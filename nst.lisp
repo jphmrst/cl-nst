@@ -23,6 +23,13 @@
 ;;; 4. Write specialized versions of def-test for checking for a
 ;;; symbol, checking equality, some sort of checking against a
 ;;; template in that way that so far exists only in my head, etc.
+;;;
+;;; 5. Use :around methods and eql methods, not fwrappers.
+;;;
+;;; 6. Separate the Allegro command-line from a CL functions.
+;;;
+;;; 7. Provide "open" methods to put fixtures into the CL-USER
+;;; namespace.
 
 
 (defconstant +fixture-info+ (make-hash-table) "For debugging")
