@@ -22,26 +22,30 @@
 
 ------------------------------------------------------------
 
-;;;:als nst
-;;;:pa nst
-;;;
-;;;(def-fixtures f1 ()
-;;;  ((c 3)
-;;;   (d 'asdfg))
-;;;  ())
-;;;
-;;;(def-fixtures f1 ()
-;;;  ((c 4)
-;;;   (d 'asdfg))
-;;;  ())
-;;;
-;;;(def-test-group g1 (f1)
-;;;  (def-test t1 :form (eql 1 1))
-;;;  (def-test t2 :form (eql 1 2))
-;;;  (def-test t3 :form (eql 2 2))
-;;;  (def-test t4 :form (eql c 3))
-;;;  (def-test t5 :form (eq d 'asdfg)))
-;;;
+:als nst
+:pa nst
+(def-fixtures f1 ((c 3) (d 'asdfg)))
+(def-fixtures f2 ((d 4) (e 'asdfg)))
+(defclass cc (test f1 f2) ())
+(defparameter cco (make-instance 'cc))
+(defmethod core ((o cc))
+  (declare (special c) (special d) (special e))
+  (format t "cc core~%") (format t "  ~s ~s ~s~%" c d e))
+(run cco)
+
+(def-fixtures f1 ((c 4) (d 'asdfg)))
+
+:als nst
+:pa nst
+(def-fixtures f1 ((c 3) (d 'asdfg)))
+(def-fixtures f2 ((d 4) (e 'asdfg)))
+(def-test-group g1 (f1)
+  (def-test t1 :form (eql 1 1))
+  (def-test t2 :form (eql 1 2))
+  (def-test t3 :form (eql 2 2))
+  (def-test t4 :form (eql c 3))
+  (def-test t5 :form (eq d 'asdfg)))
+
 ;;;(def-test-group g1 (f1)
 ;;;  (def-test t1 :form (eql 1 1))
 ;;;  (def-test t3 :form (eql 2 2))

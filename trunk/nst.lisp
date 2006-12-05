@@ -30,16 +30,17 @@
 ;;;
 ;;; 7. Provide "open" methods to put fixtures into the CL-USER
 ;;; namespace.
+;;;
+;;; 8. Define def-capture-restore-fixture to provide a
+;;; tamper-encapsulating fixture definition.
 
-
-(defconstant +fixture-info+ (make-hash-table) "For debugging")
-(defconstant +groups+ (make-hash-table) "Declared test NST groups")
-(defconstant +mixin-to-group-to-wrapper+ (make-hash-table))
-(defconstant +mixin-to-test-to-wrapper+ (make-hash-table))
+(defconstant +fixture-info+ (make-hash-table)
+  "For user echo of fixture forms and other debugging." )
+(defconstant +groups+ (make-hash-table)
+  "Declared test NST groups")
 (defconstant +groups-by-package+ (make-hash-table)
-  "Hash table from packages to sets of group names, that is, to other
-hash tables from group names to t or nil.")
-(defconstant +tests-by-group+ (make-hash-table))
+  "Hash table from packages to sets of groups, that is, to
+other hash tables each mapping group records to t or nil.")
 
 (defvar *debug-output* nil)
 (defun show-debug-output () *debug-output*)
@@ -72,328 +73,6 @@ hash tables from group names to t or nil.")
   "The hash is against test info records, not test names")
 
 ;;; -----------------------------------------------------------------
-
-(defclass nst-class () ())
-(defgeneric format-group (stream obj c s))
-(defmethod print-object ((obj nst-class) stream)
-  (print-unreadable-object (obj stream :type t :identity t)
-    (format stream "~/nst::nst-format/" obj)))
-
-;;; -----------------------------------------------------------------
-
-(defclass test-group-info (nst-class)
-     ((package :initarg :package)
-      (name :initarg :name :reader get-name :type symbol)
-      (runner :initarg :runner :type symbol)
-      (fixtures :initarg :fixtures :initform nil :type (vector symbol))
-      (setup :initarg :setup :initform nil :reader get-setup)
-      (cleanup :initarg :cleanup :initform nil :reader get-cleanup)
-      (documentation :initarg :documentation :type string))
-  (:documentation
-   "Record of information associated with each test group"))
-
-(defmethod nst-format (stream (info test-group-info) colon at-sign)
-  (declare (ignorable colon) (ignorable at-sign))
-  (with-slots (name fixtures runner setup
-		    package cleanup documentation) info
-    (format stream "~s ~@<~@[~_(~a) ~_~]with ~@<~
-                    ~[no fixtures,~*~
-                        ~;fixture ~{~s~^, ~},~
-                        ~;fixtures ~{~s~^, ~};~] ~
-                    ~_runner ~s~
-                    ~@[, ~_setup ~s~]~
-                    ~@[, ~_cleanup ~s~]~:>, ~_~
-                    in package ~a~:>"
-	    name documentation
-	    (length fixtures) (coerce fixtures 'list)
-	    runner
-	    (caddr setup)
-	    (caddr cleanup)
-	    (package-name package))))
-
-(defvar *current-group* 'default)
-
-;;;(make-instance 'test-group-info
-;;;  :package (find-package 'common-lisp)
-;;;  :name 'default-group
-;;;  :documentation
-;;;  "The default test group, for tests defined outside a
-;;;def-test-group block.")
-
-;;; -----------------------------------------------------------------
-
-(defclass test-info (nst-class)
-     ((group :initarg :group :type test-group-info)
-      (name :initarg :name :reader get-name :type symbol)
-      (core :initarg :core :type symbol
-	    :documentation
-	    "The symbolic name of the function defining the core check
-of this test")
-      (single :initarg :single :type symbol
-	  :documentation
-	  "The symbolic name of the function defining a one-off run of
-this test")
-      (documentation :initarg :documentation :type string))
-  (:documentation
-   "Record of information associated with each test"))
-
-(defmethod nst-format (stream (info test-info) colon at-sign)
-  (declare (ignorable colon) (ignorable at-sign))
-  (with-slots (group name core single documentation) info
-    (format stream "~@<~s~@[ ~_(~a)~]: ~
-                    ~_core test ~s, ~
-                    ~_single run ~s~:>"
-	    name documentation core single)))
-
-;;; -----------------------------------------------------------------
-
-(defmacro def-fixtures (name outer-decls bindings inner-decls)
-  (let* ((dynamic-decls (loop for binding in bindings
-			      collect (list 'dynamic-extent
-					     (car binding))))
-	 (special-decls (loop for binding in bindings
-			      collect (list 'special (car binding))))
-	 (group-name (gensym "group-name-"))
-	 (group-wrapping (gensym "group-wrapping-"))
-	 (all-test-wrappings (gensym "all-test-wrappings-"))
-	 (test-wrapping (gensym "test-wrapping-"))
-	 (test-info (gensym "test-info-")))
-    `(progn
-       (declaim ,@special-decls)
-       (setf (gethash ',name +fixture-info+) ',bindings)
-       (def-fwrapper ,name ()
-	 (declare ,@outer-decls)
-	 (pre-intro-fixture-set ',name)
-	 (let* ,bindings
-	   (declare ,@dynamic-decls ,@inner-decls)
-	   (post-intro-fixture-set ',name)
-	   (call-next-fwrapper))
-	 (outro-fixture-set ',name))
-       (let ((,all-test-wrappings
-	      (gethash ',name +mixin-to-test-to-wrapper+)))
-	 (unless ,all-test-wrappings
-	   (setf ,all-test-wrappings (make-hash-table)
-		 (gethash ',name +mixin-to-test-to-wrapper+)
-		 ,all-test-wrappings))
-	 (if (gethash ',name +mixin-to-group-to-wrapper+)
-	     (loop for ,group-name being the hash-keys
-		   of (gethash ',name +mixin-to-group-to-wrapper+)
-		   using (hash-value ,group-wrapping)
-		   do
-		(with-slots (runner) (gethash ,group-name +groups+)
-		  (fwrap runner ,group-wrapping ',name))
-		(loop for ,test-info in (gethash ,group-name
-						 +tests-by-group+)
-		      do
-		   (with-slots (single name) ,test-info
-		     (let ((,test-wrapping
-			    (gethash name ,all-test-wrappings)))
-		       (unless ,test-wrapping
-			 (setf ,test-wrapping (gensym "test-wrapping-")
-			       (gethash name ,all-test-wrappings)
-			       ,test-wrapping))
-		       (fwrap single ,test-wrapping ',name)))))
-
-	   (setf (gethash ',name +mixin-to-group-to-wrapper+)
-		 (make-hash-table))))
-	 nil)))
-
-(defmacro def-test-group (name fixture-names &rest forms)
-  (let ((group-info (gensym "group-info-"))
-	(len (length fixture-names))
-	(group (gensym "group-"))
-	(test (gensym "test-"))
-	(fixture-name1 (gensym "fixture-"))
-	(fixture-name2 (gensym "fixture-"))
-	(fixture-vector (gensym "fixture-vector-"))
-	(wrapping-hash (gensym "wrapping-hash-"))
-	(wrapping (gensym "wrapping-"))
-	(runner (gensym "runner-"))
-	(doc-string nil)
-	(setup-form nil)
-	(cleanup-form nil)
-	(tests nil))
-    (loop for form in forms do
-      (destructuring-bind (token &rest subforms) form
-      (cond
-	((eq token :documentation)
-	 (setf doc-string (car subforms)))
-	((eq token :setup)
-	 (setf setup-form subforms))
-	((eq token :cleanup)
-	 (setf cleanup-form subforms))
-	(t
-	 (push form tests)))))
-    (setf tests (nreverse tests))
-    `(progn
-       
-       (defun ,runner ()
-	 (let ((,group (gethash ',name nst::+groups+)))
-	   (block group-exec
-	     (with-slots (setup cleanup) ,group
-	       (intro-group-setup ',name)
-	       (when (block group-setup
-		       (handler-bind
-			   ((error
-			     #'(lambda (c)
-				 (push ,group *erred-groups*)
-				 (format t
-					 "Error in group ~s setup:
-                                              ~%  ~s~%"
-					 ,group c)
-				 (outro-failed-group-setup ',name c)
-				 (return-from group-setup nil))))
-			 (eval setup)
-			 (return-from group-setup t)))
-
-		 (outro-group-setup ',name)
-
-		 (unwind-protect
-		     (block group-tests
-		       (loop for ,test
-			     in (gethash ',name nst::+tests-by-group+)
-			     do
-			  (with-slots (core) ,test
-			    (funcall (symbol-function core)))))
-
-		   (intro-group-cleanup ',name)
-		   (eval cleanup)
-		   (outro-group-cleanup ',name)))))))
-       
-       (let* ((,fixture-vector
-	       (make-array ,len :initial-contents
-			   (reverse ',fixture-names)))
-	      (,group-info
-	       (make-instance 'test-group-info
-		 :package *package*
-		 :name ',name
-		 :fixtures ,fixture-vector
-		 :setup '(block nil ,@setup-form)
-		 :cleanup '(block nil ,@cleanup-form)
-		 :documentation ,doc-string
-		 :runner ',runner)))
-	 (setf (gethash ',name nst::+tests-by-group+) nil)
-	 (setf (gethash ',name nst::+groups+) ,group-info)
-       
-	 (loop for ,fixture-name1
-		 being the hash-keys in +mixin-to-group-to-wrapper+
-	       using (hash-value ,wrapping-hash)
-	       do (unless ,wrapping-hash
-		    (setf ,wrapping-hash (make-hash-table)
-			  (gethash ,fixture-name1
-				   +mixin-to-group-to-wrapper+)
-			  ,wrapping-hash))
-		  (remhash ',name ,wrapping-hash))
-
-	 (loop for ,fixture-name2 across ,fixture-vector do
-	   (let ((,wrapping-hash (gethash ,fixture-name2
-					  +mixin-to-group-to-wrapper+))
-		 (,wrapping (gensym "group-wrapping-")))
-	     (unless ,wrapping-hash
-	       (setf ,wrapping-hash (make-hash-table)
-		     (gethash ,fixture-name2 
-			      +mixin-to-group-to-wrapper+)
-		     ,wrapping-hash))
-	     (setf (gethash ',name ,wrapping-hash) ,wrapping)
-	     (fwrap ',runner ,wrapping ,fixture-name2)))
-	 
-	 (let ((,wrapping-hash
-		(gethash *package* +groups-by-package+)))
-	   (unless ,wrapping-hash
-	     (setf ,wrapping-hash (make-hash-table)
-		   (gethash *package* +groups-by-package+)
-		   ,wrapping-hash))
-	   (setf (gethash ',name ,wrapping-hash) t))
-	 
-	 (let ((*current-group* ',name))
-	   ,@tests)
-	 
-	 nil))))
-
-(let ((*package* (find-package 'common-lisp)))
-  (def-test-group default ()))
-
-(defmacro def-test (name &key form)
-  (let ((core-fn-name (gensym "core-fn-"))
-	(single-fn-name (gensym "single-fn-"))
-	(test-info (gensym "test-info-"))
-	(group-info (gensym "group-info-"))
-	(group-name (gensym "group-name-"))
-	(setup-form (gensym "setup-form-"))
-	(cleanup-form (gensym "cleanup-form-"))
-	(fixture-name1 (gensym "fixture-info-"))
-	(fixture-name2 (gensym "fixture-info-"))
-	(wrapping-hash (gensym "wrapping-hash-"))
-	(wrapping (gensym "wrapping-"))
-	(test-result (gensym "result-"))
-	(x (gensym "x")))
-
-    `(progn
-       (delete-if (lambda (,x) (eq (get-name ,x) ',name))
-		  (gethash ',*current-group* +tests-by-group+))
-
-       (defun ,core-fn-name ()
-	 (intro-test-run ',name)
-	 (block single-test
-	   (handler-bind ((error
-			   #'(lambda (,x)
-			       (outro-test-error ',name ,x)
-			       (return-from single-test 'err))))
-	     (let ((,test-result ,form))
-	       (when ,test-result
-		 (setf *passed-test-count*
-		       (+ 1 *passed-test-count*)))
-	       (outro-test-run ',name ,test-result)
-	       (return-from single-test (if ,test-result t nil))))))
-       
-       (defun ,single-fn-name ()
-	 (let* ((,group-info (gethash ',*current-group* +groups+))
-		(,group-name (get-name ,group-info))
-		(,setup-form   (get-setup ,group-info))
-		(,cleanup-form (get-cleanup ,group-info))
-		(,test-result nil))
-
-	   (intro-group-setup ,group-name)
-	   (eval ,setup-form)
-	   (outro-group-setup ,group-name)
-
-	   (unwind-protect (setf ,test-result (,core-fn-name))
-	     (intro-group-cleanup ,group-name)
-	     (eval ,cleanup-form)
-	     (outro-group-cleanup ,group-name))))
-       
-       (loop for ,fixture-name1
-	       being the hash-keys in +mixin-to-test-to-wrapper+
-	     using (hash-value ,wrapping-hash) 
-	     do 
-	  (unless ,wrapping-hash
-	    (setf ,wrapping-hash (make-hash-table)
-		  (gethash ,fixture-name1 +mixin-to-test-to-wrapper+)
-		  ,wrapping-hash))
-	  (remhash ',name ,wrapping-hash))
-
-       (with-slots (fixtures) (gethash ',*current-group* +groups+)
-	 (loop for ,fixture-name2 across fixtures do
-	   (let ((,wrapping-hash
-		  (gethash ,fixture-name2
-			   +mixin-to-test-to-wrapper+)))
-	     (unless ,wrapping-hash
-	       (error "No such fixture set ~s" ,fixture-name2))
-	     (let ((,wrapping (gethash ',name ,wrapping-hash)))
-	       (unless ,wrapping
-		 (setf ,wrapping (gensym "test-wrapping-")
-		       (gethash ',name ,wrapping-hash) ,wrapping))
-	       (fwrap ',single-fn-name ,wrapping ,fixture-name2)))))
-       
-       (let ((,test-info (make-instance 'test-info
-			  :group ',*current-group*
-			  :name ',name
-			  :core ',core-fn-name
-			  :single ',single-fn-name
-			  :documentation nil)))
-	 (push ,test-info
-	       (gethash ',*current-group* +tests-by-group+))))))
-
 
 (defmacro intro-test-run (name)
   `(when (show-verbose-output) 
@@ -447,6 +126,259 @@ this test")
 
 ;;; -----------------------------------------------------------------
 
+(defclass nst-class () ())
+(defgeneric nst-format (stream obj c s))
+(defmethod print-object ((obj nst-class) stream)
+  (print-unreadable-object (obj stream :type t :identity t)
+    (format stream "~/nst::nst-format/" obj)))
+
+(defclass fixture (nst-class) ()
+  (:documentation "Class of bindings usable in tests"))
+
+(defclass test (nst-class)
+     ((group     :initarg :group :type group)
+      (test-name :initarg :name  :type symbol :reader get-name)
+      (documentation :initarg :documentation :type string))
+  (:documentation "Information associated with one single test."))
+
+(defmethod nst-format (stream (info test) colon at-sign)
+  (declare (ignorable colon) (ignorable at-sign))
+  (with-slots (group test-name documentation) info
+    (format stream "~@<~s (~s)~@[ ~_(~a)~]~:>"
+	    test-name (get-name group) documentation)))
+
+(defclass group (nst-class)
+     ((package :initarg :package)
+      (group-name :initarg :name :type symbol :reader get-name)
+      (test-names :type (vector symbol) :reader get-test-names)
+      (tests-hash :type hash-table :reader get-tests-hash)
+      (setup   :initarg :setup   :initform nil :reader get-setup)
+      (cleanup :initarg :cleanup :initform nil :reader get-cleanup)
+      (testclass :initarg :testclass :type symbol)
+      (fixtures  :initarg :fixtures  :type (cons symbol)
+		:reader get-fixtures)
+      (documentation :initarg :documentation :type string))
+  (:documentation "Information associated with one group of tests."))
+
+(defmethod nst-format (stream (info group) colon at-sign)
+  (declare (ignorable colon) (ignorable at-sign))
+  (with-slots (package group-name
+		       setup cleanup documentation) info
+    (format stream "~s ~@<in package ~a~
+                          ~@[ ~_(~a)~]~
+                          ~@[, ~_setup ~s~]~
+                          ~@[, ~_cleanup ~s~]~
+                       ~:>"
+	    group-name (package-name package)
+	    documentation
+	    (caddr setup)
+	    (caddr cleanup))))
+
+(defgeneric core (test)
+  (:documentation "Run a test, a group of tests, or all the tests
+associated with a package."))
+
+(defmethod core :around (test)
+  "The primary core method simply evaluates the form given in the
+test definition, which could return an arbitrary value, or raise an
+error.  This wrapper intercepts errors and standardizes the return
+value to one of t, nil or 'err.  Here we also make the calls to our
+hook macros for output before and after indiviual tests."
+  (with-slots (test-name) test
+    (intro-test-run test-name)
+    (block single-test
+      (handler-bind ((error
+		      #'(lambda (x)
+			  (outro-test-error test-name x)
+			  (return-from single-test 'err))))
+	(let ((result (call-next-method test)))
+	  (when result
+	    (setf *passed-test-count* (+ 1 *passed-test-count*)))
+	  (outro-test-run test-name result)
+	  (return-from single-test (if result t nil)))))))
+
+(defmacro do-setup (group group-name group-setup-form
+			  &rest other-forms)
+  (let ((c (gensym)))
+    `(progn
+       (intro-group-setup ,group-name)
+
+       (when (block group-setup
+	       (handler-bind
+		   ((error
+		     #'(lambda (,c)
+			 (push ,group *erred-groups*)
+			 (format t "Error in group ~s setup:~%  ~s~%"
+				 ,group-name ,c)
+			 (outro-failed-group-setup ,group-name ,c)
+			 (return-from group-setup nil))))
+		 (eval ,group-setup-form)
+		 (return-from group-setup t)))
+    	 (outro-group-setup group-name)
+	 ,@other-forms))))
+
+(defgeneric run (ptg)
+  (:documentation "Run a test, a group of tests, or all the tests
+associated with a package.")
+
+  (:method ((ts test))
+     (with-slots (test-name group) ts
+       (with-slots (group-name setup cleanup) group
+	
+	 (do-setup
+	     group group-name setup
+	 
+	     (let ((test-result nil))
+	       (declare (ignore test-result))
+	       (unwind-protect (setf test-result (core ts))
+		 (intro-group-cleanup group-name)
+		 ;; TO DO - catch errors here
+		 (eval cleanup)
+		 (outro-group-cleanup group-name)))))))
+  
+  (:method ((g group))
+     (block group-exec
+       (with-slots (group-name setup cleanup test-names tests-hash) g
+	 (do-setup
+	     g group-name setup
+	       
+	     (unwind-protect
+		 (block group-tests
+		   (loop for test-name across test-names do
+		     (core (gethash test-name tests-hash))))
+	       
+	       (intro-group-cleanup group-name)
+	       (eval cleanup)
+	       (outro-group-cleanup group-name)))))))
+
+;;; -----------------------------------------------------------------
+
+(defmacro def-fixtures (name bindings &key
+			     outer inner documentation)
+  (let* ((dynamic-decls
+	  (loop for binding in bindings
+		collect (list 'dynamic-extent (car binding))))
+	 
+	 (special-decls
+	  (loop for binding in bindings
+		collect (list 'special (car binding))))
+	 
+	 (doc-forms (if documentation 
+			(list (list ':documentation documentation))
+			nil))
+	 
+	 (ptg (gensym "ptg-")))
+
+    `(progn
+       (declaim ,@special-decls)
+       (defclass ,name (fixture) () ,@doc-forms)
+       (setf (gethash ',name +fixture-info+) ',bindings)
+       (defmethod run :around ((,ptg ,name))
+	 (declare ,@outer)
+	 (pre-intro-fixture-set ',name)
+	 (let* ,bindings
+	   (declare ,@dynamic-decls ,@inner)
+	   (post-intro-fixture-set ',name)
+	   (call-next-method))
+	 (outro-fixture-set ',name))
+       nil)))
+
+;;; -----------------------------------------------------------------
+
+(defmacro def-test-group (group-name fixture-names &rest forms)
+  (let ((doc-string nil) (tests nil)
+	(setup-form nil) (cleanup-form nil)
+	
+	(test-class (gensym "test-class-"))
+	(tests-acc (gensym "tests-acc-"))
+	(group-class (gensym "group-class-"))
+	(singleton (gensym "singleton-"))
+	(wrapping-hash (gensym "wrapping-hash-"))
+	
+	(class-doc 
+	 (format nil "Class definition corresponding to test group ~s"
+		 group-name)))
+
+    (loop for form in forms do
+      (destructuring-bind (token &rest subforms) form
+      (cond
+	((eq token :documentation) (setf doc-string (car subforms)))
+	((eq token :setup)         (setf setup-form subforms))
+	((eq token :cleanup)       (setf cleanup-form subforms))
+	((eq token 'def-test)      (push form tests))
+	(t (error "~@<Illegal form in def-test-group:~_ ~s~:>~%"
+		  form)))))
+    (setf tests (nreverse tests))
+      
+    `(progn
+       (defclass ,group-class (,@fixture-names group) ()
+	 (:documentation ,class-doc))
+       (defclass ,test-class (,@fixture-names test) ()
+	 (:documentation ,class-doc))
+       (let ((,singleton (make-instance ',group-class
+			   :package *package* :name ',group-name
+			   :fixtures ',fixture-names
+			   :setup '(block nil ,@setup-form)
+			   :cleanup '(block nil ,@cleanup-form)
+			   :testclass ',test-class
+			   :documentation ,doc-string))
+	     (,tests-acc nil))
+	 (declare (ignorable ,tests-acc))
+	 (defmethod run-group ((g (eql ',group-name)))
+	   (run ,singleton))
+	 (setf (gethash ',group-name +groups+) ,singleton)
+	 (let ((,wrapping-hash (gethash *package*
+					+groups-by-package+)))
+	   (unless ,wrapping-hash
+	     (setf ,wrapping-hash (make-hash-table)
+		   (gethash *package*
+			    +groups-by-package+) ,wrapping-hash))
+	   (setf (gethash ',group-name ,wrapping-hash) t))
+
+	 (let ((*test-class-symbol* ',test-class)
+	       (*current-group-name* ',group-name)
+	       (*current-group-info* ,singleton)
+	       (*test-names-acc* nil)
+	       (*test-info-hash* (make-hash-table)))
+	   (declare (ignorable *test-class-symbol*)
+		    (ignorable *current-group-name*)
+		    (ignorable *current-group-info*))
+	   ,@tests
+	   (let ((tests-vector
+		  (make-array (length *test-names-acc*)
+		      :initial-contents (nreverse *test-names-acc*))))
+	     (setf (slot-value ,singleton
+			       'test-names) tests-vector
+		   (slot-value ,singleton
+			       'tests-hash) *test-info-hash*)))
+	 nil))))
+
+;;; -----------------------------------------------------------------
+
+(defmacro def-test (test-name &key form)
+  (let ((test-info (gensym "test-info-")))
+		    
+    `(progn
+       ;; (unless (and (boundp '*test-class-symbol*)
+       ;; 	    (boundp '*current-group-name*)
+       ;; 	    (boundp '*current-group-info*)
+       ;; 	    (boundp '*test-names-acc*)
+       ;; 	    (boundp '*test-info-hash*))
+       ;;   (error "Use of def-test outside of a test group body"))
+
+       (let ((,test-info (make-instance *test-class-symbol*
+			   :group *current-group-info*
+			   :name ',test-name
+			   :documentation nil)))
+	 (push ',test-name *test-names-acc*)
+	 (setf (gethash ',test-name *test-info-hash*) ,test-info)
+	 (defmethod core ((ts (eql ,test-info))) ,form)
+	 (defmethod run-test ((gr (eql *current-group-name*))
+			      (ts (eql ',test-name)))
+	   (run ,test-info))))))
+
+;;; -----------------------------------------------------------------
+
 (defmacro under-empty-pendings (&rest forms)
   `(let ((*pending-packages* ())
 	 (*pending-group-names* ())
@@ -493,10 +425,10 @@ this test")
 	(package (gensym "package-"))
 	(group-name (gensym "group-name-"))
 	(group-info (gensym "group-info-"))
+	(group-test-hash (gensym "group-test-hash-"))
 	(group-set (gensym "group-set-"))
 	(test-set (gensym "test-set-"))
 	(test-name (gensym "test-name-"))
-	(test-info-list (gensym "test-info-list-"))
 	(test-info (gensym "test-info-"))
 	(flag (gensym "flag-"))
 	(more (gensym "more-")))
@@ -509,30 +441,28 @@ this test")
 		     being the hash-keys of *pending-test-names*
 		   using (hash-value ,test-set)
 		   do
-		(loop for ,test-name being the hash-keys of ,test-set
-		      using (hash-value ,flag)
-		      do
-		   (let* ((,test-info-list
-			   (gethash ,group-name +tests-by-group+))
-			  (,test-info
-			   (block nil
-			     (loop for cand in ,test-info-list do
-			       (when (eq (get-name cand) ,test-name)
-				 (return cand))))))
-		     (unless ,test-info
-		       (error "No such test ~s in group ~s"
-			      ,test-name ,group-name))
-		     (with-slots (single) ,test-info
-		       (funcall (symbol-function single))))
-		   (remhash ,test-name ,test-set))
+		(let ((,group-test-hash
+		       (get-tests-hash (gethash ,group-name
+						+groups+))))
+		  (loop for ,test-name
+			  being the hash-keys of ,test-set
+			using (hash-value ,flag)
+			do
+		     (remhash ,test-name ,test-set)
+		     (when ,flag
+		       (let* ((,test-info (gethash ,test-name
+						   ,group-test-hash)))
+			 (unless ,test-info
+			   (error "No such test ~s in group ~s"
+				  ,test-name ,group-name))
+			 (run ,test-info)))))
 		(remhash ,group-name *pending-test-names*))
 	     (loop as ,group-name = (pop *pending-group-names*)
 		   while ,group-name
 		   do
 		(let ((,group-info (gethash ,group-name +groups+)))
 		  (if ,group-info
-		      (with-slots (runner) ,group-info
-			(funcall (symbol-function runner)))
+		      (run ,group-info)
 		      (format t "WARNING: No such group ~s~%"
 			      ,group-name))))
 	     (loop as ,package-name = (pop *pending-packages*)
@@ -570,41 +500,105 @@ this test")
 
 ;;; -----------------------------------------------------------------
 
-(top-level:alias "nst" (&rest args)
-  "Invoke the NST tester from the top-level"
-  (if (null args)
-      (progn
-	(format t "Argument-free behavior of :nst not implemented"))
-      (block nil
-	  (loop do
-	    (if (null args) (return))
-	    (let ((head (pop args)))
-	      (macrolet
-		  ((pop-arg (want have)
-		     `(cond 
-			((null args)
-			 (format t "Command ~s requires ~d~:* ~
-                               argument~[s~;~;s~] but given ~d.~%"
-				 head ,want ,have)
-			 (return))
-			(t (pop args))))
-		   (command-case (args &rest forms)
-		     (let* ((want (length args))
-			    (arg-bindings
-			     (loop for arg in args and have from 0
-				   collect
-				   (list arg
-					 (list 'pop-arg want have)))))
-		       `(let ,arg-bindings ,@forms)))
-		   (warn-unimplemented (&rest forms)
-		     `(progn ,@forms
-			     (format t "Command ~s not implemented~%"
-				     head))))
-		(cond
-		  ((or (eq head ':help)
-		       (eq head 'help)
-		       (eq head 'h))
-		   (format t "NST test framework control
+(defun format-binding (stream tup c s)
+  (declare (ignorable c) (ignorable s))
+  (format stream "~s <- ~s" (car tup) (cadr tup)))
+
+(defun format-groups (stream groups c s)
+  (declare (ignorable c) (ignorable s))
+  (loop for info being the hash-values of groups
+	using (hash-key name)
+	do
+     (format stream "Group ~/nst::nst-format/~%" info)
+     (with-slots (test-names tests-hash) info
+       (if (eql (length test-names) 0)
+	   (format stream " - No tests in group.~%")
+	   (loop for test-name across test-names do
+	     (format stream " - Test ~/nst::nst-format/~%"
+			    (gethash test-name tests-hash)))))))
+
+(defconstant +group-test-name-formatter+
+     "~:[none~;~:*~@<~{~/nst::format-group-test-list/~^, ~_~}~:>~]")
+(defun format-group-test-list (stream item s c)
+  (declare (ignorable s) (ignorable c))
+  (format stream "~s.~s" (car item) (cadr item)))
+
+(defun nst-dump (stream)
+  (macrolet ((group-test-names-from-hashes (hash)
+	       (let ((all (gensym "all-"))
+		     (group (gensym "group-"))
+		     (test (gensym "test-"))
+		     (flag (gensym "flag-"))
+		     (name-hash (gensym "name-hash-")))
+		 `(let ((,all nil))
+		    (loop for ,group being the hash-keys
+			  of ,hash
+			  using (hash-value ,name-hash)
+			  do
+		       (loop for ,test being the hash-keys
+			     of ,name-hash
+			     using (hash-value ,flag)
+			     do
+			  (if ,flag (push (list ,group ,test) ,all))))
+		    ,all))))
+
+    (unless (eql 0 (hash-table-count +fixture-info+))
+      (format stream "~%FIXTURE SETS~%")
+      (loop for name being the hash-keys of +fixture-info+
+	    using (hash-value val)
+	    do
+	 (format stream "Set ~s binds ~
+                     ~@<~{~/nst::format-binding/~^, ~}~:>~%"
+		 name val)))
+
+    (unless (eql 0 (hash-table-count +groups+))
+      (format stream "~%TEST GROUPS~%~/nst::format-groups/" +groups+))
+    
+    (format stream "~%~
+     SETTINGS~%~
+     Verbose output: ~:[off~;on~]~%~
+     Debugging output: ~:[off~;on~]~%~
+     Break on failed test: ~:[off~;on~]~%~
+     Break on error-throwing test: ~:[off~;on~]~%~
+     Debug mode on error-throw: ~:[off~;on~]~%~
+     ~%~
+     SCHEDULED TESTS~%~
+     Scheduled packages: ~:[none~;~:*~{~a~^, ~}~]~%~
+     Scheduled groups: ~:[none~;~:*~{~s~^, ~}~]~%~
+     Scheduled tests: ~@?~%~
+     ~%~
+     CURRENTLY RUNNING TESTS~%~
+     Packages pending this run: ~:[none~;~:*~{~a~^, ~}~]~%~
+     Groups pending this run: ~:[none~;~:*~{~s~^, ~}~]~%~
+     Tests pending this run: ~@?~%~
+     ~%~
+     RECENT RESULTS~%~
+     Tests passed this run: ~d~%~
+     Groups incurring errors this run: ~
+        ~:[none~;~:*~{~s~^, ~}~]~%~
+     Tests erring this run: ~@?~%~
+     Tests failed this run: ~@?~%~
+     ~%"
+	    *verbose-output* *debug-output*
+	    *break-on-wrong* *break-on-error* *debug-on-error*
+	    (map 'list #'package-name *interesting-packages*)
+	    *interesting-group-names*
+	    +group-test-name-formatter+
+	    (group-test-names-from-hashes +interesting-test-names+)
+	    (map 'list #'package-name *pending-packages*)
+	    *pending-group-names*
+	    +group-test-name-formatter+
+	    (group-test-names-from-hashes *pending-test-names*)
+	    *passed-test-count*
+	    *erred-groups*
+	    +group-test-name-formatter+
+	    (group-test-names-from-hashes *failed-tests*)
+	    +group-test-name-formatter+
+	    (group-test-names-from-hashes *erred-tests*))))
+
+;;; -----------------------------------------------------------------
+
+(defconstant +nst-top-help+ "NST test framework control
 
 OUTPUT CONTROL
   :nst :help
@@ -658,6 +652,40 @@ ONE-OFF EXECUTION
 Multiple NST commands can be combined at one prompt, e.g.
   :nst :p *package* :g aux::key-tests :run
 ")
+
+(defun run-nst-commands (&rest args)
+  "Top-level command interpreter for the NST tester"
+  (if (null args)
+      (progn
+	(format t "Argument-free behavior of :nst not implemented"))
+      (block nil
+	  (loop do
+	    (if (null args) (return))
+	    (let ((head (pop args)))
+	      (macrolet
+		  ((pop-arg (want have)
+		     `(cond 
+			((null args)
+			 (format t "Command ~s requires ~d~:* ~
+                               argument~[s~;~;s~] but given ~d.~%"
+				 head ,want ,have)
+			 (return))
+			(t (pop args))))
+		   (command-case (args &rest forms)
+		     (let* ((want (length args))
+			    (arg-bindings
+			     (loop for arg in args and have from 0
+				   collect
+				   (list arg
+					 (list 'pop-arg want have)))))
+		       `(let ,arg-bindings ,@forms)))
+		   (warn-unimplemented (&rest forms)
+		     `(progn ,@forms
+			     (format t "Command ~s not implemented~%"
+				     head))))
+		(cond
+		  ((or (eq head ':help) (eq head 'help) (eq head 'h))
+		   (format t "~a" +nst-top-help+)
 		 (return))
 
 		((eq head ':verbose)
@@ -823,110 +851,7 @@ Multiple NST commands can be combined at one prompt, e.g.
                           For more options, use :nst :help~%~%"
 			 head)))))))))
 
-(defun format-binding (stream tup c s)
-  (declare (ignorable c) (ignorable s))
-  (format stream "~s <- ~s" (car tup) (cadr tup)))
+#+allegro
+(top-level:alias "nst" (&rest args)
+  (apply #'run-nst-commands args))
 
-(defun format-groups (stream groups c s)
-  (declare (ignorable c) (ignorable s))
-  (loop for info being the hash-values of groups
-	using (hash-key name)
-	do
-     (format stream "Group ~/nst::nst-format/~%~
-                     ~:[ - No tests in group.~%~;~:*~{ - Test ~/nst::nst-format/~%~}~]"
-	     info (gethash name +tests-by-group+))
-	))
-
-(defconstant +group-test-name-formatter+
-     "~:[none~;~:*~@<~{~/nst::format-group-test-list/~^, ~_~}~:>~]")
-(defun format-group-test-list (stream item s c)
-  (declare (ignorable s) (ignorable c))
-  (format stream "~s.~s" (car item) (cadr item)))
-
-(defun nst-dump (stream)
-  (macrolet ((group-test-names-from-hashes (hash)
-	       (let ((all (gensym "all-"))
-		     (group (gensym "group-"))
-		     (test (gensym "test-"))
-		     (flag (gensym "flag-"))
-		     (name-hash (gensym "name-hash-")))
-		 `(let ((,all nil))
-		    (loop for ,group being the hash-keys
-			  of ,hash
-			  using (hash-value ,name-hash)
-			  do
-		       (loop for ,test being the hash-keys
-			     of ,name-hash
-			     using (hash-value ,flag)
-			     do
-			  (if ,flag (push (list ,group ,test) ,all))))
-		    ,all))))
-    (unless (eql 0 (hash-table-count +fixture-info+))
-      (format stream "~%FIXTURE SETS~%")
-      (loop for name being the hash-keys of +fixture-info+
-	    using (hash-value val)
-	    do
-	 (format stream "Set ~s binds ~
-                     ~@<~{~/nst::format-binding/~^, ~}~:>~%"
-		 name val)))
-
-    (unless (eql 0 (hash-table-count +groups+))
-      (format stream "~%TEST GROUPS~%")
-      (format stream "~/nst::format-groups/" +groups+))
-
-    (unless (eql 0 (hash-table-count +fixture-info+))
-      (format stream "~%FIXTURE WRAPPINGS~%")
-      (loop for fixture-name being the hash-keys of +fixture-info+ do
-	(format stream " - Fixture ~s~%" fixture-name)
-	(loop for group-name being the hash-keys
-	      of (gethash fixture-name +mixin-to-group-to-wrapper+)
-	      using (hash-value wrapping)
-	      do (format stream "    . Group ~s by ~s~%"
-			 group-name wrapping))
-	(loop for test-name being the hash-keys
-	      of (gethash fixture-name +mixin-to-test-to-wrapper+)
-	      using (hash-value wrapping)
-	      do (format stream "    . Test ~s by ~s~%"
-			 test-name wrapping))))
-    
-    (format stream "~%~
-     SETTINGS~%~
-     Verbose output: ~:[off~;on~]~%~
-     Debugging output: ~:[off~;on~]~%~
-     Break on failed test: ~:[off~;on~]~%~
-     Break on error-throwing test: ~:[off~;on~]~%~
-     Debug mode on error-throw: ~:[off~;on~]~%~
-     ~%~
-     SCHEDULED TESTS~%~
-     Scheduled packages: ~:[none~;~:*~{~a~^, ~}~]~%~
-     Scheduled groups: ~:[none~;~:*~{~s~^, ~}~]~%~
-     Scheduled tests: ~@?~%~
-     ~%~
-     CURRENTLY RUNNING TESTS~%~
-     Packages pending this run: ~:[none~;~:*~{~a~^, ~}~]~%~
-     Groups pending this run: ~:[none~;~:*~{~s~^, ~}~]~%~
-     Tests pending this run: ~@?~%~
-     ~%~
-     RECENT RESULTS~%~
-     Tests passed this run: ~d~%~
-     Groups incurring errors this run: ~
-        ~:[none~;~:*~{~s~^, ~}~]~%~
-     Tests erring this run: ~@?~%~
-     Tests failed this run: ~@?~%~
-     ~%"
-	    *verbose-output* *debug-output*
-	    *break-on-wrong* *break-on-error* *debug-on-error*
-	    (map 'list #'package-name *interesting-packages*)
-	    *interesting-group-names*
-	    +group-test-name-formatter+
-	    (group-test-names-from-hashes +interesting-test-names+)
-	    (map 'list #'package-name *pending-packages*)
-	    *pending-group-names*
-	    +group-test-name-formatter+
-	    (group-test-names-from-hashes *pending-test-names*)
-	    *passed-test-count*
-	    *erred-groups*
-	    +group-test-name-formatter+
-	    (group-test-names-from-hashes *failed-tests*)
-	    +group-test-name-formatter+
-	    (group-test-names-from-hashes *erred-tests*))))
