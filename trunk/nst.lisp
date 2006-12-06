@@ -811,7 +811,8 @@ Multiple NST commands can be combined at one prompt, e.g.
 
 	    (command-case (:run) ()
 		(reset-pending)
-		(run-pending))
+		(run-pending)
+		(report-last-run))
 
 	    (command-case (:run-package) (package-name)
 		(under-empty-pendings
