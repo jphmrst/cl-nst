@@ -42,9 +42,10 @@
 (def-test-group g1 (f1)
   (def-test t1 :form (eql 1 1))
   (def-test t2 :form (eql 1 2))
-  (def-test t3 :form (eql 2 2))
-  (def-test t4 :form (eql c 3))
+  (def-test t3 :form (error "I give an error"))
+  (def-test t4 :form (eql c 4))
   (def-test t5 :form (eq d 'asdfg)))
+(run-group 'g1)
 
 ;;;(def-test-group g1 (f1)
 ;;;  (def-test t1 :form (eql 1 1))
