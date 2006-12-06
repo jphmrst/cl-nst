@@ -24,16 +24,11 @@
 ;;; symbol, checking equality, some sort of checking against a
 ;;; template in that way that so far exists only in my head, etc.
 ;;;
-;;; 5. Use :around methods and eql methods, not fwrappers.
-;;;
-;;; 6. Separate the Allegro command-line from a CL functions.
-;;;
-;;; 7. Provide "open" methods to put fixtures into the CL-USER
-;;; namespace.
-;;;
-;;; 8. Define def-capture-restore-fixture to provide a
-;;; tamper-encapsulating fixture definition.
-
+;;; 5. Provide "open" methods (or macros, or whatever) to put fixtures
+;;; into the CL-USER namespace.
+
+;;; Global variables for the state of the test runner.
+
 (defconstant +fixture-info+ (make-hash-table)
   "For user echo of fixture forms and other debugging." )
 (defconstant +groups+ (make-hash-table)
@@ -42,36 +37,68 @@
   "Hash table from packages to sets of groups, that is, to
 other hash tables each mapping group records to t or nil.")
 
-(defvar *debug-output* nil)
+(defvar *debug-output* nil
+  "Set to t for extensive debugging output")
 (defun show-debug-output () *debug-output*)
 
-(defvar *verbose-output* nil)
+(defvar *verbose-output* nil
+  "Set to t for verbose output during test execution")
 (defun show-verbose-output () (or *verbose-output* *debug-output*))
-
-(defvar *break-on-wrong* nil)
-(defvar *break-on-error* nil)
-(defvar *debug-on-error* nil)
-
-;;; These should all be defvar's when NST is more finished.
-(defparameter *interesting-packages* nil)
-(defparameter *interesting-group-names* nil)
-(defparameter +interesting-test-names+ (make-hash-table))
-
-(defparameter *pending-packages* nil)
-(defparameter *pending-group-names* nil)
-(defparameter *pending-test-names* (make-hash-table)
-  "The hash is against first group names, and then test names")
-
-(defparameter *passed-test-count* 0)
-(defparameter *erred-groups* nil
-  "The list holds group info records, not names")
-(defparameter *erred-cleanup* nil
-  "The list holds group info records, not names")
-(defparameter *failed-tests* (make-hash-table)
-  "The hash is against test info records, not test names")
-(defparameter *erred-tests* (make-hash-table)
-  "The hash is against test info records, not test names")
 
+(defvar *break-on-wrong* nil
+  "When set to t, directs the test runner to return to the command
+line whenever a test does not succeed.")
+(defvar *break-on-error* nil
+  "When set to t, directs the test runner to return to the command
+line whenever a test raises an error condition, rather than returning
+a boolean value.")
+(defvar *debug-on-error* nil
+  "When set to t, directs the test runner to return in debugging mode
+whenever a test raises an error condition, rather than returning a
+boolean value.")
+
+(defvar *interesting-packages* nil
+  "The names of packages whose tests should be checked by the :run
+command to the NST runtime system.")
+(defvar *interesting-group-names* nil
+  "The names of groups whose tests should be checked by the :run
+command to the NST runtime system.")
+(defvar +interesting-test-names+ (make-hash-table)
+  "The names of groups whose tests should be checked by the :run
+command to the NST runtime system.  The hash is against first group
+names, and then test names.")
+
+(defvar *pending-packages* nil
+  "The names of packages whose tests remain to be checked under the
+current :run session of the NST runtime system.")
+(defvar *pending-group-names* nil
+  "The names of groups whose tests remain to be checked under the
+current :run session of the NST runtime system.")
+(defvar *pending-test-names* (make-hash-table)
+  "The names of groups whose tests remain to be checked under the
+current :run session of the NST runtime system.  The hash is against
+first group names, and then test names.")
+
+(defparameter *passed-test-count* 0
+  "The number of tests passed under the current :run session of the NST
+runtime system.")
+(defparameter *erred-groups* nil
+  "The names of groups raising an error in setup during the current
+:run session of the NST runtime system.")
+(defparameter *erred-cleanup* nil
+  "The names of groups raising an error in cleanup during the current
+:run session of the NST runtime system.")
+(defparameter *failed-tests* (make-hash-table)
+  "The test info records of tests failing during the current :run
+session of the NST runtime system.")
+(defparameter *erred-tests* (make-hash-table)
+  "The test info records of tests raising an error condition during the
+current :run session of the NST runtime system.")
+
+;;; This group of macros summarizes the control decisions for output
+;;; during test execution.  It's convenient to write this logic
+;;; separately from the rest of the system.
+
 (defmacro intro-test-run (name)
   `(when (show-verbose-output) 
      (format t " - Running test ~s..." ,name)))
@@ -276,6 +303,13 @@ associated with a package.")
 	   (call-next-method))
 	 (outro-fixture-set ',name))
        nil)))
+
+(defmacro def-capture/restore-fixtures (name variables
+					     &key documentation)
+  (let ((nil-bindings (loop for v in variables
+			    collect (list v nil))))
+    `(def-fixtures ,name ,nil-bindings
+       :documentation ,documentation)))
 
 ;;; -----------------------------------------------------------------
 
@@ -674,6 +708,13 @@ Multiple NST commands can be combined at one prompt, e.g.
 		   `(when (member head ',synonyms)
 		      (let ,arg-bindings ,@forms)
 		      (return-from single-command))))
+
+	       (command-case-flag-setter (synonyms variable blurb)
+		 (let ((flag (gensym)))
+		   `(command-case ,synonyms (,flag)
+			(setf ,variable ,flag)
+			(format t "~:[Deactivated~;Activated~] ~a.~%"
+				,flag ,blurb))))
 	       
 	       (warn-unimplemented (&rest forms)
 		 `(progn ,@forms
@@ -681,43 +722,35 @@ Multiple NST commands can be combined at one prompt, e.g.
 				 head))))
 
 	    (command-case (:help help h) ()
-			  (format t "~a" +nst-top-help+)
-			  (return-from runner))
+		(format t "~a" +nst-top-help+)
+		(return-from runner))
 	    
+	    (command-case-flag-setter (:verbose) *verbose-output*
+				      "verbose output")
+	    
+	    (command-case-flag-setter (:debug) *debug-output*
+				      "debugging output")
 
-	    (command-case (:verbose) (flag)
-			  (setf *verbose-output* flag)
-			  (format t "~:[Deactivated~;Activated~] ~
-                                     verbose output.~%" flag))
+	    (command-case-flag-setter (:break-on-wrong)
+				      *break-on-wrong*
+				      "breaking on test failure")
 
-	    (command-case (:debug) (flag)
-			  (setf *debug-output* flag)
-			  (format t "~:[Deactivated~;Activated~] ~
-                                     debugging output.~%" flag))
+	    (command-case-flag-setter (:break-on-error)
+				      *break-on-error*
+				      "breaking on raised errors")
+
+	    (command-case-flag-setter (:debug-on-error)
+				      *debug-on-error*
+				      "debugging on raised errors")
 
 	    (command-case (:dump dump) ()
-		 (nst-dump t))
-
-	    (command-case (:break-on-wrong) (flag)
-		   (setf *break-on-wrong* flag)
-		   (format t "~:[Deactivated~;Activated~] ~
-                              breaking on test failure.~%" flag))
-
-	    (command-case (:break-on-error) (flag)
-		   (setf *break-on-error* flag)
-		   (format t "~:[Deactivated~;Activated~] ~
-                                breaking on raised errors.~%" flag))
+		(nst-dump t))
 
 	    (command-case (:continue) ()
-		    (run-pending))
-
-	    (command-case (:debug-on-error) (flag)
-		   (setf *debug-on-error* flag)
-		   (format t "~:[Deactivated~;Activated~] ~
-                                debugging on raised errors~%" flag))
+		(run-pending))
 
 	    (command-case (:blurb) ()
-		   (warn-unimplemented))
+		(warn-unimplemented))
 
 	    (command-case (:p) (package-name)
 		(let ((package (find-package package-name)))
@@ -749,53 +782,53 @@ Multiple NST commands can be combined at one prompt, e.g.
 			    group-name)))
 
 	    (command-case (:t) (group-name test-name)
-		    (if (gethash group-name +groups+)
-			(progn
-			  (let ((i-tests
-				 (gethash group-name
-					  +interesting-test-names+))
-				(p-tests
-				 (gethash group-name
-					  *pending-test-names*)))
-			  (unless i-tests
-			    (setf i-tests (make-hash-table)
-				  (gethash group-name
-					   +interesting-test-names+)
-				  i-tests))
-			  (unless p-tests
-			    (setf p-tests (make-hash-table)
-				  (gethash group-name
-					   *pending-test-names*)
-				  p-tests))
-			  (setf (gethash test-name i-tests) t
-				(gethash test-name p-tests) t))
-			  (when (show-verbose-output)
-			    (format t "Marked test ~s (group ~s) ~
-                                       for testing."
-				    test-name group-name)))
-			(format t "ERROR: cannot find group ~s~%"
-				group-name)))
+		(if (gethash group-name +groups+)
+		    (progn
+		      (let ((i-tests
+			     (gethash group-name
+				      +interesting-test-names+))
+			    (p-tests
+			     (gethash group-name
+				      *pending-test-names*)))
+			(unless i-tests
+			  (setf i-tests (make-hash-table)
+				(gethash group-name
+					 +interesting-test-names+)
+				i-tests))
+			(unless p-tests
+			  (setf p-tests (make-hash-table)
+				(gethash group-name
+					 *pending-test-names*)
+				p-tests))
+			(setf (gethash test-name i-tests) t
+			      (gethash test-name p-tests) t))
+		      (when (show-verbose-output)
+			(format t "Marked test ~s (group ~s) ~
+                                   for testing."
+				test-name group-name)))
+		    (format t "ERROR: cannot find group ~s~%"
+			    group-name)))
 
 	    (command-case (:run) ()
-			  (reset-pending)
-			  (run-pending))
+		(reset-pending)
+		(run-pending))
 
 	    (command-case (:run-package) (package-name)
-			  (under-empty-pendings
-			   (push (find-package package-name)
-				 *pending-packages*)))
+		(under-empty-pendings
+		 (push (find-package package-name)
+		       *pending-packages*)))
 
 	    (command-case (:run-group) (group)
-		  (under-empty-pendings
-		   (push group *pending-group-names*)))
+		(under-empty-pendings
+		 (push group *pending-group-names*)))
 
 	    (command-case (:run-test) (group test)
-		  (under-empty-pendings
-		   (let ((singleton (make-hash-table)))
-		     (setf 
-		      (gethash test singleton) t
-		      (gethash group
-			       *pending-test-names*) singleton))))
+		(under-empty-pendings
+		 (let ((singleton (make-hash-table)))
+		   (setf 
+		    (gethash test singleton) t
+		    (gethash group 
+			     *pending-test-names*) singleton))))
 
 	    (command-case (:retry) ()
 		(loop as group = (pop *erred-groups*)
