@@ -24,9 +24,10 @@
 ;;; symbol, checking equality, some sort of checking against a
 ;;; template in that way that so far exists only in my head, etc.
 ;;;
-;;; 5. Provide "open" methods (or macros, or whatever) to put fixtures
-;;; into the CL-USER namespace.
-
+;;; 5. A bit more feedback from :open.
+;;;
+;;; 6. There are still, sometimes, warnings from the use of fixture
+;;; names in other fixtures.
 
 
 ;;; Options for the behavior of the interactive system.
@@ -39,6 +40,12 @@
   "Set to t for summaries of runs of scheduled tests.")
 (defvar *scheduled-single-output* nil
   "Set to t for summaries of single test, group or package runs.")
+
+(defvar *open-used-fixtures* t
+  "If t, then (re-)opening a fixture will always (re-)open the fixtures
+it uses.")
+(defvar *reopen-fixtures* nil
+  "If nil, then will will never open the same fixture twice.")
 
 (defvar *break-on-wrong* nil
   "When set to t, directs the test runner to return to the command
@@ -132,6 +139,10 @@ current :run session of the NST runtime system.")
        *erred-cleanup*
        (> (hash-table-count *failed-tests*) 0)
        (> (hash-table-count *erred-tests*) 0)))
+
+;;; Remembering the fixtures which have been opened.
+(defvar *opened-fixtures* (make-hash-table)
+  "Maps fixture names to t to show that they have been opened.")
 
 ;;; This group of macros summarizes the control decisions for output
 ;;; during test execution.  It's convenient to write this logic
@@ -349,57 +360,128 @@ be tedious when we finish catching errors here."
 
 (defmacro def-fixtures (name &key bindings
 			     uses outer inner documentation)
-  (let* ((dynamic-decls
-	  (loop for binding in bindings
-		collect (list 'dynamic-extent (car binding))))
+  "Define a list of test fixtures which can then be assigned to test
+groups and referenced from those groups' tests."
+
+  (let* ((names-only			; A list of the names in the
+					; bindings by themselves,
+					; without the associated
+					; forms.
+	  (loop for binding in bindings collect (car binding)))
+	 
+	 (dynamic-decls			; We use several sets of
+					; declarations about the names
+					; we bind for this fixture ---
+					; this one in "dynamic", below
+					; is "special".
+	  (loop for name in names-only
+		collect (list 'dynamic-extent name)))
 	 
 	 (special-decls
-	  (loop for binding in bindings
-		collect (list 'special (car binding))))
-	 
-	 (ignorable-decls
-	  (loop for binding in bindings
-		collect (list 'ignorable (car binding))))
-	 
-	 (used-decls
+	  (loop for name in names-only collect (list 'special name)))
+
+	 (uses-names			; The names defined in the
+					; fixtures which this one
+					; uses.
 	  (loop for f in uses
-		append (gethash f +fixture-def-names+)))
+		append (loop for id in (gethash f +fixture-def-names+)
+			     collect id)))
 	 
-	 (doc-forms (if documentation 
-			(list (list ':documentation documentation))
-			nil))
+	 (used-specials			; We also need to make
+					; declarations about the names
+					; in other fixtures which this
+					; fixture uses.  Here we make
+					; "special" and below is
+					; "ignorable".
+	  (loop for id in uses-names collect (list 'special id)))
+
+	 (ignorable-used-specials
+	  (loop for id in uses-names collect (list 'ignorable id)))
 	 
+	 (doc-forms			; Inserter for documentation,
+					; if we have any.
+	  (if documentation 
+	      (list (list ':documentation documentation))
+	      nil))
+	 
+	 ;; Documentation string for the open method
+	 (open-method-doc
+	  (format nil "Generated method for the ~s fixture set." name))
+	 
+	 ;; Converting the bindings into defparameter bindings to open
+	 ;; the fixture into the interactive system.
+	 (open-bindings (loop for b in bindings
+			      collect (cons 'defparameter b)))
+	 
+	 ;; Macro joy.
 	 (ptg (gensym "ptg-"))
-	 (disc (gensym "disc-")))
+	 (disc (gensym "disc-"))
+	 (id (gensym "id-")))
+
     `(progn
+       ;; The names we bind must be decliamed special, or they will
+       ;; not be recognized.
        (declaim ,@special-decls)
+       
+       ;; Save this name with the other fixture names.  We check
+       ;; first, since we could be re-defining the name.
+       (unless (member ',name +fixtures+)
+	 (push ',name +fixtures+))
+       
+       ;; Save the names we define in this fixture.
+       (setf (gethash ',name +fixture-def-names+) ',names-only)
+       
+       ;; Create a class with the same name as the fixture.  Possibly,
+       ;; this class name should be generated, and retrieved by a
+       ;; function against the symbol ',name .
        (defclass ,name (fixture) () ,@doc-forms)
-       (defmethod get-fixture-bindings ((,disc (eql ',name)))
-	 (declare (ignorable ,disc))
-	 ',bindings)
-       (push ',name +fixtures+)
+       
+       ;; We put the fixture's bindings in effect with this :around
+       ;; method.  All groups which use this fixture, and all of these
+       ;; groups' tests, will be subclasses of the class above.  So
+       ;; this :around method will give those test bodies these
+       ;; bindings.
        (defmethod run :around ((,ptg ,name))
-	 (declare ,@outer ,@used-decls)
+	 (declare ,@outer ,@used-specials ,@ignorable-used-specials)
 	 (pre-intro-fixture-set ',name)
 	 (let* ,bindings
-	   (declare ,@dynamic-decls ,@inner ,@ignorable-decls)
+	   (declare ,@dynamic-decls ,@inner)
 	   (post-intro-fixture-set ',name)
 	   (call-next-method))
 	 (outro-fixture-set ',name))
-       (setf (gethash ',name +fixture-def-names+) ',special-decls)
+       
+       ;; For runtime system debugging.  Returns the literal list of
+       ;; name-value bindings assigned to this fixture.
+       (defmethod get-fixture-bindings ((,disc (eql ',name)))
+	 (declare (ignorable ,disc))
+	 ',bindings)
+
+       ;; For opening the fixture to the current namespace.
+       (defmethod open-fixture ((,ptg (eql ',name)))
+	 ,open-method-doc
+	 (unless (and (gethash ',name *opened-fixtures*)
+		      (not *reopen-fixtures*))
+	   (when *open-used-fixtures*
+	     (loop for ,id in ',uses do
+	       (open-fixture ,id)))
+	   ,@open-bindings)
+	 nil)
+       
        nil)))
 
 (defmacro def-capture/restore-fixtures (name variables
 					     &key documentation)
-  (let ((nil-bindings (loop for v in variables
-			    collect (list v nil))))
-    `(def-fixtures ,name ,nil-bindings
-       :documentation ,documentation)))
-
-
+  "Defines a simple fixtures which binds nil to each of the given
+variables.  Since these bindings are all made via dynamic let's in
+:around methods, the effect of this fixture will be to protect global
+variables from the test suite."
+  (let ((nil-bindings
+	 (loop for v in variables collect (list v nil))))
+    `(def-fixtures ,name ,nil-bindings :documentation ,documentation)))
 
 ;;; -----------------------------------------------------------------
 
+;;; Global variables which we use in the embedded macros.
 (defparameter *test-class-symbol* nil)
 (defparameter *current-group-name* nil)
 (defparameter *current-group-info* nil)
@@ -407,6 +489,9 @@ be tedious when we finish catching errors here."
 (defparameter *test-info-hash* nil)
 
 (defmacro def-test-group (group-name fixture-names &rest forms)
+  "Define a group of tests associated with certain fixtures,
+initialization and cleanup."
+
   (let ((doc-string nil) (tests nil)
 	(setup-form nil) (cleanup-form nil)
 
@@ -420,8 +505,6 @@ be tedious when we finish catching errors here."
 	(class-doc 
 	 (format nil "Class definition corresponding to test group ~s"
 		 group-name)))
-    (declare (dynamic-extent test-class)
-	     (dynamic-extent group-name))
     
     (loop for form in forms do
       (destructuring-bind (token &rest subforms) form
@@ -489,7 +572,9 @@ be tedious when we finish catching errors here."
 ;;;    (error "Called def-test from outside a def-test-group"))
   
   (let ((test-info (gensym "test-info-"))
-	(specials (gethash *current-group-name* +group-def-names+)))
+	(specials (loop for name in (gethash *current-group-name*
+					     +group-def-names+)
+			collect (list 'special name))))
 		    
     `(progn
        (let ((,test-info (make-instance *test-class-symbol*
@@ -759,7 +844,7 @@ CONTROLLING TEST SUITE EXECUTION BEHAVIOR
   :nst :break-on-error BOOL
 	Set whether any error in a test run should cause test
 	execution to pause.  Not yet implemented.
-  :nst :debug-on-error
+  :nst :debug-on-error BOOL
 	Set whether an error in a test run should drop us into debug
 	mode.  Not yet implemented.
 
@@ -782,6 +867,17 @@ ONE-OFF EXECUTION
 	Run all of the tests in a single group.
   :nst :run-test GROUP TEST
 	Run a single test.
+
+OPENING FIXTURES
+  :nst :open FIXTURE-NAME
+        Bring the names bound in the fixture into the runtime
+        environment.
+  :nst :open-used BOOL
+        Set whether opening a fixture should always also open the
+        fixtures it uses.  Default is t.
+  :nst :reopen BOOL
+        Set whether fixtures should be re-opened e.g. when required
+        multiple times by opening different fixtures that use them.
 
 Multiple NST commands can be combined at one prompt, e.g.
   :nst :p *package* :g aux::key-tests :run
@@ -881,6 +977,14 @@ fixing problems as they arise.
 	    (command-case-flag-setter (:summarize-single)
 				      *scheduled-single-output*
 				      "summaries for single runs")
+
+	    (command-case-flag-setter (:open-used)
+				      *open-used-fixtures*
+				      "opening used fixtures")
+
+	    (command-case-flag-setter (:reopen)
+				      *reopen-fixtures*
+				      "reopening fixtures")
 
 	    (command-case (:dump dump) () (nst-dump t))
 
@@ -988,7 +1092,10 @@ fixing problems as they arise.
 			      do
 			   (when flag
 			     (setf (gethash test new-test-set) t))))
-		      (remhash group test-hash)))))
+		      (remhash group test-hash))))
+
+	    (command-case (:open) (fixture-name)
+		(open-fixture fixture-name)))
 	  
 	  (format t "Unrecognized NST command ~s~%~
                      For more options, use :nst :help~%~%"
