@@ -24,8 +24,8 @@
 
 :als nst
 :pa nst
-(def-fixtures f1 ((c 3) (d 'asdfg)))
-(def-fixtures f2 ((d 4) (e 'asdfg)))
+(def-fixtures f1 :bindings ((c 3) (d 'asdfg)))
+(def-fixtures f2 :bindings ((d 4) (e 'asdfg)))
 (defclass cc (test f1 f2) ())
 (defparameter cco (make-instance 'cc))
 (defmethod core ((o cc))
@@ -33,12 +33,12 @@
   (format t "cc core~%") (format t "  ~s ~s ~s~%" c d e))
 (run cco)
 
-(def-fixtures f1 ((c 4) (d 'asdfg)))
+(def-fixtures f1 :bindings ((c 4) (d 'asdfg)))
 
 :als nst
 :pa nst
-(def-fixtures f1 ((c 3) (d 'asdfg)))
-(def-fixtures f2 ((d 4) (e 'asdfg)))
+(def-fixtures f1 :bindings ((c 3) (d 'asdfg)))
+(def-fixtures f2 :uses (f1) :bindings ((d 4) (e 'asdfg) (f c)))
 (def-test-group g1 (f1)
   (def-test t1 :form (eql 1 1))
   (def-test t2 :form (eql 1 2))
@@ -63,7 +63,7 @@
 
 ------------------------------------------------------------
 
-;;; (def-fixtures f1 () ((c 3) (d 'asdfg)) ())
+;;; (def-fixtures f1 :bindings () ((c 3) (d 'asdfg)) ())
 ;;; (defun out-c () (declare (special c)) (format t "~s~%" c))
 ;;; (fwrap 'out-c 'wrapping 'f1)
 ;;; (out-c)
@@ -72,3 +72,15 @@
 
 ;;; (def-test-group g1 (f1) (:setup (format t "yyy~%")))
 
+(defmacro zz (za zb)
+  (let ((z1 (gensym "z1-"))
+	)
+    `(progn
+       (macrolet ((yy (ya yb)
+		    (let ((y1 (gensym "y1-")))
+		      `(let ((,y1 (+ 2 ya)))
+			 (format t
+				 "za ~d~%zb ~d~%ya ~d~%yb ~d~%y1 ~d~%"
+				 ,,za ,,zb ,ya ,yb ,y1)))))
+	 (yy 10 100)
+	 (yy 20 200)))))
