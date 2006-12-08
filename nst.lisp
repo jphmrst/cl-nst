@@ -1,36 +1,43 @@
 ;;; File nst.lisp
 ;;;
-;;; NST by John Maraist, based on RRT by Robert Goldman
+;;; NST by John Maraist, based on RRT by Robert Goldman.
 ;;;
-;;; NST is Copyright (c) 2006 Smart Information Flow Technologies
+;;; NST is Copyright (c) 2006 Smart Information Flow Technologies.
 ;;; RRT is Copyright (c) 2005 Robert Goldman, released under the LGPL,
 ;;; and the lisp-specific preamble to that license.
 (in-package :nst)
 
-;;; Known issues
+;;; KNOWN ISSUES
 ;;;
-;;; 1. Let there be comments.
-;;;
-;;; 2. None of the :break-on- or :debug-on- flags work yet (unless you
+;;; 1. None of the :break-on- or :debug-on- flags work yet (unless you
 ;;; set them all to be false).  So this will require thinking about
 ;;; what these things return, getting it right from the test runner to
 ;;; the group runner and so forth, doing something with the 'err
 ;;; symbols, and all that good stuff.
 ;;;
-;;; 3. The :blurb command doesn't work yet.  This will require some
+;;; 2. The :blurb command doesn't work yet.  This will require some
 ;;; additional bookkeeping to save the thrown errors.
 ;;;
-;;; 4. Write specialized versions of def-test for checking for a
+;;; 3. There are still, sometimes, warnings from the use of fixture
+;;; names in other fixtures.
+;;;
+;;; 4. We are not yet catching errors arising from cleanup.
+;;;
+;;;
+;;; WISHLIST
+;;;
+;;; 1. There should be more comments on the internals of stuff.
+;;;
+;;; 2 A bit more feedback from :open.
+;;;
+;;; 3. Write specialized versions of def-test for checking for a
 ;;; symbol, checking equality, some sort of checking against a
 ;;; template in that way that so far exists only in my head, etc.
 ;;;
-;;; 5. A bit more feedback from :open.
-;;;
-;;; 6. There are still, sometimes, warnings from the use of fixture
-;;; names in other fixtures.
+;;; 4. Maybe run-nst-commands should be turned in to a macro.
 
 
-;;; Options for the behavior of the interactive system.
+;;; Options for output in the interactive system.
 ;;;
 (defvar *debug-output* nil
   "Set to t for extensive debugging output")
@@ -40,13 +47,10 @@
   "Set to t for summaries of runs of scheduled tests.")
 (defvar *scheduled-single-output* nil
   "Set to t for summaries of single test, group or package runs.")
-
-(defvar *open-used-fixtures* t
-  "If t, then (re-)opening a fixture will always (re-)open the fixtures
-it uses.")
-(defvar *reopen-fixtures* nil
-  "If nil, then will will never open the same fixture twice.")
-
+
+;;; Options for breaking at failed and erroneous tests in the
+;;; interactive system.
+;;;
 (defvar *break-on-wrong* nil
   "When set to t, directs the test runner to return to the command
 line whenever a test does not succeed.")
@@ -58,7 +62,15 @@ a boolean value.")
   "When set to t, directs the test runner to return in debugging mode
 whenever a test raises an error condition, rather than returning a
 boolean value.")
-
+
+;;; Options for opening fictures into the interactive system.
+;;;
+(defvar *open-used-fixtures* t
+  "If t, then (re-)opening a fixture will always (re-)open the fixtures
+it uses.")
+(defvar *reopen-fixtures* nil
+  "If nil, then will will never open the same fixture twice.")
+
 ;;; The fixtures, groups and tests that have been defined.
 ;;;
 (defvar +fixtures+ nil
@@ -72,7 +84,7 @@ boolean value.")
 (defvar +groups-by-package+ (make-hash-table)
   "Hash table from packages to sets of groups, that is, to
 other hash tables each mapping group records to t or nil.")
-
+
 ;;; The packages, groups and tests that have been marked as
 ;;; interesting for quick execution in the runtime system.
 ;;;
@@ -143,6 +155,9 @@ current :run session of the NST runtime system.")
 ;;; Remembering the fixtures which have been opened.
 (defvar *opened-fixtures* (make-hash-table)
   "Maps fixture names to t to show that they have been opened.")
+(defvar *opening-at-top* t
+  "This tag will be dynamically set to nil when recurring over opening
+fixtures; this should be used for output selection only.")
 
 ;;; This group of macros summarizes the control decisions for output
 ;;; during test execution.  It's convenient to write this logic
@@ -239,6 +254,8 @@ dispatch in groups and tests which use these fixtures."))
   (:documentation
    "Return the declaration form for the named fixture.  For user echo
 of fixture forms and other debugging."))
+
+;;; Formatting the standard classes.
 
 (defgeneric nst-format (stream obj c s)
   (:documentation
@@ -263,32 +280,7 @@ of fixture forms and other debugging."))
 		     documentation
 		     (caddr setup) (caddr cleanup)))))
 
-(defgeneric core (test)
-  (:documentation
-   "Run a test, a group of tests, or all the tests associated with a
-package.  The primary methods for this generic is defined for each test
-in its def-test with the :form argument to that macro.  We provide an
-:around method for processing the result of that primary presently.")
-
-  (:method :around (test)
-   "The primary core method simply evaluates the form given in the test
-definition, which could return an arbitrary value, or raise an error.
-This wrapper intercepts errors and standardizes the return value to
-one of t, nil or 'err.  Here we also make the calls to our hook macros
-for output before and after indiviual tests."
-	   
-   (with-slots (test-name) test
-     (intro-test-run test-name)
-     (block single-test
-       (handler-bind ((error
-		       #'(lambda (x)
-			   (outro-test-error test-name x)
-			   (return-from single-test 'err))))
-	 (let ((result (call-next-method test)))
-	   (when result
-	     (setf *passed-test-count* (+ 1 *passed-test-count*)))
-	   (outro-test-run test-name result)
-	   (return-from single-test (if result t nil))))))))
+;;; Macros we'll use in the methods for running tests.
 
 (defmacro do-setup (group group-name group-setup-form
 			  &rest other-forms)
@@ -326,8 +318,35 @@ be tedious when we finish catching errors here."
      (eval ,group-cleanup-form)
      (outro-group-cleanup ,group-name)
      ,@other-forms))
-  
 
+;;; Generic functions relating to test and group execution.
+
+(defgeneric core (test)
+  (:documentation
+   "Run a test, a group of tests, or all the tests associated with a
+package.  The primary methods for this generic is defined for each test
+in its def-test with the :form argument to that macro.  We provide an
+:around method for processing the result of that primary presently.")
+
+  (:method :around (test)
+   "The primary core method simply evaluates the form given in the test
+definition, which could return an arbitrary value, or raise an error.
+This wrapper intercepts errors and standardizes the return value to
+one of t, nil or 'err.  Here we also make the calls to our hook macros
+for output before and after indiviual tests."
+	   
+   (with-slots (test-name) test
+     (intro-test-run test-name)
+     (block single-test
+       (handler-bind ((error #'(lambda (x)
+				 (outro-test-error test-name x)
+				 (return-from single-test 'err))))
+	 (let ((result (call-next-method test)))
+	   (when result
+	     (setf *passed-test-count* (+ 1 *passed-test-count*)))
+	   (outro-test-run test-name result)
+	   (return-from single-test (if result t nil))))))))
+
 (defgeneric run (ptg)
   (:documentation "Run a test, or a group of tests.")
 
@@ -335,10 +354,7 @@ be tedious when we finish catching errors here."
      "Run a single test, bracketed by its group's setup and cleanup."
      (with-slots (test-name group) ts
        (with-slots (group-name setup cleanup) group
-	
-	 (do-setup
-	     group group-name setup
-	 
+	 (do-setup group group-name setup
 	     (let ((test-result nil))
 	       (declare (ignore test-result))
 	       (unwind-protect (setf test-result (core ts))
@@ -348,16 +364,15 @@ be tedious when we finish catching errors here."
      "Run the group's tests, bracketed by its setup and cleanup."
      (block group-exec
        (with-slots (group-name setup cleanup test-names tests-hash) g
-	 (do-setup
-	     g group-name setup
-	       
+	 (do-setup g group-name setup
 	     (unwind-protect
 		 (block group-tests
 		   (loop for test-name across test-names do
 		     (core (gethash test-name tests-hash))))
-
 	       (do-cleanup group group-name cleanup)))))))
 
+;;; Exported macro which sets up test fixtures.
+
 (defmacro def-fixtures (name &key bindings
 			     uses outer inner documentation)
   "Define a list of test fixtures which can then be assigned to test
@@ -468,6 +483,8 @@ groups and referenced from those groups' tests."
 	 nil)
        
        nil)))
+
+;;; A convenience macro for specialized fixture definitions.
 
 (defmacro def-capture/restore-fixtures (name variables
 					     &key documentation)
@@ -478,8 +495,8 @@ variables from the test suite."
   (let ((nil-bindings
 	 (loop for v in variables collect (list v nil))))
     `(def-fixtures ,name ,nil-bindings :documentation ,documentation)))
-
-;;; -----------------------------------------------------------------
+
+;;; Exported macro for defining a group of tests.
 
 ;;; Global variables which we use in the embedded macros.
 (defparameter *test-class-symbol* nil)
@@ -567,6 +584,8 @@ initialization and cleanup."
 			       'tests-hash) *test-info-hash*)))
 	 nil))))
 
+;;; Exported macro for defining a test.
+
 (defmacro def-test (test-name &key form)
 ;;;  (unless *current-group-name*
 ;;;    (error "Called def-test from outside a def-test-group"))
@@ -590,6 +609,10 @@ initialization and cleanup."
 			      (ts (eql ',test-name)))
 	   (run ,test-info))))))
 
+;;; This next section of code sets up how the interactive system
+;;; manages nominating "interesting" tests; manages running,
+;;; examining, and re-running the interesting tests; etc.
+
 (defmacro under-empty-pendings (&rest forms)
   `(let ((*pending-packages* ())
 	 (*pending-group-names* ())
@@ -711,6 +734,9 @@ initialization and cleanup."
 	     (length *erred-groups*)
 	     (length *erred-cleanup*))))
 
+;;; Output functions for lists and other collections of testing
+;;; artifacts for use in the runtime system.
+
 (defun format-binding (stream tup c s)
   (declare (ignorable c) (ignorable s))
   (format stream "~s <- ~s" (car tup) (cadr tup)))
@@ -733,8 +759,6 @@ initialization and cleanup."
 (defun format-group-test-list (stream item s c)
   (declare (ignorable s) (ignorable c))
   (format stream "~s.~s" (car item) (cadr item)))
-
-
 
 
 
@@ -811,6 +835,8 @@ initialization and cleanup."
 	    +group-test-name-formatter+
 	    (group-test-names-from-hashes *erred-tests*))))
 
+;;; Top-level user help message.
+
 (defconstant +nst-top-help+ "NST test framework control
 
 OUTPUT CONTROL
@@ -888,6 +914,10 @@ the state of the last run.  Its choice expects that you would be
 fixing problems as they arise.
 ")
 
+;;; Function version of the command-line interpreter.  The main logic
+;;; is here; further below we define platform-specific command-line
+;;; interfaces.
+
 (defun run-nst-commands (&rest args)
   "Top-level command interpreter for the NST tester"
   (block runner
@@ -1095,11 +1125,14 @@ fixing problems as they arise.
 		      (remhash group test-hash))))
 
 	    (command-case (:open) (fixture-name)
-		(open-fixture fixture-name)))
+		(open-fixture fixture-name)
+		(format t "Opened fixture ~s.~%" fixture-name)))
 	  
 	  (format t "Unrecognized NST command ~s~%~
                      For more options, use :nst :help~%~%"
 		  head))))))
+
+;;; Platform-specific command-line interpreter interfaces.
 
 #+allegro
 (top-level:alias "nst" (&rest args)
