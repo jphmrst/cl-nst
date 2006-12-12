@@ -1,86 +1,43 @@
+;;; File test.lisp
+;;;
+;;; NST by John Maraist, based on RRT by Robert Goldman.
+;;;
+;;; NST is Copyright (c) 2006 Smart Information Flow Technologies.
+;;; RRT is Copyright (c) 2005 Robert Goldman, released under the LGPL,
+;;; and the lisp-specific preamble to that license.
+(in-package :nst)
 
-(defgeneric wrap (o)
-  (:method (o) (format t "core~%")))
-
-(defclass c1 () ())
-(defmethod wrap :around ((o c1))
-  (format t "c1 wrap~%")
-  (call-next-method)
-  (format t "c1 unwrap~%"))
-
-(defclass c2 () ())
-(defmethod wrap :around ((o c2))
-  (format t "c2 wrap~%")
-  (call-next-method)
-  (format t "c2 unwrap~%"))
-
-(defclass cc (c1 c2) ())
-(defparameter cco (make-instance 'cc))
-
-(defclass cc (c1 c2) ())
-(defparameter cco (make-instance 'cc))
-
-------------------------------------------------------------
-
-:als nst
-:pa nst
 (def-fixtures f1 :bindings ((c 3) (d 'asdfg)))
-(def-fixtures f2 :bindings ((d 4) (e 'asdfg)))
-(defclass cc (test f1 f2) ())
-(defparameter cco (make-instance 'cc))
-(defmethod core ((o cc))
-  (declare (special c) (special d) (special e))
-  (format t "cc core~%") (format t "  ~s ~s ~s~%" c d e))
-(run cco)
-
-(def-fixtures f1 :bindings ((c 4) (d 'asdfg)))
-
-:als nst
-:pa nst
-(def-fixtures f1 :bindings ((c 3) (d 'asdfg)))
-(def-fixtures f2 :uses (f1) :bindings ((d 4) (e 'asdfg) (f c)))
+(defmacro result-from-macro () nil)
 (def-test-group g1 (f1)
   (def-test t1 :form (eql 1 1))
   (def-test t2 :form (eql 1 2))
   (def-test t3 :form (error "I give an error"))
   (def-test t4 :form (eql c 4))
-  (def-test t5 :form (eq d 'asdfg)))
-(run-group 'g1)
+  (def-test t5 :form (eq d 'asdfg))
+  (def-test t6 :form (result-from-macro) :defer-compile t))
+(def-fixtures f2 :uses (f1) :bindings ((d 4) (e 'asdfg) (f c)))
+(def-test-group g2 (f1 f2)
+  (def-check sym1 symbol (car '(a b c)) a)
+  (def-check not1 (not symbol) 'a 'b)
+  (def-check sym2 (symbol) (car '(a b c)) a)
+  (def-check eq1 eq (cadr '(a b c)) 'b)
+  (def-check eql1 eql (cadr '(1 2 3)) 2)
+  (def-check err1 err (error "this should be caught"))
+  (def-check each1 (each symbol) '(a a a a a) a)
+  (def-check each2 (each predicate) '(1 2 3 4 5) #'numberp)
+  (def-check seq1 (seq (predicate #'symbolp)
+		       (eql 1)) '(a 1))
+  (def-check permute1 (permute each eq) '(a a) 'a)
+  (def-check permute2 (permute seq
+			       (predicate #'symbolp)
+			       (predicate #'numberp))
+    '(1 a))
+  (def-check permute3 (not permute seq
+			   (predicate #'listp)
+			   (predicate #'symbolp)
+			   (predicate #'numberp))
+    '(1 2 3)))
 
-;;;(def-test-group g1 (f1)
-;;;  (def-test t1 :form (eql 1 1))
-;;;  (def-test t3 :form (eql 2 2))
-;;;  (def-test t7 :form (eq d 'asdfg))
-;;;  (def-test t8 :form (eql c 4)))
-;;;
-;;;:nst :dump
-;;;
-;;;:nst :run-test g1 t1
-;;;
-;;;:nst :run-group g1
-;;;
-;;;:nst help
+;;(defmacro result-from-macro () t)
 
-------------------------------------------------------------
-
-;;; (def-fixtures f1 :bindings () ((c 3) (d 'asdfg)) ())
-;;; (defun out-c () (declare (special c)) (format t "~s~%" c))
-;;; (fwrap 'out-c 'wrapping 'f1)
-;;; (out-c)
-;;; (defun out-d () (declare (special d)) (format t "~s~%" d))
-;;; (fwrap 'out-d 'wrapping 'f1)
-
-;;; (def-test-group g1 (f1) (:setup (format t "yyy~%")))
-
-(defmacro zz (za zb)
-  (let ((z1 (gensym "z1-"))
-	)
-    `(progn
-       (macrolet ((yy (ya yb)
-		    (let ((y1 (gensym "y1-")))
-		      `(let ((,y1 (+ 2 ya)))
-			 (format t
-				 "za ~d~%zb ~d~%ya ~d~%yb ~d~%y1 ~d~%"
-				 ,,za ,,zb ,ya ,yb ,y1)))))
-	 (yy 10 100)
-	 (yy 20 200)))))
