@@ -880,17 +880,20 @@ check given in the further elements of the check specification."
 	   (let ((first-form (gensym "first-form"))
 		 (other-forms (gensym "other-forms")))
 	     (setf forms
-		   `(destructuring-bind
-			  (,first-form &rest ,last-var)
-			,other-forms
-		      ,@(if on-last
-			    `((declare (ignorable ,last-var))))
-		      (unless 
-			  ,(if target-supplied-p
-			       (check-form method first-form target)
-			       (check-form method first-form))
+		   `(progn
+		      (unless ,other-forms
 			(return-from ,l nil))
-		      ,forms)
+		      (destructuring-bind
+			    (,first-form &rest ,last-var)
+			  ,other-forms
+			,@(if on-last
+			      `((declare (ignorable ,last-var))))
+			(unless 
+			    ,(if target-supplied-p
+				 (check-form method first-form target)
+				 (check-form method first-form))
+			  (return-from ,l nil))
+			,forms))
 		   
 		   last-var other-forms
 		   on-last nil))))
@@ -913,6 +916,44 @@ check."
 			   (check-form details x ideal)
 			   (check-form details x))
 		  (return-from permute-yeah t))))))))
+  
+  (:method ((cmd (eql 'slots)) details form
+	    &optional (ideal nil ideal-supplied-p))
+     "Apply checks to the slots of a class."
+     (unless (and (null ideal-supplied-p) (null ideal))
+       (error "def-check form ~s does not take targets~%" cmd))
+     (let* ((slots-check (gensym "slots-check-"))
+	   
+	    (slot-checks
+	     (loop for tuple in details
+		   for slot-name = (car tuple)
+		   and method = (cadr tuple)
+		   and target = (caddr tuple)
+		   and target-supplied-p = (> (length tuple) 2)
+		   collect
+		   `(unless
+			,(if target-supplied-p
+			     (check-form method slot-name target)
+			     (check-form method slot-name))
+		      (return-from ,slots-check nil))))
+	    
+	    (slot-names
+	     (loop for tuple in details collect (car tuple))))
+       
+       `(block ,slots-check
+	  (with-slots ,slot-names ,form
+	    ,@slot-checks)
+	  t)))
+
+  (:method ((cmd (eql 'apply)) details form
+	    &optional (ideal nil ideal-supplied-p))
+     "Apply a transformation to the value of a form, and check the
+resulting value"
+     (destructuring-bind (transform &rest other-methods) details
+       (let ((application `(funcall ,transform ,form)))
+	 (if ideal-supplied-p
+	     (check-form other-methods application ideal)
+	     (check-form other-methods application)))))
   
   (:method (cmd details form &optional ideal)
      "Ill-specified checks are compile-time errors"

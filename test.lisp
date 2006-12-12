@@ -7,6 +7,10 @@
 ;;; and the lisp-specific preamble to that license.
 (in-package :nst)
 
+(defclass classcheck ()
+     ((s1 :initarg :s1 :reader get-s1)
+      (s2 :initarg :s2) (s3 :initarg :s3)))
+
 (def-fixtures f1 :bindings ((c 3) (d 'asdfg)))
 (defmacro result-from-macro () nil)
 (def-test-group g1 (f1)
@@ -37,7 +41,15 @@
 			   (predicate #'listp)
 			   (predicate #'symbolp)
 			   (predicate #'numberp))
-    '(1 2 3)))
+    '(1 2 3))
+  (def-check slot1 (slots (s1 eql 10)
+			  (s2 symbol zz)
+			  (s3 (seq (symbol q) (symbol w)
+				   (symbol e) (symbol r))))
+    (make-instance 'classcheck :s1 10 :s2 'zz :s3 '(q w e r)))
+  (def-check apply1 (apply #'get-s1 eql)
+    (make-instance 'classcheck :s1 10 :s2 'zz :s3 '(q w e r))
+    10))
 
 ;;(defmacro result-from-macro () t)
 
