@@ -253,6 +253,9 @@ dispatch in groups and tests which use these fixtures."))
 		     :documentation
 		     "Documentation associated with this test"))
   (:documentation "Information associated with one single test."))
+
+;;; Class and generic function definitions for the core of test
+;;; execution.
 
 (defclass group (nst-class)
      ((package :initarg :package
@@ -401,6 +404,8 @@ for output before and after indiviual tests."
 	       (add-test *failed-tests* test))
 	   (outro-test-run test-name result)
 	   (return-from single-test (if result t nil))))))))
+
+;;; Generic functions relating to test and group execution.
 
 (defgeneric run (ptg)
   (:documentation "Run a test, or a group of tests.  Methods return
@@ -793,7 +798,7 @@ style of test provided by RT/RRT."
        (warn "def-check form ~s should be given a target; nil assumed"
 	     cmd))
      `(eq ,form ',ideal))
-  
+  
   (:method ((cmd (eql 'eq)) details form
 	    &optional (ideal nil ideal-supplied-p))
      "Check that the form is eq to an ideal (which may itself be
@@ -842,7 +847,7 @@ form to throw an error, otherwise the test fails."
 				    (return-from ,x t))))
 	    ,form)
 	  nil)))
-  
+ 
   (:method ((cmd (eql 'each)) details form
 	    &optional (ideal nil ideal-supplied-p))
      "The each specifier tells the tester to expect that the form will 
@@ -892,7 +897,7 @@ check given in the further elements of the check specification."
        `(block ,l
 	  (let ((,last-var ,form))
 	    ,forms))))
-  
+  
   (:method ((cmd (eql 'permute)) details form
 	    &optional (ideal nil ideal-supplied-p))
      "The permute specifier expects that the form will evaluate to a
@@ -1060,7 +1065,7 @@ check."
 		   summing (hash-table-count ,hash))
 	     (length *erred-groups*)
 	     (length *erred-cleanup*))))
-
+
 (defmacro give-blurb (group-name test-name)
   (let ((x (gensym "x-"))
 	(p (gensym "p-"))
@@ -1130,8 +1135,6 @@ check."
 (defun format-group-test-list (stream item s c)
   (declare (ignorable s) (ignorable c))
   (format stream "~s.~s" (car item) (cadr item)))
-
-
 
 
 (defun nst-dump (stream)
