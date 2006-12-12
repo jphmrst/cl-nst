@@ -984,8 +984,15 @@ check."
 				 (and *break-on-wrong*
 				      (eq ,result nil)))
 			 (return-from pending-loop))))))
+
+	     ;; It's easiest to put this all this mess in a loop, and
+	     ;; cycle until it's all done.  Sloppy maybe, but
+	     ;; effective.
 	     (loop while ,more do
 	       (setf ,more nil)
+	       
+	       ;; Run individual pending tests (and tests left over
+	       ;; form groups after a break, etc.).
 	       (loop for ,group-name
 		       being the hash-keys of *pending-test-names*
 		     using (hash-value ,test-set)
@@ -1006,6 +1013,8 @@ check."
 				    ,test-name ,group-name))
 			   (check-break ,test-info)))))
 		  (remhash ,group-name *pending-test-names*))
+
+	       ;; Run pending groups.
 	       (loop as ,group-name = (pop *pending-group-names*)
 		     while ,group-name
 		     do
@@ -1014,6 +1023,9 @@ check."
 			(check-break ,group-info)
 			(format t "WARNING: No such group ~s~%"
 				,group-name))))
+
+	       ;; We don't actually run pending packages, we just make
+	       ;; their groups pending.
 	       (loop as ,package-name = (pop *pending-packages*)
 		     while ,package-name
 		     do
@@ -1035,11 +1047,11 @@ check."
   (let ((hash (gensym "hash-")))
     `(format t "------------------------------------~%~
                 SUMMARY OF TEST RUN~%~
-                Tests passed: ~d~%~
-                Tests failed: ~d~%~
-                Tests raising error: ~d~%~
-                Groups raising error in setup: ~d~%~
-                Groups raising error in cleanup: ~d~%~
+                ~[No tests passed~:;~:*Tests passed: ~d~]~%~
+                ~[No tests failed~:;~:*Tests failed: ~d~]~%~
+                ~[~:;~:*Tests raising error: ~d~%~]~
+                ~[~:;~:*Groups raising error in setup: ~d~%~]~
+                ~[~:;~:*Groups raising error in cleanup: ~d~%~]~
                 ------------------------------------~%"
 	     *passed-test-count*
 	     (loop for ,hash being the hash-values of *failed-tests*
@@ -1318,7 +1330,7 @@ fixing problems as they arise.
 		 `(cond 
 		    ((null args)
 		     (format t "Command ~s requires ~d~:* ~
-                               argument~[s~;~;s~] but given ~d.~%"
+                               argument~[s~;~:;s~] but given ~d.~%"
 			     head ,want ,have)
 		     (return))
 		    (t (pop args))))
