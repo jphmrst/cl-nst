@@ -14,6 +14,7 @@
 (asdf:defsystem :nst
     :serial t
     :components ((:file "package")
+		 (:file "permuter")
 		 (:file "nst")))
 
 ;;;(asdf:defsystem :nst-test

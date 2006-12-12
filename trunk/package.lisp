@@ -8,5 +8,8 @@
 (in-package :common-lisp-user)
 
 (defpackage :nst (:use :common-lisp)
-	    (:export #:def-fixtures #:def-test-group #:def-test
-		     #:def-capture/restore-fixtures))
+	    (:export #:def-fixtures
+		     #:def-capture/restore-fixtures
+		     #:def-test-group
+		     #:def-test
+		     #:def-check))
