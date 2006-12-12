@@ -39,7 +39,7 @@
   "Set to t for summaries of runs of scheduled tests.")
 (defvar *scheduled-single-output* nil
   "Set to t for summaries of single test, group or package runs.")
-(defvar *defer-test-compile* nil
+(defvar *defer-test-compile* t
   "Set to t to defer compilation of test forms until runtime.")
 
 ;;; Options for breaking at failed and erroneous tests in the
