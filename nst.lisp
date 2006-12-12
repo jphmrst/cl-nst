@@ -1524,5 +1524,6 @@ fixing problems as they arise.
 
 #+allegro
 (top-level:alias "nst" (&rest args)
+  #.+nst-top-help+
   (apply #'run-nst-commands args))
 
