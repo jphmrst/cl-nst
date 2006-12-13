@@ -983,6 +983,30 @@ resulting value"
 	     (check-form other-methods application ideal)
 	     (check-form other-methods application)))))
   
+  (:method ((cmd (eql 'no-fail)) details form
+	    &optional (ideal nil ideal-supplied-p))
+     "This test merely checks that evaluating a form causes no error"
+     (unless (and (null ideal-supplied-p) (null ideal))
+       (error "def-check form ~s does not take targets~%" cmd))
+     (unless (null details)
+       (error "def-check form ~s does not take further method forms~%"
+	      cmd))
+     (let ((dummy (gensym)))
+       `(let ((,dummy ,form))
+	  (declare (ignorable ,dummy))
+	  t)))
+  
+  (:method ((cmd (eql 'any)) details form
+	    &optional (ideal nil ideal-supplied-p))
+     "This test always passes"
+     (declare (ignorable form))
+     (unless (and (null ideal-supplied-p) (null ideal))
+       (error "def-check form ~s does not take targets~%" cmd))
+     (unless (null details)
+       (error "def-check form ~s does not take further method forms~%"
+	      cmd))
+     t)
+  
   (:method (cmd details form &optional ideal)
      "Ill-specified checks are compile-time errors"
      (declare (ignorable form) (ignorable ideal) (ignorable details))
