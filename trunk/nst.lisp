@@ -21,13 +21,13 @@
 ;;;
 ;;; WISHLIST
 ;;;
-;;; 1. There should be more comments on the internals of stuff.
-;;;
-;;; 2. Provide additional functionality to def-check --- other checks
+;;; 1. Provide additional functionality to def-check --- other checks
 ;;; on lists, checks on other data structures.
 ;;;
+;;; 2. Provide a def-check-method to define additional keywords to the
+;;; def-check method form.
+;;;
 ;;; 3. Maybe run-nst-commands should be turned in to a macro.
-
 
 ;;; Options for output in the interactive system.
 ;;;
@@ -900,6 +900,34 @@ check given in the further elements of the check specification."
        `(block ,l
 	  (let ((,last-var ,form))
 	    ,forms))))
+  
+  (:method ((cmd (eql 'across)) details form
+	    &optional (ideal nil ideal-supplied-p))
+     "The seq specifier takes N further specifier elements of the form\
+ (SPECIFIER) or (SPECIFIER IDEAL), and expects the form to evaluate to\
+ a vector of N elements which match the respective specifier in the\
+ further elements."
+     (unless (and (null ideal-supplied-p) (null ideal))
+       (error "def-check form ~s does not take targets~%" cmd))
+     (let* ((result (gensym "result"))
+	    (l (gensym "l")))
+       `(block ,l
+	  (let ((,result ,form))
+	    (progn 
+	      (unless (eql (length ,result) ,(length details))
+		(return-from ,l nil))
+	      ,@(loop for d in details and idx from 0
+		      collect
+		      (destructuring-bind
+			    (m &optional (targ nil targ-s-p)) d
+			(let* ((ref `(aref ,result ,idx))
+			       (item-form (if targ-s-p
+					      (check-form m ref targ)
+					      (check-form m ref))))
+			  `(progn
+			     (unless ,item-form
+			       (return-from ,l nil))))))))
+	  t)))
   
   (:method ((cmd (eql 'permute)) details form
 	    &optional (ideal nil ideal-supplied-p))

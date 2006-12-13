@@ -32,6 +32,8 @@
   (def-check each2 (each predicate) '(1 2 3 4 5) #'numberp)
   (def-check seq1 (seq (predicate #'symbolp)
 		       (eql 1)) '(a 1))
+  (def-check across1 (across (predicate #'symbolp) (eql 1))
+    (vector 'a 1))
   (def-check permute1 (permute each eq) '(a a) 'a)
   (def-check permute2 (permute seq
 			       (predicate #'symbolp)
