@@ -1,4 +1,11 @@
 
+:als nst
+:cd /home/jmaraist/Lib/Lisp/nst/
+:pa nst
+:cl test
+
+------------------------------------------------------------
+
 (defgeneric wrap (o)
   (:method (o) (format t "core~%")))
 

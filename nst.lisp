@@ -16,10 +16,10 @@
 ;;; names in other fixtures.
 ;;;
 ;;; 3. We are not yet catching errors arising from cleanup, and
-;;; there's not great feedback form erring setups.
+;;; there's not great feedback from erring setups.
 ;;;
 ;;;
-;;; WISHLIST
+;;; PLANNED FEATURES
 ;;;
 ;;; 1. Provide additional functionality to def-check --- other checks
 ;;; on lists, checks on other data structures.
@@ -28,6 +28,11 @@
 ;;; def-check method form.
 ;;;
 ;;; 3. Maybe run-nst-commands should be turned in to a macro.
+;;;
+;;; 4. The def-check macro should be able to provide better feedback
+;;; when failing (the kind of failing that doesn't throw an error),
+;;; not just at the time, but also when :blurb'ing tests
+;;; after-the-fact.
 
 ;;; Options for output in the interactive system.
 ;;;
@@ -792,25 +797,58 @@ more complicated methods.")
 	    &optional (ideal nil ideal-supplied-p))
      "Check that the form evaluates to the given atom.  This is the
 style of test provided by RT/RRT."
-     (unless (null details)
-       (error "def-check form ~s should not have arguments~%" cmd))
-     (unless ideal-supplied-p
-       (warn "def-check form ~s should be given a target; nil assumed"
+     (unless (and (null ideal) (null ideal-supplied-p))
+       (warn
+	"def-check form ~s should not have a secondary target form~%"
+	cmd))
+     (unless details
+       (error "def-check form ~s requires target in method form"
 	     cmd))
-     `(eq ,form ',ideal))
-  
+     (destructuring-bind (target &rest extra-forms) details
+       (unless (null extra-forms)
+	 (warn "Extra form argument past target to ~s ignored: ~s"
+	       cmd extra-forms))
+       `(eq ,form ',target)))
+ 
   (:method ((cmd (eql 'eq)) details form
 	    &optional (ideal nil ideal-supplied-p))
      "Check that the form is eq to an ideal (which may itself be
 another form)."
+     (unless details
+       (error "def-check form ~s requires a further method form" cmd))
+     (unless (and (null ideal) (null ideal-supplied-p))
+       (warn "def-check form ~s should not have a target form~%" cmd))
+     (destructuring-bind (target &rest extra-forms) details
+       (unless (null extra-forms)
+	 (warn "Extra form argument past target to ~s ignored: ~s"
+	       cmd extra-forms))
+       `(eq ,form ,target)))
+  
+  (:method ((cmd (eql 'eq2)) details form
+	    &optional (ideal nil ideal-supplied-p))
+     "Check that two forms are eq."
      (unless (null details)
        (error "def-check form ~s should not have arguments~%" cmd))
      (unless ideal-supplied-p
        (warn "def-check form ~s should be given a target; nil assumed"
 	     cmd))
      `(eq ,form ,ideal))
-  
+   
   (:method ((cmd (eql 'eql)) details form
+	    &optional (ideal nil ideal-supplied-p))
+     "Check that the form is eq to an ideal (which may itself be
+another form)."
+     (unless details
+       (error "def-check form ~s requires a further method form" cmd))
+     (unless (and (null ideal) (null ideal-supplied-p))
+       (warn "def-check form ~s should not have a target form~%" cmd))
+     (destructuring-bind (target &rest extra-forms) details
+       (unless (null extra-forms)
+	 (warn "Extra form argument past target to ~s ignored: ~s"
+	       cmd extra-forms))
+       `(eql ,form ,target)))
+  
+  (:method ((cmd (eql 'eql2)) details form
 	    &optional (ideal nil ideal-supplied-p))
      "Check that the form is eql to an ideal (which may itself be
 another form)."
@@ -822,15 +860,20 @@ another form)."
      `(eql ,form ,ideal))
   
   (:method ((cmd (eql 'predicate)) details form
-	    &optional (predicate nil predicate-supplied-p))
+	    &optional (ideal nil ideal-supplied-p))
      "Here the ideal argument is taken as a function value which we 
 apply to the value of the form."
-     (unless (null details)
-       (error "def-check form ~s should not have arguments~%" cmd))
-     (unless predicate-supplied-p
-       (warn "def-check form ~s must be given a predicate"
+     (unless (and (null ideal) (null ideal-supplied-p))
+       (warn "def-check form ~s should not have a secondary form~%"
 	     cmd))
-     `(funcall ,predicate ,form))
+     (unless details
+       (warn "def-check form ~s must be given predicate in method form"
+	     cmd))
+     (destructuring-bind (predicate &rest extra-forms) details
+       (unless (null extra-forms)
+	 (warn "Extra form argument past target to ~s ignored: ~s"
+	       cmd extra-forms))
+       `(funcall ,predicate ,form)))
   
   (:method ((cmd (eql 'err)) details form
 	    &optional (ideal nil ideal-supplied-p))
