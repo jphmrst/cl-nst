@@ -1,0 +1,124 @@
+
+\documentclass{article}
+\title{A user's guide to NST}
+\author{John Maraist\thanks{Smart Information Flow Technologies, 211 N.\ First St.\ Suite 300, Minneapolis, MN 55401; \textsl{jmaraist} at \textsl{sift.info}.}}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+\tableofcontents
+\parskip 0.6em
+\parindent 0pt
+\section{Overview}
+This document is a user's guide to the NST test framework.
+
+For command-line examples, we give examples from the Franz Allegro
+Lisp command line, using the \texttt{:nst} top-level alias; on other
+systems the \texttt{run-nst-commands} macro is equivalent.
+
+\section{Fixtures}
+Fixtures are data structures and values which are used by name during
+testing.  NST provides the ability to use fixtures across multiple
+tests and test groups, and to inject fixtures into the runtime
+namespace for debugging.
+
+Fixtures are defined using the \texttt{def-fixtures} macro:
+\begin{center}
+\textbf{def-fixtures} \textit{name} \texttt{\&key}
+\textit{bindings} \textit{uses} \textit{outer}
+\textit{inner} \textit{documentation}
+\end{center}
+where
+\begin{itemize}
+\item \textit{name} is the name to be associated with this set of
+  fixtures.
+\item \textit{bindings} is a list of name/value lists, as is used for \texttt{let} blocks.
+\item \textit{uses} is a list of the names used in the bindings which are defined in other fixtures.
+\item \textit{outer} and \textit{inner} are lists of declarations to be includes in a \texttt{declare} respectively outside and inside of the let-binding in which the \textit{bindings} are used.
+\item \textit{documentation} describes the fixture set.
+\end{itemize}
+Fixtures can be \emph{opened} into the interactive namespace for
+debugging with the \texttt{:nst~:open} command:
+\begin{verbatim}
+  CL-USER(75): (nst:def-fixtures small-fixture
+                  :bindings ((fix-var1 3) (fix-var2 'asdfg)))
+  NIL
+  CL-USER(76): (boundp 'fix-var1)
+  NIL
+  CL-USER(77): :nst :open small-fixture
+  Opened fixture SMALL-FIXTURE.
+  CL-USER(78): fix-var1
+  3
+  CL-USER(79): \end{verbatim}
+%
+Names defined in fixtures can be used in the tests of groups which
+import that fixture.
+
+\subsection*{Variations on fixture declarations}
+
+The \texttt{def-capture/restore-fixtures} declaration binds nil to a
+collection of variables in the extent of associated test groups.  This
+form is useful when hiding some current state from standardized tests.
+\begin{center}
+\textbf{def-capture/restore-fixtures}
+ \textit{name} \textit{variables}
+\texttt{\&key} \textit{documentation}
+\end{center}
+
+\section{Test groups}
+Groups of tests can be associated with fixture sets, stateful
+initiatization, and stateful cleanup.  The syntax of a test group
+declaration is:
+\begin{center}
+\textbf{def-test-group} \textit{name}
+ \textit{fixture-sets} \texttt{\&rest} \textit{forms}
+\end{center}
+where
+\begin{itemize}
+\item\textit{name} is the name of this test group.
+\item\textit{fixture-sets} is a list of the names of fixture
+sets to be applied to the tests in this group.
+\item\textit{forms} are one of the following:
+\begin{itemize}
+\item A test definition, described below.
+\item Test group documentation, \texttt{(:documentation
+    \textit{string})}~.
+\item A setup form, \texttt{(:documentation \textit{setup})}~.  The
+  setup form is run after inclusion of names from fixture sets, but
+  before any tests from the group.  Individual tests should make no
+  assumptions as to whether the setup is unique to that test, or
+  whether it is shared among several tests of that group.
+\item A cleanup form, \texttt{(:documentation \textit{cleanup})}~.
+  The cleanup form is normally run after the setup completes; however
+  the cleanup form will not be run if the setup form raises an error.
+  When the user asks the runtime system to enter the debugger on an
+  error, the cleanup form will not run unless the user explicitly
+  enabled a resumption of the test routine from the debugger.  The
+  cleanup form will be run in other circumstances, including at a
+  user-requested break in testing at either failure or error.
+\item A compile deferral supression, \texttt{(:defer-compile nil)}~.
+  Normally the form of a test is evaluated at run time, so that e.g.\
+  macros will be expanded according to the most current declaration.
+  This flag will cause test forms to be compiled when the test is
+  first loaded.
+\end{itemize}
+\end{itemize}
+\section{Tests}
+The basic form for defining a test is:
+\begin{center}
+\textbf{def-test} \textit{name}
+ \texttt{\&rest} \textit{form} \textit{defer-compile}
+\end{center}
+where
+\begin{itemize}
+\item\textit{name} is the name of this test.
+\item\textit{form} is the expression to be evaluated for this test.
+\item\textit{defer-compile} functions as for the option on groups, but
+  applied to this test only.
+\end{itemize}
+Test evaluation considers only whether the form evaluates to
+\texttt{nil}, non-\texttt{nil}, or raises an error.
+\section{Checks: higher-level tests}
+\section{Integration with ASDF}
+\section{The runtime system}
+\end{document}
