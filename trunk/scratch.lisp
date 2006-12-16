@@ -3,6 +3,7 @@
 :cd /home/jmaraist/Lib/Lisp/nst/
 :pa nst
 :cl test
+:nst :run-group g2
 
 ------------------------------------------------------------
 
@@ -102,14 +103,3 @@
 
 
 
-;;;(defmacro for-permutations (id list not-first perm-so-far &rest forms)
-;;;  
-;;;  (cond
-;;;    
-;;;    ((null list)
-;;;     (return-from for-permutations forms))
-;;;    
-;;;    ((eql 1 (length list))
-;;;     (return-from for-permutations forms))
-;;;  
-;;;  )

@@ -18,6 +18,9 @@
 ;;; 3. We are not yet catching errors arising from cleanup, and
 ;;; there's not great feedback from erring setups.
 ;;;
+;;; 4. Clobbering test/group names should be caught by the macros, not
+;;; by the lower-level expanded code defining methods.
+;;;
 ;;;
 ;;; PLANNED FEATURES
 ;;;
@@ -33,6 +36,8 @@
 ;;; when failing (the kind of failing that doesn't throw an error),
 ;;; not just at the time, but also when :blurb'ing tests
 ;;; after-the-fact.
+;;;
+;;; 5. Texinfo the user guide.
 
 ;;; Options for output in the interactive system.
 ;;;
@@ -755,305 +760,264 @@ initialization and cleanup."
 			      (ts (eql ',test-name)))
 	   (run ,test-info))))))
 
-;;; Exported macro provided a more expressive test-definition
+;;; Some shorthand we'll use in def-check below.
+
+(defmacro require-arguments-for-method (keyword args count
+						&key at-least)
+  (let ((given (gensym)))
+    `(let ((,given (length ,args)))
+       (unless (>= ,given ,count)
+	 (error "def-check form ~s requires ~:[~;at least ~]~d target~:*~[s~;~:;s~] in method form, provided ~d, ~{~s~^ ~}"
+		,keyword ,at-least ,count ,given ,args
+		)))))
+
+(defmacro warn-if-excess-arguments (keyword args)
+  `(unless (null ,args)
+     (warn "~@<Extra arguments to def-check form ~s ignored:~_ ~
+               ~@<~{~s~^ ~_~}~:>~:>"
+	   ,keyword ,args)))
+
+(defmacro require-further-checks (cmd further)
+  `(unless ,further
+     (error "def-check form ~s requires further check methods" ,cmd)))
+
+(defmacro destructure-warning-extra (cmd bindings value &rest forms)
+  (let ((extra-forms (gensym))
+	(minimum (length bindings)))
+    `(progn
+       (require-arguments-for-method ,cmd ,value ,minimum)
+       (destructuring-bind (,@bindings &rest ,extra-forms) ,value
+	 (warn-if-excess-arguments ,cmd ,extra-forms)
+	 ,@forms))))
+
+(defmacro destructure-prefix-last (cmd prefixes middle form value
+				       &rest forms)
+  (let ((minimum (+ 2 (length prefixes)))
+	(raw-middle (gensym)))
+    `(progn
+       (require-arguments-for-method ,cmd ,value ,minimum :at-least t)
+       (destructuring-bind (,@prefixes &rest ,raw-middle) ,value
+	 (let ((,form (car (last ,raw-middle)))
+	       (,middle (nbutlast ,raw-middle)))
+	   ,@forms)))))
+
+(defun continue-check (further)
+  (destructuring-bind (method &rest details) further
+    (let ((local-symbol (intern (symbol-name method)
+				(find-package "NST"))))
+      (apply #'check-form (cons local-symbol details)))))
+
+;;; Exported macro providing a more expressive test-definition
 ;;; facility.
 
-(defmacro def-check (name method form
-			  &optional (ideal nil ideal-supplied-p))
+(defmacro def-check (name &rest commands-and-forms)
   "Define a test constructed according to the specified method."
-  `(def-test ,name :form ,(if ideal-supplied-p
-			      (check-form method form ideal)
-			      (check-form method form))))
+  (unless commands-and-forms
+    (error "def-check needs arguments")) 
+    `(def-test ,name :form
+       ,(continue-check commands-and-forms)))
 
-(defgeneric check-form (method form &optional ideal)
-  (:documentation
-   "This function allows test method specifications to be given as
-single atoms, instead of singleton lists.  It's a small thing, but
-it comes up frequently, especially as the subcomponents of the
-more complicated methods.")
-  
-  (:method ((method cons) form &optional (ideal nil ideal-supplied-p))
-     (destructuring-bind (head &rest details) method
-       (if ideal-supplied-p
-	   (check-form-with head details form ideal)
-	   (check-form-with head details form))))
-  
-  (:method (method form &optional (ideal nil ideal-supplied-p))
-     (if ideal-supplied-p
-	 (check-form-with method nil form ideal)
-	 (check-form-with method nil form))))
+(defgeneric check-form (method &rest details)
+  (:documentation "Definition of the top-level check forms."))
 
-(defgeneric check-form-with (rule details form &optional ideal)
-  (:documentation "Definition of the top-level check forms.")
-  
-  (:method ((cmd (eql 'not)) details form
-	    &optional (ideal nil ideal-supplied-p))
-     "Require that a check fail."
-     `(not ,(if ideal-supplied-p
-		(check-form details form ideal)
-		(check-form details form))))
-  
-  (:method ((cmd (eql 'symbol)) details form
-	    &optional (ideal nil ideal-supplied-p))
-     "Check that the form evaluates to the given atom.  This is the
+(defmethod check-form ((cmd (eql 'symbol)) &rest details)
+  "Check that the form evaluates to the given atom.  This is the
 style of test provided by RT/RRT."
-     (unless (and (null ideal) (null ideal-supplied-p))
-       (warn
-	"def-check form ~s should not have a secondary target form~%"
-	cmd))
-     (unless details
-       (error "def-check form ~s requires target in method form"
-	     cmd))
-     (destructuring-bind (target &rest extra-forms) details
-       (unless (null extra-forms)
-	 (warn "Extra form argument past target to ~s ignored: ~s"
-	       cmd extra-forms))
-       `(eq ,form ',target)))
- 
-  (:method ((cmd (eql 'eq)) details form
-	    &optional (ideal nil ideal-supplied-p))
-     "Check that the form is eq to an ideal (which may itself be
+  (destructure-warning-extra cmd (target form) details
+        `(eq ,form ',target)))
+ 
+(defmethod check-form ((cmd (eql 'eq)) &rest details)
+  "Check that the form is eq to an ideal (which may itself be
 another form)."
-     (unless details
-       (error "def-check form ~s requires a further method form" cmd))
-     (unless (and (null ideal) (null ideal-supplied-p))
-       (warn "def-check form ~s should not have a target form~%" cmd))
-     (destructuring-bind (target &rest extra-forms) details
-       (unless (null extra-forms)
-	 (warn "Extra form argument past target to ~s ignored: ~s"
-	       cmd extra-forms))
+  (destructure-warning-extra cmd (target form) details
        `(eq ,form ,target)))
-  
-  (:method ((cmd (eql 'eq2)) details form
-	    &optional (ideal nil ideal-supplied-p))
-     "Check that two forms are eq."
-     (unless (null details)
-       (error "def-check form ~s should not have arguments~%" cmd))
-     (unless ideal-supplied-p
-       (warn "def-check form ~s should be given a target; nil assumed"
-	     cmd))
-     `(eq ,form ,ideal))
    
-  (:method ((cmd (eql 'eql)) details form
-	    &optional (ideal nil ideal-supplied-p))
-     "Check that the form is eq to an ideal (which may itself be
+(defmethod check-form ((cmd (eql 'eql)) &rest details)
+  "Check that the form is eql to an ideal (which may itself be
 another form)."
-     (unless details
-       (error "def-check form ~s requires a further method form" cmd))
-     (unless (and (null ideal) (null ideal-supplied-p))
-       (warn "def-check form ~s should not have a target form~%" cmd))
-     (destructuring-bind (target &rest extra-forms) details
-       (unless (null extra-forms)
-	 (warn "Extra form argument past target to ~s ignored: ~s"
-	       cmd extra-forms))
+  (destructure-warning-extra cmd (target form) details
        `(eql ,form ,target)))
   
-  (:method ((cmd (eql 'eql2)) details form
-	    &optional (ideal nil ideal-supplied-p))
-     "Check that the form is eql to an ideal (which may itself be
-another form)."
-     (unless (null details)
-       (error "def-check form ~s should not have arguments~%" cmd))
-     (unless ideal-supplied-p
-       (warn "def-check form ~s should be given a target; nil assumed"
-	     cmd))
-     `(eql ,form ,ideal))
+(defmethod check-form ((cmd (eql 'forms-eq)) &rest details)
+  "Check that two forms are eq."
+  (destructure-warning-extra cmd (form1 form2) details
+       `(eq ,form1 ,form2)))
   
-  (:method ((cmd (eql 'predicate)) details form
-	    &optional (ideal nil ideal-supplied-p))
-     "Here the ideal argument is taken as a function value which we 
-apply to the value of the form."
-     (unless (and (null ideal) (null ideal-supplied-p))
-       (warn "def-check form ~s should not have a secondary form~%"
-	     cmd))
-     (unless details
-       (warn "def-check form ~s must be given predicate in method form"
-	     cmd))
-     (destructuring-bind (predicate &rest extra-forms) details
-       (unless (null extra-forms)
-	 (warn "Extra form argument past target to ~s ignored: ~s"
-	       cmd extra-forms))
+(defmethod check-form ((cmd (eql 'forms-eql)) &rest details)
+  "Check that two forms are eql."
+  (destructure-warning-extra cmd (form1 form2) details
+       `(eql ,form1 ,form2)))
+  
+(defmethod check-form ((cmd (eql 'predicate)) &rest details)
+  "Apply a boolean predicate to a form, and take the result as the
+test result."
+  (destructure-warning-extra cmd (predicate form) details
        `(funcall ,predicate ,form)))
-  
-  (:method ((cmd (eql 'err)) details form
-	    &optional (ideal nil ideal-supplied-p))
-     "The err specifier tells the tester to expect evaluation of the
-form to throw an error, otherwise the test fails."
-     (declare (ignorable ideal))
-     (unless (null details)
-       (error "def-check form ~s should not have arguments~%" cmd))
-     (when ideal-supplied-p (error "def-check form ~s uses no target"))
-     (let ((x (gensym "x")))
-       `(block ,x
-	  (handler-bind ((error #'(lambda (,x)
-				    (declare (ignorable ,x))
-				    (return-from ,x t))))
-	    ,form)
-	  nil)))
- 
-  (:method ((cmd (eql 'each)) details form
-	    &optional (ideal nil ideal-supplied-p))
-     "The each specifier tells the tester to expect that the form will 
+
+(defmethod check-form ((cmd (eql 'err)) &rest details)
+  "The err specifier tells the tester to expect evaluation of the
+form to throw an error, and otherwise the test fails."
+  (destructure-warning-extra cmd (form) details
+       (let ((x (gensym "x")))
+	 `(block ,x
+	    (handler-bind ((error #'(lambda (,x)
+				      (declare (ignorable ,x))
+				      (return-from ,x t))))
+	      ,form)
+	    nil))))
+
+(defmethod check-form ((cmd (eql 'not)) &rest details)
+  "Require that a check fail."
+  (require-further-checks cmd details)
+  (let ((subform (continue-check details)))
+    `(not ,subform)))
+
+(defmethod check-form ((cmd (eql 'each)) &rest details)
+  "The each specifier tells the tester to expect that the form will 
 evaluate to a list, and that each element of the list will pass the
 check given in the further elements of the check specification."
-     (let ((x (gensym "x")))
-       `(block ,x
-	  (loop for ,x in ,form do
-	    (unless ,(if ideal-supplied-p
-			 (check-form details x ideal)
-			 (check-form details x))
-	      (return-from ,x nil)))
-	  t)))
+     
+  (require-further-checks cmd details)
+  (let* ((list-form (car (last details)))
+	 (subdetails-rev (cdr (reverse details)))
+	 (x (gensym "x"))
+	 (subform (continue-check (reverse (cons x subdetails-rev)))))
+    `(block ,x
+       (loop for ,x in ,list-form do
+	 (unless ,subform (return-from ,x nil)))
+       t)))
   
-  (:method ((cmd (eql 'seq)) details form
-	    &optional (ideal nil ideal-supplied-p))
-     "The seq specifier takes N further specifier elements of the form\
- (SPECIFIER) or (SPECIFIER IDEAL), and expects the form to evaluate to\
- a list of N elements which match the respective specifier in the\
+(defmethod check-form ((cmd (eql 'seq)) &rest details)
+  "The seq specifier takes N further specifier elements of the form\
+ plus a form for evaluation.  The check expects the form to evaluate\
+ to a list of N elements which match the respective specifier in the\
  further elements."
-     (unless (and (null ideal-supplied-p) (null ideal))
-       (error "def-check form ~s does not take targets~%" cmd))
-     (let ((l (gensym "l"))
-	   (last-var (gensym "unused"))
-	   (on-last t)
-	   (forms t))
-       (loop for d in (reverse details) do
-	 (destructuring-bind (method &optional
-				     (target nil target-supplied-p)) d
-	   (let ((first-form (gensym "first-form"))
-		 (other-forms (gensym "other-forms")))
-	     (setf forms
-		   `(progn
-		      (unless ,other-forms
-			(return-from ,l nil))
-		      (destructuring-bind
-			    (,first-form &rest ,last-var)
-			  ,other-forms
-			,@(if on-last
-			      `((declare (ignorable ,last-var))))
-			(unless 
-			    ,(if target-supplied-p
-				 (check-form method first-form target)
-				 (check-form method first-form))
-			  (return-from ,l nil))
-			,forms))
-		   
-		   last-var other-forms
-		   on-last nil))))
-       `(block ,l
-	  (let ((,last-var ,form))
-	    ,forms))))
+
+  (require-further-checks cmd details)
+  (let ((form (car (last details)))
+	(checks (cdr (reverse details)))
+	
+	(overall (gensym "overall"))
+	(last-var (gensym "unused"))
+	(on-last t)
+	(result-form t))
+    
+    (loop for method in checks do
+      (let ((first-form (gensym "first-form"))
+	    (other-forms (gensym "other-forms")))
+	(setf result-form
+	      `(progn
+		 (unless ,other-forms (return-from ,overall nil))
+		 (destructuring-bind (,first-form &rest ,last-var)
+		     ,other-forms
+		   ,@(if on-last
+			 `((declare (ignorable ,last-var))))
+		   (unless 
+		       ,(continue-check (nconc method
+					       (list first-form)))
+		     (return-from ,overall nil))
+		   ,result-form))
+		
+	      last-var other-forms
+	      on-last nil)))
+    
+    `(block ,overall
+       (let ((,last-var ,form))
+	 ,result-form))))
+
+(defmethod check-form ((cmd (eql 'across)) &rest details)
+  "The across specifier takes N further specifier elements and a form,\
+ and expects the form to evaluate to a vector of N elements which match\
+ the respective specifier in the further elements."
+
+  (require-further-checks cmd details)
+  (let ((form (car (last details)))
+	(checks (nbutlast details))
+	
+	(result (gensym "result"))
+	(l (gensym "l")))
+    
+    `(block ,l
+       (let ((,result ,form))
+	 (progn 
+	   (unless (eql (length ,result) ,(length checks))
+	     (return-from ,l nil))
+	   ,@(loop for check in checks and idx from 0
+		   collect
+		   (let* ((ref `(aref ,result ,idx))
+			  (item-form
+			   (continue-check (nconc check (list ref)))))
+		     `(unless ,item-form
+			(return-from ,l nil))))))
+       t)))
   
-  (:method ((cmd (eql 'across)) details form
-	    &optional (ideal nil ideal-supplied-p))
-     "The seq specifier takes N further specifier elements of the form\
- (SPECIFIER) or (SPECIFIER IDEAL), and expects the form to evaluate to\
- a vector of N elements which match the respective specifier in the\
- further elements."
-     (unless (and (null ideal-supplied-p) (null ideal))
-       (error "def-check form ~s does not take targets~%" cmd))
-     (let* ((result (gensym "result"))
-	    (l (gensym "l")))
-       `(block ,l
-	  (let ((,result ,form))
-	    (progn 
-	      (unless (eql (length ,result) ,(length details))
-		(return-from ,l nil))
-	      ,@(loop for d in details and idx from 0
-		      collect
-		      (destructuring-bind
-			    (m &optional (targ nil targ-s-p)) d
-			(let* ((ref `(aref ,result ,idx))
-			       (item-form (if targ-s-p
-					      (check-form m ref targ)
-					      (check-form m ref))))
-			  `(progn
-			     (unless ,item-form
-			       (return-from ,l nil))))))))
-	  t)))
-  
-  (:method ((cmd (eql 'permute)) details form
-	    &optional (ideal nil ideal-supplied-p))
-     "The permute specifier expects that the form will evaluate to a
+(defmethod check-form ((cmd (eql 'permute)) &rest details)
+  "The permute specifier expects that the form will evaluate to a
 list, some permutation of which will satisfy the further specified
 check."
-     (let ((perms (gensym "perms-"))
-	   (x (gensym "x-")))
-       `(block permute-yeah
-	  (let ((,perms (make-instance 'permuter :src ,form)))
-	    (loop while (has-next ,perms) do
-	      (let ((,x (next-permutation ,perms)))
-		(when ,(if ideal-supplied-p
-			   (check-form details x ideal)
-			   (check-form details x))
-		  (return-from permute-yeah t))))))))
-  
-  (:method ((cmd (eql 'slots)) details form
-	    &optional (ideal nil ideal-supplied-p))
-     "Apply checks to the slots of a class."
-     (unless (and (null ideal-supplied-p) (null ideal))
-       (error "def-check form ~s does not take targets~%" cmd))
-     (let* ((slots-check (gensym "slots-check-"))
-	   
-	    (slot-checks
-	     (loop for tuple in details
-		   for slot-name = (car tuple)
-		   and method = (cadr tuple)
-		   and target = (caddr tuple)
-		   and target-supplied-p = (> (length tuple) 2)
-		   collect
-		   `(unless
-			,(if target-supplied-p
-			     (check-form method slot-name target)
-			     (check-form method slot-name))
-		      (return-from ,slots-check nil))))
-	    
-	    (slot-names
-	     (loop for tuple in details collect (car tuple))))
-       
-       `(block ,slots-check
-	  (with-slots ,slot-names ,form
-	    ,@slot-checks)
-	  t)))
 
-  (:method ((cmd (eql 'apply)) details form
-	    &optional (ideal nil ideal-supplied-p))
-     "Apply a transformation to the value of a form, and check the
+  (require-further-checks cmd details)
+  (let ((form (car (last details)))
+	(method (nbutlast details))
+	
+	(perms (gensym "perms-"))
+	(x (gensym "x-"))
+	(permute-block (gensym "permute-block-")))
+
+    `(block ,permute-block
+       (let ((,perms (make-instance 'permuter :src ,form)))
+	 (loop while (has-next ,perms) do
+	   (let ((,x (next-permutation ,perms)))
+	     (when ,(continue-check (nconc method (list x)))
+	       (return-from ,permute-block t))))))))
+  
+(defmethod check-form ((cmd (eql 'slots)) &rest details)
+  "Apply checks to the slots of a class."
+
+  (require-further-checks cmd details)
+  (let* ((form (car (last details)))
+	 (tuples (nbutlast details))
+	
+	 (slots-check (gensym "slots-check-"))
+	 (slot-checks
+	  (loop for tuple in tuples
+		for slot-name = (car tuple)
+		and method = (cadr tuple)
+		collect
+		`(unless
+		     ,(continue-check (nconc method (list slot-name)))
+		   (return-from ,slots-check nil))))
+	    
+	 (slot-names
+	  (loop for tuple in tuples collect (car tuple))))
+       
+    `(block ,slots-check
+       (with-slots ,slot-names ,form ,@slot-checks)
+       t)))
+
+(defmethod check-form ((cmd (eql 'apply)) &rest details)
+  "Apply a transformation to the value of a form, and check the
 resulting value"
-     (destructuring-bind (transform &rest other-methods) details
-       (let ((application `(funcall ,transform ,form)))
-	 (if ideal-supplied-p
-	     (check-form other-methods application ideal)
-	     (check-form other-methods application)))))
+
+  (destructure-prefix-last cmd (transform) methods form details
+    (let ((application `(funcall ,transform ,form)))
+      (continue-check (nconc methods (list application))))))
   
-  (:method ((cmd (eql 'no-fail)) details form
-	    &optional (ideal nil ideal-supplied-p))
-     "This test merely checks that evaluating a form causes no error"
-     (unless (and (null ideal-supplied-p) (null ideal))
-       (error "def-check form ~s does not take targets~%" cmd))
-     (unless (null details)
-       (error "def-check form ~s does not take further method forms~%"
-	      cmd))
-     (let ((dummy (gensym)))
-       `(let ((,dummy ,form))
-	  (declare (ignorable ,dummy))
-	  t)))
+(defmethod check-form ((cmd (eql 'pass)) &rest details)
+  "This test always passes"
+  (warn-if-excess-arguments cmd details)
+  t)
   
-  (:method ((cmd (eql 'any)) details form
-	    &optional (ideal nil ideal-supplied-p))
-     "This test always passes"
-     (declare (ignorable form))
-     (unless (and (null ideal-supplied-p) (null ideal))
-       (error "def-check form ~s does not take targets~%" cmd))
-     (unless (null details)
-       (error "def-check form ~s does not take further method forms~%"
-	      cmd))
-     t)
-  
-  (:method (cmd details form &optional ideal)
-     "Ill-specified checks are compile-time errors"
-     (declare (ignorable form) (ignorable ideal) (ignorable details))
-     (error "Unrecognized def-check form ~s~%" cmd)))
+(defmethod check-form ((cmd (eql 'fail)) &rest details)
+  "This test always fails"
+  (warn-if-excess-arguments cmd details)
+  nil)
+
+(defmethod check-form (unrecognized &rest whatever)
+  "Ill-specified checks are compile-time errors"
+  (declare (ignorable unrecognized) (ignorable whatever))
+  (error "Unrecognized def-check form ~s~%" unrecognized))
+
 
 ;;; This next section of code sets up how the interactive system
 ;;; manages nominating "interesting" tests; manages running,
@@ -1660,6 +1624,6 @@ fixing problems as they arise.
 
 #+allegro
 (top-level:alias "nst" (&rest args)
-  #.+nst-top-help+
+  ;;  #.+nst-top-help+
   (apply #'run-nst-commands args))
 

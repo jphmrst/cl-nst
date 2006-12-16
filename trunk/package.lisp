@@ -12,4 +12,5 @@
 		     #:def-capture/restore-fixtures
 		     #:def-test-group
 		     #:def-test
-		     #:def-check))
+		     #:def-check
+		     #:run-nst-commands))

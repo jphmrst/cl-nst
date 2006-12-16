@@ -10,6 +10,7 @@
 
 (defpackage :nst (:use :franz :cl))
 (in-package :nst)
+(defpackage :nst-test (:use :franz :cl :nst))
 
 (asdf:defsystem :nst
     :serial t
