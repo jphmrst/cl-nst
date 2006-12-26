@@ -136,18 +136,22 @@ runtime system.")
 ;;; The groups and tests that failed or caused an error in the current
 ;;; :run session.
 ;;;
-(defparameter *erred-groups* nil
-  "The names of groups raising an error in setup during the current
-:run session of the NST runtime system.")
-(defparameter *erred-cleanup* nil
-  "The names of groups raising an error in cleanup during the current
-:run session of the NST runtime system.")
+(defparameter *erred-groups* (make-hash-table)
+  "Map from groups raising an error in setup during the current
+:run session of the NST runtime system to a reason for the error,
+or t if none is available.")
+(defparameter *erred-cleanup* (make-hash-table)
+  "Map from groups raising an error in cleanup during the current
+:run session of the NST runtime system to a reason for the error,
+or t if none is available.")
 (defparameter *failed-tests* (make-hash-table)
-  "The names of tests failing during the current :run session of the
-NST runtime system.")
+  "Map from names of tests failing during the current :run session of
+the NST runtime system to a reason for the error, or t if none is
+available.")
 (defparameter *erred-tests* (make-hash-table)
-  "The names of tests raising an error condition during the current
-:run session of the NST runtime system.")
+  "Map from names of tests raising an error condition during the
+current :run session of the NST runtime system to a reason for the
+error, or t if none is available.")
 
 (defmacro if-test (storage group-name test-name)
   "Where storage is some double hash table, return what, if anything,
@@ -169,8 +173,8 @@ is stored against group-name and test-name."
 		    
 (defmacro have-erred-tests ()
   "Poll the above variables to check for erred tests."
-  `(or *erred-groups*
-       *erred-cleanup*
+  `(or (> (hash-table-count *erred-groups*) 0)
+       (> (hash-table-count *erred-cleanup*) 0)
        (> (hash-table-count *failed-tests*) 0)
        (> (hash-table-count *erred-tests*) 0)))
 
@@ -211,8 +215,8 @@ fixtures; this should be used for output selection only.")
   `(when *verbose-output* (format t "done~%")))
 
 (defmacro outro-failed-group-setup (name msg)
-  (declare (ignorable name))
-  `(when *verbose-output* (format t "failed:~%  ~s~%" ,msg)))
+  `(format t "Error in group ~s setup:~%  ~/nst::nst-format/~%"
+	   ,name ,msg))
 
 (defmacro intro-group-cleanup (name)
   `(when *verbose-output* 
@@ -305,6 +309,35 @@ This function is defined via eql-methods for each fixture name."))
    "Return the declaration form for the named fixture.  For user echo
 of fixture forms and other debugging."))
 
+;;; Packets of information stored as reasons why a test or group errs
+;;; or fails.
+ 
+(defclass error-or-failure-report ()
+     ()
+  (:documentation
+   "Top-level class of error and failure reports for tests and\
+ groups"))
+
+(defclass error-report (error-or-failure-report)
+     ((caught :initarg :caught))
+  (:documentation
+   "Top-level class of error reports for tests and groups."))
+
+(defclass setup-error-report (error-report)
+     ((form :initarg :form))
+  (:documentation "Error reports arising from setup forms"))
+
+(defclass fixture-error-report (error-report)
+     ((fixture-name :initarg :fixture-name)
+      (var-name :initarg :var-name))
+  (:documentation "Error reports arising from setup forms"))
+
+(defclass failure-report (error-or-failure-report)
+     ()
+  (:documentation
+   "Top-level class of failure reports for tests"))
+
+
 ;;; Formatting the standard classes.
 
 (defgeneric nst-format (stream obj c s)
@@ -330,9 +363,65 @@ of fixture forms and other debugging."))
                           ~:>"
 	       group-name (package-name package)
 	       documentation
-	       (caddr setup) (caddr cleanup)))))
+	       (caddr setup) (caddr cleanup))))
+
+  (:method (stream (info error-or-failure-report) colon at-sign)
+     "Default formatter for unspecialized non-success records."
+     (declare (ignorable colon) (ignorable at-sign))
+     (format stream "Unspecified non-success"))
+
+  (:method (stream (info error-report) colon at-sign)
+     "Default formatter for unspecialized error report records."
+     (declare (ignorable colon) (ignorable at-sign))
+     (with-slots (caught) info
+       (format stream "Error: ~s" caught)))
+
+  (:method (stream (info fixture-error-report) colon at-sign)
+     "Default formatter for error reports from fixture setup"
+     (declare (ignorable colon) (ignorable at-sign))
+     (with-slots (caught fixture-name var-name) info
+       (format stream
+	       "~@<Error setting up fixture ~s element ~s: ~_~s~:>"
+	       fixture-name var-name caught)))
+
+  (:method (stream (info failure-report) colon at-sign)
+     "Default formatter for unspecialized failure report records."
+     (declare (ignorable colon) (ignorable at-sign))
+     (format stream "Test failure"))
+
+  (:method (stream misc colon at-sign)
+     "Fall-through for non-NST stuff.  Shouldn't be called."
+     (declare (ignorable colon) (ignorable at-sign))
+     (format stream "Non-NST object ~s" misc)))
 
 ;;; Macros we'll use in the methods for running tests.
+
+(defmacro control-setup-errors (&rest forms)
+  (let ((c (gensym)) (setup-block (gensym "setup-block")))
+    `(block ,setup-block
+       ;; Grab thrown errors.  If we want to debug errors right away,
+       ;; then we let the usual handler sequence go.  Otherwise we
+       ;; return nil from this block, and so skip the tests and
+       ;; cleanup.
+       (handler-bind
+	   ((error
+	     #'(lambda (,c)
+		 (declare (ignorable ,c))
+		 (unless *debug-on-error*
+		   (return-from ,setup-block nil)))))
+	 ,@forms
+	 (return-from ,setup-block t)))))
+
+(defmacro record-setup-error (group id record-form &rest forms)
+  (let ((report (gensym)))
+    `(handler-bind
+	 ((error
+	   #'(lambda (,id)
+	       (let ((,report ,record-form))
+		 (setf (gethash ,group *erred-groups*) ,report)
+		 (outro-failed-group-setup (get-name ,group)
+					   ,report)))))
+       ,@forms)))
 
 (defmacro do-setup (group group-name group-setup-form
 			  &rest other-forms)
@@ -340,33 +429,23 @@ of fixture forms and other debugging."))
 running tests as for running groups, describes the tedious plumbing
 associated with the setup form of a test group."
   (let ((c (gensym)))
-    `(progn
-       ;; Print the currently selecting blurbing for group setup
-       ;; execution.
-       (intro-group-setup ,group-name)
+  `(progn
+     ;; Print the currently selecting blurbing for group setup
+     ;; execution.
+     (intro-group-setup ,group-name)
 
-       ;; We capture the success of setup in a conditional, and
-       ;; proceed with tests and cleanup only if it works.
-       (when (block group-setup
-	       ;; Grab thrown errors.  If we want to debug errors
-	       ;; right away, then we let the usual handler sequence
-	       ;; go.  Otherwise we return nil from this block, and so
-	       ;; skip the tests and cleanup.
-	       (handler-bind
-		   ((error
-		     #'(lambda (,c)
-			 (push ,group *erred-groups*)
-			 (format t "Error in group ~s setup:~%  ~s~%"
-				 ,group-name ,c)
-			 (outro-failed-group-setup ,group-name ,c)
-			 (unless *debug-on-error*
-			   (return-from group-setup nil)))))
-		 (eval ,group-setup-form)
-		 (return-from group-setup t)))
+     ;; We capture the success of setup in a conditional, and proceed
+     ;; with tests and cleanup only if it works.
+     (control-setup-errors
+	(record-setup-error
+	 ,group ,c
+	 (make-instance 'setup-error-report
+	   :caught ,c :form ,group-setup-form)
+	 (eval ,group-setup-form)))
 
-	 ;; Blurb a successful setup, and run the given forms.
-    	 (outro-group-setup group-name)
-	 ,@other-forms))))
+     ;; Blurb a successful setup, and run the given forms.
+     (outro-group-setup ,group-name)
+     ,@other-forms)))
 
 (defmacro do-cleanup (group group-name group-cleanup-form
 			    &rest other-forms)
@@ -464,12 +543,30 @@ unsuccessful nil result.")
 
 ;;; Exported macro which sets up test fixtures.
 
+(defparameter *active-group* nil)
+
 (defmacro def-fixtures (name &key bindings
 			     uses outer inner documentation)
   "Define a list of test fixtures which can then be assigned to test
 groups and referenced from those groups' tests."
 
-  (let* (;; A list of the names in the bindings by themselves, without
+  (let* ((err (gensym))
+	 
+	 ;; A list of the names in the bindings by themselves, without
+	 ;; the associated forms.
+	 (safe-bindings
+	  (loop for binding in bindings
+		collect `(,(car binding)
+			  (progn
+			    (record-setup-error
+			     *active-group* ,err
+			     (make-instance 'fixture-error-report
+			       :caught ,err
+			       :fixture-name ',name
+			       :var-name ',(car binding))
+			     ,@(cdr binding))))))
+	 
+	 ;; A list of the names in the bindings by themselves, without
 	 ;; the associated forms.
 	 (names-only
 	  (loop for binding in bindings collect (car binding)))
@@ -545,7 +642,7 @@ groups and referenced from those groups' tests."
        (defmethod run :around ((,ptg ,name))
 	 (declare ,@outer ,@used-specials ,@ignorable-used-specials)
 	 (pre-intro-fixture-set ',name)
-	 (let* ,bindings
+	 (let* ,safe-bindings
 	   (declare ,@dynamic-decls ,@inner)
 	   (post-intro-fixture-set ',name)
 	   (call-next-method))
@@ -591,6 +688,8 @@ variables from the test suite."
 (defparameter *test-names-acc* nil)
 (defparameter *test-info-hash* nil)
 (defparameter *group-defer-test-compile* nil)
+(defparameter *fixtures-for-group* nil)
+(defparameter *fixtures-for-group-name* nil)
 
 (defmacro def-test-group (group-name fixture-names &rest forms)
   "Define a group of tests associated with certain fixtures,
@@ -606,6 +705,7 @@ initialization and cleanup."
 	(group-class (gensym "group-class-"))
 	(singleton (gensym "singleton-"))
 	(wrapping-hash (gensym "wrapping-hash-"))
+	(ptg (gensym))
 
 	(class-doc 
 	 (format nil "Class definition corresponding to test group ~s"
@@ -636,7 +736,7 @@ initialization and cleanup."
        ;; "group" class.
        (defclass ,group-class (,@fixture-names group) ()
 	 (:documentation ,class-doc))
-
+       
        ;; Define a uniquely-named class which we will extend for each
        ;; test in this group.  It will also extend all of the given
        ;; fixture groups, plus the "test" class.
@@ -659,6 +759,14 @@ initialization and cleanup."
 			   :testclass ',test-class
 			   :documentation ,doc-string)))
 
+
+	 ;; Calling the fixture setup might throw an error, so we need
+	 ;; to catch a setup exception here as well as when calling
+	 ;; the actual setup form.
+	 (defmethod run :around ((,ptg ,group-class))
+	   (let ((*active-group* ,singleton))
+	     (control-setup-errors (call-next-method))))
+	 
 	 ;; Convenience method for running this group by name.
 	 (defmethod run-group ((g (eql ',group-name)))
 	   (run ,singleton))
@@ -927,8 +1035,8 @@ check given in the further elements of the check specification."
 
 (defmethod check-form ((cmd (eql 'across)) &rest details)
   "The across specifier takes N further specifier elements and a form,\
- and expects the form to evaluate to a vector of N elements which match\
- the respective specifier in the further elements."
+ and expects the form to evaluate to a vector of N elements which\
+ match the respective specifier in the further elements."
 
   (require-further-checks cmd details)
   (let ((form (car (last details)))
@@ -1007,7 +1115,7 @@ resulting value"
   "This test always passes"
   (warn-if-excess-arguments cmd details)
   t)
-  
+
 (defmethod check-form ((cmd (eql 'fail)) &rest details)
   "This test always fails"
   (warn-if-excess-arguments cmd details)
@@ -1028,8 +1136,8 @@ resulting value"
 	 (*pending-group-names* ())
 	 (*pending-test-names* (make-hash-table))
 	 (*passed-test-count* 0)
-	 (*erred-groups* nil)
-	 (*erred-cleanup* nil)
+	 (*erred-groups* (make-hash-table))
+	 (*erred-cleanup* (make-hash-table))
 	 (*failed-tests* (make-hash-table))
 	 (*erred-tests* (make-hash-table)))
      ,@forms
@@ -1044,14 +1152,13 @@ resulting value"
     `(progn
        (setf *pending-packages* *interesting-packages*
 	     *pending-group-names* *interesting-group-names*
-
-	     *passed-test-count* 0
-	     *erred-groups* nil
-	     *erred-cleanup* nil)
+	     *passed-test-count* 0)
 
        (clrhash *pending-test-names*)
        (clrhash *failed-tests*)
        (clrhash	*erred-tests*)
+       (clrhash *erred-groups*)
+       (clrhash	*erred-cleanup*)
        
        (loop for ,group-name
 	       being the hash-keys of *interesting-test-names*
@@ -1163,8 +1270,8 @@ resulting value"
 		   summing (hash-table-count ,hash))
 	     (loop for ,hash being the hash-values of *erred-tests*
 		   summing (hash-table-count ,hash))
-	     (length *erred-groups*)
-	     (length *erred-cleanup*))))
+	     (hash-table-count *erred-groups*)
+	     (hash-table-count *erred-cleanup*))))
 
 (defmacro give-blurb (group-name test-name)
   (let ((x (gensym "x-"))
@@ -1191,7 +1298,7 @@ resulting value"
 		  (format t "Package ~a is pending.~%" ,package-name)
 		  (return-from blurbing)))))
       
-	 (when (member ,group-name *erred-groups*)
+	 (when (gethash (gethash ,group-name +groups+) *erred-groups*)
 	   (format t "Group ~s raised an error in setup.~%"
 		   ,group-name)
 	   (return-from blurbing))
@@ -1206,7 +1313,7 @@ resulting value"
 	     (format t "Test ~s.~s raised an error:~%  ~s~%"
 		     ,group-name ,test-name ,x)
 	     (return-from blurbing))))
-       (when (member ,group-name *erred-cleanup*)
+       (when (gethash (gethash ,group-name +groups+) *erred-cleanup*)
 	 (format t "Group ~s raised an error in cleanup.~%"
 		 ,group-name)))))
 
@@ -1303,7 +1410,8 @@ resulting value"
 	    +group-test-name-formatter+
 	    (group-test-names-from-hashes *pending-test-names*)
 	    *passed-test-count*
-	    *erred-groups*
+	    (loop for g being the hash-keys of *erred-groups*
+		  collect (get-name g))
 	    +group-test-name-formatter+
 	    (group-test-names-from-hashes *failed-tests*)
 	    +group-test-name-formatter+
@@ -1409,7 +1517,6 @@ fixing problems as they arise.
 	((have-pending-tests)
 	 (setf args '(:continue))
 	 (format t "Running pending tests.~%"))
-	
 	
 	((have-erred-tests)
 	 (setf args '(:retry))
@@ -1587,10 +1694,14 @@ fixing problems as they arise.
 			     *pending-test-names*) singleton))))
 
 	    (command-case (:retry) ()
-		(loop as group = (pop *erred-groups*) while group do
-		  (push group *pending-group-names*))
-		(loop as group = (pop *erred-cleanup*) while group do
-		   (push group *pending-group-names*))
+		(loop for group being the hash-keys of *erred-groups*
+		      do (push (get-name group) *pending-group-names*))
+		(clrhash *erred-groups*)
+		
+		(loop for group being the hash-keys of *erred-cleanup*
+		      do (push (get-name group) *pending-group-names*))
+		(clrhash *erred-cleanup*)
+		
 		(loop for test-hash
 		      in (list *failed-tests* *erred-tests*)
 		      do 
