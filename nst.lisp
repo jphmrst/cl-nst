@@ -15,11 +15,13 @@
 ;;; 2. There are still, sometimes, warnings from the use of fixture
 ;;; names in other fixtures.
 ;;;
-;;; 3. We are not yet catching errors arising from cleanup, and
-;;; there's not great feedback from erring setups.
+;;; 3. We are not yet catching errors arising from cleanup.
 ;;;
 ;;; 4. Clobbering test/group names should be caught by the macros, not
 ;;; by the lower-level expanded code defining methods.
+;;;
+;;; 5. Have warnings or errors when multiple fixtures get the same
+;;; error.
 ;;;
 ;;;
 ;;; PLANNED FEATURES
