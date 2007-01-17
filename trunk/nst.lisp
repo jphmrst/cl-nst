@@ -2,7 +2,7 @@
 ;;;
 ;;; NST by John Maraist, based on RRT by Robert Goldman.
 ;;;
-;;; NST is Copyright (c) 2006 Smart Information Flow Technologies.
+;;; NST is Copyright (c) 2006, 2007 Smart Information Flow Technologies.
 ;;; RRT is Copyright (c) 2005 Robert Goldman, released under the LGPL,
 ;;; and the lisp-specific preamble to that license.
 (in-package :nst)
@@ -23,6 +23,8 @@
 ;;; 5. Have warnings or errors when multiple fixtures get the same
 ;;; error.
 ;;;
+;;; 6. The testing via ASDF adds the package tests, but doesn't remove
+;;; them after that run.  This is probably not how it should work.
 ;;;
 ;;; PLANNED FEATURES
 ;;;
@@ -877,7 +879,9 @@ initialization and cleanup."
   (let ((given (gensym)))
     `(let ((,given (length ,args)))
        (unless (>= ,given ,count)
-	 (error "def-check form ~s requires ~:[~;at least ~]~d target~:*~[s~;~:;s~] in method form, provided ~d, ~{~s~^ ~}"
+	 (error "def-check form ~s requires ~:[~;at least ~]~d ~
+                 target~:*~[s~;~:;s~] in method form, provided ~d, ~
+                 ~{~s~^ ~}"
 		,keyword ,at-least ,count ,given ,args
 		)))))
 
@@ -916,218 +920,6 @@ initialization and cleanup."
     (let ((local-symbol (intern (symbol-name method)
 				(find-package "NST"))))
       (apply #'check-form (cons local-symbol details)))))
-
-;;; Exported macro providing a more expressive test-definition
-;;; facility.
-
-(defmacro def-check (name &rest commands-and-forms)
-  "Define a test constructed according to the specified method."
-  (unless commands-and-forms
-    (error "def-check needs arguments")) 
-    `(def-test ,name :form
-       ,(continue-check commands-and-forms)))
-
-(defgeneric check-form (method &rest details)
-  (:documentation "Definition of the top-level check forms."))
-
-(defmethod check-form ((cmd (eql 'symbol)) &rest details)
-  "Check that the form evaluates to the given atom.  This is the
-style of test provided by RT/RRT."
-  (destructure-warning-extra cmd (target form) details
-        `(eq ,form ',target)))
- 
-(defmethod check-form ((cmd (eql 'eq)) &rest details)
-  "Check that the form is eq to an ideal (which may itself be
-another form)."
-  (destructure-warning-extra cmd (target form) details
-       `(eq ,form ,target)))
-   
-(defmethod check-form ((cmd (eql 'eql)) &rest details)
-  "Check that the form is eql to an ideal (which may itself be
-another form)."
-  (destructure-warning-extra cmd (target form) details
-       `(eql ,form ,target)))
-  
-(defmethod check-form ((cmd (eql 'forms-eq)) &rest details)
-  "Check that two forms are eq."
-  (destructure-warning-extra cmd (form1 form2) details
-       `(eq ,form1 ,form2)))
-  
-(defmethod check-form ((cmd (eql 'forms-eql)) &rest details)
-  "Check that two forms are eql."
-  (destructure-warning-extra cmd (form1 form2) details
-       `(eql ,form1 ,form2)))
-  
-(defmethod check-form ((cmd (eql 'predicate)) &rest details)
-  "Apply a boolean predicate to a form, and take the result as the
-test result."
-  (destructure-warning-extra cmd (predicate form) details
-       `(funcall ,predicate ,form)))
-
-(defmethod check-form ((cmd (eql 'err)) &rest details)
-  "The err specifier tells the tester to expect evaluation of the
-form to throw an error, and otherwise the test fails."
-  (destructure-warning-extra cmd (form) details
-       (let ((x (gensym "x")))
-	 `(block ,x
-	    (handler-bind ((error #'(lambda (,x)
-				      (declare (ignorable ,x))
-				      (return-from ,x t))))
-	      ,form)
-	    nil))))
-
-(defmethod check-form ((cmd (eql 'not)) &rest details)
-  "Require that a check fail."
-  (require-further-checks cmd details)
-  (let ((subform (continue-check details)))
-    `(not ,subform)))
-
-(defmethod check-form ((cmd (eql 'each)) &rest details)
-  "The each specifier tells the tester to expect that the form will 
-evaluate to a list, and that each element of the list will pass the
-check given in the further elements of the check specification."
-     
-  (require-further-checks cmd details)
-  (let* ((list-form (car (last details)))
-	 (subdetails-rev (cdr (reverse details)))
-	 (x (gensym "x"))
-	 (subform (continue-check (reverse (cons x subdetails-rev)))))
-    `(block ,x
-       (loop for ,x in ,list-form do
-	 (unless ,subform (return-from ,x nil)))
-       t)))
-  
-(defmethod check-form ((cmd (eql 'seq)) &rest details)
-  "The seq specifier takes N further specifier elements of the form\
- plus a form for evaluation.  The check expects the form to evaluate\
- to a list of N elements which match the respective specifier in the\
- further elements."
-
-  (require-further-checks cmd details)
-  (let ((form (car (last details)))
-	(checks (cdr (reverse details)))
-	
-	(overall (gensym "overall"))
-	(last-var (gensym "unused"))
-	(on-last t)
-	(result-form t))
-    
-    (loop for method in checks do
-      (let ((first-form (gensym "first-form"))
-	    (other-forms (gensym "other-forms")))
-	(setf result-form
-	      `(progn
-		 (unless ,other-forms (return-from ,overall nil))
-		 (destructuring-bind (,first-form &rest ,last-var)
-		     ,other-forms
-		   ,@(if on-last
-			 `((declare (ignorable ,last-var))))
-		   (unless 
-		       ,(continue-check (nconc method
-					       (list first-form)))
-		     (return-from ,overall nil))
-		   ,result-form))
-		
-	      last-var other-forms
-	      on-last nil)))
-    
-    `(block ,overall
-       (let ((,last-var ,form))
-	 ,result-form))))
-
-(defmethod check-form ((cmd (eql 'across)) &rest details)
-  "The across specifier takes N further specifier elements and a form,\
- and expects the form to evaluate to a vector of N elements which\
- match the respective specifier in the further elements."
-
-  (require-further-checks cmd details)
-  (let ((form (car (last details)))
-	(checks (nbutlast details))
-	
-	(result (gensym "result"))
-	(l (gensym "l")))
-    
-    `(block ,l
-       (let ((,result ,form))
-	 (progn 
-	   (unless (eql (length ,result) ,(length checks))
-	     (return-from ,l nil))
-	   ,@(loop for check in checks and idx from 0
-		   collect
-		   (let* ((ref `(aref ,result ,idx))
-			  (item-form
-			   (continue-check (nconc check (list ref)))))
-		     `(unless ,item-form
-			(return-from ,l nil))))))
-       t)))
-  
-(defmethod check-form ((cmd (eql 'permute)) &rest details)
-  "The permute specifier expects that the form will evaluate to a
-list, some permutation of which will satisfy the further specified
-check."
-
-  (require-further-checks cmd details)
-  (let ((form (car (last details)))
-	(method (nbutlast details))
-	
-	(perms (gensym "perms-"))
-	(x (gensym "x-"))
-	(permute-block (gensym "permute-block-")))
-
-    `(block ,permute-block
-       (let ((,perms (make-instance 'permuter :src ,form)))
-	 (loop while (has-next ,perms) do
-	   (let ((,x (next-permutation ,perms)))
-	     (when ,(continue-check (nconc method (list x)))
-	       (return-from ,permute-block t))))))))
-  
-(defmethod check-form ((cmd (eql 'slots)) &rest details)
-  "Apply checks to the slots of a class."
-
-  (require-further-checks cmd details)
-  (let* ((form (car (last details)))
-	 (tuples (nbutlast details))
-	
-	 (slots-check (gensym "slots-check-"))
-	 (slot-checks
-	  (loop for tuple in tuples
-		for slot-name = (car tuple)
-		and method = (cadr tuple)
-		collect
-		`(unless
-		     ,(continue-check (nconc method (list slot-name)))
-		   (return-from ,slots-check nil))))
-	    
-	 (slot-names
-	  (loop for tuple in tuples collect (car tuple))))
-       
-    `(block ,slots-check
-       (with-slots ,slot-names ,form ,@slot-checks)
-       t)))
-
-(defmethod check-form ((cmd (eql 'apply)) &rest details)
-  "Apply a transformation to the value of a form, and check the
-resulting value"
-
-  (destructure-prefix-last cmd (transform) methods form details
-    (let ((application `(funcall ,transform ,form)))
-      (continue-check (nconc methods (list application))))))
-  
-(defmethod check-form ((cmd (eql 'pass)) &rest details)
-  "This test always passes"
-  (warn-if-excess-arguments cmd details)
-  t)
-
-(defmethod check-form ((cmd (eql 'fail)) &rest details)
-  "This test always fails"
-  (warn-if-excess-arguments cmd details)
-  nil)
-
-(defmethod check-form (unrecognized &rest whatever)
-  "Ill-specified checks are compile-time errors"
-  (declare (ignorable unrecognized) (ignorable whatever))
-  (error "Unrecognized def-check form ~s~%" unrecognized))
-
 
 ;;; This next section of code sets up how the interactive system
 ;;; manages nominating "interesting" tests; manages running,

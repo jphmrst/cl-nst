@@ -14,3 +14,5 @@
 		     #:def-test
 		     #:def-check
 		     #:run-nst-commands))
+
+(defpackage :nst-test (:use :common-lisp :nst))
