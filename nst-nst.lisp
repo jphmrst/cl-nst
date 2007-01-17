@@ -1,26 +1,22 @@
-;;; File test.lisp
+;;; File nst-nst.lisp
 ;;;
 ;;; NST by John Maraist, based on RRT by Robert Goldman.
 ;;;
-;;; NST is Copyright (c) 2006 Smart Information Flow Technologies.
+;;; NST is Copyright (c) 2006, 2007 Smart Information Flow Technologies.
 ;;; RRT is Copyright (c) 2005 Robert Goldman, released under the LGPL,
 ;;; and the lisp-specific preamble to that license.
-(in-package :nst)
+(in-package :nst-test)
+
+(def-test-group nst-tests ()
+  (def-check symbol-1 symbol a 'a)
+  (def-check symbol-2 not symbol b 'a)  
+  (def-check eql-1 eql 4 (+ 1 3)))
 
 (defclass classcheck ()
      ((s1 :initarg :s1 :reader get-s1)
       (s2 :initarg :s2) (s3 :initarg :s3)))
 
-
 (def-fixtures f1 :bindings ((c 3) (d 'asdfg)))
-(defmacro result-from-macro () nil)
-(def-test-group g1 (f1)
-  (def-test t1 :form (eql 1 1))
-  (def-test t2 :form (eql 1 2))
-  (def-test t3 :form (error "I give an error"))
-  (def-test t4 :form (eql c 4))
-  (def-test t5 :form (eq d 'asdfg))
-  (def-test t6 :form (result-from-macro) :defer-compile t))
 (def-fixtures f2 :uses (f1) :bindings ((d 4) (e 'asdfg) (f c)))
 (def-test-group g2 (f1 f2)
   (def-check sym1 symbol a (car '(a b c)))
@@ -55,7 +51,9 @@
   (def-check apply1 apply get-s1 eql 10
     (make-instance 'classcheck :s1 10 :s2 'zz :s3 '(q w e r)))
   (def-check apply2 apply cadr eql 10 '(0 10 20))
-  )
+  (def-check multi1 multi
+    (eql 10) (predicate symbolp) (predicate stringp)
+    (values 10 'a "sss"))
 
-;;(defmacro result-from-macro () t)
-
+  (def-check float1 round-sig-eql 3 142.1 141.9)
+  (def-check float2 not round-sig-eql 3 141.1 141.9))

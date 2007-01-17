@@ -1,5 +1,5 @@
 
-all: package.ps nst.ps test.ps
+all: package.ps nst.ps test.ps check.ps
 	#
 
 %.ps: %.lisp

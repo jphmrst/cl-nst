@@ -6,20 +6,37 @@
 ;;; RRT is Copyright (c) 2005 Robert Goldman, released under the LGPL,
 ;;; and the lisp-specific preamble to that license.
 
-(in-package "COMMON-LISP-USER")
+(defpackage :nst-asd (:use :common-lisp :asdf))
+(in-package :nst-asd)
 
-(defpackage :nst (:use :franz :cl))
-(in-package :nst)
-(defpackage :nst-test (:use :franz :cl :nst))
+(defclass nst-tester (system) ())
 
-(asdf:defsystem :nst
+(defsystem :nst
     :serial t
+    :in-order-to ((test-op (test-op :test-nst)))
     :components ((:file "package")
 		 (:file "permuter")
-		 (:file "nst")))
+		 (:file "numbers")
+		 (:file "nst")
+		 (:file "check")))
 
-;;;(asdf:defsystem :nst-test
-;;;    :serial t
-;;;    :depends-on (:nst)
-;;;    :components ((:file "test-package")))
+(defsystem :test-nst
+    :class nst-tester
+    :depends-on (:nst)
+    :in-order-to ((test-op (load-op :test-nst)))
+    :components ((:file "nst-nst")))
 
+(defmethod perform ((op test-op)
+		    (system (eql (find-system :test-nst))))
+  (eval (list (intern (symbol-name '#:run-nst-commands)
+		      (find-package :nst))
+	      :p
+	      (quote (intern (symbol-name 'nst-test)
+			     (find-package 'cl-user)))
+	      :run))
+  )
+
+(defmethod operation-done-p ((o test-op) (c nst-tester))
+  "We need to make sure that operation-done-p doesn't return its
+normal value, or a test-op will be run only once."
+  (values nil))
