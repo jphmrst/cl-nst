@@ -10,6 +10,12 @@
 ;;; Exported macro providing a more expressive test-definition
 ;;; facility.
 
+(defun continue-check (further)
+  (destructuring-bind (method &rest details) further
+    (let ((local-symbol (intern (symbol-name method)
+				(find-package "NST"))))
+      (apply #'check-form (cons local-symbol details)))))
+
 (defmacro def-check (name &rest commands-and-forms)
   "Define a test constructed according to the specified method."
   (unless commands-and-forms

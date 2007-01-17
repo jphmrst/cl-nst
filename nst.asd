@@ -18,7 +18,8 @@
 		 (:file "permuter")
 		 (:file "numbers")
 		 (:file "nst")
-		 (:file "check")))
+		 (:file "check")
+		 (:file "interactive")))
 
 (defsystem :test-nst
     :class nst-tester
@@ -30,11 +31,9 @@
 		    (system (eql (find-system :test-nst))))
   (eval (list (intern (symbol-name '#:run-nst-commands)
 		      (find-package :nst))
-	      :p
+	      :run-package
 	      (quote (intern (symbol-name 'nst-test)
-			     (find-package 'cl-user)))
-	      :run))
-  )
+			     (find-package 'cl-user))))))
 
 (defmethod operation-done-p ((o test-op) (c nst-tester))
   "We need to make sure that operation-done-p doesn't return its

@@ -13,6 +13,7 @@
 		     #:def-test-group
 		     #:def-test
 		     #:def-check
+		     #:def-check-form
 		     #:run-nst-commands))
 
 (defpackage :nst-test (:use :common-lisp :nst))

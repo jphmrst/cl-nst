@@ -1,5 +1,7 @@
 
-all: package.ps nst.ps test.ps check.ps
+all: package.ps nst.ps test.ps check.ps \
+	interactive.ps numbers.ps permuter.ps \
+	nst-nst.ps
 	#
 
 %.ps: %.lisp
