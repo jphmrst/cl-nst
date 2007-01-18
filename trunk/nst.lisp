@@ -671,6 +671,13 @@ groups and referenced from those groups' tests."
        
        nil)))
 
+;;; Defining a fixture anonymously.
+(defun quick-fix (name binding)
+  (let ((bindings (loop for x = (pop binding) while x
+			for y = (pop binding)
+			collect (list x y))))
+    `(def-fixtures ,name :bindings ,bindings)))
+
 ;;; A convenience macro for specialized fixture definitions.
 
 (defmacro def-capture/restore-fixtures (name variables
@@ -682,6 +689,25 @@ variables from the test suite."
   (let ((nil-bindings
 	 (loop for v in variables collect (list v nil))))
     `(def-fixtures ,name ,nil-bindings :documentation ,documentation)))
+
+(defun clean-fixtures-names! (fixtures-list)
+  "Returns fixture declarations for anonymous fixtures"
+  (let* ((fixture-decls nil))
+    (loop for node on fixtures-list do
+      (let ((item (car node)))
+	(cond
+	  ((symbolp item) t)
+			      
+	  ((and (listp item) (symbolp (car item))
+		(string= "FIXTURES" (symbol-name (car item))))
+	   (let* ((name (gensym))
+		  (decl (quick-fix name (cdr item))))
+	     (push decl fixture-decls)
+	     (setf (car node) name)))
+	  
+	  (t (error "Unrecognized fixture name list item ~s"
+		    item)))))
+    fixture-decls))
 
 ;;; Exported macro for defining a group of tests.
 
@@ -699,9 +725,12 @@ variables from the test suite."
   "Define a group of tests associated with certain fixtures,
 initialization and cleanup."
 
+;;;  (format t "Defining group ~s with fixtures ~s.~%"
+;;;	  group-name fixture-names)
   (let ((doc-string nil) (tests nil)
 	(setup-form nil) (cleanup-form nil)
 	(group-defer-compile *defer-test-compile*)
+	(anon-fixtures (clean-fixtures-names! fixture-names))
 
 	;; Unique names.
 	(f (gensym "f"))
@@ -732,125 +761,201 @@ initialization and cleanup."
 
     ;; Preserve the order of tests.
     (setf tests (nreverse tests))  
+
+    (let ((actual-tests
+	   (let ((*current-group-name* group-name))
+	     (declare (dynamic-extent *current-group-name*)
+		      (ignorable *current-group-name*))
+	     (loop for test in tests collect
+		   (macroexpand test)))))
+
     
     `(progn
        
-       ;; Define a uniquely-named class associated with this group.
-       ;; It should extend all of the given fixture groups, plus the
-       ;; "group" class.
-       (defclass ,group-class (,@fixture-names group) ()
-	 (:documentation ,class-doc))
+	 ;; First define any of the anonymous fixtures we found in the
+	 ;; original fixtures list.
+	 ,@anon-fixtures
        
-       ;; Define a uniquely-named class which we will extend for each
-       ;; test in this group.  It will also extend all of the given
-       ;; fixture groups, plus the "test" class.
-       (defclass ,test-class (,@fixture-names test) ()
-	 (:documentation ,class-doc))
+	 ;; Define a uniquely-named class associated with this group.
+	 ;; It should extend all of the given fixture groups, plus the
+	 ;; "group" class.
+	 (defclass ,group-class (,@fixture-names group) ()
+	   (:documentation ,class-doc))
        
-       ;; Extract the names which will be provided by the fixtures
-       ;; which this group uses.
-       (setf (gethash ',group-name +group-def-names+) 
-	     (loop for ,f in ',fixture-names
-		   append (gethash ,f +fixture-def-names+)))
+	 ;; Define a uniquely-named class which we will extend for
+	 ;; each test in this group.  It will also extend all of the
+	 ;; given fixture groups, plus the "test" class.
+	 (defclass ,test-class (,@fixture-names test) ()
+	   (:documentation ,class-doc))
+       
+	 ;; Extract the names which will be provided by the fixtures
+	 ;; which this group uses.
+	 (setf (gethash ',group-name +group-def-names+) 
+	       (loop for ,f in ',fixture-names
+		     append (gethash ,f +fixture-def-names+)))
        
        
-       (let (;; The record of information about this group.
-	     (,singleton (make-instance ',group-class
-			   :package *package* :name ',group-name
-			   :fixtures ',fixture-names
-			   :setup '(block nil ,@setup-form)
-			   :cleanup '(block nil ,@cleanup-form)
-			   :testclass ',test-class
-			   :documentation ,doc-string)))
-
-
-	 ;; Calling the fixture setup might throw an error, so we need
-	 ;; to catch a setup exception here as well as when calling
-	 ;; the actual setup form.
-	 (defmethod run :around ((,ptg ,group-class))
-	   (let ((*active-group* ,singleton))
-	     (control-setup-errors (call-next-method))))
+;;;	 (format t " - Creating singleton record for ~s~%" ',group-name)
+	 (let (;; The record of information about this group.
+	       (,singleton (make-instance ',group-class
+			     :package *package* :name ',group-name
+			     :fixtures ',fixture-names
+			     :setup '(block nil ,@setup-form)
+			     :cleanup '(block nil ,@cleanup-form)
+			     :testclass ',test-class
+			     :documentation ,doc-string)))
+	   
+	   
+	   ;; Calling the fixture setup might throw an error, so we
+	   ;; need to catch a setup exception here as well as when
+	   ;; calling the actual setup form.
+	   (defmethod run :around ((,ptg ,group-class))
+	     (let ((*active-group* ,singleton))
+	       (control-setup-errors (call-next-method))))
 	 
-	 ;; Convenience method for running this group by name.
-	 (defmethod run-group ((g (eql ',group-name)))
-	   (run ,singleton))
+	   ;; Convenience method for running this group by name.
+	   (defmethod run-group ((g (eql ',group-name)))
+	     (run ,singleton))
 
-	 ;; Save the group information against its name.
-	 (setf (gethash ',group-name +groups+) ,singleton)
+	   ;; Save the group information against its name.
+	   (setf (gethash ',group-name +groups+) ,singleton)
 	 
-	 ;; Save the group information against this package.
-	 (let ((,wrapping-hash (gethash *package*
-					+groups-by-package+)))
-	   (unless ,wrapping-hash
-	     (setf ,wrapping-hash (make-hash-table)
-		   (gethash *package*
-			    +groups-by-package+) ,wrapping-hash))
-	   (setf (gethash ',group-name ,wrapping-hash) t))
+	   ;; Save the group information against this package.
+	   (let ((,wrapping-hash (gethash *package*
+					  +groups-by-package+)))
+	     (unless ,wrapping-hash
+	       (setf ,wrapping-hash (make-hash-table)
+		     (gethash *package*
+			      +groups-by-package+) ,wrapping-hash))
+	     (setf (gethash ',group-name ,wrapping-hash) t))
 
-	 ;; Set up variables that the tests defined in this group
-	 ;; should see.
-	 (let (;; The class which all tests of this group should
-	       ;; extend; information about the group.
-	       (*test-class-symbol* ',test-class)
-	       (*current-group-name* ',group-name)
-	       (*current-group-info* ,singleton)
+	   ;; Set up variables that the tests defined in this group
+	   ;; should see.
+	   (let (;; The class which all tests of this group should
+		 ;; extend; information about the group.
+		 (*test-class-symbol* ',test-class)
+		 (*current-group-name* ',group-name)
+		 (*current-group-info* ,singleton)
 	       
-	       ;; Accumulators for tests in this group.
-	       (*test-names-acc* nil)
-	       (*test-info-hash* (make-hash-table))
+		 ;; Accumulators for tests in this group.
+		 (*test-names-acc* nil)
+		 (*test-info-hash* (make-hash-table))
 
-	       ;; Any override for the default settings for deferring
-	       ;; test compilation.
-	       (*group-defer-test-compile* ,group-defer-compile))
+		 ;; Any override for the default settings for
+		 ;; deferring test compilation.
+		 (*group-defer-test-compile* ,group-defer-compile))
 	   
-	   (declare (dynamic-extent *test-names-acc*)
-		    (dynamic-extent *test-info-hash*)
-		    (dynamic-extent *test-class-symbol*)
-		    (dynamic-extent *current-group-name*)
-		    (dynamic-extent *current-group-info*)
-		    (dynamic-extent *group-defer-test-compile*)
-		    (ignorable *test-class-symbol*)
-		    (ignorable *current-group-name*)
-		    (ignorable *current-group-info*)
-		    (ignorable *group-defer-test-compile*))
+	     (declare (dynamic-extent *test-names-acc*)
+		      (dynamic-extent *test-info-hash*)
+		      (dynamic-extent *test-class-symbol*)
+		      (dynamic-extent *current-group-name*)
+		      (dynamic-extent *current-group-info*)
+		      (dynamic-extent *group-defer-test-compile*)
+		      (ignorable *test-class-symbol*)
+		      (ignorable *current-group-name*)
+		      (ignorable *current-group-info*)
+		      (ignorable *group-defer-test-compile*))
 	   
-	   ;; Now process the tests defined for this group.
-	   ,@tests
+	     ;; Now process the tests defined for this group.
+;;;	     (format t " - Processing tests in ~s~%" ',group-name)
+	     (setf *current-group-name* ',group-name)
+	     ,@actual-tests
 	   
-	   ;; Store the accumulated test information in this group
-	   ;; record.
-	   (let ((tests-vector
-		  (make-array (length *test-names-acc*)
-		      :initial-contents (nreverse *test-names-acc*))))
-	     (setf (slot-value ,singleton
-			       'test-names) tests-vector
-		   (slot-value ,singleton
-			       'tests-hash) *test-info-hash*)))
-	 nil))))
+	     ;; Store the accumulated test information in this group
+	     ;; record.
+	     (let ((tests-vector
+		    (make-array (length *test-names-acc*)
+				:initial-contents
+				(nreverse *test-names-acc*))))
+	       
+	       (setf (slot-value ,singleton 'test-names)
+		     tests-vector
+		     
+		     (slot-value ,singleton 'tests-hash)
+		     *test-info-hash*)))
+	   nil)))))
 
 ;;; Exported macro for defining a boolean test.
 
-(defmacro def-test (test-name &key form
-			      (defer-compile nil
-				  defer-compile-supplied-p))
-  ;;  (unless *current-group-name*
-  ;;    (error "Called def-test from outside a def-test-group"))
+(defmacro def-test
+    (test-name &key form 
+	       (setup nil setup-supplied-p)
+	       (cleanup nil cleanup-supplied-p)
+	       (fixtures nil fixtures-supplied-p)
+	       (defer-compile nil defer-compile-supplied-p))
 
-  (let (;; Unique symbol for the macro expansion.
-	(test-info (gensym "test-info-"))
+  `(def-test-in-group ',test-name ',*current-group-name*
+     :form ',form
+     ,@(if setup-supplied-p `(:setup ,setup))
+     ,@(if cleanup-supplied-p `(:cleanup ,cleanup))
+     ,@(if fixtures-supplied-p `(:fixtures ,fixtures))
+     ,@(if defer-compile-supplied-p `(:defer-compile ,defer-compile))))
+
+(defmacro def-test-in-group
+    (test-name group-name
+	       &key form 
+	       (setup nil setup-supplied-p)
+	       (cleanup nil cleanup-supplied-p)
+	       (fixtures nil fixtures-supplied-p)
+	       (defer-compile nil defer-compile-supplied-p))
+
+;;;  (format t " - Processing test ~s of group ~s (~s)~%"
+;;;	  test-name group-name (eval group-name))
+  (let* (;; Unique symbol for the macro expansion.
+	 (test-info (gensym "test-info"))
+	 (actual-test-class (gensym "test-class"))
+
+	 (actual-defer (if defer-compile-supplied-p
+			   defer-compile
+			   *group-defer-test-compile*))
+
+	 (actual-form
+	  (let ((forms (list (if actual-defer `(eval ',form) form))))
+	    (when setup-supplied-p
+	      (setf forms (cons (if actual-defer `(eval ',setup) setup)
+				forms)))
+	    (when cleanup-supplied-p
+	      (setf forms
+		    `((unwind-protect ,(if (> (length forms) 1)
+					   `(progn ,@forms)
+					   (car forms))
+			,(if actual-defer `(eval ',cleanup) cleanup)))))
+	    (if (> (length forms) 1)
+		`(progn ,@forms)
+		(car forms))))
 	
-	;; Build "special" declarations for the names defined in
-	;; fixtures.
-	(specials (loop for name in (gethash *current-group-name*
-					     +group-def-names+)
-			collect (list 'special name))))
-		    
-    `(progn
+	 ;; Build "special" declarations for the names defined in
+	 ;; fixtures.
+	 (specials (loop for name in (gethash group-name
+					      +group-def-names+)
+			 collect (list 'special name))))
+    
+;;;    (format t " -- Given fixtures ~s~%" fixtures)
+    
+    `(let ((,actual-test-class))
+	 
+       ,@(if fixtures-supplied-p
+	     
+	     (let* ((new-class-name (gensym "custom-test-class"))
+		    (anon-fixtures (clean-fixtures-names! fixtures))
+		    (class-defn (gensym)))
+	       ;; (format t "~s~%~s~%~%" anon-fixtures class-defn)
+	       `(,@anon-fixtures
+		 (let ((,class-defn (list 'defclass ',new-class-name 
+					  (cons *test-class-symbol*
+						',fixtures)
+					  ())))
+		   (eval ,class-defn))
+		 (setf ,actual-test-class ',new-class-name)))
+	     
+	    `((setf ,actual-test-class *test-class-symbol*)))
+	 
        (let (;; Actual information record for this test.
-	     (,test-info (make-instance *test-class-symbol*
+	     (,test-info (make-instance ,actual-test-class
 			   :group *current-group-info*
 			   :name ',test-name
 			   :documentation nil)))
+	 
 	 ;; File away this test's name and information.
 	 (push ',test-name *test-names-acc*)
 	 (setf (gethash ',test-name *test-info-hash*) ,test-info)
@@ -861,14 +966,12 @@ initialization and cleanup."
 	   (declare ,@specials)
 
 	   ;; Run the test expression, and return its value.
-	   ,(if (if defer-compile-supplied-p
-		    defer-compile
-		    *group-defer-test-compile*)
-		`(eval ',form)
-		form))
+	   ,actual-form)
 	 
+;;;	 (format t " - Defining run-test for test ~s in group ~s~%"
+;;;		 ',test-name ',group-name)
 	 ;; Convenience method for running tests by name.
-	 (defmethod run-test ((gr (eql ',*current-group-name*))
+	 (defmethod run-test ((gr (eql ,group-name))
 			      (ts (eql ',test-name)))
 	   (run ,test-info))))))
 
@@ -914,5 +1017,3 @@ initialization and cleanup."
 	 (let ((,form (car (last ,raw-middle)))
 	       (,middle (nbutlast ,raw-middle)))
 	   ,@forms)))))
-
-

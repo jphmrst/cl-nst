@@ -16,6 +16,9 @@
      ((s1 :initarg :s1 :reader get-s1)
       (s2 :initarg :s2) (s3 :initarg :s3)))
 
+(def-test-group g1 ()
+  (def-test triv :form t))
+
 (def-fixtures f1 :bindings ((c 3) (d 'asdfg)))
 (def-fixtures f2 :uses (f1) :bindings ((d 4) (e 'asdfg) (f c)))
 (def-test-group g2 (f1 f2)
@@ -56,4 +59,26 @@
     (values 10 'a "sss"))
 
   (def-check float1 round-sig-eql 3 142.1 141.9)
-  (def-check float2 not round-sig-eql 3 141.1 141.9))
+  (def-check float2 not round-sig-eql 3 141.1 141.9)
+
+  (def-test fix0 :fixtures (f1)                :form (boundp 'c))
+  (def-test fix1 :fixtures ((fixtures x 3))    :form (boundp 'x))
+  (def-test fix2 :fixtures (f1 (fixtures x 3)) :form (eql c x))
+  (def-test fix3 :fixtures (f1 (fixtures qq 3)) :form (eql c qq))
+  )
+
+(def-test-group g3a (f1)
+  (def-test fix0 :form (boundp 'c))
+  (def-test fix1 :form (not (boundp 'zz)))
+  )
+
+(def-test-group g3 (f1 (fixtures zz 3))
+  (def-test fix0 :form (boundp 'c))
+  (def-test fix1 :form (boundp 'zz))
+  )
+
+(def-test-group g4 (f1)
+  (def-test fix0 :form (boundp 'c))
+  (def-test fix1 :form (not (boundp 'zz)))
+  )
+

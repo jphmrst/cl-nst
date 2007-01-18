@@ -7,6 +7,7 @@
 ;;; and the lisp-specific preamble to that license.
 (in-package :nst)
 
+
 (defclass classcheck ()
      ((s1 :initarg :s1 :reader get-s1)
       (s2 :initarg :s2) (s3 :initarg :s3)))
