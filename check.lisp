@@ -106,6 +106,10 @@
 (def-check-form fail
     "This test always fails"
   :body nil)
+  
+(def-check-form bool
+    "Check that a value evaluates to non-null"
+  :args (form) :body form)
 
 ;;; Standard checking forms --- various equality tests.
 			       
