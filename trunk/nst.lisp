@@ -26,7 +26,7 @@
 ;;; 6. The testing via ASDF adds the package tests, but doesn't remove
 ;;; them after that run.  This is probably not how it should work.
 ;;;
-;;; 7. There's alot of cruft here arising from my inexperience on
+;;; 7. There is much cruft here arising from my inexperience on
 ;;; getting names known at macro-expansion time communicated to other
 ;;; subsequently expanded macros.  I should clean up after myself.
 ;;;
