@@ -14,6 +14,8 @@
 		     #:def-test
 		     #:def-check
 		     #:def-check-form
+		     #:def-check-form-manip
+		     #:continue-check
 		     #:run-nst-commands))
 
 (defpackage :nst-test (:use :common-lisp :nst))

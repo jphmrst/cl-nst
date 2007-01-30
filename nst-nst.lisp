@@ -21,6 +21,8 @@
 
 (def-fixtures f1 :bindings ((c 3) (d 'asdfg)))
 (def-fixtures f2 :uses (f1) :bindings ((d 4) (e 'asdfg) (f c)))
+(def-fixtures capture-x-y-fixtures :bindings ((z (+ x y)) (w 10)))
+
 (def-test-group g2 (f1 f2)
   (def-check sym1 symbol a (car '(a b c)))
   (def-check not1 not symbol b 'a)
@@ -65,6 +67,19 @@
   (def-test fix1 :fixtures ((fixtures x 3))    :form (boundp 'x))
   (def-test fix2 :fixtures (f1 (fixtures x 3)) :form (eql c x))
   (def-test fix3 :fixtures (f1 (fixtures qq 3)) :form (eql c qq))
+
+  (def-check checkfix1 :fixtures ((fixtures qq 5)) eql 5 qq)
+  
+  (nst:def-check check-capture-0
+      :fixtures ((fixtures x 1 y 2) capture-x-y-fixtures)
+      pass)
+  (nst:def-check check-capture-1
+      :fixtures ((fixtures x 1 y 2) capture-x-y-fixtures)
+      eql 3 z)
+  (nst:def-check check-capture-2
+      :fixtures ((fixtures x 1 y 2) capture-x-y-fixtures)
+      :setup (setf w 100)
+      eql 100 w)
   )
 
 (def-test-group g3a (f1)

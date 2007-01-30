@@ -16,12 +16,49 @@
 				(find-package "NST"))))
       (apply #'check-form (cons local-symbol details)))))
 
-(defmacro def-check (name &rest commands-and-forms)
+(defmacro def-check (name &rest commands-and-forms
+			  &aux setup cleanup fixtures)
   "Define a test constructed according to the specified method."
-  (unless commands-and-forms
-    (error "def-check needs arguments")) 
-    `(def-test ,name :form
-       ,(continue-check commands-and-forms)))
+
+  (block process-check-options
+    (loop do
+      (unless commands-and-forms
+	(error "too few arguments in def-check ~s" name))
+      (let ((orig-first (car commands-and-forms)))
+	(unless (symbolp orig-first)
+	  (error "Bad command to def-check: ~s" orig-first))
+	(let ((first (intern (symbol-name orig-first)
+			     (find-package "NST"))))
+	  (cond
+	    ((eq first 'setup)
+	     (when setup
+	       (error "Multiple :setup declaration to def-check ~s"
+		      name))
+	     (pop commands-and-forms)
+	     (let ((form (pop commands-and-forms)))
+	       (setf setup `(:setup ,form))))
+	    
+	    ((eq first 'cleanup)
+	     (when setup
+	       (error "Multiple :cleanup declaration to def-check ~s"
+		      name))
+	     (pop commands-and-forms)
+	     (let ((form (pop commands-and-forms)))
+	       (setf cleanup `(:cleanup ,form))))
+	    
+	    ((eq first 'fixtures)
+	     (when setup
+	       (error "Multiple :fixtures declaration to def-check ~s"
+		      name))
+	     (pop commands-and-forms)
+	     (let ((form (pop commands-and-forms)))
+	       (setf fixtures `(:fixtures ,form))))
+	    
+	    (t (return-from process-check-options)))))))
+  
+  `(def-test ,name
+     ,@setup ,@cleanup ,@fixtures
+     :form ,(continue-check commands-and-forms)))
 
 (defgeneric check-form (method &rest details)
   (:documentation "Definition of the top-level check forms.")
@@ -99,6 +136,15 @@
 	  documentation)
        ,body)))
 
+(defmacro def-check-form-manip (name doc-string
+				     &key (args nil) form manip)
+  (let ((methods (gensym))
+	(new-form (gensym)))
+    `(def-check-form ,name ,doc-string
+       :args ,args :strip-suffix ,form :expose-bare-subforms ,methods
+       :body (let ((,new-form ,manip))
+	       (continue-check (append ,methods (list ,new-form)))))))
+
 (def-check-form pass
     "This test always passes"
   :body t)
@@ -172,12 +218,12 @@ and check the resulting value"
   :strip-suffix form
   :require-min-bare-subforms 1
   :expose-bare-subforms methods
-  :body (let ((method (gensym)))
-	  `(block ,method
+  :body (let ((block (gensym)))
+	  `(block ,block
 	     ,@(loop for method in methods collect
 		     `(unless ,(continue-check (nconc method
 						      (list form)))
-			(return-from ,method nil)))
+			(return-from ,block nil)))
 	     t)))
 
 (def-check-form any
@@ -188,7 +234,8 @@ and check the resulting value"
   :body (let ((block (gensym)))
 	  `(block ,block
 	     ,@(loop for method in methods collect
-		     `(when ,(continue-check (nconc method (list form)))
+		     `(when ,(continue-check (nconc method
+						    (list form)))
 			(return-from ,block t)))
 	     nil)))
 
