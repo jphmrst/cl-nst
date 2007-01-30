@@ -889,7 +889,7 @@ initialization and cleanup."
 	       (defer-compile nil defer-compile-supplied-p))
 
   `(def-test-in-group ',test-name ',*current-group-name*
-     :form ',form
+     :form ,form
      ,@(if setup-supplied-p `(:setup ,setup))
      ,@(if cleanup-supplied-p `(:cleanup ,cleanup))
      ,@(if fixtures-supplied-p `(:fixtures ,fixtures))
