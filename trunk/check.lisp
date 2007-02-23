@@ -12,8 +12,8 @@
 
 (defun continue-check (further)
   (destructuring-bind (method &rest details) further
-    (let ((local-symbol (intern (symbol-name method)
-				(find-package "NST"))))
+    (let* ((name (symbol-name method))
+	   (local-symbol (intern name (find-package "NST"))))
       (apply #'check-form (cons local-symbol details)))))
 
 (defmacro def-check (name &rest commands-and-forms
@@ -27,8 +27,8 @@
       (let ((orig-first (car commands-and-forms)))
 	(unless (symbolp orig-first)
 	  (error "Bad command to def-check: ~s" orig-first))
-	(let ((first (intern (symbol-name orig-first)
-			     (find-package "NST"))))
+	(let* ((first-name (symbol-name orig-first))
+	       (first (intern first-name (find-package "NST"))))
 	  (cond
 	    ((eq first 'setup)
 	     (when setup
@@ -71,7 +71,7 @@
 (defmacro def-check-form
     (given-name &optional
 		(documentation nil documentation-supplied-p)
-		&key body package-local
+		&key body
 		(args nil args-supplied-p)
 		(expose-subtests nil)
 		(require-min-bare-subforms 0)
@@ -81,10 +81,8 @@
     
   (let* ((cmd (gensym "cmd"))
 	 (details (gensym "details"))
-	 (name (if package-local given-name 
-		   (intern (symbol-name given-name)
-			   (find-package "NST")))))
-
+	 (name (intern (symbol-name given-name) (find-package "NST"))))
+    
     (when (and (not expose-subtests)
 	       (not expose-bare-subforms)
 	       (eql require-min-bare-subforms 0))
@@ -131,10 +129,10 @@
 			,body))
 	      details next-details)))
     
-    `(defmethod check-form ((,cmd (eql ',name)) &rest ,details)
-       ,(when (and documentation-supplied-p (stringp documentation))
-	  documentation)
-       ,body)))
+    (eval `(defmethod check-form ((,cmd (eql ',name)) &rest ,details)
+	     ,(when (and documentation-supplied-p (stringp documentation))
+		documentation)
+	     ,body))))
 
 (defmacro def-check-form-manip (name doc-string
 				     &key (args nil) form manip)
