@@ -12,9 +12,7 @@
 
 (defun continue-check (further)
   (destructuring-bind (method &rest details) further
-    (let* ((name (symbol-name method))
-	   (local-symbol (intern name (find-package "NST"))))
-      (apply #'check-form (cons local-symbol details)))))
+    (apply #'check-form (cons method details))))
 
 (defmacro def-check (name &rest commands-and-forms
 			  &aux setup cleanup fixtures)
@@ -24,37 +22,35 @@
     (loop do
       (unless commands-and-forms
 	(error "too few arguments in def-check ~s" name))
-      (let ((orig-first (car commands-and-forms)))
-	(unless (symbolp orig-first)
-	  (error "Bad command to def-check: ~s" orig-first))
-	(let* ((first-name (symbol-name orig-first))
-	       (first (intern first-name (find-package "NST"))))
-	  (cond
-	    ((eq first 'setup)
-	     (when setup
-	       (error "Multiple :setup declaration to def-check ~s"
-		      name))
-	     (pop commands-and-forms)
-	     (let ((form (pop commands-and-forms)))
-	       (setf setup `(:setup ,form))))
+      (let ((first (car commands-and-forms)))
+	(unless (symbolp first)
+	  (error "Bad command to def-check: ~s" first))
+
+	(cond
+	  ((eq first :setup)
+	   (when setup
+	     (error "Multiple :setup declaration to def-check ~s" name))
+	   (pop commands-and-forms)
+	   (let ((form (pop commands-and-forms)))
+	     (setf setup `(:setup ,form))))
 	    
-	    ((eq first 'cleanup)
-	     (when setup
-	       (error "Multiple :cleanup declaration to def-check ~s"
-		      name))
-	     (pop commands-and-forms)
-	     (let ((form (pop commands-and-forms)))
-	       (setf cleanup `(:cleanup ,form))))
+	  ((eq first :cleanup)
+	   (when setup
+	     (error "Multiple :cleanup declaration to def-check ~s"
+		    name))
+	   (pop commands-and-forms)
+	   (let ((form (pop commands-and-forms)))
+	     (setf cleanup `(:cleanup ,form))))
 	    
-	    ((eq first 'fixtures)
-	     (when setup
-	       (error "Multiple :fixtures declaration to def-check ~s"
-		      name))
-	     (pop commands-and-forms)
-	     (let ((form (pop commands-and-forms)))
-	       (setf fixtures `(:fixtures ,form))))
+	  ((eq first :fixtures)
+	   (when setup
+	     (error "Multiple :fixtures declaration to def-check ~s"
+		    name))
+	   (pop commands-and-forms)
+	   (let ((form (pop commands-and-forms)))
+	     (setf fixtures `(:fixtures ,form))))
 	    
-	    (t (return-from process-check-options)))))))
+	  (t (return-from process-check-options))))))
   
   `(def-test ,name
      ,@setup ,@cleanup ,@fixtures
@@ -65,23 +61,21 @@
 
   (:method (unrecognized &rest whatever)
      "Ill-specified checks are compile-time errors"
-     (declare (ignorable unrecognized) (ignorable whatever))
+     (declare (ignorable whatever))
      (error "Unrecognized def-check form ~s~%" unrecognized)))
 
 (defmacro def-check-form
-    (given-name &optional
-		(documentation nil documentation-supplied-p)
-		&key body
-		(args nil args-supplied-p)
-		(expose-subtests nil)
-		(require-min-bare-subforms 0)
-		(expose-bare-subforms nil
-				      expose-bare-subforms-supplied-p)
-		(strip-suffix nil strip-suffix-supplied-p))
+    (name &optional (documentation nil documentation-supplied-p)
+	  &key body
+	  (args nil args-supplied-p)
+	  (expose-subtests nil)
+	  (require-min-bare-subforms 0)
+	  (expose-bare-subforms nil
+				expose-bare-subforms-supplied-p)
+	  (strip-suffix nil strip-suffix-supplied-p))
     
   (let* ((cmd (gensym "cmd"))
-	 (details (gensym "details"))
-	 (name (intern (symbol-name given-name) (find-package "NST"))))
+	 (details (gensym "details")))
     
     (when (and (not expose-subtests)
 	       (not expose-bare-subforms)
@@ -130,7 +124,8 @@
 	      details next-details)))
     
     (eval `(defmethod check-form ((,cmd (eql ',name)) &rest ,details)
-	     ,(when (and documentation-supplied-p (stringp documentation))
+	     ,(when (and documentation-supplied-p
+			 (stringp documentation))
 		documentation)
 	     ,body))))
 
@@ -143,44 +138,44 @@
        :body (let ((,new-form ,manip))
 	       (continue-check (append ,methods (list ,new-form)))))))
 
-(def-check-form pass
+(def-check-form :pass
     "This test always passes"
   :body t)
 
-(def-check-form fail
+(def-check-form :fail
     "This test always fails"
   :body nil)
   
-(def-check-form bool
+(def-check-form :bool
     "Check that a value evaluates to non-null"
   :args (form) :body form)
 
 ;;; Standard checking forms --- various equality tests.
 			       
-(def-check-form symbol
+(def-check-form :symbol
     "Check that the form evaluates to the given atom.  This is
 the style of test provided by RT/RRT."
   :args (target form) :body `(eq ,form ',target))
 			       
-(def-check-form eq
+(def-check-form :eq
     "Check that the form evaluates to the given atom.  This is
 the style of test provided by RT/RRT."
   :args (target form) :body `(eq ,form ,target))
    
-(def-check-form eql
+(def-check-form :eql
     "Check that the form is eql to an ideal (which may itself be
 another form)."
   :args (target form) :body `(eql ,form ,target))
 
-(def-check-form forms-eq
+(def-check-form :forms-eq
     "Check that two forms are eq."
   :args (form1 form2) :body `(eq ,form1 ,form2))
   
-(def-check-form forms-eql
+(def-check-form :forms-eql
     "Check that two forms are eql."
   :args (form1 form2) :body `(eql ,form1 ,form2))
 
-(def-check-form round-sig-eql
+(def-check-form :round-sig-eql
     "Check that two numbers are eql to the given number fo significant\
  digits.  Fails if either form evaluates to a non-number"
   :args (digits form1 form2)
@@ -193,12 +188,12 @@ another form)."
 
 ;;; Standard checking forms --- transforming arguments.
   
-(def-check-form predicate
+(def-check-form :predicate
     "Apply the named boolean predicate to a form, and take the
 result as the test result."
   :args (predicate form) :body `(funcall #',predicate ,form))
 
-(def-check-form apply
+(def-check-form :apply
     "Apply the named transformation to the value of a form,
 and check the resulting value"
   :args (transform)
@@ -211,7 +206,7 @@ and check the resulting value"
 ;;; Standard checking forms --- combinations of methods on a single
 ;;; value form.
 
-(def-check-form all
+(def-check-form :all
     "Require all the given tests to succeed on a value"
   :strip-suffix form
   :require-min-bare-subforms 1
@@ -224,7 +219,7 @@ and check the resulting value"
 			(return-from ,block nil)))
 	     t)))
 
-(def-check-form any
+(def-check-form :any
     "Require that at least one of the given tests succeed on a value"
   :strip-suffix form
   :require-min-bare-subforms 1
@@ -237,12 +232,12 @@ and check the resulting value"
 			(return-from ,block t)))
 	     nil)))
 
-(def-check-form not
+(def-check-form :not
     "Require that a check fail."
   :expose-subtests t
   :body `(not ,subchecks))
 
-(def-check-form multi
+(def-check-form :multi
     "Provide corresponding tests for a multiple-values form"
   :strip-suffix form
   :require-min-bare-subforms 1
@@ -261,7 +256,7 @@ and check the resulting value"
 
 ;;; Standard checking forms --- expecting errors or warnings.
 
-(def-check-form err
+(def-check-form :err
     "The err specifier tells the tester to expect evaluation of the
 form to throw an error, and otherwise the test fails."
   :args (form)
@@ -275,7 +270,7 @@ form to throw an error, and otherwise the test fails."
 
 ;;; Standard checking forms --- operations on lists.
 
-(def-check-form each
+(def-check-form :each
     "The each specifier tells the tester to expect that the form will 
 evaluate to a list, and that each element of the list will pass the
 check given in the further elements of the check specification."
@@ -291,7 +286,7 @@ check given in the further elements of the check specification."
 	       (unless ,subform (return-from ,x nil)))
 	     t)))
   
-(def-check-form seq
+(def-check-form :seq
     "The seq specifier takes N further specifier elements of the form\
  plus a form for evaluation.  The check expects the form to evaluate\
  to a list of N elements which match the respective specifier in the\
@@ -329,7 +324,7 @@ check given in the further elements of the check specification."
 	     (let ((,last-var ,form))
 	       ,result-form))))
   
-(def-check-form permute
+(def-check-form :permute
     "The permute specifier expects that the form will evaluate\
  to a list, some permutation of which will satisfy the further\
  specified check."
@@ -351,7 +346,7 @@ check given in the further elements of the check specification."
 
 ;;; Standard checking forms --- operations on vectors.
 
-(def-check-form across
+(def-check-form :across
     "The across specifier takes N further specifier elements and a\
  form, and expects the form to evaluate to a vector of N elements\
  which match the respective specifier in the further elements."
@@ -380,7 +375,7 @@ check given in the further elements of the check specification."
 
 ;;; Standard checking forms --- operations on records and fields.
   
-(def-check-form slots
+(def-check-form :slots
   "Apply checks to the individual slots of a class."
   :expose-bare-subforms details
   :require-min-bare-subforms 2
