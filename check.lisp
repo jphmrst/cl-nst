@@ -12,7 +12,7 @@
 
 (defun continue-check (further)
   (destructuring-bind (method &rest details) further
-    (apply #'check-form (cons method details))))
+    (apply #'check-form method details)))
 
 (defmacro def-check (name &rest commands-and-forms
 			  &aux setup cleanup fixtures)
