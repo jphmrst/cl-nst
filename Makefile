@@ -1,7 +1,7 @@
 
 all: package.ps nst.ps test.ps check.ps \
 	interactive.ps numbers.ps permuter.ps \
-	nst-nst.ps format.ps tests.ps fixtures.ps \
+	nst-nst.ps format.ps testforms.ps fixtures.ps \
 	classes.ps runners.ps
 	#
 
