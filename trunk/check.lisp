@@ -9,7 +9,50 @@
 
 ;;; Exported macro providing a more expressive test-definition
 ;;; facility.
+
+;;; Some shorthand we'll use below.
 
+(defmacro require-arguments-for-method (keyword args count
+						&key at-least)
+  (let ((given (gensym)))
+    `(let ((,given (length ,args)))
+       (unless (>= ,given ,count)
+	 (error "def-check form ~s requires ~:[~;at least ~]~d ~
+                 target~:*~[s~;~:;s~] in method form, provided ~d, ~
+                 ~{~s~^ ~}"
+		,keyword ,at-least ,count ,given ,args
+		)))))
+
+(defmacro warn-if-excess-arguments (keyword args)
+  `(unless (null ,args)
+     (warn "~@<Extra arguments to def-check form ~s ignored:~_ ~
+               ~@<~{~s~^ ~_~}~:>~:>"
+	   ,keyword ,args)))
+
+(defmacro require-further-checks (cmd further)
+  `(unless ,further
+     (error "def-check form ~s requires further check methods" ,cmd)))
+
+(defmacro destructure-warning-extra (cmd bindings value &rest forms)
+  (let ((extra-forms (gensym))
+	(minimum (length bindings)))
+    `(progn
+       (require-arguments-for-method ,cmd ,value ,minimum)
+       (destructuring-bind (,@bindings &rest ,extra-forms) ,value
+	 (warn-if-excess-arguments ,cmd ,extra-forms)
+	 ,@forms))))
+
+(defmacro destructure-prefix-last (cmd prefixes middle form value
+				       &rest forms)
+  (let ((minimum (+ 2 (length prefixes)))
+	(raw-middle (gensym)))
+    `(progn
+       (require-arguments-for-method ,cmd ,value ,minimum :at-least t)
+       (destructuring-bind (,@prefixes &rest ,raw-middle) ,value
+	 (let ((,form (car (last ,raw-middle)))
+	       (,middle (nbutlast ,raw-middle)))
+	   ,@forms)))))
+
 (defun continue-check (further)
   (destructuring-bind (method &rest details) further
     (apply #'check-form method details)))
