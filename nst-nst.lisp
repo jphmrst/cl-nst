@@ -72,13 +72,13 @@
   (def-check checkfix1 :fixtures ((:fixtures qq 5))
 	     :eql 5 qq)
   
-  (nst:def-check check-capture-0
+  (def-check check-capture-0
       :fixtures ((:fixtures x 1 y 2) capture-x-y-fixtures)
       :pass)
-  (nst:def-check check-capture-1
+  (def-check check-capture-1
       :fixtures ((:fixtures x 1 y 2) capture-x-y-fixtures)
       :eql 3 z)
-  (nst:def-check check-capture-2
+  (def-check check-capture-2
       :fixtures ((:fixtures x 1 y 2) capture-x-y-fixtures)
       :setup (setf w 100)
       :eql 100 w)

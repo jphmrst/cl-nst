@@ -18,8 +18,13 @@
 		 (:file "permuter")
 		 (:file "numbers")
 		 (:file "nst")
+		 (:file "classes")
+		 (:file "runners")
+		 (:file "fixtures")
+		 (:file "tests")
 		 (:file "check")
-		 (:file "interactive")))
+		 (:file "interactive")
+		 (:file "format")))
 
 (defsystem :test-nst
     :class nst-tester
