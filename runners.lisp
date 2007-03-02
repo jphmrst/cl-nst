@@ -52,7 +52,7 @@ associated with the setup form of a test group."
      ;; Print the currently selecting blurbing for group setup
      ;; execution.
      (verbose-out 
-      (format t "Setting up tests in group ~s..." group-name))
+      (format t "Setting up tests in group ~s..." ',group-name))
 
      ;; We capture the success of setup in a conditional, and proceed
      ;; with tests and cleanup only if it works.
