@@ -46,35 +46,40 @@
 ;;; after-the-fact.
 ;;;
 ;;; 5. Texinfo the user guide.
-
+
 ;;; Options for output in the interactive system.
 ;;;
 (defmacro def-flag (flag-name flag-value implying-flags
 			      &key (documentation nil doc-sup-p)
 			      runtime-macro function-name)
-  `(progn
+  `(eval-when (:compile-toplevel :load-toplevel :execute)
+     (defvar ,flag-name ,flag-value ,(when doc-sup-p documentation))
      ,(when function-name
 	`(defun ,function-name () (or ,flag-name ,@implying-flags)))
      ,(when runtime-macro
 	`(defmacro ,runtime-macro (&rest forms)
 	   (let ((name-echo ',flag-name) (flags-echo ',implying-flags))
 	     `(when (or ,name-echo ,@flags-echo) ,@forms))))
-     (defvar ,flag-name ,flag-value ,(when doc-sup-p documentation))))
+     t))
 
-(def-flag *debug-macrotime* t ()
-	  :runtime-macro macro-dbg
-	  :documentation "Set to t for extensive macro expansion \
-                          debugging output")
-(def-flag *debug-compile* t ()
-	  :runtime-macro compile-dbg
-	  :documentation "Set to t for extensive debugging output for \
-                          expanded macros")
-(def-flag *debug-class-hierarchy* t ()
+(def-flag *debug-fixtures* t ()
+	  :runtime-macro fixture-dbg
+	  :documentation "Set to t to generate debugging information \
+                          about fixtures")
+(def-flag *debug-class-hierarchy* nil ()
 	  :runtime-macro class-dbg
 	  :documentation "Set to t to generate debugging information \
                           about the class hierarchy of tests and \
                           groups")
-(def-flag *debug-bindings* t ()
+(def-flag *debug-macrotime* t (*debug-class-hierarchy* *debug-fixtures*)
+	  :runtime-macro macro-dbg
+	  :documentation "Set to t for extensive macro expansion \
+                          debugging output")
+(def-flag *debug-compile* t (*debug-fixtures*)
+	  :runtime-macro compile-dbg
+	  :documentation "Set to t for extensive debugging output for \
+                          expanded macros")
+(def-flag *debug-bindings* t (*debug-fixtures*)
 	  :runtime-macro bind-dbg
 	  :documentation "Set to t to generate debugging information \
                           about fixture bindings in tests and groups")
@@ -88,6 +93,7 @@
 	  :documentation "Set to t for verbose output during test\
                           execution.  This setting is implied by\
                           *debug-output*.")
+
 (def-flag *scheduled-summary-output* t ()
 	  :documentation "Set to t for summaries of runs of scheduled\
                           tests.")
@@ -441,6 +447,7 @@ associated with the setup form of a test group."
      (verbose-out (format t "done~%"))
      ,@other-forms)))
 
+
 (defmacro do-cleanup (group group-name group-cleanup-form
 			    &rest other-forms)
   "This macro, which we use twice below, describes the tedious plumbing
@@ -476,7 +483,6 @@ one of t, nil or 'err.  Here we also make the calls to our hook macros
 for output before and after indiviual tests."
 	   
    (with-slots (test-name group) test
-     (verbose-out (format t " - Running test ~s~%" test-name))
      (block single-test
        (handler-bind
 	   ((error
@@ -494,11 +500,48 @@ for output before and after indiviual tests."
 	       (setf *passed-test-count* (+ 1 *passed-test-count*))
 	       (add-test *failed-tests* test))
 	   (if (use-verbose-output) 
-		(format t "   ~a~%" (if result "Passed" "Failed"))
-		(unless result
-		  (format t "Test ~s (group ~s) failed~%"
-			  test-name (get-name group))))
+	       (format t "   ~a~%" (if result "Passed" "Failed"))
+	       (unless result
+		 (format t "Test ~s (group ~s) failed~%"
+			 test-name (get-name group))))
 	   (return-from single-test (if result t nil))))))))
+
+(defgeneric bind-for-test (test)
+  (:method ((ts test)) (core ts)))
+
+(defgeneric setup/cleanup-test (test)
+  (:method ((ts test)) (bind-for-test ts)))
+
+(defgeneric bind-for-group (test)
+  (:method ((g group))
+     (block nil
+	 (let ((group-result t))
+	   (with-slots (group-name test-names tests-hash) g
+	     (loop for test-name across test-names do
+	       (verbose-out
+		(format t " - ~@<Running test ~s ~_of group ~s~:>~%"
+			test-name group-name))
+	       (let* ((test (gethash test-name tests-hash))
+		      (test-result (setup/cleanup-test test)))
+		 
+		 ;; Here we check for the *break-on-...* flags.
+		 (cond
+		   ((eq test-result 'err)
+		    (if (or *break-on-error* *debug-on-error*)
+			(return 'err)
+			(setf group-result 'err)))
+	   
+		   ((not test-result)
+		    (if *break-on-wrong*
+			(return nil)
+			(unless (eq group-result 'err)
+			  (setf group-result nil))))))))
+	   group-result)))
+
+  (:method ((ts test)) (setup/cleanup-test ts)))
+
+(defgeneric setup/cleanup-group (item)
+  (:method (item) (bind-for-group item)))
 
 ;;; Generic functions relating to test and group execution.
 
@@ -510,11 +553,13 @@ unsuccessful nil result.")
 
   (:method ((ts test))
      "Run a single test, bracketed by its group's setup and cleanup."
-     (with-slots (test-name group) ts
+     (with-slots (group test-name) ts
+       (verbose-out (format t " - Running test ~s~%" test-name))
        (with-slots (group-name setup cleanup) group
 	 (do-setup group group-name setup
-	     (let ((test-result nil))
-	       (unwind-protect (setf test-result (core ts))
+	     (let ((test-result))
+	       (unwind-protect
+		   (setf test-result (setup/cleanup-group ts))
 		 (do-cleanup group group-name cleanup))
 	       ;; When we're only trying to run one test, the return
 	       ;; value from the method run is the same as the return
@@ -527,35 +572,21 @@ unsuccessful nil result.")
        (block group-exec
 	 (with-slots (group-name setup cleanup test-names tests-hash) g
 	   (do-setup g group-name setup
-	     (unwind-protect
-		 (loop for test-name across test-names do
-		   (let ((test-result
-			  (core (gethash test-name tests-hash))))
-
-		     ;; Here we check for the *break-on-...* flags.
-		     (cond
-		       ((eq test-result 'err)
-			(if (or *break-on-error* *debug-on-error*)
-			    (return-from group-exec 'err)
-			    (setf group-result 'err)))
-			
-		       ((not test-result)
-			(if *break-on-wrong*
-			    (return-from group-exec nil)
-			    (unless (eq group-result 'err)
-			      (setf group-result nil)))))))
-	       (do-cleanup group group-name cleanup))))
+		     (unwind-protect (setup/cleanup-group g)
+		       (do-cleanup group group-name cleanup))))
 	 group-result))))
 
 ;;; Exported macro which sets up test fixtures.
 
 (defparameter *active-group* nil)
 
+(eval-when (:compile-toplevel)
+  (defparameter *fixture-to-group-class* (make-hash-table :test 'eq))
+  (defparameter *fixture-to-test-class* (make-hash-table :test 'eq)))
+
 (defmacro def-fixtures (name &key bindings
 			     uses outer inner documentation)
-  "Define a list of test fixtures which can then be assigned to test
-groups and referenced from those groups' tests."
-
+  (macro-dbg (format t "Expanding declaration of fixture ~s:~%" name))
   (let* ((err (gensym))
 	 
 	 ;; A list of the names in the bindings by themselves, without
@@ -617,69 +648,101 @@ groups and referenced from those groups' tests."
 	 (open-bindings (loop for b in bindings
 			      collect (cons 'defparameter b)))
 	 
+	 ;; Names for the classes we define.
+	 (class-for-group (gensym))
+	 (class-for-test  (gensym))
+	 
 	 ;; Macro joy.
 	 (ptg (gensym "ptg-"))
 	 (disc (gensym "disc-"))
 	 (id (gensym "id-")))
 
-    `(progn
-       ;; The names we bind must be declaimed special, or they will
-       ;; not be recognized.
-       (declaim ,@special-decls)
+    (setf (gethash name *fixture-to-group-class*) class-for-group
+	  (gethash name *fixture-to-test-class*) class-for-test)
+    (class-dbg
+     (format t " - Classes from fixture ~s:~
+              ~%    . For groups, ~s~%    . For tests, ~s~%"
+	     name class-for-group class-for-test))
+    
+    (let ((result
+	   `(progn
+	      (compile-dbg
+	       (format t "Compiling declaration of fixture ~s:~%"
+		       ',name))
+	      
+	      ;; The names we bind must be declaimed special, or they
+	      ;; will not be recognized.
+	      (declaim ,@special-decls)
        
-       ;; Save this name with the other fixture names.  We check
-       ;; first, since we could be re-defining the name.
-       (unless (member ',name +fixtures+)
-	 (push ',name +fixtures+))
+	      ;; Save this name with the other fixture names.  We
+	      ;; check first, since we could be re-defining the name.
+	      (unless (member ',name +fixtures+)
+		(push ',name +fixtures+))
        
-       ;; Save the names we define in this fixture.
-       (setf (gethash ',name +fixture-def-names+) ',names-only)
+	      ;; Save the names we define in this fixture.
+	      (setf (gethash ',name +fixture-def-names+) ',names-only)
        
-       ;; Create a class with the same name as the fixture.  Possibly,
-       ;; this class name should be generated, and retrieved by a
-       ;; function against the symbol ',name .
-       (defclass ,name (fixture) () ,@doc-forms)
+	      ;; Create classes for using this fixture with groups and
+	      ;; with individual tests.
+	      (defclass ,class-for-group (fixture) () ,@doc-forms)
+	      (defclass ,class-for-test  (fixture) () ,@doc-forms)
        
-       ;; We put the fixture's bindings in effect with this :around
-       ;; method.  All groups which use this fixture, and all of these
-       ;; groups' tests, will be subclasses of the class above.  So
-       ;; this :around method will give those test bodies these
-       ;; bindings.
-       ;;
-       ;;(format t "Defining names: ~s~%" ',names-only)
-       (defmethod run :around ((,ptg ,name))
-	 (declare ,@outer ,@used-specials ,@ignorable-used-specials)
-	 (bind-dbg (format t "  Binding names:~{ ~s~} (by ~s)~%"
-			   ',names-only ',name))
-	 (let* ,safe-bindings
-	   (declare ,@dynamic-decls ,@inner)
-	   (call-next-method)))
+	      ;; We put the fixture's bindings in effect with this
+	      ;; :around method.  All groups which use this fixture,
+	      ;; and all of these groups' tests, will be subclasses of
+	      ;; the class above.  So this :around method will give
+	      ;; those test bodies these bindings.
+	      (defmethod bind-for-group
+		  :around ((,ptg ,class-for-group))
+		(declare ,@outer ,@used-specials
+			 ,@ignorable-used-specials)
+		(bind-dbg
+		 (format t "  ~@<Binding names:~{ ~s~} ~
+                               ~_(by ~s via ~s)~:>~%"
+			 ',names-only ',name ',class-for-group))
+		(let* ,safe-bindings
+		  (declare ,@dynamic-decls ,@inner)
+		  (call-next-method)))
+	      (defmethod bind-for-test :around ((,ptg ,class-for-test))
+		(declare ,@outer ,@used-specials
+			 ,@ignorable-used-specials)
+		(bind-dbg
+		 (format t "     ~@<Binding names:~{ ~s~} ~
+                                  ~_(by ~s via ~s)~:>~%"
+			 ',names-only ',name ',class-for-test))
+		(let* ,safe-bindings
+		  (declare ,@dynamic-decls ,@inner)
+		  (call-next-method)))
        
-       ;; For runtime system debugging.  Returns the literal list of
-       ;; name-value bindings assigned to this fixture.
-       (defmethod get-fixture-bindings ((,disc (eql ',name)))
-	 (declare (ignorable ,disc))
-	 ',bindings)
+	      ;; For runtime system debugging.  Returns the literal
+	      ;; list of name-value bindings assigned to this fixture.
+	      (defmethod get-fixture-bindings ((,disc (eql ',name)))
+		(declare (ignorable ,disc))
+		',bindings)
 
-       ;; For opening the fixture to the current namespace.
-       (defmethod open-fixture ((,ptg (eql ',name)))
-	 ,open-method-doc
-	 (unless (and (gethash ',name *opened-fixtures*)
-		      (not *reopen-fixtures*))
-	   (when *open-used-fixtures*
-	     (loop for ,id in ',uses do
-	       (open-fixture ,id)))
-	   ,@open-bindings)
-	 nil)
-       
-       nil)))
+	      ;; For opening the fixture to the current namespace.
+	      (defmethod open-fixture ((,ptg (eql ',name)))
+		,open-method-doc
+		(unless (and (gethash ',name *opened-fixtures*)
+			     (not *reopen-fixtures*))
+		  (when *open-used-fixtures*
+		    (loop for ,id in ',uses do
+		      (open-fixture ,id)))
+		  ,@open-bindings)
+		nil)
+	      
+	      (compile-dbg
+	       (format t "Ending compilation of fixture ~s.~%"
+		       ',name)))))
+      (macro-dbg (format t "End expansion of fixture ~s~%" name))
+      result)))
 
 ;;; Defining a fixture anonymously.
-(defun quick-fix (name binding)
-  (let ((bindings (loop for x = (pop binding) while x
-			for y = (pop binding)
-			collect (list x y))))
-    `(def-fixtures ,name :bindings ,bindings)))
+;;;(defmacro quick-fix (name binding)
+;;;  (let ((bindings (loop for x = (pop binding) while x
+;;;			for y = (pop binding)
+;;;			collect (list x y))))
+;;;    `(def-fixtures ,name :bindings ,bindings)))
 
 ;;; A convenience macro for specialized fixture definitions.
 
@@ -693,20 +756,31 @@ variables from the test suite."
 	 (loop for v in variables collect (list v nil))))
     `(def-fixtures ,name ,nil-bindings :documentation ,documentation)))
 
-(defun clean-fixtures-names! (fixtures-list)
+(defun clean-fixtures-names! (fixtures-list fixture-to-class)
   "Returns fixture declarations for anonymous fixtures"
   (let* ((fixture-decls nil))
     (loop for node on fixtures-list do
       (let ((item (car node)))
 	(cond
-	  ((symbolp item) t)
-			      
+	  ((symbolp item)
+	   (setf (car node) (gethash item fixture-to-class))
+	   t)
+
 	  ((and (listp item) (eq :fixtures (car item)))
 	   (let* ((name (gensym))
-		  (decl (quick-fix name (cdr item))))
+		  (decl-binding (cdr item))
+		  (decl (macroexpand-1
+			 `(def-fixtures ,name :bindings
+			    ,(loop for x = (pop decl-binding)
+				   while x
+				   for y = (pop decl-binding)
+				   collect (list x y))))))
+	     ;; (fixture-dbg
+	     ;;  (format t "      * From ~s~%        generated ~s~%"
+	     ;;          (car node) decl))
 	     (push decl fixture-decls)
-	     (setf (car node) name)))
-	  
+	     (setf (car node) (gethash name fixture-to-class))))
+
 	  (t (error "Unrecognized fixture name list item ~s"
 		    item)))))
     fixture-decls))
@@ -727,17 +801,21 @@ variables from the test suite."
   "Define a group of tests associated with certain fixtures,
 initialization and cleanup."
 
-;;;  (format t "Defining group ~s with fixtures ~s.~%"
-;;;	  group-name fixture-names)
+  (macro-dbg
+   (format t "Defining group ~s with fixtures ~s.~%"
+	   group-name fixture-names))
   (let ((doc-string nil) (tests nil)
 	(setup-form nil) (cleanup-form nil)
 	(group-defer-compile *defer-test-compile*)
-	(anon-fixtures (clean-fixtures-names! fixture-names))
-
+	(anon-fixtures (clean-fixtures-names! fixture-names
+					      *fixture-to-group-class*))
+	
 	;; Unique names.
 	(f (gensym "f"))
 	(test-class (gensym "test-class-"))
-	(group-class (gensym "group-class-"))
+	(group-class (gensym (concatenate 'string "group-class-"
+					  (symbol-name group-name)
+					  "-")))
 	(singleton (gensym "singleton-"))
 	(wrapping-hash (gensym "wrapping-hash-"))
 	(ptg (gensym))
@@ -770,7 +848,6 @@ initialization and cleanup."
 		      (ignorable *current-group-name*))
 	     (loop for test in tests collect
 		   (macroexpand test)))))
-
     
     `(progn
        
@@ -899,8 +976,9 @@ initialization and cleanup."
 	       (fixtures nil fixtures-supplied-p)
 	       (defer-compile nil defer-compile-supplied-p))
 
-;;;  (format t " - Processing test ~s of group ~s (~s)~%"
-;;;	  test-name group-name (eval group-name))
+  (macro-dbg
+   (format t " - Processing test ~s of group ~s (~s)~%"
+	   test-name group-name (eval group-name)))
   (let* (;; Unique symbol for the macro expansion.
 	 (test-info (gensym "test-info"))
 
@@ -934,12 +1012,19 @@ initialization and cleanup."
 	 (actual-test-class '*test-class-symbol*))
 
     (macro-dbg
-      (format t "Expanding ~s/~s.~%" group-name test-name))
+      (format t "Expanding ~a/~a.~%" group-name test-name))
     
     (when fixtures-supplied-p
+      (fixture-dbg
+       (format t " - Fixtures before cleanup: ~s~%" fixtures))
       (let* ((new-class-name (gensym "custom-test-class"))
-	     (anon-fixtures (clean-fixtures-names! fixtures))
+	     (anon-fixtures
+	      (clean-fixtures-names! fixtures *fixture-to-test-class*))
 	     (class-defn (gensym)))
+	(fixture-dbg
+	 (format t " - Fixtures after cleanup: ~s~
+                  ~%   Expansion: ~s~%"
+		 fixtures anon-fixtures))
 	(setf actual-test-class `',new-class-name)
 	(setf fixtures-forms
 	      `(,@anon-fixtures
@@ -952,7 +1037,7 @@ initialization and cleanup."
 			    ,class-defn))
 		  (eval ,class-defn))))
 	(macro-dbg
-	  (format t " - Test-local fixture declaration~% - ~s~%"
+	  (format t " - Test-local fixture declaration:~%     ~s~%"
 		  fixtures-forms))))
     
     `(progn
