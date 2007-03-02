@@ -21,7 +21,7 @@
 		 (:file "classes")
 		 (:file "runners")
 		 (:file "fixtures")
-		 (:file "tests")
+		 (:file "testforms")
 		 (:file "check")
 		 (:file "interactive")
 		 (:file "format")))
