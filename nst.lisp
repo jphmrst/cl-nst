@@ -1022,9 +1022,8 @@ initialization and cleanup."
 	      (clean-fixtures-names! fixtures *fixture-to-test-class*))
 	     (class-defn (gensym)))
 	(fixture-dbg
-	 (format t " - Fixtures after cleanup: ~s~
-                  ~%   Expansion: ~s~%"
-		 fixtures anon-fixtures))
+	 (format t " - Fixtures after cleanup: ~s~%"
+		 fixtures))
 	(setf actual-test-class `',new-class-name)
 	(setf fixtures-forms
 	      `(,@anon-fixtures
@@ -1036,9 +1035,10 @@ initialization and cleanup."
 		    (format t " - Local test class definition:~%   ~s~%"
 			    ,class-defn))
 		  (eval ,class-defn))))
-	(macro-dbg
-	  (format t " - Test-local fixture declaration:~%     ~s~%"
-		  fixtures-forms))))
+	;;(macro-dbg
+	;;  (format t " - Test-local fixture declaration:~%     ~s~%"
+	;;	    fixtures-forms))
+	))
     
     `(progn
        (compile-dbg
