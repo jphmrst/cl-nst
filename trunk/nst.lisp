@@ -64,16 +64,21 @@
 	       `(when (or ,name-echo ,@flags-echo) ,@forms)))))
      t))
 
+(def-flag *debug-forms-manip* nil ()
+	  :runtime-macro forms-dbg
+	  :documentation "Set to t to generate debugging information \
+                          about certain macro expansions")
 (def-flag *debug-fixtures* t ()
 	  :runtime-macro fixture-dbg
 	  :documentation "Set to t to generate debugging information \
                           about fixtures")
-(def-flag *debug-class-hierarchy* nil ()
+(def-flag *debug-class-hierarchy* t ()
 	  :runtime-macro class-dbg
 	  :documentation "Set to t to generate debugging information \
                           about the class hierarchy of tests and \
                           groups")
-(def-flag *debug-macrotime* t (*debug-class-hierarchy* *debug-fixtures*)
+(def-flag *debug-macrotime* t
+  (*debug-class-hierarchy* *debug-fixtures* *debug-forms-manip*)
 	  :runtime-macro macro-dbg
 	  :documentation "Set to t for extensive macro expansion \
                           debugging output")
@@ -116,7 +121,7 @@ line whenever a test does not succeed.")
   "When set to t, directs the test runner to return to the command
 line whenever a test raises an error condition, rather than returning
 a boolean value.")
-(defvar *debug-on-error* nil
+(defvar *debug-on-error* t
   "When set to t, directs the test runner to return in debugging mode
 whenever a test raises an error condition, rather than returning a
 boolean value.")
