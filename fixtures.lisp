@@ -17,161 +17,148 @@
   (defparameter *fixture-to-test-class* (make-hash-table :test 'eq)))
 
 (defmacro def-fixtures (name &key bindings
-			     uses outer inner documentation)
+			     uses assumes outer inner documentation)
   (macro-dbg (format t "Expanding declaration of fixture ~s:~%" name))
   (let* ((err (gensym))
 	 
 	 ;; A list of the names in the bindings by themselves, without
 	 ;; the associated forms.
-	 (safe-bindings
-	  (loop for binding in bindings
-		collect `(,(car binding)
+	 (names (loop for b in bindings collect (car b)))
+	 
+	 ;; The names defined in the other fixtures which this fixture
+	 ;; is declared to use.
+	 (fix-used
+	  (loop for f in uses
+		append (loop for id in (gethash f +fixture-def-names+)
+			     collect id)))
+	 
+	 ;; Names for the classes we define.
+	 (class-for-group (gensym))
+	 (class-for-test  (gensym))
+	 
+	 ;; Name-capture avoidance.
+	 (ptg (gensym "ptg-"))
+	 (disc (gensym "disc-"))
+	 (id (gensym "id-")))
+
+    (macro-dbg (format t " + Assembling form~%"))
+
+    `(progn
+       
+       ;; Things we do as soon as we expand the fixture, because it
+       ;; affects how we expand other fixtures, groups and tests.
+       (eval-when (:compile-toplevel :load-toplevel :execute)
+	 (setf (gethash ',name *fixture-to-group-class*)
+	       ',class-for-group
+	       	       (gethash ',name *fixture-to-test-class*)
+	       ',class-for-test)
+	 
+	 (class-dbg
+	  (format t " - Classes from fixture ~s:~
+                   ~%    . For groups, ~s~%    . For tests, ~s~%"
+		  ',name ',class-for-group ',class-for-test))
+       
+	 ;; Save this name with the other fixture names.  We check
+	 ;; first, since we could be re-defining the name.
+	 (unless (member ',name +fixtures+)
+	   (push ',name +fixtures+))
+       
+	 ;; Save the names we define in this fixture.
+	 (setf (gethash ',name +fixture-def-names+) ',names))
+
+
+       ;; Below is all done after expanding the macro.
+       (compile-dbg
+	(format t "Compiling declaration of fixture ~s:~%"
+		',name))
+	      
+       ;; Create classes for using this fixture with groups and with
+       ;; individual tests.
+       (defclass ,class-for-group (fixture) ()
+	 ,@(if documentation `((:documentation ,documentation))))
+       (defclass ,class-for-test  (fixture) ()
+	 ,@(if documentation `((:documentation ,documentation))))
+       
+       ;; We put the fixture's bindings in effect with this :around
+       ;; method.  All groups which use this fixture, and all of these
+       ;; groups' tests, will be subclasses of the class above.  So
+       ;; this :around method will give those test bodies these
+       ;; bindings.
+       (defmethod bind-for-group
+	   :around ((,ptg ,class-for-group))
+	 (declare ,@outer
+		  ,@(loop for f in fix-used collect `(special ,f))
+		  ,@(loop for f in fix-used collect `(ignorable ,f))
+		  ,@(loop for v in assumes collect `(special ,v)))
+	 (bind-dbg
+	  (format t "  ~@<Binding names:~{ ~s~} ~_(by ~s via ~s)~:>~%"
+		  ',names ',name ',class-for-group))
+	 (let* ,(loop for b in bindings collect
+		      (let ((var (car b)) (body (cdr b)))
+			`(,var
 			  (progn
 			    (record-setup-error
 			     *active-group* ,err
 			     (make-instance 'fixture-error-report
 			       :caught ,err
 			       :fixture-name ',name
-			       :var-name ',(car binding))
-			     ,@(cdr binding))))))
-	 
-	 ;; A list of the names in the bindings by themselves, without
-	 ;; the associated forms.
-	 (names-only
-	  (loop for binding in bindings collect (car binding)))
-	 
-	 ;; We use several sets of declarations about the names we
-	 ;; bind for this fixture --- this one in "dynamic", below is
-	 ;; "special".
-	 (dynamic-decls
-	  (loop for name in names-only
-		collect (list 'dynamic-extent name)))
-	 
-	 (special-decls
-	  (loop for name in names-only collect (list 'special name)))
+			       :var-name ',var)
+			     ,@body)))))
+	   (declare
+	    ,@(loop for n in names collect `(dynamic-extent ,n))
+	    ,@(loop for n in names collect `(ignorable ,n))
+	    ,@inner)
+	   (call-next-method)))
 
-	 ;; The names defined in the fixtures which this one uses.
-	 (uses-names
-	  (loop for f in uses
-		append (loop for id in (gethash f +fixture-def-names+)
-			     collect id)))
-	 
-	 ;; We also need to make declarations about the names in other
-	 ;; fixtures which this fixture uses.  Here we make "special"
-	 ;; and below is "ignorable".
-	 (used-specials
-	  (loop for id in uses-names collect (list 'special id)))
+       (defmethod bind-for-test :around ((,ptg ,class-for-test))
+	 (declare ,@outer
+		  ,@(loop for f in fix-used collect `(special ,f))
+		  ,@(loop for v in assumes collect `(special ,v))
+		  ,@(loop for f in fix-used collect `(ignorable ,f)))
+	 (bind-dbg
+	  (format t "     ~@<Binding names:~{ ~s~} ~
+                           ~_(by ~s via ~s)~:>~%"
+		  ',names ',name ',class-for-test))
+	 (let* ,(loop for b in bindings collect
+		      (let ((var (car b)) (body (cdr b)))
+			`(,var
+			  (progn
+			    (record-setup-error
+			     *active-group* ,err
+			     (make-instance 'fixture-error-report
+			       :caught ,err
+			       :fixture-name ',name
+			       :var-name ',var)
+			     ,@body)))))
+	   (declare
+	    ,@(loop for n in names collect `(dynamic-extent ,n))
+	    ,@(loop for n in names collect `(ignorable ,n))
+	    ,@inner)
+	   (call-next-method)))
+       
+       ;; For runtime system debugging.  Returns the literal list of
+       ;; name-value bindings assigned to this fixture.
+       (defmethod get-fixture-bindings ((,disc (eql ',name)))
+	 (declare (ignorable ,disc))
+	 ',bindings)
 
-	 (ignorable-used-specials
-	  (loop for id in uses-names collect (list 'ignorable id)))
-	 
-	 ;; Inserter for documentation, if we have any.
-	 (doc-forms
-	  (if documentation 
-	      (list (list ':documentation documentation))
-	      nil))
-	 
-	 ;; Documentation string for the open method
-	 (open-method-doc
-	  (format nil "Generated method for the ~s fixture set." name))
-	 
-	 ;; Converting the bindings into defparameter bindings to open
-	 ;; the fixture into the interactive system.
-	 (open-bindings (loop for b in bindings
-			      collect (cons 'defparameter b)))
-	 
-	 ;; Names for the classes we define.
-	 (class-for-group (gensym))
-	 (class-for-test  (gensym))
-	 
-	 ;; Macro joy.
-	 (ptg (gensym "ptg-"))
-	 (disc (gensym "disc-"))
-	 (id (gensym "id-")))
-
-    
-    (let ((result
-	   `(progn
-	      (eval-when (:compile-toplevel :load-toplevel :execute)
-		(setf (gethash ',name *fixture-to-group-class*)
-		      ',class-for-group
-		      (gethash ',name *fixture-to-test-class*)
-		      ',class-for-test)
-		(class-dbg
-		 (format t " - Classes from fixture ~s:~
-              ~%    . For groups, ~s~%    . For tests, ~s~%"
-			 ',name ',class-for-group ',class-for-test)))
-	      
-	      (compile-dbg
-	       (format t "Compiling declaration of fixture ~s:~%"
-		       ',name))
-	      
-	      ;; The names we bind must be declaimed special, or they
-	      ;; will not be recognized.
-	      (declaim ,@special-decls)
+       ;; For opening the fixture to the current namespace.
+       (defmethod open-fixture ((,ptg (eql ',name)))
+	 (declare ,@outer
+		  ,@(loop for f in fix-used collect `(special ,f))
+		  ,@(loop for v in assumes collect `(special ,v))
+		  ,@(loop for f in fix-used collect `(ignorable ,f))
+		  ,@(loop for n in names collect `(special ,n)))
+	 ,(format nil "Generated method for the ~s fixture set." name)
+	 (unless (and (gethash ',name *opened-fixtures*)
+		      (not *reopen-fixtures*))
+	   (when *open-used-fixtures*
+	     (loop for ,id in ',uses do (open-fixture ,id)))
+	   ,@(loop for b in bindings collect `(defparameter ,@b)))
+	 nil)
        
-	      ;; Save this name with the other fixture names.  We
-	      ;; check first, since we could be re-defining the name.
-	      (unless (member ',name +fixtures+)
-		(push ',name +fixtures+))
-       
-	      ;; Save the names we define in this fixture.
-	      (setf (gethash ',name +fixture-def-names+) ',names-only)
-       
-	      ;; Create classes for using this fixture with groups and
-	      ;; with individual tests.
-	      (defclass ,class-for-group (fixture) () ,@doc-forms)
-	      (defclass ,class-for-test  (fixture) () ,@doc-forms)
-       
-	      ;; We put the fixture's bindings in effect with this
-	      ;; :around method.  All groups which use this fixture,
-	      ;; and all of these groups' tests, will be subclasses of
-	      ;; the class above.  So this :around method will give
-	      ;; those test bodies these bindings.
-	      (defmethod bind-for-group
-		  :around ((,ptg ,class-for-group))
-		(declare ,@outer ,@used-specials
-			 ,@ignorable-used-specials)
-		(bind-dbg
-		 (format t "  ~@<Binding names:~{ ~s~} ~
-                               ~_(by ~s via ~s)~:>~%"
-			 ',names-only ',name ',class-for-group))
-		(let* ,safe-bindings
-		  (declare ,@dynamic-decls ,@inner)
-		  (call-next-method)))
-	      (defmethod bind-for-test :around ((,ptg ,class-for-test))
-		(declare ,@outer ,@used-specials
-			 ,@ignorable-used-specials)
-		(bind-dbg
-		 (format t "     ~@<Binding names:~{ ~s~} ~
-                                  ~_(by ~s via ~s)~:>~%"
-			 ',names-only ',name ',class-for-test))
-		(let* ,safe-bindings
-		  (declare ,@dynamic-decls ,@inner)
-		  (call-next-method)))
-       
-	      ;; For runtime system debugging.  Returns the literal
-	      ;; list of name-value bindings assigned to this fixture.
-	      (defmethod get-fixture-bindings ((,disc (eql ',name)))
-		(declare (ignorable ,disc))
-		',bindings)
-
-	      ;; For opening the fixture to the current namespace.
-	      (defmethod open-fixture ((,ptg (eql ',name)))
-		,open-method-doc
-		(unless (and (gethash ',name *opened-fixtures*)
-			     (not *reopen-fixtures*))
-		  (when *open-used-fixtures*
-		    (loop for ,id in ',uses do
-		      (open-fixture ,id)))
-		  ,@open-bindings)
-		nil)
-	      
-	      (compile-dbg
-	       (format t "Ending compilation of fixture ~s.~%"
-		       ',name)))))
-      (macro-dbg (format t "End expansion of fixture ~s~%" name))
-      result)))
+       (compile-dbg
+	(format t "Ending compilation of fixture ~s.~%" ',name)))))
 
 ;;; Defining a fixture anonymously.
 ;;;(defmacro quick-fix (name binding)
@@ -192,15 +179,17 @@ variables from the test suite."
 	 (loop for v in variables collect (list v nil))))
     `(def-fixtures ,name ,nil-bindings :documentation ,documentation)))
 
-(defun clean-fixtures-names! (fixtures-list fixture-to-class)
+(defun process-anonymous-fixtures (fixtures-list fixture-to-class)
   "Returns fixture declarations for anonymous fixtures"
-  (let* ((fixture-decls nil))
+  (let* ((fixture-decls nil)
+	 (class-list nil))
+    (fixture-dbg
+     (format t "    >> Resolving fixture list ~s~%" fixtures-list))
     (loop for node on fixtures-list do
       (let ((item (car node)))
 	(cond
 	  ((symbolp item)
-	   (setf (car node) (gethash item fixture-to-class))
-	   t)
+	   (push item class-list))
 
 	  ((and (listp item) (eq :fixtures (car item)))
 	   (let* ((name (gensym))
@@ -211,12 +200,10 @@ variables from the test suite."
 				   while x
 				   for y = (pop decl-binding)
 				   collect (list x y))))))
-	     ;; (fixture-dbg
-	     ;;  (format t "      * From ~s~%        generated ~s~%"
-	     ;;          (car node) decl))
 	     (push decl fixture-decls)
-	     (setf (car node) (gethash name fixture-to-class))))
+	     (push name class-list)
+	     (fixture-dbg (format t "       ~s -> ~s~%" item name))))
 
 	  (t (error "Unrecognized fixture name list item ~s"
 		    item)))))
-    fixture-decls))
+    (values fixture-decls (nreverse class-list))))
