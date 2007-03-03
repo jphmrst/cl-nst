@@ -69,26 +69,31 @@ initialization and cleanup."
 	;; Preserve the order of tests.
 	(setf tests (nreverse tests))  
 
-	(let ((actual-tests) (test-fixture-defs))
+	(let ((actual-tests) (test-fixture-defs)
+	      (*current-group-name* group-name)
+	      (*current-group-info*)
+	      (*expanding-test-for-group* t))
+	  (declare (dynamic-extent *current-group-name*)
+		   (dynamic-extent *current-group-info*)
+		   (dynamic-extent *expanding-test-for-group*)
+		   (ignorable *current-group-name*)
+		   (ignorable *current-group-info*)
+		   (ignorable *expanding-test-for-group*))
 
-	  (let ((*current-group-name* group-name)
-		(*expanding-test-for-group* t))
-	    (declare (dynamic-extent *current-group-name*)
-		     (ignorable *current-group-name*)
-		     (dynamic-extent *expanding-test-for-group*)
-		     (ignorable *expanding-test-for-group*))
-	    (loop for ts in (reverse tests) do
-	      (let ((processed-test (macroexpand ts)))
-		(forms-dbg
-		 (format t "    * Orig.: ~s~%      Processed: ~s~%"
-			 ts processed-test))
-		(loop for d in (reverse (car processed-test)) do
-		  (push d test-fixture-defs))
-		(loop for pt in (reverse (cadr processed-test)) do
-		  (push pt actual-tests)))))
+	  (loop for ts in (reverse tests) do
+	    (let ((processed-test (macroexpand ts)))
+	      (forms-dbg
+	       (format t "    * Orig.: ~s~%      Processed: ~s~%"
+		       ts processed-test))
+	      (loop for d in (reverse (car processed-test)) do
+		(push d test-fixture-defs))
+	      (loop for pt in (reverse (cadr processed-test)) do
+		(push pt actual-tests))))
 	  (forms-dbg
-	   (format t " * Final list of fixtures defs:~%   ~S~%~
-                   * Final list of tests:~%   ~S~%"
+	   (format t " * Final list of fixtures defs:~
+                    ~%   ~S~
+                    ~% * Final list of tests:~
+                    ~%   ~S~%"
 		   test-fixture-defs actual-tests))
     
 	  `(progn
@@ -141,28 +146,32 @@ initialization and cleanup."
        
 	     ;; (format t " - Creating singleton record for ~s~%"
 	     ;;	 ',group-name)
-	     (let (;; The record of information about this group.
-		   (,singleton (make-instance ',group-class
-				 :package *package* :name ',group-name
-				 :fixtures ',fixture-names
-				 :setup '(block nil ,@setup-form)
-				 :cleanup '(block nil ,@cleanup-form)
-				 :testclass ',test-class
-				 :documentation ,doc-string)))
+	     (setf *current-group-info*
+		   (make-instance ',group-class
+		     :package *package*
+		     :name ',group-name
+		     :fixtures ',fixture-names
+		     :setup '(block nil ,@setup-form)
+		     :cleanup '(block nil ,@cleanup-form)
+		     :testclass ',test-class
+		     :documentation ,doc-string))
+	     (setf (gethash ',group-name +groups+)
+		   *current-group-info*)
+;;;	     (let (;; The record of information about this group.
+;;;		   (,singleton ))
 	   
 	       ;; Calling the fixture setup might throw an error, so
 	       ;; we need to catch a setup exception here as well as
 	       ;; when calling the actual setup form.
 	       (defmethod run :around ((,ptg ,group-class))
-		 (let ((*active-group* ,singleton))
+		 (let ((*active-group* *current-group-info*))
 		   (control-setup-errors (call-next-method))))
 	 
 	       ;; Convenience method for running this group by name.
 	       (defmethod run-group ((g (eql ',group-name)))
-		 (run ,singleton))
+		 (run ,*current-group-info*))
 
 	       ;; Save the group information against its name.
-	       (setf (gethash ',group-name +groups+) ,singleton)
 	 
 	       ;; Save the group information against this package.
 	       (let ((,wrapping-hash (gethash *package*
@@ -178,8 +187,7 @@ initialization and cleanup."
 	       (let (;; The class which all tests of this group should
 		     ;; extend, information about the group.
 		     (*test-class-symbol* ',test-class)
-		     (*current-group-name* ',group-name)
-		     (*current-group-info* ,singleton)
+		     ;; (*current-group-name* ',group-name)
 	       
 		     ;; Accumulators for tests in this group.
 		     (*test-names-acc* nil)
@@ -200,12 +208,12 @@ initialization and cleanup."
 				    :initial-contents
 				    (nreverse *test-names-acc*))))
 		 
-		   (setf (slot-value ,singleton 'test-names)
+		   (setf (slot-value *current-group-info* 'test-names)
 			 tests-vector
 		     
-			 (slot-value ,singleton 'tests-hash)
+			 (slot-value *current-group-info* 'tests-hash)
 			 *test-info-hash*)))
-	       nil)))))))
+	       nil))))))
 
 ;;; Exported macro for defining a boolean test.
 
@@ -286,7 +294,8 @@ initialization and cleanup."
 		      ',*current-group-name* ',test-name))
 	     (let (;; Actual information record for this test.
 		   (,test-info (make-instance ,actual-test-class
-				 :group ',*current-group-info*
+				 :group (gethash ',*current-group-name*
+						 +groups+)
 				 :name ',test-name
 				 :documentation nil)))
 	 
