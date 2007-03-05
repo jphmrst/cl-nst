@@ -53,7 +53,8 @@
 			      &key (documentation nil doc-sup-p)
 			      runtime-macro function-name)
   `(progn
-     (defvar ,flag-name ,flag-value ,(when doc-sup-p documentation))
+     (defparameter ,flag-name ,flag-value
+       ,(when doc-sup-p documentation))
      ,(when function-name
 	`(defun ,function-name () (or ,flag-name ,@implying-flags)))
      (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -68,29 +69,29 @@
 	  :runtime-macro forms-dbg
 	  :documentation "Set to t to generate debugging information \
                           about certain macro expansions")
-(def-flag *debug-fixtures* t ()
+(def-flag *debug-fixtures* nil ()
 	  :runtime-macro fixture-dbg
 	  :documentation "Set to t to generate debugging information \
                           about fixtures")
-(def-flag *debug-class-hierarchy* t ()
+(def-flag *debug-class-hierarchy* nil ()
 	  :runtime-macro class-dbg
 	  :documentation "Set to t to generate debugging information \
                           about the class hierarchy of tests and \
                           groups")
-(def-flag *debug-macrotime* t
+(def-flag *debug-macrotime* nil
   (*debug-class-hierarchy* *debug-fixtures* *debug-forms-manip*)
 	  :runtime-macro macro-dbg
 	  :documentation "Set to t for extensive macro expansion \
                           debugging output")
-(def-flag *debug-compile* t (*debug-fixtures*)
+(def-flag *debug-compile* nil (*debug-forms-manip* *debug-fixtures*)
 	  :runtime-macro compile-dbg
 	  :documentation "Set to t for extensive debugging output for \
                           expanded macros")
-(def-flag *debug-bindings* t (*debug-fixtures*)
+(def-flag *debug-bindings* nil (*debug-fixtures*)
 	  :runtime-macro bind-dbg
 	  :documentation "Set to t to generate debugging information \
                           about fixture bindings in tests and groups")
-(def-flag *debug-output* t (*debug-class-hierarchy* *debug-bindings*)
+(def-flag *debug-output* nil (*debug-class-hierarchy* *debug-bindings*)
 	  :runtime-macro run-dbg
 	  :documentation "Set to t for extensive runtime debugging \
                           output")
