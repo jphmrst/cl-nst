@@ -132,8 +132,11 @@ for output before and after indiviual tests."
 (defgeneric setup/cleanup-test (test)
   (:method ((ts test)) (bind-for-test ts)))
 
-(defgeneric bind-for-group (test)
+(defgeneric bind-for-group (group-or-test)
   (:method ((g group))
+     (run-dbg 
+      (format t " - Relayed to group bindings hook on ~s~%"
+	      (type-of g)))
      (block nil
 	 (let ((group-result t))
 	   (with-slots (group-name test-names tests-hash) g
@@ -161,7 +164,11 @@ for output before and after indiviual tests."
   (:method ((ts test)) (setup/cleanup-test ts)))
 
 (defgeneric setup/cleanup-group (item)
-  (:method (item) (bind-for-group item)))
+  (:method (item)
+     (run-dbg 
+      (format t " - Relaying from group setup/cleanup hook to ~
+                    group bindings hook~%"))
+     (bind-for-group item)))
 
 ;;; Generic functions relating to test and group execution.
 
