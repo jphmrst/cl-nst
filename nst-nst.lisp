@@ -55,6 +55,9 @@
   (def-check seq1
       :seq (:predicate symbolp) (:eql 1) (:symbol d)
       '(a 1 d))
+  (def-check with-seq1
+      :with (:seq (:predicate symbolp) (:eql 1) (:symbol d))
+      '(a 1 d))
   (def-check across1
       :across (:predicate symbolp) (:eql 1)
       (vector 'a 1))
@@ -118,3 +121,11 @@
   (def-test fix1 :form (not (boundp 'zz)))
   )
 
+(def-check-alias :carcarcdr :args (x y zs)
+		 :expansion (:all (:apply 'car :with x)
+				  (:apply 'cadr :with y)
+				  (:apply 'cddr :with zs)))
+
+(def-test-group g5 ()
+  (def-check ccc1
+      :carcarcdr (:eq 'a) (:eql 3) (:apply length :eql 2) '(a 3 2 1)))

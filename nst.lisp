@@ -122,7 +122,7 @@ line whenever a test does not succeed.")
   "When set to t, directs the test runner to return to the command
 line whenever a test raises an error condition, rather than returning
 a boolean value.")
-(defvar *debug-on-error* t
+(defvar *debug-on-error* nil
   "When set to t, directs the test runner to return in debugging mode
 whenever a test raises an error condition, rather than returning a
 boolean value.")
