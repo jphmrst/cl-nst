@@ -13,6 +13,7 @@
 		     #:def-test-group
 		     #:def-test
 		     #:def-check
+		     #:def-check-alias
 		     #:def-check-form
 		     #:def-check-form-manip
 		     #:continue-check

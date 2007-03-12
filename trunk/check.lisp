@@ -55,7 +55,21 @@
 
 (defun continue-check (further)
   (destructuring-bind (method &rest details) further
-    (apply #'check-form method details)))
+    (cond
+      ((check-form-alias-p method)
+       (continue-check (check-form-alias method details)))
+      
+      (t
+       (apply #'check-form method details)))))
+
+(defgeneric check-form-alias-p (method)
+  (:method (m)  (declare (ignorable m))
+     nil))
+
+(defgeneric check-form-alias (method details)
+  (:method (m d)
+     (declare (ignorable d))
+     (error "No such check-form alias ~s" m)))
 
 (defmacro def-check (name &rest commands-and-forms
 			  &aux setup cleanup fixtures)
@@ -113,8 +127,7 @@
 	  (args nil args-supplied-p)
 	  (expose-subtests nil)
 	  (require-min-bare-subforms 0)
-	  (expose-bare-subforms nil
-				expose-bare-subforms-supplied-p)
+	  (expose-bare-subforms nil expose-bare-subforms-supplied-p)
 	  (strip-suffix nil strip-suffix-supplied-p))
     
   (let* ((cmd (gensym "cmd"))
@@ -181,6 +194,31 @@
        :body (let ((,new-form ,manip))
 	       (continue-check (append ,methods (list ,new-form)))))))
 
+(defun add-all-list-calls (xs)
+  (cond
+    ((eq (car xs) 'quote)
+     `',(cadr xs))
+			   
+    (t
+     `(list ,@(loop for x in xs
+		    collect (cond
+			      ((consp x) (add-all-list-calls x))
+			      (t x)))))))
+
+(defmacro def-check-alias (name &key documentation
+				(args nil)
+				(expansion nil exp-supp-p))
+  (declare (ignorable documentation))
+  (unless exp-supp-p
+    (error "def-check-alias ~s given no expansion" name))
+  (let ((rest (gensym)) (details (gensym)))
+    `(eval-when (:compile-toplevel :load-toplevel :execute)
+       (defmethod check-form-alias-p ((id (eql ',name))) t)
+       (defmethod check-form-alias ((id (eql ',name)) ,details)
+	 (destructuring-bind (,@args &rest ,rest) ,details
+	   (append ,(add-all-list-calls expansion) ,rest)))
+       nil)))
+
 (def-check-form :pass
     "This test always passes"
   :body t)
@@ -245,6 +283,13 @@ and check the resulting value"
   :expose-bare-subforms methods
   :body (let ((application `(funcall #',transform ,form)))
 	  (continue-check (append methods (list application)))))
+
+(def-check-form :with
+    "Incorporate a list of check forms"
+  :require-min-bare-subforms 1
+  :expose-bare-subforms methods
+  :args (form-list)
+  :body (continue-check (nconc form-list methods)))
 
 ;;; Standard checking forms --- combinations of methods on a single
 ;;; value form.
