@@ -122,10 +122,21 @@
   )
 
 (def-check-alias :carcarcdr :args (x y zs)
-		 :expansion (:all (:apply 'car :with x)
-				  (:apply 'cadr :with y)
-				  (:apply 'cddr :with zs)))
+		 :expansion `(:all (:apply car :with ,x)
+				   (:apply cadr :with ,y)
+				   (:apply cddr :with ,zs)))
+
+(def-check-alias :car-fits-any-but-first
+    :args (x) :rest rest
+    :expansion `(:apply car :any ,@rest))
 
 (def-test-group g5 ()
   (def-check ccc1
-      :carcarcdr (:eq 'a) (:eql 3) (:apply length :eql 2) '(a 3 2 1)))
+      :carcarcdr (:eq 'a) (:eql 3) (:apply length :eql 2) '(a 3 2 1))
+  (def-check cfabf1
+      :car-fits-any-but-first (:eq 'c) (:eq 'a) (:eql 3) (:apply length :eql 2)
+      '(a 3 2 1))
+  (def-check cfabf2
+      :not :car-fits-any-but-first
+      (:eq 'a) (:eq 'c) (:eql 3) (:predicate listp)
+      '(a 3 2 1)))

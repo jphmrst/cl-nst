@@ -57,7 +57,10 @@
   (destructuring-bind (method &rest details) further
     (cond
       ((check-form-alias-p method)
-       (continue-check (check-form-alias method details)))
+       (let ((the-form (car (last details)))
+	     (submethods (butlast details)))
+	 (continue-check (append (check-form-alias method submethods)
+				 (list the-form)))))
       
       (t
        (apply #'check-form method details)))))
@@ -207,16 +210,19 @@
 
 (defmacro def-check-alias (name &key documentation
 				(args nil)
+				(rest (gensym) rest-supp-p)
 				(expansion nil exp-supp-p))
   (declare (ignorable documentation))
   (unless exp-supp-p
     (error "def-check-alias ~s given no expansion" name))
-  (let ((rest (gensym)) (details (gensym)))
+  (let ((details (gensym)))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
        (defmethod check-form-alias-p ((id (eql ',name))) t)
        (defmethod check-form-alias ((id (eql ',name)) ,details)
 	 (destructuring-bind (,@args &rest ,rest) ,details
-	   (append ,(add-all-list-calls expansion) ,rest)))
+	   ,(cond
+	      (rest-supp-p expansion)
+	      (t `(append ,expansion ,rest)))))
        nil)))
 
 (def-check-form :pass
@@ -299,12 +305,13 @@ and check the resulting value"
   :strip-suffix form
   :require-min-bare-subforms 1
   :expose-bare-subforms methods
-  :body (let ((block (gensym)))
+  :body (let ((block (gensym)) (val (gensym)))
 	  `(block ,block
-	     ,@(loop for method in methods collect
-		     `(unless ,(continue-check (nconc method
-						      (list form)))
-			(return-from ,block nil)))
+	     (let ((,val ,form))
+	       ,@(loop for method in methods collect
+		       `(unless
+			    ,(continue-check (nconc method (list val)))
+			  (return-from ,block nil))))
 	     t)))
 
 (def-check-form :any
