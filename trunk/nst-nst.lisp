@@ -63,6 +63,7 @@
   (def-check across1
       :across (:predicate symbolp) (:eql 1)
       (vector 'a 1))
+  (def-check permute0 :permute :seq nil)
   (def-check permute1 :permute :each :eq 'a '(a a))
   (def-check permute2 :permute
     :seq (:symbol b) (:predicate symbolp) (:predicate numberp)
