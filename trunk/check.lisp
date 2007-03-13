@@ -216,7 +216,7 @@
   (declare (ignorable documentation))
   (unless exp-supp-p
     (error "def-check-criterion ~s given no expansion" name))
-  (let ((details (gensym)))
+  (let* ((details (gensym)))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
        (defmethod check-form-criterion-p ((id (eql ',name))) t)
        (defmethod check-form-criterion ((id (eql ',name)) ,details)
