@@ -110,9 +110,10 @@
 (def-test-group group-with-anon-fixture ((:fixtures zz 3))
   (def-test use-anon-bound :form (boundp 'zz)))
 
-(def-test-group g3 (f1 (:fixtures zz 3))
+(def-test-group g3 (f1 (:fixtures zz 3 yy 5))
   (def-test fix0 :form (boundp 'c))
-  (def-test fix1 :form (boundp 'zz)))
+  (def-test fix1 :form (boundp 'zz))
+  (def-test fix2 :form (eql yy 5)))
 
 (def-test-group g3a (f1)
   (def-test fix0 :form (boundp 'c))
@@ -124,12 +125,12 @@
   (def-test fix1 :form (not (boundp 'zz)))
   )
 
-(def-check-alias :carcarcdr :args (x y zs)
-		 :expansion `(:all (:apply car :with ,x)
-				   (:apply cadr :with ,y)
-				   (:apply cddr :with ,zs)))
+(def-check-criterion :carcarcdr :args (x y zs)
+		     :expansion `(:all (:apply car :with ,x)
+				       (:apply cadr :with ,y)
+				       (:apply cddr :with ,zs)))
 
-(def-check-alias :car-fits-any-but-first
+(def-check-criterion :car-fits-any-but-first
     :args (x) :rest rest
     :expansion `(:apply car :any ,@rest))
 
