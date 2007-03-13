@@ -52,6 +52,8 @@
   (def-check each1 :each :symbol a '(a a a a a))
   (def-check not2 :not :predicate numberp 'a)
   (def-check each2 :each :predicate numberp '(1 2 3 4 5))
+  (def-check seq0 :seq nil)
+  (def-check seq0e :not :seq (:eql 1) nil)
   (def-check seq1
       :seq (:predicate symbolp) (:eql 1) (:symbol d)
       '(a 1 d))

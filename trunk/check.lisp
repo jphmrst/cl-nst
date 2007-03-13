@@ -57,10 +57,11 @@
   (destructuring-bind (method &rest details) further
     (cond
       ((check-form-alias-p method)
-       (let ((the-form (car (last details)))
-	     (submethods (butlast details)))
-	 (continue-check (append (check-form-alias method submethods)
-				 (list the-form)))))
+       (let* ((the-form (last details))
+	      (submethods (butlast details))
+	      (changed (check-form-alias method submethods))
+	      (revised (append changed the-form)))
+	 (continue-check revised)))
       
       (t
        (apply #'check-form method details)))))
@@ -295,7 +296,7 @@ and check the resulting value"
   :require-min-bare-subforms 1
   :expose-bare-subforms methods
   :args (form-list)
-  :body (continue-check (nconc form-list methods)))
+  :body (continue-check (append form-list methods)))
 
 ;;; Standard checking forms --- combinations of methods on a single
 ;;; value form.
@@ -310,7 +311,7 @@ and check the resulting value"
 	     (let ((,val ,form))
 	       ,@(loop for method in methods collect
 		       `(unless
-			    ,(continue-check (nconc method (list val)))
+			    ,(continue-check (append method (list val)))
 			  (return-from ,block nil))))
 	     t)))
 
@@ -322,8 +323,7 @@ and check the resulting value"
   :body (let ((block (gensym)))
 	  `(block ,block
 	     ,@(loop for method in methods collect
-		     `(when ,(continue-check (nconc method
-						    (list form)))
+		     `(when ,(continue-check (append method (list form)))
 			(return-from ,block t)))
 	     nil)))
 
@@ -344,7 +344,7 @@ and check the resulting value"
 	       ,@(loop for method = (pop methods)
 		       and name = (pop names)
 		       while method collect
-		       `(unless ,(continue-check (nconc method
+		       `(unless ,(continue-check (append method
 							(list name)))
 			  (return-from ,block nil))))
 	     t)))
@@ -387,7 +387,7 @@ check given in the further elements of the check specification."
  to a list of N elements which match the respective specifier in the\
  further elements."
   :expose-bare-subforms details
-  :require-min-bare-subforms 2
+  :require-min-bare-subforms 1
   :body (let ((form (car (last details)))
 	      (checks (cdr (reverse details)))
 	
@@ -407,7 +407,7 @@ check given in the further elements of the check specification."
 			 ,@(if on-last
 			       `((declare (ignorable ,last-var))))
 			 (unless 
-			     ,(continue-check (nconc method
+			     ,(continue-check (append method
 						     (list first-form)))
 			   (return-from ,overall nil))
 			 ,result-form))
@@ -436,7 +436,7 @@ check given in the further elements of the check specification."
 	     (let ((,perms (make-instance 'permuter :src ,form)))
 	       (loop while (has-next ,perms) do
 		 (let ((,x (next-permutation ,perms)))
-		   (when ,(continue-check (nconc method (list x)))
+		   (when ,(continue-check (append method (list x)))
 		     (return-from ,permute-block t))))))))
 
 ;;; Standard checking forms --- operations on vectors.
@@ -446,7 +446,7 @@ check given in the further elements of the check specification."
  form, and expects the form to evaluate to a vector of N elements\
  which match the respective specifier in the further elements."
   :expose-bare-subforms details
-  :require-min-bare-subforms 2
+  :require-min-bare-subforms 1
   :body (let ((form (car (last details)))
 	      (checks (nbutlast details))
 	
@@ -462,7 +462,7 @@ check given in the further elements of the check specification."
 			 collect
 			 (let* ((ref `(aref ,result ,idx))
 				(item-form
-				 (continue-check (nconc check
+				 (continue-check (append check
 							(list ref)))))
 			   `(unless ,item-form
 			      (return-from ,l nil))))))
@@ -484,7 +484,7 @@ check given in the further elements of the check specification."
 		      and method = (cadr tuple)
 		      collect
 		      `(unless
-			   ,(continue-check (nconc method
+			   ,(continue-check (append method
 						   (list slot-name)))
 			 (return-from ,slots-check nil))))
 	    
