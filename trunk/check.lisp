@@ -56,24 +56,24 @@
 (defun continue-check (further)
   (destructuring-bind (method &rest details) further
     (cond
-      ((check-form-alias-p method)
+      ((check-form-criterion-p method)
        (let* ((the-form (last details))
 	      (submethods (butlast details))
-	      (changed (check-form-alias method submethods))
+	      (changed (check-form-criterion method submethods))
 	      (revised (append changed the-form)))
 	 (continue-check revised)))
       
       (t
        (apply #'check-form method details)))))
 
-(defgeneric check-form-alias-p (method)
+(defgeneric check-form-criterion-p (method)
   (:method (m)  (declare (ignorable m))
      nil))
 
-(defgeneric check-form-alias (method details)
+(defgeneric check-form-criterion (method details)
   (:method (m d)
      (declare (ignorable d))
-     (error "No such check-form alias ~s" m)))
+     (error "No such check-form criterion ~s" m)))
 
 (defmacro def-check (name &rest commands-and-forms
 			  &aux setup cleanup fixtures)
@@ -209,17 +209,17 @@
 			      ((consp x) (add-all-list-calls x))
 			      (t x)))))))
 
-(defmacro def-check-alias (name &key documentation
+(defmacro def-check-criterion (name &key documentation
 				(args nil)
 				(rest (gensym) rest-supp-p)
 				(expansion nil exp-supp-p))
   (declare (ignorable documentation))
   (unless exp-supp-p
-    (error "def-check-alias ~s given no expansion" name))
+    (error "def-check-criterion ~s given no expansion" name))
   (let ((details (gensym)))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
-       (defmethod check-form-alias-p ((id (eql ',name))) t)
-       (defmethod check-form-alias ((id (eql ',name)) ,details)
+       (defmethod check-form-criterion-p ((id (eql ',name))) t)
+       (defmethod check-form-criterion ((id (eql ',name)) ,details)
 	 (destructuring-bind (,@args &rest ,rest) ,details
 	   ,(cond
 	      (rest-supp-p expansion)
