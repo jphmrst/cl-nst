@@ -20,7 +20,8 @@
 (defclass permuter ()
      ((next-permutation :type cons)
       (perm-stack :type (cons permuter))
-      (has-next :initform t :reader has-next)))
+      (has-next :initform t :reader has-next)
+      (degenerate)))
 
 (defun get-unassigned (p)
   (with-slots (perm-stack) p
@@ -28,9 +29,10 @@
       (append next-firsts prev-firsts))))
 
 (defmethod initialize-instance ((p permuter) &key src)
-  (with-slots (next-permutation perm-stack has-next) p
-    (setf  next-permutation nil  perm-stack nil  has-next t))
-  (tighten-stack p src))
+  (with-slots (next-permutation perm-stack has-next degenerate) p
+    (setf  next-permutation nil  perm-stack nil  has-next t
+	   degenerate (null src)))
+  (when src (tighten-stack p src)))
 
 (defmethod print-object ((p permuter) stream)
   (print-unreadable-object (p stream :type t :identity nil)
@@ -52,18 +54,21 @@
     (format stream "~@<~s~_--~s~:>" next-firsts prev-firsts)))
 
 (defun next-permutation (p)
-  (with-slots (next-permutation perm-stack has-next) p
-    (let ((result next-permutation))
-      (unless has-next
-	(error "Asked an empty permutation generator for another\
+  (with-slots (next-permutation perm-stack has-next degenerate) p
+    (if degenerate
+	(progn (setf has-next nil)
+	       next-permutation)
+	(let ((result next-permutation))
+	  (unless has-next
+	    (error "Asked an empty permutation generator for another\
  permutation"))
-      (relax-stack p)
-      (let ((whittled (whittle-relaxed-stack p)))
-	(if whittled
-	    (progn 
-	      (setf has-next nil))
-	    (tighten-stack p (get-unassigned p))))
-      result)))
+	  (relax-stack p)
+	  (let ((whittled (whittle-relaxed-stack p)))
+	    (if whittled
+		(progn 
+		  (setf has-next nil))
+		(tighten-stack p (get-unassigned p))))
+	  result))))
 
 (defun relax-stack (p)
   (with-slots (next-permutation perm-stack has-next) p
