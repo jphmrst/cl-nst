@@ -1,0 +1,497 @@
+
+\documentclass{article}
+\usepackage{makeidx}
+\title{A user's guide to NST}
+\author{John Maraist\thanks{Smart Information Flow Technologies, 211 N.\ First St.\ Suite 300, Minneapolis, MN 55401; \textsl{jmaraist} at \textsl{sift.info}.}}
+\setcounter{tocdepth}{2}
+\makeindex
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+\tableofcontents
+\parskip 0.6em
+\parindent 0pt
+
+\section*{Overview}
+This document is the manual and users' guide to the NST test
+framework.  NST is a unit test system which provides support for test
+fixture data, stateful setup and cleanup of tests, grouping of tests,
+and (we think!) a useful interface.  Suggestions and comments are
+welcome; a list of known bugs and infelicities concludes this
+document.  The file \texttt{nst-nst.lisp} in this distribution is our
+debugging suite for this package, and contains many examples (some of
+which we include in this document).
+
+\section{Fixtures}
+\label{fixtures}
+Fixtures\index{fixtures} are data structures and values which may be
+referred to by name during testing.  NST provides the ability to use
+fixtures across multiple tests and test groups, and to inject fixtures
+into the runtime namespace for debugging.
+
+A set of fixtures is defined using the \texttt{def-fixtures}
+macro:\index{def-fixtures@\texttt{def-fixtures}}
+\begin{center}
+\textbf{def-fixtures} \textit{name} \texttt{\&key}
+\textit{bindings} \textit{uses} \textit{outer}
+\textit{inner} \textit{documentation}
+\end{center}
+where
+\begin{itemize}
+\item \textit{name} is the name to be associated with this set of
+  fixtures.
+\item \textit{bindings} is a list of name/value lists, as is used for
+  \texttt{let} blocks.
+\item \textit{uses} is a list of the names of other fixture sets which
+  this declaration assumes to be available.  This declaration is
+  optional, but will supress some warnings.
+\item \textit{outer} and \textit{inner} are lists of declarations to
+  be included in a \texttt{declare} statement respectively outside and
+  inside of the let-binding in which the \textit{bindings} are used.
+\item \textit{documentation} describes the fixture set.
+\end{itemize}
+A fixture in one set may refer back to other fixtures in the same set
+(\emph{\`a la} \texttt{let*}) but forward references are not allowed.
+
+Examples:
+\begin{verbatim}
+(def-fixtures f1 :bindings ((c 3) (d 'asdfg)))
+(def-fixtures f2 :uses (f1) :bindings ((d 4) (e 'asdfg) (f c)))
+\end{verbatim}
+
+\subsection{Alternate fixture definitions}
+The
+\texttt{def-capture/restore-fixtures}\index{def-capture/restore-fixtures@\texttt{def-capture/restore-fixtures}}
+declaration binds \texttt{nil} to a collection of variables in the
+extent of associated test groups.  This form is useful when hiding
+some current state from standardized tests.
+\begin{center}
+\textbf{def-capture/restore-fixtures}
+ \textit{name} \textit{variables}
+\texttt{\&key} \textit{documentation}
+\end{center}
+
+\subsection{Anonymous fixture sets}
+It is not necessary to name fixture sets; they may be given
+anonymously in any situation where a fixture set name is allowed.  The
+syntax of anonymous fixture sets
+is:\index{fixtures@\texttt{:fixtures}}\index{fixtures!anonymous}
+\begin{center}
+\texttt{(:fixtures }\textit{(name form)}$^+$\texttt{ )}
+\end{center}
+The examples of Section~\ref{tests} show the use of anonymous fixture
+sets.
+
+\section{Test groups}
+Groups of tests\index{group}\index{test group|see{group}} can be
+associated with fixture sets, stateful initiatization, and stateful
+cleanup.  The syntax of a test group declaration
+is:\index{def-test-group@\texttt{def-test-group}}
+\begin{center}
+\textbf{def-test-group} \textit{name}
+ \textit{fixture-sets} \texttt{\&rest} \textit{forms}
+\end{center}
+where
+\begin{itemize}
+\item\textit{name} is the name of this test group.
+\item\textit{fixture-sets} is a list of fixture sets --- given by
+  name, or as anonymous fixtures --- to be applied to the tests in
+  this group.
+\item\textit{forms} are one of the following:
+\begin{itemize}
+\item A test definition, described below.
+\item Test group documentation, \texttt{(:documentation
+    \textit{string})}~\index{documentation@\texttt{:documentation}}.
+\item A setup form, \texttt{(:setup
+    \textit{setup})}~\index{setup@\texttt{:setup}}.  The setup form is
+  run after inclusion of names from fixture sets, but before any tests
+  from the group.  Individual tests should make no assumptions as to
+  whether the setup is unique to that test, or whether it is shared
+  among several tests of that group.
+\item A cleanup form, \texttt{(:cleanup
+    \textit{cleanup})}~\index{cleanup@\texttt{:cleanup}}.  The
+  cleanup form is normally run after the setup completes; however the
+  cleanup form will not be run if the setup form raises an error.
+  When the user asks the runtime system to enter the debugger on an
+  error, the cleanup form will not run unless the user explicitly
+  enabled a resumption of the test routine from the debugger.  The
+  cleanup form will be run in other circumstances, including at a
+  user-requested break in testing at either failure or error.
+\item A compile deferral supression, \texttt{(:defer-compile
+    nil)}~\index{defer-compile@\texttt{:defer-compile}}.  Normally the
+  form of a test is evaluated at run time, so that e.g.\ macros will
+  be expanded according to the most current declaration.  This flag
+  will cause test forms to be compiled when the test is first loaded.
+\end{itemize}
+\end{itemize}
+
+\section{Tests}
+\label{tests}
+The basic form for defining a
+test\index{test}\index{def-test@\texttt{def-test}} within a group is:
+\begin{center}
+\textbf{def-test} \textit{name}
+ \texttt{\&key} \textit{form} \textit{setup} \textit{cleanup} \textit{fixtures} \textit{defer-compile}
+\end{center}
+where
+\begin{itemize}
+\item\textit{name} is the name of this test.
+\item\textit{form} is the expression to be evaluated for this test.
+\item\textit{setup}\index{setup@\texttt{:setup}},
+  \textit{cleanup}\index{cleanup@\texttt{:cleanup}} and
+  \textit{defer-compile} all function as for the option on groups, but
+  applied to this test only.
+\item\textit{fixtures}\index{fixtures@\texttt{:fixtures}} allows
+  fixture sets to be applied to a single test.
+\end{itemize}
+Test evaluation considers only whether the form evaluates to
+\texttt{nil}, non-\texttt{nil}, or raises an error.
+
+These examples assume that the fixture declarations of
+Section~\ref{fixtures} are in effect:
+\begin{verbatim}
+(def-test-group small-tests ()
+  (def-test test-with-eq  :form (eq 'a 'a))
+  (def-test test-with-eql :form (eql 4 (+ 1 3))))
+(def-test-group bindings (f1 (:fixtures zz 3 yy 5))
+  (def-test bound0 :form (boundp 'c))
+  (def-test bound1 :form (boundp 'zz))
+  (def-test bound2 :form (eql yy 5)))
+(def-test-group with-test-fixings ()
+  (def-test fix0 :fixtures (f1)              :form (boundp 'c))
+  (def-test fix1 :fixtures ((:fixtures x 3)) :form (boundp 'x)))
+\end{verbatim}
+Note that the \texttt{def-test} declarations are embedded within the
+\texttt{def-test-group} declaration.
+
+\section{Checks: higher-level tests}
+The
+\texttt{def-check}\index{check}\index{def-check@\texttt{def-check}}
+form allows a higher-level description of tests.  The basic syntax of
+the form is
+\begin{center}
+\textbf{def-check} \textit{name} \texttt{\&rest} \textit{methods-and-forms}
+\end{center}
+Generally speaking, the syntax of the \textit{methods-and-forms} are:
+\begin{center}
+\textit{transform} $\cdots$ \textit{transform} \textit{criteria} \textit{form}
+\end{center}
+where the \emph{transform}s are applied left-to-right to the
+\emph{form}, which is then checked against the \emph{criteria}.
+However, many of the criteria or transforms introduce other
+interpretations of the \textit{methods-and-forms}.
+\subsection{Basic checks}
+\subsubsection{The \texttt{:pass} check} 
+This check always passes.\index{pass@\texttt{:pass}}
+\\ Syntax: \texttt{:pass}
+\\ Example: \texttt{(def-check passing-test :pass)}
+
+\subsubsection{The \texttt{:fail} check} 
+This check always fails.\index{fail@\texttt{:fail}}
+\\ Syntax: \texttt{:fail}
+\\ Example: \texttt{(def-check failing-test :fail)}
+
+\subsubsection{The \texttt{:symbol} check} 
+This test verifies that a form evaluates to some named
+symbol.\index{symbol@\texttt{:symbol}}
+\\ Syntax: \texttt{:symbol} \textit{symbol-name} \textit{form}
+\\ Passing example: \texttt{(def-check sym1 :symbol a (car '(a b c)))}
+\\ Failing example: \texttt{(def-check sym1x :symbol a (cadr '(a b c)))}
+
+\subsubsection{The \texttt{:eq} check} 
+This test verifies that the form to be tested evaluates to a value
+\texttt{eq}-identified with the value of some designated
+form.\index{eq@\texttt{:eq}}
+\\ Syntax: \texttt{:eq} \textit{correct-form} \textit{tested-form}
+\\ Example: \texttt{(def-check eq1 :eq 'b (cadr '(a b c)))}
+
+\subsubsection{The \texttt{:eql} check} 
+This test verifies that the form to be tested evaluates to a value
+\texttt{eql}-identified with the value of some designated
+form.\index{eql@\texttt{:eql}}
+\\ Syntax: \texttt{:eql} \textit{correct-form} \textit{tested-form}
+\\ Example: \texttt{(def-check eql1 :eql 2 (cadr '(1 2 3)))}
+
+\subsubsection{The \texttt{:forms-eq} check} 
+This test verifies that two forms evaluate to \texttt{eq}-identified
+values.\index{forms-eq@\texttt{:forms-eq}}
+\\ Syntax: \texttt{:forms-eq} \textit{form1} \textit{form2}
+{\ttfamily\begin{tabbing}
+\textrm{Example:}\ (def-check \=eqforms1
+\\ \>  :forms-eq (cadr '(a b c)) (caddr '(a c b)))
+\end{tabbing}}
+
+\subsubsection{The \texttt{:forms-eql} check} 
+This test verifies that two forms evaluate to \texttt{eql}-identified
+values.\index{forms-eql@\texttt{:forms-eql}}
+\\ Syntax: \texttt{:forms-eql} \textit{form1} \textit{form2}
+{\ttfamily\begin{tabbing}
+\textrm{Example:}\ (def-check \=eqlforms1
+\\ \>  :forms-eq (cadr '(a 3 c)) (caddr '(a c 3)))
+\end{tabbing}}
+
+\subsubsection{The \texttt{:predicate} check} 
+This test applies some predicate function to a form, and verifies that
+the result is non-null.\index{predicate@\texttt{:predicate}}
+\\ Syntax: \texttt{:predicate} \textit{function} \textit{form}
+\\ Example: \texttt{(def-check pred1 :predicate numberp 3)}
+
+\subsubsection{The \texttt{:err} check} 
+This test verifies that a form throws an
+error.\index{err@\texttt{:err}}
+\\ Syntax: \texttt{:err} \textit{form}
+\\ Example: \texttt{(def-check err1 :err (error "this should be caught"))}
+
+\subsection{Basic transforms}
+
+\subsubsection{The \texttt{:not} check} 
+This check verifies that some other check fails (but does not throw an
+error).\index{not@\texttt{:not}}
+\\ Syntax: \texttt{:not} \textit{method}
+\\ Example: \texttt{(def-check not1 :not :symbol b 'a)}
+\\In this example, the ``inner'' method is \texttt{:symbol b 'a}\enspace.
+
+\subsubsection{The \texttt{:apply} check} 
+This check applies some transforming function to a form, and applies
+another check to the result.\index{apply@\texttt{:apply}}
+\\ Syntax: \texttt{:apply} \textit{function} \textit{method} \textit{form}
+\\ Example: \texttt{(def-check applycheck :apply cadr eql 10 '(0 10 20))}
+
+\subsubsection{The \texttt{:with} check} 
+This check assumes that the next item is a list, whose contents are
+expanded into the methods-and-forms.\index{with@\texttt{:with}} This
+check is especially useful with the \texttt{def-check-cri\-ter\-ion}
+command below.
+\\ Syntax: \texttt{:with} (\textit{methods-and-forms}) \textit{methods-and-forms}
+\\ Example: The following two \texttt{def-check}s are equivalent.
+\begin{verbatim}
+  (def-check seq1
+      :seq (:predicate symbolp) (:eql 1) (:symbol d)
+      '(a 1 d))
+  (def-check with-seq1
+      :with (:seq (:predicate symbolp) (:eql 1) (:symbol d))
+      '(a 1 d))
+\end{verbatim}
+
+\subsection{Checks on lists}
+
+\subsubsection{The \texttt{:each} check} 
+This check verifies that every member of the list to which a form
+evaluates satisfies some other check.\index{each@\texttt{:each}}
+\\ Syntax: \texttt{:each} \textit{method} \textit{form}
+\\ Example: \texttt{(def-check each1 :each :symbol a '(a a a a a))}
+
+\subsubsection{The \texttt{:seq} check} 
+This check verifies, for each element $n$ of the $n$-element list to
+which the form evaluates, that that element satisfies the respective
+check.\index{seq@\texttt{:seq}}
+\\ Syntax: \texttt{:seq} \textit{method-1} \ldots\ \textit{method-$n$} \textit{form}
+{\ttfamily\begin{tabbing}
+\textrm{Example:}\ (def-check \=seqcheck
+\\ \>  :seq (:predicate symbolp) (:eql 1) (:symbol d)
+\\ \>  '(a 1 d))
+\end{tabbing}}
+
+\subsubsection{The \texttt{:permute} check} 
+The permute check verifies that some permutation of the list to which
+the form evaluates satisfies some other check.
+\index{permute@\texttt{:permute}}
+\\ Syntax: \texttt{:permute} \textit{method} \textit{form}
+{\ttfamily\begin{tabbing}
+\textrm{Examples:}\ \=(def-check permute1 :permute :each :eq 'a '(a a))
+\\ \> (def-check \=permute2
+\\ \> \>  :permute :seq \=(:symbol b)
+\\ \> \>              \>(:predicate symbolp)
+\\ \> \>              \>(:predicate numberp)
+\\ \> \>'(1 a b))
+\end{tabbing}}
+
+\subsection{Checks on vectors}
+\subsubsection{The \texttt{:across} check} 
+Like the \texttt{seq} check, but for vectors rather than
+lists.\index{across@\texttt{:across}}
+\\ Syntax: \texttt{:across} \textit{method-1} \ldots\ \textit{method-$n$} \textit{form}
+{\ttfamily\begin{tabbing}
+\textrm{Example:}\ (def-check \=across1
+\\ \>  :across (:predicate symbolp) (:eql 1)
+\\ \>  (vector 'a 1))
+\end{tabbing}}
+
+\subsection{Checks on class instances}
+\subsubsection{The \texttt{:slots} check} 
+This check specifies checks for some or all of the slots of a class
+member.\index{slots@\texttt{:slots}}
+\\ Syntax: \texttt{:slots} (\textit{slot-1} \textit{method-1})  \ldots\ (\textit{slot-$n$} \textit{method-$n$}) \textit{form}
+{\ttfamily\begin{tabbing}
+\textrm{Example:}\ \= (defc\=lass classcheck ()
+\\ \> \> (\=(s1 :initarg :s1 :reader get-s1)
+\\ \> \> \> (s2 :initarg :s2)
+\\ \> \> \> (s3 :initarg :s3)))
+\\ \> (def-check \=slot1
+\\ \> \>  :slots \=(s1 (:eql 10))
+\\ \> \>  \>(s2 (:symbol zz))
+\\ \> \>  \>(s3 (:seq \=(:symbol q) (:symbol w)
+\\ \> \>  \> \> (:symbol e) (:symbol r)))
+\\ \> \>  (m\=ake-instance 'classcheck
+\\ \> \> \>  :s1 10 :s2 'zz :s3 '(q w e r)))
+\end{tabbing}}
+
+\subsection{Defining criteria aliases}
+It is straightforward to introduce new testing criteria and
+transformers for a project's local classes and data.  The
+\texttt{def-check-criterion}\index{def-check-criterion@\texttt{def-check-criterion}}
+command introduces a new \texttt{def-check} keyword which is
+implemented by rewriting the remaining methods and forms of
+the~\texttt{def-check}, roughly in the manner of Lisp macro expansion.
+The syntax of \texttt{def-check-criterion} is:
+\begin{center}
+  \textbf{def-check-criterion} \textit{name} \texttt{\&key}
+  \textit{documentation} \textit{args} \textit{rest}
+  \textit{expansion}
+\end{center}
+where:
+\begin{itemize}
+\item\textit{documentation} is a documentation string.  As of this
+  writing, NST does not actually install this string anywhere, but we
+  do have very high hopes for the future.
+\item\textit{args} provides a list of names used to expose names of
+  subsequent methods and forms for use in the expansion.  At this time
+  we cannot support lambda list keywords here; their use will produce
+  undefined behavior (but which would most likely be very cryptic
+  error messages).  By default, this is taken to be \textit{nil}.
+\item\textit{rest} provides a name against which the remaining methods
+  and forms (after those consumed by \textit{args}) may be exposed to
+  the expansion.  When this argument is \emph{not} supplied, a
+  noninterned symbol is used, and moreover these remaining methods and
+  forms are appended to those given by the expansion.  Whenever this
+  argument \emph{is} supplied, no such automatic append occurs, and it
+  is assumed that the expansion makes some appropriate use of the
+  keywords and forms bound to \textit{rest}.
+
+  Note that the form being checked --- which is taken to be the last
+  form in the \texttt{def-check} --- is never bound, neither to the
+  name specified by \textit{rest} nor to any name in \textit{args};
+  this form moreover remains the last form in the \texttt{def-check}.
+\item\textit{expansion} is a form which, when evaluated, should return
+  a list of \texttt{def-check} keywords and forms which will be taken
+  as the expansion of \textit{name}.
+\end{itemize}
+Examples:
+\begin{itemize}
+\item\index{carcarcdr@\texttt{:carcarcdr}}
+\begin{verbatim}
+(def-check-criterion :carcarcdr :args (x y zs)
+		     :expansion `(:all (:apply car :with ,x)
+				       (:apply cadr :with ,y)
+				       (:apply cddr :with ,zs)))
+\end{verbatim}
+  This criterion takes three arguments $x$, $y$ and $z$ from the list
+  of methods and forms, and produces a test operating on lists.
+  Specifically, all of three sub-checks are expected to hold for the
+  list.
+  \begin{enumerate}
+  \item The first sub-check transforms the list to retrieve its first
+    element, and then applies the check specified by $x$ to this
+    result.
+  \item The second sub-check transforms the list to retrieve its
+    second element, and then applies the check specified by $y$ to
+    this result.
+  \item The third sub-check transforms the list to retrieve its second
+    tail (the \texttt{cdr} of its \texttt{cdr}), and then applies the
+    check specified by $xs$ to this sublist.
+  \end{enumerate}
+  A valid use of this criterion is:
+\begin{verbatim}
+  (def-check ccc1
+      :carcarcdr (:eq 'a) (:eql 3) (:apply length :eql 2)
+      '(a 3 2 1))
+\end{verbatim}
+\item Custom criteria are especially useful for defining checks on new
+  class definitions:
+\begin{verbatim}
+  (defclass classcheck ()
+     ((s1 :initarg :s1 :reader get-s1)
+      (s2 :initarg :s2) (s3 :initarg :s3)))
+  (def-check-criterion :cc
+      :args (c1 c2 c3)
+      :expansion `(:slots (s1 ,c1) (s2 ,c2) (s3 ,c3)))
+  (def-check cc-1
+      :cc (:eql 1) (:symbol p) (:eq 'd)
+      (make-instance 'classcheck :s1 1 :s2 'p :s3 'd))
+\end{verbatim}
+\item Finally, this example shows a use of the \texttt{:rest}
+  argument:
+\begin{verbatim}
+  (def-check-criterion :car-fits-any-but-first
+      :args (x) :rest rr
+      :expansion `(:apply car :any ,@rr))
+\end{verbatim}
+  This criterion operates on a list.  It expects the checked form to
+  evaluate to a list whose first element satisfies at least one of the
+  forms given after the \texttt{:car-fits-any-but-first}, excluding
+  the first of these forms.  That first form would be bound to
+  \texttt{x}, rather than being in \texttt{rr}.  So both of these
+  tests succeed (note that the latter uses \texttt{:not}):
+\begin{verbatim}
+  (def-check cfabf1
+      :car-fits-any-but-first (:eq 'c) (:eq 'a) (:eql 3)
+                              (:apply length :eql 2)
+      '(a 3 2 1))
+  (def-check cfabf2
+      :not
+      :car-fits-any-but-first (:eq 'a) (:eq 'c) (:eql 3)
+                              (:predicate listp)
+      '(a 3 2 1))
+\end{verbatim}
+\end{itemize}
+
+\subsection{Defining new checks}
+\fbox{FILL IN}
+
+\section{Integration with ASDF}
+Try something like the following, where \texttt{PACKAGE} is where
+your code lives, and \texttt{test-PACKAGE} is where your tests on that
+code live.\index{ASDF}
+\begin{verbatim}
+(defmethod perform ((op test-op)
+                    (system (eql (find-system :test-PACKAGE))))
+  (eval (list (intern (symbol-name '#:run-nst-commands)
+                      (find-package :nst))
+              :p
+              (quote (intern (symbol-name 'PACKAGE)
+                             (find-package 'cl-user)))
+              :run)))
+\end{verbatim}
+
+\section{The runtime system}
+Use \texttt{(nst:run-nst-commands :help)}\footnote{Under Allegro, this
+  can be abbreviated \texttt{:nst
+    :help}\enspace.}\index{run-nst-commands@\texttt{run-nst-commands}}
+to display a summary of command to the runtime system.
+
+For command-line examples, we give examples from the Franz Allegro
+Lisp command line, using the \texttt{:nst}\index{nst@\texttt{:nst}}
+top-level alias; on other systems the \texttt{run-nst-commands} macro
+is equivalent.
+
+Fixtures\index{fixtures!debugging} can be \emph{opened} into the
+interactive namespace for debugging with the
+\texttt{:nst~:open}\index{open@\texttt{:open}} command:
+\begin{verbatim}
+  CL-USER(75): (nst:def-fixtures small-fixture
+                  :bindings ((fix-var1 3) (fix-var2 'asdfg)))
+  NIL
+  CL-USER(76): (boundp 'fix-var1)
+  NIL
+  CL-USER(77): :nst :open small-fixture
+  Opened fixture SMALL-FIXTURE.
+  CL-USER(78): fix-var1
+  3
+  CL-USER(79): \end{verbatim}
+%
+Names defined in fixtures can be used in the tests of groups which
+import that fixture.
+
+\printindex
+\end{document}

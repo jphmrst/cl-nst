@@ -134,6 +134,10 @@
     :args (x) :rest rest
     :expansion `(:apply car :any ,@rest))
 
+(def-check-criterion :cc
+    :args (c1 c2 c3)
+    :expansion `(:slots (s1 ,c1) (s2 ,c2) (s3 ,c3)))
+
 (def-test-group g5 ()
   (def-check ccc1
       :carcarcdr (:eq 'a) (:eql 3) (:apply length :eql 2) '(a 3 2 1))
@@ -143,4 +147,7 @@
   (def-check cfabf2
       :not :car-fits-any-but-first
       (:eq 'a) (:eq 'c) (:eql 3) (:predicate listp)
-      '(a 3 2 1)))
+      '(a 3 2 1))
+  (def-check cc-1
+      :cc (:eql 1) (:symbol p) (:eq 'd)
+      (make-instance 'classcheck :s1 1 :s2 'p :s3 'd)))
