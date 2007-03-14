@@ -7,16 +7,20 @@
 
 (in-package :common-lisp-user)
 
-(defpackage :nst (:use :common-lisp)
-	    (:export #:def-fixtures
-		     #:def-capture/restore-fixtures
-		     #:def-test-group
-		     #:def-test
-		     #:def-check
-		     #:def-check-criterion
-		     #:def-check-form
-		     #:def-check-form-manip
-		     #:continue-check
-		     #:run-nst-commands))
+(defpackage :sift.nst
+    (:nicknames :nst)
+    (:use :common-lisp)
+    (:export #:def-fixtures
+	     #:def-capture/restore-fixtures
+	     #:def-test-group
+	     #:def-test
+	     #:def-check
+	     #:def-check-criterion
+	     #:def-check-form
+	     #:def-check-form-manip
+	     #:continue-check
+	     #:run-nst-commands))
 
-(defpackage :nst-test (:use :common-lisp :nst))
+(defpackage :sift.nst-test
+    (:nicknames :nst-test)
+    (:use :common-lisp :sift.nst))

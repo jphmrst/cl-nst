@@ -654,7 +654,7 @@ code live.\index{ASDF}
 (defmethod perform ((op test-op)
                     (system (eql (find-system :test-PACKAGE))))
   (eval (list (intern (symbol-name '#:run-nst-commands)
-                      (find-package :nst))
+                      (find-package :sift.nst))
               :run-package
               (quote (intern (symbol-name 'PACKAGE)
                              (find-package 'cl-user))))))

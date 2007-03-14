@@ -5,7 +5,7 @@
 ;;; NST is Copyright (c) 2006, 2007 Smart Information Flow Technologies.
 ;;; RRT is Copyright (c) 2005 Robert Goldman, released under the LGPL,
 ;;; and the lisp-specific preamble to that license.
-(in-package :nst-test)
+(in-package :sift.nst-test)
 
 (def-fixtures f1 :bindings ((c 3) (d 'asdfg)))
 

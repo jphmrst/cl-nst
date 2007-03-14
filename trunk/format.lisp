@@ -5,7 +5,7 @@
 ;;; NST is Copyright (c) 2006, 2007 Smart Information Flow Technologies.
 ;;; RRT is Copyright (c) 2005 Robert Goldman, released under the LGPL,
 ;;; and the lisp-specific preamble to that license.
-(in-package :nst)
+(in-package :sift.nst)
 
 (defmethod print-object ((obj nst-class) stream)
   "We route print-object calls to a wrapped use of nst-format"
