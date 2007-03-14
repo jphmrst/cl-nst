@@ -142,7 +142,8 @@
   (def-check ccc1
       :carcarcdr (:eq 'a) (:eql 3) (:apply length :eql 2) '(a 3 2 1))
   (def-check cfabf1
-      :car-fits-any-but-first (:eq 'c) (:eq 'a) (:eql 3) (:apply length :eql 2)
+      :car-fits-any-but-first (:eq 'c) (:eq 'a) (:eql 3)
+                              (:apply length :eql 2)
       '(a 3 2 1))
   (def-check cfabf2
       :not :car-fits-any-but-first

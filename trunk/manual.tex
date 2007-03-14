@@ -446,38 +446,179 @@ Examples:
 \end{verbatim}
 \end{itemize}
 
-\subsection{Defining new checks}
-\fbox{FILL IN}
-
-\section{Integration with ASDF}
-Try something like the following, where \texttt{PACKAGE} is where
-your code lives, and \texttt{test-PACKAGE} is where your tests on that
-code live.\index{ASDF}
-\begin{verbatim}
-(defmethod perform ((op test-op)
-                    (system (eql (find-system :test-PACKAGE))))
-  (eval (list (intern (symbol-name '#:run-nst-commands)
-                      (find-package :nst))
-              :p
-              (quote (intern (symbol-name 'PACKAGE)
-                             (find-package 'cl-user)))
-              :run)))
-\end{verbatim}
+\subsection{Low-level check definitions}
+While \texttt{def-check-criterion} should be completely adequate for
+most extensions of \texttt{def-check}, some extensions require
+lower-level access to the translation to \texttt{def-test}.  The
+\texttt{def-check-form} command provides this access.  The syntax of
+\texttt{def-check-form} is:
+\begin{tabbing}
+  ~~~~\textbf{def-}\=\textbf{check-form} \textit{name}
+  \\ \> \texttt{\&optional} \textit{documentation}
+  \\ \> \texttt{\&key} \= \textit{strip-suffix} \textit{args}
+  \textit{require-min-bare-subforms}
+  \\ \> \>  \textit{expose-subtests} \textit{expose-bare-subforms} \textit{body}
+\end{tabbing}
+Most of the standard check forms are defined using
+\texttt{def-check-form}, and we refer the reader to file
+\texttt{check.lisp} in this distribution for examples.
 
 \section{The runtime system}
-Use \texttt{(nst:run-nst-commands :help)}\footnote{Under Allegro, this
-  can be abbreviated \texttt{:nst
-    :help}\enspace.}\index{run-nst-commands@\texttt{run-nst-commands}}
-to display a summary of command to the runtime system.
+The runtime system provides several operations for scheduling and
+running tests, and debugging failing and erring tests.  The operations
+are accessible from the
+\texttt{run-nst-commands}\index{run-nst-commands@\texttt{run-nst-commands}}
+function.  Under Allegro, the top-level alias
+\texttt{:nst}\index{nst@\texttt{:nst}} provides a shorthand to this
+function; for the sake of brevity we use this shorthand below.
 
-For command-line examples, we give examples from the Franz Allegro
-Lisp command line, using the \texttt{:nst}\index{nst@\texttt{:nst}}
-top-level alias; on other systems the \texttt{run-nst-commands} macro
-is equivalent.
+\subsection{Output control}
+\subsubsection{The \texttt{:help} operation}
+\index{help@\texttt{:help}}%
+Shows a brief summary of the runtime system operations.
+\\ Syntax: \texttt{:nst :help}
 
+\subsubsection{The \texttt{:verbose} operation}
+\index{verbose@\texttt{:verbose}}%
+Sets whether the runtime system should show verbose output.
+\\ Syntax: \texttt{:nst :verbose FORM}
+
+\subsubsection{The \texttt{:debug} operation}
+\index{debug@\texttt{:debug}}%
+Sets whether NST debugging messages should be generated.
+\\ Syntax: \texttt{:nst :debug BOOL}
+
+\subsubsection{The \texttt{:summarize-scheduled} operation}
+\index{summarize-scheduled@\texttt{:summarize-scheduled}}%
+If \texttt{BOOL} evaluates to non-null, then the runtime system will
+print a summary after running scheduled tests with \texttt{:run},
+\texttt{:continue}, etc.
+\\ Syntax: \texttt{:nst :summarize-scheduled BOOL}
+
+\subsubsection{The \texttt{:summarize-single} operation}
+\index{summarize-single@\texttt{:summarize-single}}%
+If \texttt{BOOL} evaluates to non-null, then the runtime system will
+print a summary after one-time test runs initiated by
+\texttt{:run-test}, \texttt{:run-group}, etc.
+\\ Syntax: \texttt{:nst :summarize-single BOOL}
+
+\subsubsection{The \texttt{:dump} operation}
+\index{dump@\texttt{:dump}}%
+Prints the state of the test system.
+\\ Syntax: \texttt{:nst :dump}
+
+\subsection{Marking tests of interest for execution}
+\label{nominating-tests}
+NST allows tests to be marked for execution by the \texttt{:run}
+command.  Tests can be marked by package or group, or as an individual
+test.
+
+\subsubsection{The \texttt{:p} operation}
+\index{p@\texttt{:p}}%
+Indicates that all tests in a particular package should be run.
+\\ Syntax: \texttt{:nst :p PACKAGE}
+
+\subsubsection{The \texttt{:g} operation}
+\index{g@\texttt{:g}}%
+Indicates that all tests in a particular group should be run.
+\\ Syntax: \texttt{:nst :g GROUP}
+
+\subsubsection{The \texttt{:t} operation}
+\index{t@\texttt{:t}}%
+Indicates that the named test should be run.
+\\ Syntax: \texttt{:nst :t TEST}
+
+\subsection{Test suite execution}
+These commands control execution of tests selected by the commands of
+the previous section.
+
+\subsubsection{The \texttt{:run} operation}
+\index{run@\texttt{:run}}%
+Runs all marked tests.
+\\ Syntax: \texttt{:nst :run}
+
+\subsubsection{The \texttt{:continue} operation}
+\index{continue@\texttt{:continue}}%
+Resumes running tests after an interruption arising from one of the
+three switch setting above.
+\\ Syntax: \texttt{:nst :continue}
+
+\subsubsection{The \texttt{:retry} operation}
+\index{retry@\texttt{:retry}}%
+Retries failed or error-raising tests from the last run.
+\\ Syntax: \texttt{:nst :retry}
+
+\subsubsection{The \texttt{:blurb} operation}
+\index{blurb@\texttt{:blurb}}%
+Describes the outcome of the last run of a test.
+\\ Syntax: \texttt{:nst :blurb GROUPNAME TESTNAME}
+
+\subsection{Controlling test suite execution behavior}
+The following commands control options governing how the runtime
+system should behave when a test fails or raises an error.
+
+\subsubsection{The \texttt{:break-on-wrong} operation}
+\index{break-on-wrong@\texttt{:break-on-wrong}}%
+If \texttt{BOOL} evaluates to non-null, then a failing test will cause
+test execution to pause.
+\\ Syntax: \texttt{:nst :break-on-wrong BOOL}
+
+\subsubsection{The \texttt{:break-on-error} operation}
+\index{break-on-error@\texttt{:break-on-error}}%
+If \texttt{BOOL} evaluates to non-null, then any error in a test run
+will cause test execution to pause.
+\\ Syntax: \texttt{:nst :break-on-error BOOL}
+
+\subsubsection{The \texttt{:debug-on-error} operation}
+\index{debug-on-error@\texttt{:debug-on-error}}%
+If \texttt{BOOL} evaluates to non-null, then an error in a test run
+will pause test execution and enter debug mode.
+\\ Syntax: \texttt{:nst :debug-on-error BOOL}
+
+\subsection{Test definition}
+\subsubsection{The \texttt{:defer-test-compile} operation}
+\index{defer-test-compile@\texttt{:defer-test-compile}}%
+Sets whether tests defined subsequently should, by default, defer
+compilation of their forms until actually running the test.  This
+feature is useful when debugging code involving macros, but changing
+this feature in the runtime system can lead to confusion.  It is
+surely almost always the right thing to set this flag locally via
+def-test-group and def-test.  In fact, this operation may be removed
+in a future version of the runtime system.
+\\ Syntax: \texttt{:nst :defer-test-compile BOOL}
+
+\subsection{One-off execution}
+The following commands allow one-time execution of tests without
+altering the settings made by the commands of
+Section~\ref{nominating-tests}.
+
+\subsubsection{The \texttt{:run-package} operation}
+\index{run-package@\texttt{:run-package}}%
+Runs all of the tests in a package.
+\\ Syntax: \texttt{:nst :run-package PACKAGE}
+
+\subsubsection{The \texttt{:run-group} operation}
+\index{run-group@\texttt{:run-group}}%
+Runs all of the tests in a single group.
+\\ Syntax: \texttt{:nst :run-group GROUP}
+
+\subsubsection{The \texttt{:run-test} operation}
+\index{run-test@\texttt{:run-test}}%
+Runs a single test.
+\\ Syntax: \texttt{:nst :run-test GROUP TEST}
+
+\subsection{Opening fixtures}
+The use of fixtures would make debugging tedious without access to
+these named values.  Fortunately, it is straightforward to inject
+these names into the runtime system.
+
+\subsubsection{The \texttt{:open} operation}
+\index{open@\texttt{:open}}%
 Fixtures\index{fixtures!debugging} can be \emph{opened} into the
 interactive namespace for debugging with the
 \texttt{:nst~:open}\index{open@\texttt{:open}} command:
+\\ Syntax: \texttt{:nst :open FIXTURE-NAME}
+\\ Example:
 \begin{verbatim}
   CL-USER(75): (nst:def-fixtures small-fixture
                   :bindings ((fix-var1 3) (fix-var2 'asdfg)))
@@ -489,9 +630,77 @@ interactive namespace for debugging with the
   CL-USER(78): fix-var1
   3
   CL-USER(79): \end{verbatim}
+
+\subsubsection{The \texttt{:open-used} operation}
+\index{open-used@\texttt{:open-used}}%
+If \texttt{BOOL} evaluates to non-null, then opening a fixture will
+always also open the fixtures it uses.  Default is t.
+\\ Syntax: \texttt{:nst :open-used BOOL}
+
+\subsubsection{The \texttt{:reopen} operation}
+\index{reopen@\texttt{:reopen}}%
+If \texttt{BOOL} evaluates to non-null, then fixtures will be
+re-opened e.g. when required multiple times by opening different
+fixtures that use them.
+\\ Syntax: \texttt{:nst :reopen BOOL}
+
 %
-Names defined in fixtures can be used in the tests of groups which
-import that fixture.
+
+\section{Integration with ASDF}
+Try something like the following, where \texttt{PACKAGE} is where
+your code lives, and \texttt{test-PACKAGE} is where your tests on that
+code live.\index{ASDF}
+\begin{verbatim}
+(defmethod perform ((op test-op)
+                    (system (eql (find-system :test-PACKAGE))))
+  (eval (list (intern (symbol-name '#:run-nst-commands)
+                      (find-package :nst))
+              :run-package
+              (quote (intern (symbol-name 'PACKAGE)
+                             (find-package 'cl-user))))))
+\end{verbatim}
+
+\section{Known issues}
+If this list actually contained all of the bugs and shortcoming of
+NST, I'd be one happy Lisper.  First, bugs\index{bugs} and
+unimplemented features:
+\begin{enumerate}
+\item We do a poor job of printing the conditions that come back from
+  erring tests.
+\item There are still, sometimes, warnings from the use of fixture
+  names in other fixtures.
+\item We are not yet catching errors arising from
+  \texttt{:cleanup}\index{cleanup@\texttt{:cleanup}} blocks.
+\item Clobbering test/group names should be caught by the macros, not
+  by the lower-level expansions arising from those methods.
+\item There is much cruft here arising from my inexperience on getting
+  names known at macro-expansion time communicated to other
+  subsequently expanded macros.  I should clean up after myself.
+\item In the runtime system, the implementations of
+  \texttt{:blurb}\index{blurb@\texttt{:blurb}},
+  \texttt{:open-used}\index{open-used@\texttt{:open-used}} and
+  \texttt{:reopen}\index{reopen@\texttt{:reopen}} are questionable.
+\end{enumerate}
+Next, a wishlist\index{wishlist}:
+\begin{enumerate}
+\item There's probably some additional functionality that would be
+  nice to have for
+  \texttt{def-check}\index{def-check@\texttt{def-check}} --- other
+  checks on lists, checks on other data structures.
+\item Possibly,
+  \texttt{run-nst-commands}\index{run-nst-commands@\texttt{run-nst-commands}}
+  should be turned into a macro.
+\item The \texttt{def-check}\index{def-check@\texttt{def-check}} macro
+  should be able to provide better feedback when failing (the kind of
+  failing that doesn't throw an error), not just at the time, but also
+  when \texttt{:blurb}ing\index{blurb@\texttt{:blurb}} tests
+  after-the-fact.
+\item It would be nice to have some management of the warnings or
+  errors when multiple fixtures get the same error.
+\item It might be nice to have a
+  \texttt{texinfo}\index{texinfo@\texttt{texinfo}} version of this
+  user guide.
+\end{enumerate}
 
 \printindex
 \end{document}

@@ -264,7 +264,7 @@ another form)."
   :args (form1 form2) :body `(eql ,form1 ,form2))
 
 (def-check-form :round-sig-eql
-    "Check that two numbers are eql to the given number fo significant\
+    "Check that two numbers are eql to the given number of significant\
  digits.  Fails if either form evaluates to a non-number"
   :args (digits form1 form2)
   :body (let ((n1 (gensym))
@@ -323,7 +323,8 @@ and check the resulting value"
   :body (let ((block (gensym)))
 	  `(block ,block
 	     ,@(loop for method in methods collect
-		     `(when ,(continue-check (append method (list form)))
+		     `(when
+			  ,(continue-check (append method (list form)))
 			(return-from ,block t)))
 	     nil)))
 

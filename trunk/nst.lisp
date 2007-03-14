@@ -7,45 +7,7 @@
 ;;; and the lisp-specific preamble to that license.
 (in-package :nst)
 
-;;; KNOWN ISSUES
-;;;
-;;; 1. What's up with printing the conditions that come back from
-;;; erring tests?
-;;;
-;;; 2. There are still, sometimes, warnings from the use of fixture
-;;; names in other fixtures.
-;;;
-;;; 3. We are not yet catching errors arising from cleanup.
-;;;
-;;; 4. Clobbering test/group names should be caught by the macros, not
-;;; by the lower-level expanded code defining methods.
-;;;
-;;; 5. Have warnings or errors when multiple fixtures get the same
-;;; error.
-;;;
-;;; 6. The testing via ASDF adds the package tests, but doesn't remove
-;;; them after that run.  This is probably not how it should work.
-;;;
-;;; 7. There is much cruft here arising from my inexperience on
-;;; getting names known at macro-expansion time communicated to other
-;;; subsequently expanded macros.  I should clean up after myself.
-;;;
-;;; PLANNED FEATURES
-;;;
-;;; 1. Provide additional functionality to def-check --- other checks
-;;; on lists, checks on other data structures.
-;;;
-;;; 2. Provide a def-check-method to define additional keywords to the
-;;; def-check method form.
-;;;
-;;; 3. Maybe run-nst-commands should be turned in to a macro.
-;;;
-;;; 4. The def-check macro should be able to provide better feedback
-;;; when failing (the kind of failing that doesn't throw an error),
-;;; not just at the time, but also when :blurb'ing tests
-;;; after-the-fact.
-;;;
-;;; 5. Texinfo the user guide.
+;;; Settings, global variables and flags.
 
 ;;; Options for output in the interactive system.
 ;;;
