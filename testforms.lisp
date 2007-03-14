@@ -123,8 +123,8 @@ initialization and cleanup."
 		       (list 'defclass ',group-class
 			     `(,@(loop for f in ',fixture-names
 				       collect
-				       (gethash f
-						*fixture-to-group-class*))
+				       (gethash
+					 f *fixture-to-group-class*))
 				 group)
 			     () '(:documentation ,class-doc))))
 		  (bind-dbg 
@@ -135,14 +135,16 @@ initialization and cleanup."
 		;; for each test in this group.  It will also extend
 		;; all of the given fixture groups, plus the "test"
 		;; class.
-		(let ((form (list 'defclass ',*test-class-symbol*
-				  `(,@(loop for f in ',fixture-names
-					    collect
-					    (gethash f *fixture-to-test-class*))
-				      test)
-				  () '(:documentation ,class-doc))))
+		(let ((form
+		       (list 'defclass ',*test-class-symbol*
+			     `(,@(loop for f in ',fixture-names
+				       collect
+				       (gethash
+					 f *fixture-to-test-class*))
+				 test)
+			     () '(:documentation ,class-doc))))
 		  (forms-dbg
-		   (format t " - Test class form:~%   ~s~%" form))	       
+		   (format t " - Test class form:~%   ~s~%" form))
 		  (eval form)
 		  (forms-dbg (format t "   compiled~%")))
 	       
