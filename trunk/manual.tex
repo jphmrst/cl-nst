@@ -1,7 +1,7 @@
 
 \documentclass{article}
 \usepackage{makeidx}
-\title{A user's guide to NST}
+\title{NST users' manual}
 \author{John Maraist\thanks{Smart Information Flow Technologies, 211 N.\ First St.\ Suite 300, Minneapolis, MN 55401; \textsl{jmaraist} at \textsl{sift.info}.}}
 \setcounter{tocdepth}{2}
 \makeindex
@@ -17,11 +17,11 @@
 This document is the manual and users' guide to the NST test
 framework.  NST is a unit test system which provides support for test
 fixture data, stateful setup and cleanup of tests, grouping of tests,
-and (we think!) a useful interface.  Suggestions and comments are
-welcome; a list of known bugs and infelicities concludes this
-document.  The file \texttt{nst-nst.lisp} in this distribution is our
-debugging suite for this package, and contains many examples (some of
-which we include in this document).
+and (we think!) a useful runtime interface.  Suggestions and comments
+are welcome; a list of known bugs and infelicities concludes this
+document.  The file \texttt{nst-nst.lisp} in this distribution holds
+the NST tests for NST, and contains many examples (some of which we
+have adapted to this document).
 
 \section{Fixtures}
 \label{fixtures}
@@ -42,13 +42,14 @@ where
 \item \textit{name} is the name to be associated with this set of
   fixtures.
 \item \textit{bindings} is a list of name/value lists, as is used for
-  \texttt{let} blocks.
+  Lisp \texttt{let} blocks.
 \item \textit{uses} is a list of the names of other fixture sets which
   this declaration assumes to be available.  This declaration is
   optional, but will supress some warnings.
 \item \textit{outer} and \textit{inner} are lists of declarations to
   be included in a \texttt{declare} statement respectively outside and
-  inside of the let-binding in which the \textit{bindings} are used.
+  inside of the \texttt{let}-binding in which the \textit{bindings}
+  are applied.
 \item \textit{documentation} describes the fixture set.
 \end{itemize}
 A fixture in one set may refer back to other fixtures in the same set
@@ -65,7 +66,8 @@ The
 \texttt{def-capture/restore-fixtures}\index{def-capture/restore-fixtures@\texttt{def-capture/restore-fixtures}}
 declaration binds \texttt{nil} to a collection of variables in the
 extent of associated test groups.  This form is useful when hiding
-some current state from standardized tests.
+some developers' state from tests intended to simulate a
+non-development environment.
 \begin{center}
 \textbf{def-capture/restore-fixtures}
  \textit{name} \textit{variables}
@@ -120,9 +122,10 @@ where
   user-requested break in testing at either failure or error.
 \item A compile deferral supression, \texttt{(:defer-compile
     nil)}~\index{defer-compile@\texttt{:defer-compile}}.  Normally the
-  form of a test is evaluated at run time, so that e.g.\ macros will
-  be expanded according to the most current declaration.  This flag
-  will cause test forms to be compiled when the test is first loaded.
+  form of a test is evaluated at run time, so that \emph{e.g.}\ macros
+  will be expanded according to the most current declaration.  This
+  flag will cause test forms to be compiled when the test is first
+  loaded.
 \end{itemize}
 \end{itemize}
 
@@ -179,7 +182,7 @@ Generally speaking, the syntax of the \textit{methods-and-forms} are:
 \end{center}
 where the \emph{transform}s are applied left-to-right to the
 \emph{form}, which is then checked against the \emph{criteria}.
-However, many of the criteria or transforms introduce other
+However, many of the criteria and transforms introduce other
 interpretations of the \textit{methods-and-forms}.
 \subsection{Basic checks}
 \subsubsection{The \texttt{:pass} check} 
@@ -408,7 +411,8 @@ Examples:
       '(a 3 2 1))
 \end{verbatim}
 \item Custom criteria are especially useful for defining checks on new
-  class definitions:
+  class
+  definitions:\index{classcheck@\texttt{classcheck}}\index{cc@\texttt{:cc}}\index{cc-1@\texttt{cc-1}}
 \begin{verbatim}
   (defclass classcheck ()
      ((s1 :initarg :s1 :reader get-s1)
@@ -418,6 +422,22 @@ Examples:
       :expansion `(:slots (s1 ,c1) (s2 ,c2) (s3 ,c3)))
   (def-check cc-1
       :cc (:eql 1) (:symbol p) (:eq 'd)
+      (make-instance 'classcheck :s1 1 :s2 'p :s3 'd))
+\end{verbatim}
+\item Although keywords should not be specified through the
+  \emph{args} list of names, keyword parameters can be used within one
+  of the names in that list.  For example, as an alternative to
+  \texttt{:cc} above we might
+  use\index{cc@\texttt{:cc-keyed}}\index{cc-1@\texttt{cc-1-keyed}}:
+\begin{verbatim}
+  (def-check-criterion :cc-keyed
+      :args (args)
+      :expansion (destructuring-bind (&key s1 s2 s3) args
+                   `(:slots (s1 ,s1) (s2 ,s2) (s3 ,s3))))
+  (def-check cc-1-keyed
+      :cc-keyed (:s1 (:eql 1)
+                 :s2 (:symbol p)
+                 :s3 (:eq 'd))
       (make-instance 'classcheck :s1 1 :s2 'p :s3 'd))
 \end{verbatim}
 \item Finally, this example shows a use of the \texttt{:rest}
@@ -640,8 +660,8 @@ always also open the fixtures it uses.  Default is t.
 \subsubsection{The \texttt{:reopen} operation}
 \index{reopen@\texttt{:reopen}}%
 If \texttt{BOOL} evaluates to non-null, then fixtures will be
-re-opened e.g. when required multiple times by opening different
-fixtures that use them.
+re-opened \emph{e.g.}\ when required multiple times by opening
+different fixtures that use them.
 \\ Syntax: \texttt{:nst :reopen BOOL}
 
 %
@@ -660,46 +680,29 @@ code live.\index{ASDF}
                              (find-package 'cl-user))))))
 \end{verbatim}
 
-\section{Known issues}
-If this list actually contained all of the bugs and shortcoming of
-NST, I'd be one happy Lisper.  First, bugs\index{bugs} and
-unimplemented features:
+\section{Known bugs and enhancement ideas}\index{bugs}\index{enhancements}
 \begin{enumerate}
 \item We do a poor job of printing the conditions that come back from
-  erring tests.
+  erring tests.  Moreover, the
+  \texttt{def-check}\index{def-check@\texttt{def-check}} macro should
+  be able to provide better feedback about the context of an error
+  when failing (the kind of failing that doesn't throw an error), not
+  just at the time, but also when
+  \texttt{:blurb}ing\index{blurb@\texttt{:blurb}} tests
+  after-the-fact.
 \item There are still, sometimes, warnings from the use of fixture
   names in other fixtures.
 \item We are not yet catching errors arising from
   \texttt{:cleanup}\index{cleanup@\texttt{:cleanup}} blocks.
-\item Clobbering test/group names should be caught by the macros, not
-  by the lower-level expansions arising from those methods.
-\item There is much cruft here arising from my inexperience on getting
-  names known at macro-expansion time communicated to other
-  subsequently expanded macros.  I should clean up after myself.
+\item Clobbering of test/group names should be caught by the macros,
+  not by the lower-level expansions arising from those methods.
 \item In the runtime system, the implementations of
   \texttt{:blurb}\index{blurb@\texttt{:blurb}},
   \texttt{:open-used}\index{open-used@\texttt{:open-used}} and
   \texttt{:reopen}\index{reopen@\texttt{:reopen}} are questionable.
-\end{enumerate}
-Next, a wishlist\index{wishlist}:
-\begin{enumerate}
-\item There's probably some additional functionality that would be
-  nice to have for
-  \texttt{def-check}\index{def-check@\texttt{def-check}} --- other
-  checks on lists, checks on other data structures.
 \item Possibly,
   \texttt{run-nst-commands}\index{run-nst-commands@\texttt{run-nst-commands}}
   should be turned into a macro.
-\item The \texttt{def-check}\index{def-check@\texttt{def-check}} macro
-  should be able to provide better feedback when failing (the kind of
-  failing that doesn't throw an error), not just at the time, but also
-  when \texttt{:blurb}ing\index{blurb@\texttt{:blurb}} tests
-  after-the-fact.
-\item It would be nice to have some management of the warnings or
-  errors when multiple fixtures get the same error.
-\item It might be nice to have a
-  \texttt{texinfo}\index{texinfo@\texttt{texinfo}} version of this
-  user guide.
 \end{enumerate}
 
 \printindex

@@ -405,8 +405,8 @@ check given in the further elements of the check specification."
 		       (unless ,other-forms (return-from ,overall nil))
 		       (destructuring-bind (,first-form &rest ,last-var)
 			   ,other-forms
-			 ,@(if on-last
-			       `((declare (ignorable ,last-var))))
+			 ,@(when on-last
+			     `((declare (ignorable ,last-var))))
 			 (unless 
 			     ,(continue-check (append method
 						     (list first-form)))

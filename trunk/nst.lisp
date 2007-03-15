@@ -7,7 +7,18 @@
 ;;; and the lisp-specific preamble to that license.
 (in-package :sift.nst)
 
-;;; Settings, global variables and flags.
+
+;;; Some general code remarks:
+;;;
+;;;   1. There's probably some "hangover" code here having to do with
+;;;   my unfamiliarity with some of the dark corners of macro
+;;;   expansion.  One of these days, this could use a good,
+;;;   comprehensive code review.
+;;;
+;;;   2. Should the nst-run-command function be turned into a macro?
+
+
+;;; This file contains settings, global variables and flags.
 
 ;;; Options for output in the interactive system.
 ;;;
