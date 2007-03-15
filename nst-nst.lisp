@@ -138,6 +138,11 @@
     :args (c1 c2 c3)
     :expansion `(:slots (s1 ,c1) (s2 ,c2) (s3 ,c3)))
 
+(def-check-criterion :cc-keyed
+    :args (args)
+    :expansion (destructuring-bind (&key s1 s2 s3) args
+		 `(:slots (s1 ,s1) (s2 ,s2) (s3 ,s3))))
+
 (def-test-group g5 ()
   (def-check ccc1
       :carcarcdr (:eq 'a) (:eql 3) (:apply length :eql 2) '(a 3 2 1))
@@ -151,4 +156,10 @@
       '(a 3 2 1))
   (def-check cc-1
       :cc (:eql 1) (:symbol p) (:eq 'd)
+      (make-instance 'classcheck :s1 1 :s2 'p :s3 'd))
+  (def-check cc-1-keyed
+      :cc-keyed (:s1 (:eql 1)
+		 :s2 (:symbol p)
+		 :s3 (:eq 'd))
       (make-instance 'classcheck :s1 1 :s2 'p :s3 'd)))
+
