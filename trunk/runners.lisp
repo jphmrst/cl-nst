@@ -117,7 +117,9 @@ for output before and after indiviual tests."
 		   (return-from single-test 'err)))))
 	 (let ((result (call-next-method test)))
 	   (if result
-	       (setf *passed-test-count* (+ 1 *passed-test-count*))
+	       (progn
+		 (add-test *passed-tests* test)
+		 (setf *passed-test-count* (+ 1 *passed-test-count*)))
 	       (add-test *failed-tests* test))
 	   (if (use-verbose-output) 
 	       (format t "   ~a~%" (if result "Passed" "Failed"))
@@ -130,7 +132,13 @@ for output before and after indiviual tests."
   (:method ((ts test)) (core ts)))
 
 (defgeneric setup/cleanup-test (test)
-  (:method ((ts test)) (bind-for-test ts)))
+  (:method ((ts test))
+     (with-slots (group test-name) ts
+       (with-slots (group-name) group
+	 (clear-test *passed-tests* group-name test-name)
+	 (clear-test *failed-tests* group-name test-name)
+	 (clear-test *erred-tests*  group-name test-name)))
+     (bind-for-test ts)))
 
 (defgeneric bind-for-group (group-or-test)
   (:method ((g group))
@@ -195,6 +203,8 @@ unsuccessful nil result.")
   
   (:method ((g group))
      "Run the group's tests, bracketed by its setup and cleanup."
+     (remhash g *erred-groups*)
+     (remhash g *erred-cleanup*)
      (let ((group-result t))
        (block group-exec
 	 (with-slots (group-name setup cleanup test-names tests-hash) g

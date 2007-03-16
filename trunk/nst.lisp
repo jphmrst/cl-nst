@@ -85,6 +85,21 @@
 	  :documentation "Set to t to defer compilation of test forms\
                           until runtime.")
 
+;;; The fixtures, groups and tests that have been defined.
+;;;
+(defvar +fixtures+ nil
+  "For user echo of fixture forms and other debugging." )
+(defvar +fixture-def-names+ (make-hash-table)
+  "The names bound by each fixture.")
+(defvar +group-def-names+ (make-hash-table)
+  "The names bound by each group" )
+(defvar +groups+ (make-hash-table)
+  "Declared test NST groups")
+(defvar +groups-by-package+ (make-hash-table)
+  "Hash table from packages to sets of groups, that is, to
+other hash tables each mapping group records to t or nil.")
+
+
 ;;; Options for breaking at failed and erroneous tests in the
 ;;; interactive system.
 ;;;
@@ -107,21 +122,6 @@ boolean value.")
 it uses.")
 (defvar *reopen-fixtures* nil
   "If nil, then will will never open the same fixture twice.")
-
-;;; The fixtures, groups and tests that have been defined.
-;;;
-(defvar +fixtures+ nil
-  "For user echo of fixture forms and other debugging." )
-(defvar +fixture-def-names+ (make-hash-table)
-  "The names bound by each fixture.")
-(defvar +group-def-names+ (make-hash-table)
-  "The names bound by each group" )
-(defvar +groups+ (make-hash-table)
-  "Declared test NST groups")
-(defvar +groups-by-package+ (make-hash-table)
-  "Hash table from packages to sets of groups, that is, to
-other hash tables each mapping group records to t or nil.")
-
 ;;; The packages, groups and tests that have been marked as
 ;;; interesting for quick execution in the runtime system.
 ;;;
@@ -177,14 +177,18 @@ or t if none is available.")
   "Map from groups raising an error in cleanup during the current
 :run session of the NST runtime system to a reason for the error,
 or t if none is available.")
+
+;;; These maps and sets are implemented as double-hash tables, and
+;;; managed by the macros below.
+;;;
+(defparameter *passed-tests* (make-hash-table)
+  "Set of tests which passed on their most recent run.")
 (defparameter *failed-tests* (make-hash-table)
-  "Map from names of tests failing during the current :run session of
-the NST runtime system to a reason for the error, or t if none is
-available.")
+  "Set of tests failing on their most recent run.")
 (defparameter *erred-tests* (make-hash-table)
-  "Map from names of tests raising an error condition during the
-current :run session of the NST runtime system to a reason for the
-error, or t if none is available.")
+  "Map from tests raising an error condition during the current :run
+session of the NST runtime system to a reason for the error, or t if
+none is available.")
 
 (defmacro if-test (storage group-name test-name)
   "Where storage is some double hash table, return what, if anything,
@@ -193,6 +197,14 @@ is stored against group-name and test-name."
     `(let ((,group-hash (gethash ,group-name ,storage)))
        (when ,group-hash
 	 (gethash ,test-name ,group-hash)))))
+
+(defmacro clear-test (storage group-name test-name)
+  "Remove anything stored against group-name and test-name in the given
+double-hash table."
+  (let ((group-hash (gensym "group-hash-")))
+    `(let ((,group-hash (gethash ,group-name ,storage)))
+       (when ,group-hash
+	 (remhash ,test-name ,group-hash)))))
 
 (defmacro add-test (test-record-hash test-record &optional (value t))
   (let ((group-hash (gensym "group-hash")))
@@ -203,7 +215,7 @@ is stored against group-name and test-name."
 	     (setf ,group-hash (make-hash-table)
 		   (gethash group-name ,test-record-hash) ,group-hash))
 	   (setf (gethash test-name ,group-hash) ,value))))))
-		    
+
 (defmacro have-erred-tests ()
   "Poll the above variables to check for erred tests."
   `(or (> (hash-table-count *erred-groups*) 0)
@@ -217,3 +229,4 @@ is stored against group-name and test-name."
 (defvar *opening-at-top* t
   "This tag will be dynamically set to nil when recurring over opening
 fixtures; this should be used for output selection only.")
+
