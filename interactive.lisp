@@ -18,10 +18,12 @@
 	 (*pending-group-names* ())
 	 (*pending-test-names* (make-hash-table))
 	 (*passed-test-count* 0)
-	 (*erred-groups* (make-hash-table))
-	 (*erred-cleanup* (make-hash-table))
-	 (*failed-tests* (make-hash-table))
-	 (*erred-tests* (make-hash-table)))
+;;;	 (*erred-groups* (make-hash-table))
+;;;	 (*erred-cleanup* (make-hash-table))
+;;;	 (*failed-tests* (make-hash-table))
+;;;	 (*passed-tests* (make-hash-table))
+;;;	 (*erred-tests* (make-hash-table))
+	 )
      ,@forms
      (run-pending)
      (report-last-run)))
@@ -38,6 +40,7 @@
 
        (clrhash *pending-test-names*)
        (clrhash *failed-tests*)
+       (clrhash	*passed-tests*)
        (clrhash	*erred-tests*)
        (clrhash *erred-groups*)
        (clrhash	*erred-cleanup*)
@@ -160,44 +163,55 @@
 	(p (gensym "p-"))
 	(package-hash (gensym "package-hash-"))
 	(package-name (gensym "package-name-")))
-    `(progn
-       (block blurbing
-	 (when (member ,group-name *pending-group-names*)
-	   (format t "Group ~s is pending.~%" ,group-name)
-	   (return-from blurbing))
+    `(block blurbing
+       (when (member ,group-name *pending-group-names*)
+	 (format t "Group ~s is pending.~%" ,group-name)
+	 (return-from blurbing))
       
-	 (when (if-test *pending-test-names* ,group-name ,test-name)
-	   (format t "Test ~s.~s is pending.~%"
-		   ,group-name ,test-name)
-	   (return-from blurbing))
-	
-	 (loop for ,p being the hash-keys in +groups-by-package+
-	       using (hash-value ,package-hash)
-	       do
-	    (when (gethash ,group-name ,package-hash)
-	      (let ((,package-name (package-name ,p)))
-		(when (member ,package-name *pending-packages*)
-		  (format t "Package ~a is pending.~%" ,package-name)
-		  (return-from blurbing)))))
-      
-	 (when (gethash (gethash ,group-name +groups+) *erred-groups*)
-	   (format t "Group ~s raised an error in setup.~%"
-		   ,group-name)
-	   (return-from blurbing))
-      
-	 (let ((,x (if-test *failed-tests* ,group-name ,test-name)))
-	   (when ,x
-	     (format t "Test ~s.~s failed.~%" ,group-name ,test-name)
-	     (return-from blurbing)))
-      
-	 (let ((,x (if-test *erred-tests* ,group-name ,test-name)))
-	   (when ,x
-	     (format t "Test ~s.~s raised an error:~%  ~s~%"
-		     ,group-name ,test-name ,x)
-	     (return-from blurbing))))
+       (when (gethash (gethash ,group-name +groups+) *erred-groups*)
+	 (format t "Group ~s raised an error in setup.~%"
+		 ,group-name)
+	 (return-from blurbing))
+
        (when (gethash (gethash ,group-name +groups+) *erred-cleanup*)
 	 (format t "Group ~s raised an error in cleanup.~%"
-		 ,group-name)))))
+		 ,group-name))
+      
+       (when (if-test *pending-test-names* ,group-name ,test-name)
+	 (format t "Test ~s/~s is pending.~%"
+		 ,group-name ,test-name)
+	 (return-from blurbing))
+	
+       (loop for ,p being the hash-keys in +groups-by-package+
+	     using (hash-value ,package-hash)
+	     do
+	  (when (gethash ,group-name ,package-hash)
+	    (let ((,package-name (package-name ,p)))
+	      (when (member ,package-name *pending-packages*)
+		(format t "Package ~a is pending.~%" ,package-name)
+		(return-from blurbing)))))
+      
+       (let ((,x (if-test *failed-tests* ,group-name ,test-name)))
+	 (when ,x
+	   (format t "Test ~s/~s failed.~%" ,group-name ,test-name)
+	   (return-from blurbing)))
+      
+       (let ((,x (if-test *erred-tests* ,group-name ,test-name)))
+	 (when ,x
+	   (format t "Test ~s/~s raised an error:~%  ~s~%"
+		   ,group-name ,test-name ,x)
+	   (return-from blurbing)))
+      
+       (when (if-test *passed-tests* ,group-name ,test-name)
+	 (format t "Test ~s/~s passed.~%" ,group-name ,test-name)
+	 (return-from blurbing))
+       
+       (format t
+	       "Test ~s/~s not scheduled and not recently manually run~
+                ~%(or, perhaps you are not querying on atoms from the ~
+                   test package).~%"
+	       ,group-name ,test-name)
+       (return-from blurbing))))
 
 ;;; Output functions for lists and other collections of testing
 ;;; artifacts for use in the runtime system.
@@ -223,27 +237,30 @@
      "~:[none~;~:*~@<~{~/nst::format-group-test-list/~^, ~_~}~:>~]")
 (defun format-group-test-list (stream item s c)
   (declare (ignorable s) (ignorable c))
-  (format stream "~s.~s" (car item) (cadr item)))
+  (format stream "~s/~s" (car item) (cadr item)))
 
 
 (defun nst-dump (stream)
-  (macrolet ((group-test-names-from-hashes (hash)
-	       (let ((all (gensym "all-"))
-		     (group (gensym "group-"))
-		     (test (gensym "test-"))
-		     (flag (gensym "flag-"))
-		     (name-hash (gensym "name-hash-")))
-		 `(let ((,all nil))
-		    (loop for ,group being the hash-keys
+  (macrolet ((group-test-loop (hash group test content &rest forms)
+	       (let ((name-hash (gensym "name-hash-")))
+		 `(loop for ,group being the hash-keys
 			  of ,hash
 			  using (hash-value ,name-hash)
 			  do
 		       (loop for ,test being the hash-keys
 			     of ,name-hash
-			     using (hash-value ,flag)
-			     do
-			  (if ,flag (push (list ,group ,test) ,all))))
-		    ,all))))
+			     using (hash-value ,content)
+			     do ,@forms))))
+	     (group-test-names-from-hashes (hash)
+	       (let ((group (gensym "group-"))
+		     (test (gensym "test-"))
+		     (name-hash (gensym "name-hash-")))
+		 `(loop for ,group being the hash-keys of ,hash
+			using (hash-value ,name-hash)
+			append
+			(loop for ,test being the hash-keys of ,name-hash
+			      collect
+			      (list ,group ,test))))))
 
     (unless +fixtures+
       (format stream "~%FIXTURE SETS~%")
@@ -280,6 +297,7 @@
         ~:[none~;~:*~{~s~^, ~}~]~%~
      Tests erring this run: ~@?~%~
      Tests failed this run: ~@?~%~
+     Tests passed this run: ~@?~%~
      ~%"
 	    *verbose-output* *debug-output*
 	    *break-on-wrong* *break-on-error* *debug-on-error*
@@ -297,7 +315,9 @@
 	    +group-test-name-formatter+
 	    (group-test-names-from-hashes *failed-tests*)
 	    +group-test-name-formatter+
-	    (group-test-names-from-hashes *erred-tests*))))
+	    (group-test-names-from-hashes *erred-tests*)
+	    +group-test-name-formatter+
+	    (group-test-names-from-hashes *passed-tests*))))
 
 ;;; Top-level user help message.
 
