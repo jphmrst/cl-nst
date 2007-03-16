@@ -246,6 +246,14 @@ error.\index{err@\texttt{:err}}
 \\ Syntax: \texttt{:err} \textit{form}
 \\ Example: \texttt{(def-check err1 :err (error "this should be caught"))}
 
+\subsubsection{The \texttt{:perf} check} 
+This test sets minimum performance requirements for evaluation of a
+form.\index{err@\texttt{:perf}}
+\\ Syntax: \texttt{:perf} \textit{criteria} \textit{form}
+{\ttfamily\begin{tabbing}
+\textrm{Examples:}\ \=(def-check perf1 :perf (:min 2) (ack 3 5))
+\end{tabbing}}
+
 \subsection{Basic transforms}
 
 \subsubsection{The \texttt{:not} check} 
@@ -703,9 +711,12 @@ code live.\index{ASDF}
 \item Possibly,
   \texttt{run-nst-commands}\index{run-nst-commands@\texttt{run-nst-commands}}
   should be turned into a macro.
-
-\item Benchmarking tests measuring execution time, or maybe also
-  memory use if feasible, would be a nice addition.
+\item The def-check form \texttt{:perf} might be extended to provide
+  (implementation-dependent) checks on memory limits as well as time
+  limits.
+\item Some sort of timeout mechanism (again, possibly
+  implementation-dependent) could be helpful for measuring correctness
+  via termination in more complicated algorithms.
 \end{enumerate}
 
 \printindex

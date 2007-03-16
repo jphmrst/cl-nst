@@ -92,6 +92,8 @@
   (def-test fix3 :fixtures (f1 (:fixtures qq 3)) :form (eql c qq))
   (def-test fix4 :fixtures (f1 (:fixtures x 3))  :form (eql c 3))
 
+  (def-check perf1 :perf (:sec 4) (sleep 2))
+  
   (def-check checkfix1 :fixtures ((:fixtures qq 5))
 	     :eql 5 qq)
   
