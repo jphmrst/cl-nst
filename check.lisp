@@ -316,13 +316,15 @@ and check the resulting value"
 	      (when sec-supp-p (setf ms (* 1000 sec)))
 	      (when min-supp-p (setf ms (* 60000 sec)))
 	      (setf core-form
-		    `(let ((start-time (get-internal-real-time))
-			   (result ,core-form)
-			   (end-time (get-internal-real-time)))
+		    `(let* ((start-time (get-internal-real-time))
+			    (result ,core-form)
+			    (elapsed-ms
+			     (* ,(/ 1000
+				    internal-time-units-per-second)
+				(- (get-internal-real-time)
+				   start-time))))
 		       (declare (ignorable result))
-		       (< ,ms (* ,(/ 1000
-				     internal-time-units-per-second)
-				 (- end-time start-time))))))
+		       (> ,ms elapsed-ms))))
 	    core-form)))
 
 ;;; Standard checking forms --- combinations of methods on a single
