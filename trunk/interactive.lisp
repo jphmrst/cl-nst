@@ -258,9 +258,9 @@
 		 `(loop for ,group being the hash-keys of ,hash
 			using (hash-value ,name-hash)
 			append
-			(loop for ,test being the hash-keys of ,name-hash
-			      collect
-			      (list ,group ,test))))))
+			(loop for ,test being
+			      the hash-keys of ,name-hash
+			      collect (list ,group ,test))))))
 
     (unless +fixtures+
       (format stream "~%FIXTURE SETS~%")
