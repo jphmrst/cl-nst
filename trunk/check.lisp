@@ -297,6 +297,33 @@ and check the resulting value"
   :expose-bare-subforms methods
   :args (form-list)
   :body (continue-check (append form-list methods)))
+
+(def-check-form :perf
+    "Incorporate a list of check forms"
+  :strip-suffix form
+  :expose-bare-subforms methods
+  :args (metrics)
+  :body (destructuring-bind (&key (ms nil ms-supp-p)
+				  (sec nil sec-supp-p)
+				  (min nil min-supp-p)) metrics
+	  (warn-if-excess-arguments :perf methods)
+	  (let ((core-form form))
+	    (when (or sec-supp-p min-supp-p ms-supp-p)
+	      (when (or (and sec-supp-p min-supp-p)
+			(and ms-supp-p min-supp-p)
+			(and ms-supp-p sec-supp-p))
+		(error "Multiple time metrics given"))
+	      (when sec-supp-p (setf ms (* 1000 sec)))
+	      (when min-supp-p (setf ms (* 60000 sec)))
+	      (setf core-form
+		    `(let ((start-time (get-internal-real-time))
+			   (result ,core-form)
+			   (end-time (get-internal-real-time)))
+		       (declare (ignorable result))
+		       (< ,ms (* ,(/ 1000
+				     internal-time-units-per-second)
+				 (- end-time start-time))))))
+	    core-form)))
 
 ;;; Standard checking forms --- combinations of methods on a single
 ;;; value form.
