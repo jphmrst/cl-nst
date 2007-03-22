@@ -55,11 +55,15 @@ where
 A fixture in one set may refer back to other fixtures in the same set
 (\emph{\`a la} \texttt{let*}) but forward references are not allowed.
 
-Examples:
+Examples of fixture definitions:
 \begin{verbatim}
 (def-fixtures f1 :bindings ((c 3) (d 'asdfg)))
 (def-fixtures f2 :uses (f1) :bindings ((d 4) (e 'asdfg) (f c)))
 \end{verbatim}
+There are examples of using these fixture definitions in tests (i.e.\
+with \texttt{def-test}) in Section~\ref{first-test-use-of-fixtures},
+p.~\pageref{first-test-use-of-fixtures}, and in checks (i.e.\ with
+\texttt{def-check}) in Section~\ref{}, p.~\pageref{}.
 
 \subsection{Alternate fixture definitions}
 The
@@ -151,6 +155,7 @@ where
 Test evaluation considers only whether the form evaluates to
 \texttt{nil}, non-\texttt{nil}, or raises an error.
 
+\label{first-test-use-of-fixtures}
 These examples assume that the fixture declarations of
 Section~\ref{fixtures} are in effect:
 \begin{verbatim}
@@ -253,6 +258,13 @@ form.\index{err@\texttt{:perf}}
 {\ttfamily\begin{tabbing}
 \textrm{Examples:}\ \=(def-check perf1 :perf (:min 2) (ack 3 5))
 \end{tabbing}}
+
+\subsection{Use of fixtures}
+
+Fixtures can be used on a per-test basis with \texttt{def-check} just
+as with \texttt{def-test}.  The syntax is the same, for example,
+\begin{verbatim}
+\end{verbatim}
 
 \subsection{Basic transforms}
 
