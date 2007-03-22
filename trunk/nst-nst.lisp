@@ -23,6 +23,7 @@
 
 (def-test-group g1a ()
   (def-test fix0 :fixtures (f1)              :form (boundp 'c))
+  (def-check fix0c :fixtures (f1) :eq t (boundp 'c))
   (def-test fix1 :fixtures ((:fixtures x 3)) :form (boundp 'x)))
 
 (def-test-group g1a1 ()
