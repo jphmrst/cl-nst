@@ -16,8 +16,9 @@
   (defparameter *fixture-to-group-class* (make-hash-table :test 'eq))
   (defparameter *fixture-to-test-class* (make-hash-table :test 'eq)))
 
-(defmacro def-fixtures (name &key bindings
-			     uses assumes outer inner documentation)
+(defmacro def-fixtures (name (&key uses assumes outer inner
+				   documentation)
+			     &body bindings)
   (macro-dbg (format t "Expanding declaration of fixture ~s:~%" name))
   (let* ((err (gensym))
 	 
@@ -176,7 +177,8 @@ variables.  Since these bindings are all made via dynamic let's in
 variables from the test suite."
   (let ((nil-bindings
 	 (loop for v in variables collect (list v nil))))
-    `(def-fixtures ,name ,nil-bindings :documentation ,documentation)))
+    `(def-fixtures ,name (:documentation ,documentation)
+       ,@nil-bindings)))
 
 (defun process-anonymous-fixtures (fixtures-list)
   "Returns fixture declarations for anonymous fixtures"
@@ -194,8 +196,8 @@ variables from the test suite."
 	   (let* ((name (gensym))
 		  (decl-binding (cdr item))
 		  (decl (macroexpand-1
-			 `(def-fixtures ,name :bindings
-			    ,(loop for x = (pop decl-binding)
+			 `(def-fixtures ,name ()
+			    ,@(loop for x = (pop decl-binding)
 				   while x
 				   for y = (pop decl-binding)
 				   collect (list x y))))))
