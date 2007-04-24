@@ -7,7 +7,8 @@
 ;;; and the lisp-specific preamble to that license.
 (in-package :sift.nst-test)
 
-(def-fixtures f1 :bindings ((c 3) (d 'asdfg)))
+(def-fixtures f1 ()
+  (c 3) (d 'asdfg))
 
 (def-test-group nst-tests ()
   (def-check symbol-1 :symbol a 'a)
@@ -32,11 +33,11 @@
 (def-test-group g1a2 ()
   (def-test fix1 :fixtures ((:fixtures x 3)) :form (boundp 'x)))
 
-(def-fixtures f2 :uses (f1)
-	      :bindings ((d 4) (e 'asdfg) (f c)))
+(def-fixtures f2 (:uses (f1))
+  (d 4) (e 'asdfg) (f c))
 
-(def-fixtures capture-x-y-fixtures :assumes (x y)
-	      :bindings ((z (+ x y)) (w 10)))
+(def-fixtures capture-x-y-fixtures (:assumes (x y))
+  (z (+ x y)) (w 10))
 
 (def-test-group g2a (f1)
   (def-test using-c :form (boundp 'c)))

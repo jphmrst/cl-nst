@@ -182,12 +182,15 @@
 			  ,next-details
 			,body))
 	      details next-details)))
-    
-    (eval `(defmethod check-form ((,cmd (eql ',name)) &rest ,details)
-	     ,(when (and documentation-supplied-p
-			 (stringp documentation))
-		documentation)
-	     ,body))))
+    (let ((form
+	   `(defmethod check-form ((,cmd (eql ',name)) &rest ,details)
+	      ,@(when (and documentation-supplied-p
+			   (stringp documentation))
+		  (list documentation))
+	      ,body)))
+      
+      ;; (eval form)
+      form)))
 
 (defmacro def-check-form-manip (name doc-string
 				     &key (args nil) form manip)
