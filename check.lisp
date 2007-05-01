@@ -75,47 +75,17 @@
      (declare (ignorable d))
      (error "No such check-form criterion ~s" m)))
 
-(defmacro def-check (name &rest commands-and-forms
-			  &aux setup cleanup fixtures)
+(defmacro def-check (name (&key (setup nil setup-supp-p)
+				(cleanup nil cleanup-supp-p)
+				(fixtures nil fixtures-supp-p))
+			  &body commands-and-forms)
   "Define a test constructed according to the specified method."
 
-  (block process-check-options
-    (loop do
-      (unless commands-and-forms
-	(error "too few arguments in def-check ~s" name))
-      (let ((first (car commands-and-forms)))
-	(unless (symbolp first)
-	  (error "Bad command to def-check: ~s" first))
-
-	(cond
-	  ((eq first :setup)
-	   (when setup
-	     (error "Multiple :setup declaration to def-check ~s" name))
-	   (pop commands-and-forms)
-	   (let ((form (pop commands-and-forms)))
-	     (setf setup `(:setup ,form))))
-	    
-	  ((eq first :cleanup)
-	   (when setup
-	     (error "Multiple :cleanup declaration to def-check ~s"
-		    name))
-	   (pop commands-and-forms)
-	   (let ((form (pop commands-and-forms)))
-	     (setf cleanup `(:cleanup ,form))))
-	    
-	  ((eq first :fixtures)
-	   (when setup
-	     (error "Multiple :fixtures declaration to def-check ~s"
-		    name))
-	   (pop commands-and-forms)
-	   (let ((form (pop commands-and-forms)))
-	     (setf fixtures `(:fixtures ,form))))
-	    
-	  (t (return-from process-check-options))))))
-  
   `(def-test ,name
-     ,@setup ,@cleanup ,@fixtures
-     :form ,(continue-check commands-and-forms)))
+       ,@(when setup-supp-p    `(:setup ,setup))
+       ,@(when cleanup-supp-p  `(:cleanup ,cleanup))
+       ,@(when fixtures-supp-p `(:fixtures ,fixtures))
+       :form ,(continue-check commands-and-forms)))
 
 (defgeneric check-form (method &rest details)
   (:documentation "Definition of the top-level check forms.")
