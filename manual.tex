@@ -62,8 +62,7 @@ Examples of fixture definitions:
 \end{verbatim}
 There are examples of using these fixture definitions in tests (i.e.\
 with \texttt{def-test}) in Section~\ref{first-test-use-of-fixtures},
-p.~\pageref{first-test-use-of-fixtures}, and in checks (i.e.\ with
-\texttt{def-check}) in Section~\ref{}, p.~\pageref{}.
+p.~\pageref{first-test-use-of-fixtures}.
 
 \subsection{Alternate fixture definitions}
 The
@@ -178,17 +177,23 @@ The
 \texttt{def-check}\index{check}\index{def-check@\texttt{def-check}}
 form allows a higher-level description of tests.  The basic syntax of
 the form is
-\begin{center}
-\textbf{def-check} \textit{name} \texttt{\&rest} \textit{methods-and-forms}
-\end{center}
+\begin{tabbing}\hspace*{1cm}
+\textbf{de}\=\textbf{f-check} \textit{name}
+	( \= [ \texttt{:setup} \textit{setup} ]
+	     [ \texttt{:cleanup} \textit{cleanup} ]
+\\ \>\>	  [ \texttt{:fixtures} \textit{fixtures} ] )
+\\ \> \texttt{\&body} \textit{methods-and-forms}
+\end{tabbing}
 Generally speaking, the syntax of the \textit{methods-and-forms} are:
 \begin{center}
 \textit{transform} $\cdots$ \textit{transform} \textit{criteria} \textit{form}
 \end{center}
 where the \emph{transform}s are applied left-to-right to the
 \emph{form}, which is then checked against the \emph{criteria}.
-However, many of the criteria and transforms introduce other
-interpretations of the \textit{methods-and-forms}.
+However, many of the criteria and transforms introduce variations and
+elaborations of the basic idea.  The \texttt{:setup},
+\texttt{:cleanup} and \texttt{:fixtures} options are passed as-are to
+the underlying \texttt{def-test}, and work the same way.
 \subsection{Basic checks}
 \subsubsection{The \texttt{:pass} check} 
 This check always passes.\index{pass@\texttt{:pass}}
