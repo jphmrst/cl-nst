@@ -20,7 +20,7 @@
   (defvar *fixtures-for-group* nil)
   (defvar *fixtures-for-group-name* nil))
 
-(defmacro def-test-group (group-name given-fixtures &rest forms)
+(defmacro def-test-group (group-name given-fixtures &body forms)
   "Define a group of tests associated with certain fixtures,
 initialization and cleanup."
 
