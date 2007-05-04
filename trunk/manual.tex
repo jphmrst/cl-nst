@@ -256,6 +256,18 @@ error.\index{err@\texttt{:err}}
 \\ Syntax: \texttt{:err} \textit{form}
 \\ Example: \texttt{(def-check err1 :err (error "this should be caught"))}
 
+\subsubsection{The \texttt{:check-err} check} 
+This test verifies that evaluating a check throws an
+error.\index{err@\texttt{:check-err}} The difference between
+\texttt{:check-err} and \texttt{:err} is that the latter deals only
+with evaluation of a form, whereas \texttt{:check-err} is more about
+the unit testing process.  This form is mostly useful for temporarily
+disregarding certain checks until some later fix, when they
+\emph{won't} throw an error.
+%
+\\ Syntax: \texttt{:check-err} \textit{methods-and-forms}
+\\ Example: \texttt{(def-check check-err1 :check-err :forms-eq 'asdfgh (error "this should be caught"))}
+
 \subsubsection{The \texttt{:perf} check} 
 This test sets minimum performance requirements for evaluation of a
 form.\index{err@\texttt{:perf}}
