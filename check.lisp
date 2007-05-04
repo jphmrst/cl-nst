@@ -153,6 +153,7 @@
 			,body))
 	      details next-details)))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
+       ;; (format t "~a" ,(format nil "** Defining check-form ~s~%" name))
        (defmethod check-form ((,cmd (eql ',name)) &rest ,details)
 	 ,@(when (and documentation-supplied-p (stringp documentation))
 	     (list documentation))
