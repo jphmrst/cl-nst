@@ -51,6 +51,8 @@
   (def-check eqforms1 () :forms-eq (cadr '(a b c)) (caddr '(a c b)))
   (def-check pred1 () :predicate numberp 3)
   (def-check err1 () :err (error "this should be caught"))
+  (def-check check-err1 () :check-err
+	     :forms-eq 'adsfgh (error "this should be caught"))
   (def-check each1 () :each :symbol a '(a a a a a))
   (def-check not2 () :not :predicate numberp 'a)
   (def-check each2 () :each :predicate numberp '(1 2 3 4 5))

@@ -284,7 +284,7 @@ and check the resulting value"
 			(and ms-supp-p sec-supp-p))
 		(error "Multiple time metrics given"))
 	      (when sec-supp-p (setf ms (* 1000 sec)))
-	      (when min-supp-p (setf ms (* 60000 sec)))
+	      (when min-supp-p (setf ms (* 60000 min)))
 	      (setf core-form
 		    `(let* ((start-time (get-internal-real-time))
 			    (result ,core-form)
@@ -361,6 +361,23 @@ form to throw an error, and otherwise the test fails."
 				       (declare (ignorable ,x))
 				       (return-from ,x t))))
 	       ,form)
+	     nil)))
+
+(def-check-form :check-err
+    "The :check-err specifier tells the tester to expect that the
+check which follows should fail.  The difference between :check-err
+and :err is that the latter deals only with evaluation of a form,
+whereas :check-err is more about the unit testing process.  This
+form is mostly useful for temporarily disregarding certain checks
+until some later fix, when they *won't* throw an error."
+  :expose-bare-subforms methods
+  :body (let ((x (gensym "x")))
+	  (declare (ignorable x))
+	  `(block ,x
+	     (handler-bind ((error #'(lambda (,x)
+				       (declare (ignorable ,x))
+				       (return-from ,x t))))
+	       ,(continue-check methods))
 	     nil)))
 
 ;;; Standard checking forms --- operations on lists.
