@@ -225,6 +225,11 @@ the style of test provided by RT/RRT."
 another form)."
   :args (target form) :body `(eql ,form ,target))
 
+(def-check-form :equal
+    "Check that the form is equal to an ideal (which may itself be
+another form)."
+  :args (target form) :body `(equal ,form ,target))
+
 (def-check-form :forms-eq
     "Check that two forms are eq."
   :args (form1 form2) :body `(eq ,form1 ,form2))
@@ -232,6 +237,10 @@ another form)."
 (def-check-form :forms-eql
     "Check that two forms are eql."
   :args (form1 form2) :body `(eql ,form1 ,form2))
+  
+(def-check-form :forms-equal
+    "Check that two forms are equal."
+  :args (form1 form2) :body `(equal ,form1 ,form2))
 
 (def-check-form :round-sig-eql
     "Check that two numbers are eql to the given number of significant\
