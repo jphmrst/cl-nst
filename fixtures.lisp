@@ -161,7 +161,13 @@
 			(not *reopen-fixtures*))
 	     (when *open-used-fixtures*
 	       (loop for ,id in ',uses do (open-fixture ,id)))
-	     ,@(loop for b in bindings collect `(defparameter ,@b)))
+	     ,@(loop for b in bindings append
+		     `((verbose-out
+			 (format t "Defining ~s...~%" ',(car b)))
+		       (defparameter ,@b)
+		       (verbose-out
+			(format t "~@<Set ~s to~_ ~s~:>~%"
+				',(car b) ,(car b))))))
 	   nil)
        
 	 (compile-dbg
