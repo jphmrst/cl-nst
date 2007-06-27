@@ -163,7 +163,8 @@
 	       (loop for ,id in ',uses do (open-fixture ,id)))
 	     ,@(loop for b in bindings append
 		     `((verbose-out
-			 (format t "Defining ~s...~%" ',(car b)))
+			(format t "Defining ~s as ~s...~%"
+				',(car b) ',(cadr b)))
 		       (defparameter ,@b)
 		       (verbose-out
 			(format t "~@<Set ~s to~_ ~s~:>~%"
