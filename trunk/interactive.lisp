@@ -626,8 +626,11 @@ fixing problems as they arise.
 		(run-pending) (report-last-run))
 
 	    (command-case (:open) (fixture-name)
-		(open-fixture fixture-name)
-		(format t "Opened fixture ~s.~%" fixture-name)))
+	      (handler-case (open-fixture fixture-name)
+		(unknown-fixture (cnd)
+		  (format t "Can't find fixture ~s ~
+                             ~_(check current package)." (name cnd))
+		  (return-from run-nst-commands)))))
 	  
 	  (format t "Unrecognized NST command ~s~%~
                      For more options, use :nst :help~%~%"
