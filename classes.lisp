@@ -63,10 +63,14 @@ associated with this group should subclass.")
 		     "Documentation associated with this group"))
   (:documentation "Information associated with one group of tests."))
 
+(define-condition unknown-fixture ()
+  ((name :initarg :name :reader name)))
+
 (defgeneric open-fixture (fixture)
   (:documentation
    "Adds the bindings defined by each fixture to the runtime namespace.
-This function is defined via eql-methods for each fixture name."))
+This function is defined via eql-methods for each fixture name.")
+  (:method (unc) (error 'unknown-fixture :name unc)))
 
 (defgeneric get-fixture-bindings (name)
   (:documentation
