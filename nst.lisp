@@ -16,7 +16,7 @@
 ;;;   comprehensive code review.
 ;;;
 ;;;   2. Should the nst-run-command function be turned into a macro?
-
+;;;
 
 ;;; This file contains settings, global variables and flags.
 
