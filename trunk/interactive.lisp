@@ -233,7 +233,7 @@
 	     (format stream " - Test ~/nst::nst-format/~%"
 			    (gethash test-name tests-hash)))))))
 
-(defconstant +group-test-name-formatter+
+(defmacro group-test-name-formatter ()
      "~:[none~;~:*~@<~{~/nst::format-group-test-list/~^, ~_~}~:>~]")
 (defun format-group-test-list (stream item s c)
   (declare (ignorable s) (ignorable c))
@@ -303,25 +303,25 @@
 	    *break-on-wrong* *break-on-error* *debug-on-error*
 	    (map 'list #'package-name *interesting-packages*)
 	    *interesting-group-names*
-	    +group-test-name-formatter+
+	    (group-test-name-formatter)
 	    (group-test-names-from-hashes *interesting-test-names*)
 	    (map 'list #'package-name *pending-packages*)
 	    *pending-group-names*
-	    +group-test-name-formatter+
+	    (group-test-name-formatter)
 	    (group-test-names-from-hashes *pending-test-names*)
 	    *passed-test-count*
 	    (loop for g being the hash-keys of *erred-groups*
 		  collect (get-name g))
-	    +group-test-name-formatter+
+	    (group-test-name-formatter)
 	    (group-test-names-from-hashes *failed-tests*)
-	    +group-test-name-formatter+
+	    (group-test-name-formatter)
 	    (group-test-names-from-hashes *erred-tests*)
-	    +group-test-name-formatter+
+	    (group-test-name-formatter)
 	    (group-test-names-from-hashes *passed-tests*))))
 
 ;;; Top-level user help message.
 
-(defconstant +nst-top-help+ "NST test framework control
+(defmacro nst-top-help () "NST test framework control
 
 OUTPUT CONTROL
   :nst :help
@@ -454,8 +454,7 @@ fixing problems as they arise.
 			       collect
 			       (list arg (list 'pop-arg want have)))))
 		   `(when (member head ',synonyms)
-		      (let ,arg-bindings ,@forms)
-		      (return-from single-command))))
+		      (let ,arg-bindings ,@forms))))
 
 	       (command-case-flag-setter (synonyms variable blurb)
 		 (let ((flag (gensym)))
@@ -470,7 +469,7 @@ fixing problems as they arise.
 				 head))))
 
 	    (command-case (:help help h) ()
-		(format t "~a" +nst-top-help+)
+		(format t "~a" (nst-top-help))
 		(return-from runner))
 	    
 	    (command-case-flag-setter (:verbose) *verbose-output*
@@ -638,8 +637,7 @@ fixing problems as they arise.
 
 ;;; Platform-specific command-line interpreter interfaces.
 
-#+allegro
-(top-level:alias "nst" (&rest args)
-  ;;  #.+nst-top-help+
+#+(or allegro sbcl)
+(#+allegro top-level:alias #+sbcl sb-aclrepl:alias "nst" (&rest args)
   (apply #'run-nst-commands args))
 
