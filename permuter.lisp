@@ -38,6 +38,8 @@
   (print-unreadable-object (p stream :type t :identity nil)
     (format stream "~/nst::fmt-permuter/" p)))
 
+(defgeneric fmt-permuter (stream p c s))
+
 (defmethod fmt-permuter (stream (p permuter) c s)
   (declare (ignorable c) (ignorable s))
   (with-slots (next-permutation perm-stack has-next) p
