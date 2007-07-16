@@ -454,7 +454,8 @@ fixing problems as they arise.
 			       collect
 			       (list arg (list 'pop-arg want have)))))
 		   `(when (member head ',synonyms)
-		      (let ,arg-bindings ,@forms))))
+		      (let ,arg-bindings ,@forms)
+		      (return-from single-command))))
 
 	       (command-case-flag-setter (synonyms variable blurb)
 		 (let ((flag (gensym)))
