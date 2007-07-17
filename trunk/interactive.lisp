@@ -447,15 +447,18 @@ fixing problems as they arise.
 		     (return))
 		    (t (pop args))))
 	       
-	       (command-case (synonyms args &rest forms)
+	       (command-case-core (synonyms args &rest forms)
 		 (let* ((want (length args))
 			(arg-bindings
 			 (loop for arg in args and have from 0
 			       collect
 			       (list arg (list 'pop-arg want have)))))
 		   `(when (member head ',synonyms)
-		      (let ,arg-bindings ,@forms)
-		      (return-from single-command))))
+		      (let ,arg-bindings ,@forms))))
+	       
+	       (command-case (synonyms args &rest forms)
+		   `(command-case-core ,synonyms ,args ,@forms
+				       (return-from single-command)))
 
 	       (command-case-flag-setter (synonyms variable blurb)
 		 (let ((flag (gensym)))
@@ -469,7 +472,7 @@ fixing problems as they arise.
 			 (format t "Command ~s not implemented~%"
 				 head))))
 
-	    (command-case (:help help h) ()
+	    (command-case-core (:help help h) ()
 		(format t "~a" (nst-top-help))
 		(return-from runner))
 	    

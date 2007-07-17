@@ -87,13 +87,14 @@
        ,@(when fixtures-supp-p `(:fixtures ,fixtures))
        :form ,(continue-check commands-and-forms)))
 
-(defgeneric check-form (method &rest details)
-  (:documentation "Definition of the top-level check forms.")
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defgeneric check-form (method &rest details)
+    (:documentation "Definition of the top-level check forms.")
 
-  (:method (unrecognized &rest whatever)
-     "Ill-specified checks are compile-time errors"
-     (declare (ignorable whatever))
-     (error "Unrecognized def-check form ~s~%" unrecognized)))
+    (:method (unrecognized &rest whatever)
+	     "Ill-specified checks are compile-time errors"
+	     (declare (ignorable whatever))
+	     (error "Unrecognized def-check form ~s~%" unrecognized))))
 
 (defmacro def-check-form
     (name &optional (documentation nil documentation-supplied-p)
