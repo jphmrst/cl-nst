@@ -96,80 +96,82 @@ initialization and cleanup."
 	  `(progn
 
 	     (eval-when (:compile-toplevel :load-toplevel :execute)
-	     ,@test-fixture-defs
+	       ,@test-fixture-defs
 
-	     (compile-dbg
-	      (format t
-		      "Compiling anonymous fixtures to test group ~s~%"
-		      ',group-name))
+	       (compile-dbg
+		(format t
+		    "Compiling anonymous fixtures to test group ~s~%"
+		  ',group-name))
 
-	     ;; First define any of the anonymous fixtures we found in
-	     ;; the original fixtures list.
+	       ;; First define any of the anonymous fixtures we found in
+	       ;; the original fixtures list.
 	       ,@anon-fixtures
-       
+
 	       (compile-dbg
 		(format t "~@<Compiling test group ~s~_ (class ~s)~:>~%"
-			',group-name ',group-class)
-		(format t " * fixtures ~s~% * map to classes ~s~%"
-			',fixture-names
+		  ',group-name ',group-class)
+		(format t " * fixtures ~s~%" ',fixture-names)
+		,@(when fixture-names
+		    `((format t " * map to classes ~s~%"
 			(loop for f in ',fixture-names
-			      collect
-			      (gethash f *fixture-to-group-class*))))
+			    collect
+			      (gethash f *fixture-to-group-class*))))))
 
-		;; Define a uniquely-named class associated with this
-		;; group.  It should extend all of the given fixture
-		;; groups, plus the "group" class.
-		(let ((form
-		       (list 'defclass ',group-class
-			     `(,@(loop for f in ',fixture-names
-				       collect
-				       (gethash
-					 f *fixture-to-group-class*))
-				 group)
-			     () '(:documentation ,class-doc))))
-		  (bind-dbg 
-		   (format t " * Form is:~%   ~s~%" form))
-		  (eval form))
+	       ;; Define a uniquely-named class associated with this
+	       ;; group.  It should extend all of the given fixture
+	       ;; groups, plus the "group" class.
+	       (let ((form
+                      (list 'defclass ',group-class
+                            `(,@(loop for f in ',fixture-names
+				    collect 
+                                      (gethash
+				       f *fixture-to-group-class*))
+                                group)
+                            () '(:documentation ,class-doc))))
+		 (bind-dbg 
+		  (format t " * Form is:~%   ~s~%" form))
+		 (eval form))
        
-		;; Define a uniquely-named class which we will extend
-		;; for each test in this group.  It will also extend
-		;; all of the given fixture groups, plus the "test"
-		;; class.
-		(let ((form
-		       (list 'defclass ',*test-class-symbol*
-			     `(,@(loop for f in ',fixture-names
-				       collect
-				       (gethash
+	       ;; Define a uniquely-named class which we will extend
+	       ;; for each test in this group.  It will also extend
+	       ;; all of the given fixture groups, plus the "test"
+	       ;; class.
+	       (let ((form
+		      (list 'defclass ',*test-class-symbol*
+			    `(,@(loop for f in ',fixture-names
+				      collect
+					(gethash
 					 f *fixture-to-test-class*))
-				 test)
-			     () '(:documentation ,class-doc))))
-		  (forms-dbg
-		   (format t " - Test class form:~%   ~s~%" form))
-		  (eval form)
-		  (forms-dbg (format t "   compiled~%")))
+				test)
+			    () '(:documentation ,class-doc))))
+		 (forms-dbg
+		  (format t " - Test class form:~%   ~s~%" form))
+		 (eval form)
+		 (forms-dbg (format t "   compiled~%")))
 	       
-	     ;; Extract the names which will be provided by the
-	     ;; fixtures which this group uses.
+	       ;; Extract the names which will be provided by the
+	       ;; fixtures which this group uses.
 	       (setf (gethash ',group-name +group-def-names+) 
-		 (loop for ,f in ',fixture-names
-		     append (gethash ,f +fixture-def-names+))))
+		     ,(when fixture-names
+			`(loop for ,f in ',fixture-names
+			    append (gethash ,f +fixture-def-names+)))))
        
 	     ;; (format t " - Creating singleton record for ~s~%"
 	     ;;	 ',group-name)
 	     (let ((current-group-info))
 	       (eval-when (:load-toplevel :execute)
 		 (setf current-group-info
-		       (make-instance ',group-class
-			 :package *package*
-			 :name ',group-name
-			 :fixtures ',fixture-names
-			 :setup '(block nil ,@setup-form)
-			 :cleanup '(block nil ,@cleanup-form)
-			 :testclass ',*test-class-symbol*
-			 :documentation ,doc-string))
+		   (make-instance ',group-class
+		     :package *package*
+		     :name ',group-name
+		     :fixtures ',fixture-names
+		     :setup '(block nil ,@setup-form)
+		     :cleanup '(block nil ,@cleanup-form)
+		     :testclass ',*test-class-symbol*
+		     :documentation ,doc-string))
 		 ;; Save the group information against its name.
 		 (setf (gethash ',group-name +groups+)
-		       current-group-info))
+		   current-group-info))
 	   
 	       ;; Calling the fixture setup might throw an error, so
 	       ;; we need to catch a setup exception here as well as
@@ -215,12 +217,12 @@ initialization and cleanup."
 		   (compile-dbg
 		    (format t "   ~@<Saving compiled test names ~s ~
                                  ~_for class ~s~:>~%"
-			    tests-vector (get-name current-group-info)))
-		 (setf (slot-value current-group-info 'test-names)
-		       tests-vector
+		      tests-vector (get-name current-group-info)))
+		   (setf (slot-value current-group-info 'test-names)
+		     tests-vector
 		     
-		       (slot-value current-group-info 'tests-hash)
-		       *test-info-hash*)))
+		     (slot-value current-group-info 'tests-hash)
+		     *test-info-hash*)))
 	       nil)))))))
 
 ;;; Exported macro for defining a boolean test.

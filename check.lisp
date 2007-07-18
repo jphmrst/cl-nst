@@ -87,14 +87,18 @@
        ,@(when fixtures-supp-p `(:fixtures ,fixtures))
        :form ,(continue-check commands-and-forms)))
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (defgeneric check-form (method &rest details)
-    (:documentation "Definition of the top-level check forms.")
+(defgeneric-when (:compile-toplevel :load-toplevel :execute)
+    check-form (method &rest details)
+  (:documentation "Definition of the top-level check forms.")
 
-    (:method (unrecognized &rest whatever)
-	     "Ill-specified checks are compile-time errors"
-	     (declare (ignorable whatever))
-	     (error "Unrecognized def-check form ~s~%" unrecognized))))
+  (:method (unrecognized &rest whatever)
+	   "Ill-specified checks are compile-time errors"
+	   (declare (ignorable whatever))
+	   (error "Unrecognized def-check form ~s~%" unrecognized)))
+
+(defconstant +mop-eql-specializer-type+
+    #+sbcl 'sb-mop:eql-specializer #-sbcl 'mop:eql-specializer
+    "Deal with SBCL putting the MOP in a package not nicknamed to :mop")
 
 (defmacro def-check-form
     (name &optional (documentation nil documentation-supplied-p)
@@ -154,11 +158,23 @@
 			,body))
 	      details next-details)))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
-       ;; (format t "~a" ,(format nil "** Defining check-form ~s~%" name))
-       (defmethod check-form ((,cmd (eql ',name)) &rest ,details)
-	 ,@(when (and documentation-supplied-p (stringp documentation))
-	     (list documentation))
-	 ,body))))
+       (unless
+	   (block find-existing
+	     (let ((methods (generic-function-methods
+			     (symbol-function 'check-form))))
+	       (loop for method in methods do
+		     (let ((spec (car (method-specializers method))))
+		       (when (typep spec +mop-eql-specializer-type+)
+			 (let ((obj (eql-specializer-object spec)))
+			   (when (eql obj ',name)
+			     (return-from find-existing t))))))
+	       ;; else return nil to unless, and so do the
+	       ;; defmethod
+	       nil))
+	 (defmethod check-form ((,cmd (eql ',name)) &rest ,details)
+	   ,@(when (and documentation-supplied-p (stringp documentation))
+	       (list documentation))
+	   ,body)))))
 
 (defmacro def-check-form-manip (name doc-string
 				     &key (args nil) form manip)
