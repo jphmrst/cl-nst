@@ -63,13 +63,8 @@
     (setf (gethash name +fixture-def-names+) names)    
     
     `(progn
-       
-       (declaim
-	,@(loop for n in names collect `(dynamic-extent ,n))
-	,@(loop for n in names collect `(special ,n)))
-
+       (declaim ,@(loop for n in names collect `(special ,n)))
        (eval-when (:compile-toplevel :load-toplevel :execute)
-
 	 (setf (gethash ',name *fixture-to-group-class*)
 	       ',class-for-group
 	       (gethash ',name *fixture-to-test-class*)
@@ -159,16 +154,22 @@
 	   ,(format nil "Generated method for the ~s fixture set." name)
 	   (unless (and (gethash ',name *opened-fixtures*)
 			(not *reopen-fixtures*))
-	     (when *open-used-fixtures*
-	       (loop for ,id in ',uses do (open-fixture ,id)))
+	     ,@(when uses
+		 `((when *open-used-fixtures*
+		     (loop for ,id in ',uses do (open-fixture ,id)))))
 	     ,@(loop for b in bindings append
 		     `((verbose-out
-			(format t "~@<Defining ~s as~_ ~s...~:>~%"
-				',(car b) ',(cadr b)))
+			(format t 
+			    ,(format nil
+				 "~~@<Defining ~s as~~_ ~~s...~~:>~~%"
+			       (car b))
+			  ',(cadr b)))
 		       (defparameter ,@b)
 		       (verbose-out
-			(format t "~@<Set ~s to~_ ~s~:>~%"
-				',(car b) ,(car b))))))
+			(format t 
+			    ,(format nil "~~@<Set ~s to~~_ ~~s~~:>~~%"
+			       (car b))
+			  ,(car b))))))
 	   nil)
        
 	 (compile-dbg

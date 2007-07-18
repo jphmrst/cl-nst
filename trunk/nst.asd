@@ -15,6 +15,7 @@
 
 (defsystem :nst
     :serial t
+    :depends-on (:jm-defs)
     :in-order-to ((test-op (test-op :test-nst)))
     :components ((:file "package")
 		 (:file "permuter")
