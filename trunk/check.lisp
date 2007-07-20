@@ -172,7 +172,8 @@
 	       ;; defmethod
 	       nil))
 	 (defmethod check-form ((,cmd (eql ',name)) &rest ,details)
-	   ,@(when (and documentation-supplied-p (stringp documentation))
+	   ,@(when (and documentation-supplied-p
+			(stringp documentation))
 	       (list documentation))
 	   ,body)))))
 
@@ -286,6 +287,20 @@ and check the resulting value"
   :expose-bare-subforms methods
   :body (let ((application `(funcall #',transform ,form)))
 	  (continue-check (append methods (list application)))))
+
+(def-check-form :prog
+    "Evaluate a (side-effecting) form, and then continue with checking"
+  :args (form)
+  :require-min-bare-subforms 1
+  :expose-bare-subforms methods-and-expr
+  :body `(progn ,form ,(continue-check methods-and-expr)))
+
+(def-check-form :progn
+    "Evaluate a (side-effecting) form, and then continue with checking"
+  :args (forms)
+  :require-min-bare-subforms 1
+  :expose-bare-subforms methods-and-expr
+  :body `(progn ,@forms ,(continue-check methods-and-expr)))
 
 (def-check-form :with
     "Incorporate a list of check forms"
