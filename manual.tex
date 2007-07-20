@@ -305,6 +305,19 @@ disregarding certain checks until some later fix, when they
 \\ Syntax: \texttt{:check-err} \textit{methods-and-forms}
 \\ Example: \texttt{(def-check check-err1 :check-err :forms-eq 'asdfgh (error "this should be caught"))}
 
+\subsubsection{The \texttt{:prog} and \texttt{:progn} checks} 
+These checks evaluate the next item as a form (resp.\ list of forms)
+before evaluating the remaining check forms.
+\\ Syntax:
+\\ \texttt{:prog} \textit{form} \textit{methods-and-forms}
+\\ \texttt{:progn} (\textit{form} \ldots\ \textit{form}) \textit{methods-and-forms}
+\\ Example: Assuming that \texttt{zz} is defined as some variable,
+\begin{verbatim}
+  (def-check form1
+      :prog (setf zz 3) (:eql 3)
+      zz)
+\end{verbatim}
+
 \subsubsection{The \texttt{:with} check} 
 This check assumes that the next item is a list, whose contents are
 expanded into the methods-and-forms.\index{with@\texttt{:with}} This

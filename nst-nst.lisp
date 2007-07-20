@@ -7,6 +7,8 @@
 ;;; and the lisp-specific preamble to that license.
 (in-package :sift.nst-test)
 
+(defparameter *mmmm* 0)
+
 (def-fixtures f1 ()
   (c 3) (d 'asdfg))
 
@@ -67,6 +69,9 @@
   (def-check across1 ()
     :across (:predicate symbolp) (:eql 1)
     (vector 'a 1))
+  (def-check form1 ()
+      :prog (setf *mmmm* 3) :eql 3
+      *mmmm*)
   (def-check permute0 () :permute :seq nil)
   (def-check permute1 () :permute :each :eq 'a '(a a))
   (def-check permute2 () :permute
