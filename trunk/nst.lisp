@@ -230,3 +230,6 @@ double-hash table."
   "This tag will be dynamically set to nil when recurring over opening
 fixtures; this should be used for output selection only.")
 
+;;; Redirecting output from NST to elsewhere.
+(defvar *default-report-stream* t
+  "The default value for the stream to which NST reports output.")
