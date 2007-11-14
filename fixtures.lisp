@@ -16,11 +16,12 @@
   (defparameter *fixture-to-group-class* (make-hash-table :test 'eq))
   (defparameter *fixture-to-test-class* (make-hash-table :test 'eq)))
 
-(defmacro def-fixtures (name (&key uses assumes outer inner
-				   documentation)
+(defmacro def-fixtures (name
+			(&key uses assumes outer inner documentation)
 			     &body bindings)
-  (macro-dbg (format t "Expanding declaration of fixture ~s:~%" name))
-  (let* ((err (gensym))
+  (macro-dbg
+   (format t "Expanding declaration of fixture ~s:~%" name))
+  (let* ((err (gensym "err"))
 	 
 	 ;; A list of the names in the bindings by themselves, without
 	 ;; the associated forms.
@@ -34,13 +35,14 @@
 			     collect id)))
 	 
 	 ;; Names for the classes we define.
-	 (class-for-group (gensym))
-	 (class-for-test  (gensym))
+	 (class-for-group (gensym (format nil "~a-class-" name)))
+	 (class-for-test  (gensym (format nil "~a-test-" name)))
 	 
 	 ;; Name-capture avoidance.
 	 (ptg (gensym "ptg-"))
 	 (disc (gensym "disc-"))
-	 (id (gensym "id-")))
+	 (id (gensym "id-"))
+	 (report-stream (gensym "stream-")))
 
     (macro-dbg (format t " + Assembling form~%"))
 
@@ -48,12 +50,13 @@
 	  (gethash name *fixture-to-test-class*) class-for-test)
 	 
     (class-dbg
-     (format t " - Classes from fixture ~s:~
-                   ~%    . For groups, ~s~%    . For tests, ~s~
-                   ~%    . Check: -> ~s, -> ~s~%"
-	     name class-for-group class-for-test
-	     (gethash name *fixture-to-group-class*)
-	     (gethash name *fixture-to-test-class*)))
+     (format t
+	 " - Classes from fixture ~s:~
+        ~%    . For groups, ~s~%    . For tests, ~s~
+        ~%    . Check: -> ~s, -> ~s~%"
+       name class-for-group class-for-test
+       (gethash name *fixture-to-group-class*)
+       (gethash name *fixture-to-test-class*)))
        
     ;; Save this name with the other fixture names.  We check first,
     ;; since we could be re-defining the name.
@@ -72,9 +75,10 @@
 	 
 	 ;; Below is all done after expanding the macro.
 	 (compile-dbg
-	  (format t "Compiling declaration of fixture ~s:~
-                 ~% - Classes ~s, ~s~%"
-		  ',name ',class-for-group ',class-for-test))
+	  (format t
+	      "Compiling declaration of fixture ~s:~
+             ~% - Classes ~s, ~s~%"
+	    ',name ',class-for-group ',class-for-test))
 	      
 	 ;; Create classes for using this fixture with groups and with
 	 ;; individual tests.
@@ -88,52 +92,53 @@
 	 ;; these groups' tests, will be subclasses of the class
 	 ;; above.  So this :around method will give those test bodies
 	 ;; these bindings.
-	 (defmethod bind-for-group :around ((,ptg ,class-for-group))
+	 (defmethod bind-for-group :around ((,ptg ,class-for-group)
+					    ,report-stream)
 	   (declare ,@outer
 		    ,@(loop for f in fix-used collect `(special ,f))
 		    ,@(loop for f in fix-used collect `(ignorable ,f))
 		    ,@(loop for v in assumes collect `(special ,v)))
 	   (bind-dbg
-	    (format t "  ~@<Binding names:~{ ~s~} ~_(by ~s via ~s)~:>~%"
-		    ',names ',name ',class-for-group))
+	    (format ,report-stream
+		"       ~@<Binding names:~{ ~s~} ~_(by ~s via ~s)~:>~%"
+	      ',names ',name ',class-for-group))
 	   (let* ,(loop for b in bindings
 			collect
 			(let ((var (car b)) (body (cdr b)))
 			  `(,var
-			    (progn
-			      (record-setup-error
-			       *active-group* ,err
-			       (make-instance 'fixture-error-report
-				 :caught ,err
-				 :fixture-name ',name
-				 :var-name ',var)
-			       ,@body)))))
+			    (record-setup-error
+			     *active-group* ,err
+			     (make-instance 'fixture-error-report
+			       :caught ,err
+			       :fixture-name ',name
+			       :var-name ',var) ,report-stream
+			     ,@body))))
 	     (declare
 	      ,@(loop for n in names collect `(ignorable ,n))
 	      ,@inner)
 	     (call-next-method)))
 
-	 (defmethod bind-for-test :around ((,ptg ,class-for-test))
+	 (defmethod bind-for-test :around ((,ptg ,class-for-test)
+					   ,report-stream)
 	   (declare ,@outer
 		    ,@(loop for f in fix-used collect `(special ,f))
 		    ,@(loop for v in assumes collect `(special ,v))
 		    ,@(loop for f in fix-used collect `(ignorable ,f)))
 	   (bind-dbg
-	    (format t "     ~@<Binding names:~{ ~s~} ~
-                           ~_(by ~s via ~s)~:>~%"
+	    (format ,report-stream
+		"       ~@<Binding names:~{ ~s~} ~_(by ~s via ~s)~:>~%"
 		    ',names ',name ',class-for-test))
 	   (let* ,(loop for b in bindings
 			collect
 			(let ((var (car b)) (body (cdr b)))
 			  `(,var
-			    (progn
-			      (record-setup-error
-			       *active-group* ,err
-			       (make-instance 'fixture-error-report
-				 :caught ,err
-				 :fixture-name ',name
-				 :var-name ',var)
-			       ,@body)))))
+			    (record-setup-error
+			     *active-group* ,err
+			     (make-instance 'fixture-error-report
+			       :caught ,err
+			       :fixture-name ',name
+			       :var-name ',var) ,report-stream
+			     ,@body))))
 	     (declare
 	      ,@(loop for n in names collect `(ignorable ,n))
 	      ,@inner)
@@ -159,7 +164,7 @@
 		     (loop for ,id in ',uses do (open-fixture ,id)))))
 	     ,@(loop for b in bindings append
 		     `((verbose-out
-			(format t 
+			(format t
 			    ,(format nil
 				 "~~@<Defining ~s as~~_ ~~s...~~:>~~%"
 			       (car b))
@@ -173,7 +178,8 @@
 	   nil)
        
 	 (compile-dbg
-	  (format t "Ending compilation of fixture ~s.~%" ',name))))))
+	  (format t
+	      "Ending compilation of fixture ~s.~%" ',name))))))
 
 ;;; A convenience macro for specialized fixture definitions.
 
@@ -201,7 +207,7 @@ variables from the test suite."
 	   (push item class-list))
 
 	  ((and (listp item) (eq :fixtures (car item)))
-	   (let* ((name (gensym))
+	   (let* ((name (gensym "anon-fixtures-"))
 		  (decl-binding (cdr item))
 		  (decl (macroexpand-1
 			 `(def-fixtures ,name ()

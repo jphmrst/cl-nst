@@ -586,6 +586,12 @@ fixing problems as they arise.
 		(under-empty-pendings
 		 (push (find-package pkg-name) *pending-packages*)))
 
+	    (command-case (:run-packages) (pkg-name-list)
+	      (under-empty-pendings
+	       (setf *pending-packages*
+		     (loop for pkg-name in pkg-name-list
+			   collect (find-package pkg-name)))))
+
 	    (command-case (:run-group) (group)
 			  (under-empty-pendings
 			   (push group *pending-group-names*)))

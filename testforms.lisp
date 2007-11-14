@@ -176,14 +176,18 @@ initialization and cleanup."
 	       ;; Calling the fixture setup might throw an error, so
 	       ;; we need to catch a setup exception here as well as
 	       ;; when calling the actual setup form.
-	       (defmethod run :around ((,ptg ,group-class))
+	       (defmethod run :around ((,ptg ,group-class)
+				       &key report-stream)
+		 (declare (ignorable report-stream))
 		 (let ((*active-group* ,ptg))
 		   (control-setup-errors (call-next-method))))
 	 
 	       ;; Convenience method for running this group by name.
-	       (defmethod run-group ((g (eql ',group-name)))
+	       (defmethod run-group ((g (eql ',group-name))
+					&key (report-stream
+					      *default-report-stream*))
 		 (let ((group-info (gethash g +groups+)))
-		   (run group-info)))
+		   (run group-info :report-stream report-stream)))
 
 	       ;; Save the group information against this package.
 	       (let ((,wrapping-hash (gethash *package*
@@ -319,16 +323,18 @@ initialization and cleanup."
 	 
 	       ;; Define a method which runs the form given for this
 	       ;; test.
-	       (defmethod core ((ts (eql ,test-info)))
+	       (defmethod core ((ts (eql ,test-info)) &key report-stream)
 		 ;; Declare the names provided by fixtures.
-		 (declare ,@specials)
+		 (declare ,@specials (ignorable report-stream))
 		 ;; Run the test expression, and return its value.
 		 ,actual-form)
 	 
 	       ;; Convenience method for running tests by name.
 	       (defmethod run-test ((gr (eql ',*current-group-name*))
-				    (ts (eql ',test-name)))
-		 (run ,test-info))))))
+				    (ts (eql ',test-name))
+				    &key (report-stream
+					  *default-report-stream*))
+		 (run ,test-info :report-stream report-stream))))))
     
       (if *expanding-test-for-group*
 	  `(,fixtures-forms ,final-test-forms)

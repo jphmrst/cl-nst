@@ -1,8 +1,7 @@
 
-all: package.ps nst.ps test.ps check.ps \
-		interactive.ps numbers.ps permuter.ps \
-		nst-nst.ps format.ps testforms.ps fixtures.ps \
-		classes.ps runners.ps manual.ps
+all: check.ps classes.ps fixtures.ps format.ps interactive.ps manual.ps \
+	nst.ps nst-nst.ps numbers.ps package.ps permuter.ps runners.ps  \
+	test.ps test2.ps testforms.ps
 	#
 
 %.pdf: %.tex
