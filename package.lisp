@@ -23,7 +23,9 @@
 	     #:def-check-form
 	     #:def-check-form-manip
 	     #:continue-check
-	     #:run-nst-commands))
+	     #:run-nst-commands
+	     
+	     #:*default-report-stream*))
 
 (defpackage :sift.nst-test
     (:nicknames :nst-test)
