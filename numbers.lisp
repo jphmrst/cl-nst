@@ -22,3 +22,23 @@
        (numberp n2)
        (let ((rounder (sig-place digits n1)))
 	 (eql (round n1 rounder) (round n2 rounder)))))
+
+(defun lambda-list-names (lambda-list)
+  (let ((generic-list (mop:extract-lambda-list lambda-list))
+	(result))
+    (labels ((descend (list)
+	        (unless (null list)
+		  (let ((item (car list)))
+		    (cond 
+		     ((listp item)
+		      (descend item))
+		     ((symbolp item)
+		      (unless (member item
+				      #+allegro '(&allow-other-keys &aux
+						  &body &environment &key
+						  &optional &rest &whole)
+				      #-allegro lambda-list-keywords)
+			(push item result))))
+		    (descend (cdr list))))))
+      (descend generic-list)
+      (nreverse result))))

@@ -134,10 +134,25 @@ for output before and after indiviual tests."
 		  "       - In core of bind-for-test ~s~%" ts))
      (core ts :report-stream report-stream)))
 
+(defun chase-superclasses (class)
+  (let ((result nil) (classes (list class)))
+    (loop while classes do
+      (let ((c (pop classes)))
+	(unless (member c result)
+	  (push (mop::class-name c) result)
+	  (loop for sc in (mop:class-direct-superclasses c) do
+	    (push sc classes)))))
+    result))
+
 (defun setup/cleanup-test (ts report-stream)
-  (run-dbg (format report-stream
-	       "    - Relaying from test setup/cleanup hook to ~
-                      group bindings hook~%"))
+  (run-dbg
+   (format report-stream
+       "    - ~@<Relaying from test setup/cleanup function ~
+                                            to test bindings methods,~
+                 ~:@_for test ~s~
+                 ~:@_of class ~s~
+                 ~:@_superclasses ~@<~{~s~^ ~_~}~:>~:>~%"
+     ts (class-of ts) (chase-superclasses (class-of ts))))
   (with-slots (group test-name) ts
     (with-slots (group-name) group
       (clear-test *passed-tests* group-name test-name)
@@ -180,9 +195,14 @@ for output before and after indiviual tests."
      (setup/cleanup-test ts report-stream)))
 
 (defun setup/cleanup-group (item report-stream)
-  (run-dbg (format report-stream
-	       " - Relaying from group setup/cleanup hook to ~
-                   group bindings hook~%"))
+  (run-dbg
+   (format report-stream
+       " - ~@<Relaying from group setup/cleanup function ~
+                                               to group binding methods~
+              ~:@_for group: ~s~
+              ~:@_of class: ~s~
+              ~:@_superclasses ~@<~{~s~^ ~_~}~:>~:>~%"
+     item (class-of item) (chase-superclasses (class-of item))))
   (bind-for-group item report-stream))
 
 ;;; Generic functions relating to test and group execution.
