@@ -13,7 +13,7 @@
 
 (defclass nst-tester (system) ())
 
-(defsystem :nst
+(defsystem :nst1
     :serial t
     :depends-on (:jm-defs)
     :in-order-to ((test-op (test-op :test-nst)))
@@ -25,27 +25,18 @@
 		 (:file "runners")
 		 (:file "fixtures")
 		 (:file "testforms")
-		 (:module "check-v2"
-			  :components ((:file "status")
-				       (:file "defcheck")
-				       (:file "criteria")))
+		 (:module "check-v1"
+			  :components ((:file "check")))
 		 (:file "interactive")
 		 (:file "format")))
-
-(defclass nst-file (cl-source-file) ())
-(defmethod perform ((o compile-op) (c nst-file)) nil)
-(defmethod operation-done-p ((op compile-op) (file nst-file)) nil)
-(defmethod input-files ((op load-op) (file nst-file))
-  (list (component-pathname file)))
-(defmethod output-files ((o compile-op) (c nst-file)) nil)
 
 (defsystem :test-nst
     :class nst-tester
     :depends-on (:nst)
     :in-order-to ((test-op (load-op :test-nst)))
-    :components ((:nst-file "nst-nst")
-		 (:module "check-v2"
-			  :components ((:nst-file "nst")))))
+    :components ((:file "nst-nst")
+		 (:module "check-v1"
+			  :components ((:file "nst")))))
 
 (defmethod perform ((op test-op)
 		    (system (eql (find-system :test-nst))))

@@ -114,7 +114,8 @@
 			       :var-name ',var) ,report-stream
 			     ,@body))))
 	     (declare
-	      ,@(loop for n in names collect `(ignorable ,n))
+	      (ignorable ,@(loop for n in names collect n))
+	      (dynamic-extent ,@(loop for n in names collect n))
 	      ,@inner)
 	     (call-next-method)))
 
@@ -140,7 +141,8 @@
 			       :var-name ',var) ,report-stream
 			     ,@body))))
 	     (declare
-	      ,@(loop for n in names collect `(ignorable ,n))
+	      (ignorable ,@(loop for n in names collect n))
+	      (dynamic-extent ,@(loop for n in names collect n))
 	      ,@inner)
 	     (call-next-method)))
        
