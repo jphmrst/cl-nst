@@ -43,8 +43,7 @@
 	 ,@(when cleanup-supp-p  `(:cleanup ,cleanup))
 	 ,@(when fixtures-supp-p `(:fixtures ,fixtures))
 	 :form (let ((check-result
-		      ,(continue-check criterion
-				       (cons 'list forms))))
+		      ,(continue-check criterion (cons 'list forms))))
 		 (and (null (check-result-failures check-result))
 		      (null (check-result-errors check-result)))))))
 
@@ -55,6 +54,7 @@
   (defun continue-check (criterion forms)
     "criterion is a expression denoting a check to be made.  forms is
 an expression evaluating to the stack of values to be tested."
+    (declare (special *nst-context*))
     (let (criterion-name criterion-args)
       (cond ((symbolp criterion)
 	     (setf criterion-name criterion criterion-args nil))
@@ -120,6 +120,8 @@ an expression evaluating to the stack of values to be tested."
     (let ((criterion-formals (lambda-list-names criterion-args))
 	  (stream (gensym "stream")) (id (gensym "id"))
 	  (args (gensym "args")))
+      (unless (symbolp forms-forms)
+	(error "Expected a symbol but got ~s" forms-forms))
       (unless blurb-format-supp-p
 	(setf blurb-format
 	  `("~s ~@<~{~s~^ ~:_~}~:>" ',name (list ,@criterion-formals))))
