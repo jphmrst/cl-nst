@@ -334,7 +334,7 @@ another check to the result.\index{apply@\texttt{:apply}}
 \\ Syntax: \texttt{(:apply \textit{function} \textit{subcriterion})}
 \\ Example: \texttt{(def-check applycheck (:apply cadr (:eql 10)) '(0 10 20))}
 
-\subsubsection{The \texttt{:check-err} check \fbox{REDO}}
+\subsubsection{The \texttt{:check-err} check}
 This test verifies that evaluating a check throws an
 error.\index{err@\texttt{:check-err}} The difference between
 \texttt{:check-err} and \texttt{:err} is that the latter deals only
@@ -343,15 +343,22 @@ the unit testing process.  This form is mostly useful for temporarily
 disregarding certain checks until some later fix, when they
 \emph{won't} throw an error.
 %
-\\ Syntax: \texttt{:check-err} \textit{methods-and-forms}
-\\ Example: \texttt{(def-check check-err1 :check-err :forms-eq 'asdfgh (error "this should be caught"))}
+\\ Syntax: \texttt{(:check-err \textit{criterion})}
+\\ Example: \texttt{(def-check check-err1 (:check-err :forms-eq) 'asdfgh (error "this should be caught"))}
 
 \subsubsection{The \texttt{:progn} check}
 This check evaluate a list of Lisp forms before evaluating the
 remaining check criteria.
-\\ Syntax: (\texttt{:prog} \textit{form} \ldots\ \textit{form} \textit{criterion})
+\\ Syntax: (\texttt{:progn} \textit{form} \ldots\ \textit{form} \textit{criterion})
 \\ Example: Assuming that \texttt{zz} is defined as some variable,
 \\ \hspace*{2em}\texttt{(def-check form1 (:progn (setf zz 3) (:eql 3)) zz)}
+
+\subsubsection{The \texttt{:proj} check}
+This check projects certain values from the current stack of forms
+(numbering from 0) for another criterion.  This check is useful for
+composing new checks as aliases.
+\\ Syntax: \texttt{(:proj (\textit{num} \ldots\  \textit{num}) \textit{criterion})}
+\\ Example: \texttt{(def-check proj-1 (:proj (0 2) :forms-eq) 'a 3 (car '(a b)))}
 
 \subsubsection{The \texttt{:with} check}
 \fbox{UNIMPLEMENTED --- is this still needed?}
@@ -379,207 +386,129 @@ evaluates satisfies some other check.\index{each@\texttt{:each}}
 \\ Syntax: \texttt{(:each \emph{criterion})}
 \\ Example: \texttt{(def-check each1 (:each (:symbol a)) '(a a a a a))}
 
-\subsubsection{The \texttt{:seq} check \fbox{REDO}}
+\subsubsection{The \texttt{:seq} check}
 This check verifies, for each element $n$ of the $n$-element list to
 which the form evaluates, that that element satisfies the respective
 check.\index{seq@\texttt{:seq}}
-\\ Syntax: \texttt{:seq} \textit{method-1} \ldots\ \textit{method-$n$} \textit{form}
+\\ Syntax: \texttt{(:seq \emph{criteria} \ldots\ \emph{criteria})}
 {\ttfamily\begin{tabbing}
-\textrm{Example:}\ (def-check \=seqcheck
-\\ \>  :seq (:predicate symbolp) (:eql 1) (:symbol d)
+\textrm{Example:}\ (de\=f-\=check seqcheck
+\\ \>\>  (:seq (:predicate symbolp) (:eql 1) (:symbol d))
 \\ \>  '(a 1 d))
 \end{tabbing}}
 
-\subsubsection{The \texttt{:permute} check \fbox{REDO}}
+\subsubsection{The \texttt{:permute} check}
 The permute check verifies that some permutation of the list to which
 the form evaluates satisfies some other check.
 \index{permute@\texttt{:permute}}
-\\ Syntax: \texttt{:permute} \textit{method} \textit{form}
+\\ Syntax: \texttt{(:permute \textit{criterion}}
 {\ttfamily\begin{tabbing}
-\textrm{Examples:}\ \=(def-check permute1 :permute :each :eq 'a '(a a))
-\\ \> (def-check \=permute2
-\\ \> \>  :permute :seq \=(:symbol b)
-\\ \> \>              \>(:predicate symbolp)
-\\ \> \>              \>(:predicate numberp)
+\textrm{Examples:}\ \=(def-check permute1 (:permute (:each (:eq 'a))) '(a a))
+\\ \> (de\=f-\=check permute2
+\\ \> \> \> (:permute (:seq \=(:symbol b)
+\\ \> \> \>             \>(:predicate symbolp)
+\\ \> \> \>             \>(:predicate numberp)))
 \\ \> \>'(1 a b))
 \end{tabbing}}
 
 \subsection{Checks on vectors}
 
-\subsubsection{The \texttt{:across} check \fbox{REDO}} 
+\subsubsection{The \texttt{:across} check}
 Like the \texttt{seq} check, but for vectors rather than
 lists.\index{across@\texttt{:across}}
-\\ Syntax: \texttt{:across} \textit{method-1} \ldots\ \textit{method-$n$} \textit{form}
+\\ Syntax: \texttt{(:across \emph{criteria} \ldots\ \emph{criteria})}
 {\ttfamily\begin{tabbing}
-\textrm{Example:}\ (def-check \=across1
-\\ \>  :across (:predicate symbolp) (:eql 1)
+\textrm{Example:}\ (de\=f-\=check across1
+\\ \>\>  (:across (:predicate symbolp) (:eql 1))
 \\ \>  (vector 'a 1))
 \end{tabbing}}
 
 \subsection{Checks on class instances}
 
-\subsubsection{The \texttt{:slots} check \fbox{REDO}} 
+\subsubsection{The \texttt{:slots} check} 
 This check specifies checks for some or all of the slots of a class
 member.\index{slots@\texttt{:slots}}
-\\ Syntax: \texttt{:slots} (\textit{slot-1} \textit{method-1})  \ldots\ (\textit{slot-$n$} \textit{method-$n$}) \textit{form}
+\\ Syntax: \texttt{(:slots  (\textit{slot} \textit{criterion})  \ldots\ (\textit{slot} \textit{criterion}))}
 {\ttfamily\begin{tabbing}
 \textrm{Example:}\ \= (defc\=lass classcheck ()
 \\ \> \> (\=(s1 :initarg :s1 :reader get-s1)
 \\ \> \> \> (s2 :initarg :s2)
 \\ \> \> \> (s3 :initarg :s3)))
 \\ \> (def-check \=slot1
-\\ \> \>  :slots \=(s1 (:eql 10))
+\\ \> \>  (:slots \=(s1 (:eql 10))
 \\ \> \>  \>(s2 (:symbol zz))
 \\ \> \>  \>(s3 (:seq \=(:symbol q) (:symbol w)
-\\ \> \>  \> \> (:symbol e) (:symbol r)))
+\\ \> \>  \> \> (:symbol e) (:symbol r))))
 \\ \> \>  (m\=ake-instance 'classcheck
 \\ \> \> \>  :s1 10 :s2 'zz :s3 '(q w e r)))
 \end{tabbing}}
 
-\subsection{Defining criteria aliases}
- \fbox{REWRITE}
-% It is straightforward to introduce new testing criteria and
-% transformers for a project's local classes and data.  The
-% \texttt{def-check-criterion}\index{def-check-criterion@\texttt{def-check-criterion}}
-% command introduces a new \texttt{def-check} keyword which is
-% implemented by rewriting the remaining methods and forms of
-% the~\texttt{def-check}, roughly in the manner of Lisp macro expansion.
-% The syntax of \texttt{def-check-criterion} is:
-% \begin{center}
-%   \textbf{def-check-criterion} \textit{name} \texttt{\&key}
-%   \textit{documentation} \textit{args} \textit{rest}
-%   \textit{expansion}
-% \end{center}
-% where:
-% \begin{itemize}
-% \item\textit{documentation} is a documentation string.  As of this
-%   writing, NST does not actually install this string anywhere, but we
-%   do have very high hopes for the future.
-% \item\textit{args} provides a list of names used to expose names of
-%   subsequent methods and forms for use in the expansion.  At this time
-%   we cannot support lambda list keywords here; their use will produce
-%   undefined behavior (but which would most likely be very cryptic
-%   error messages).  By default, this is taken to be \textit{nil}.
-% \item\textit{rest} provides a name against which the remaining methods
-%   and forms (after those consumed by \textit{args}) may be exposed to
-%   the expansion.  When this argument is \emph{not} supplied, a
-%   noninterned symbol is used, and moreover these remaining methods and
-%   forms are appended to those given by the expansion.  Whenever this
-%   argument \emph{is} supplied, no such automatic append occurs, and it
-%   is assumed that the expansion makes some appropriate use of the
-%   keywords and forms bound to \textit{rest}.
-% 
-%   Note that the form being checked --- which is taken to be the last
-%   form in the \texttt{def-check} --- is never bound, neither to the
-%   name specified by \textit{rest} nor to any name in \textit{args};
-%   this form moreover remains the last form in the \texttt{def-check}.
-% \item\textit{expansion} is a form which, when evaluated, should return
-%   a list of \texttt{def-check} keywords and forms which will be taken
-%   as the expansion of \textit{name}.
-% \end{itemize}
-% Examples:
-% \begin{itemize}
-% \item\index{carcarcdr@\texttt{:carcarcdr}}
-% \begin{verbatim}
-% (def-check-criterion :carcarcdr :args (x y zs)
-% 		     :expansion `(:all (:apply car :with ,x)
-% 				       (:apply cadr :with ,y)
-% 				       (:apply cddr :with ,zs)))
-% \end{verbatim}
-%   This criterion takes three arguments $x$, $y$ and $z$ from the list
-%   of methods and forms, and produces a test operating on lists.
-%   Specifically, all of three sub-checks are expected to hold for the
-%   list.
-%   \begin{enumerate}
-%   \item The first sub-check transforms the list to retrieve its first
-%     element, and then applies the check specified by $x$ to this
-%     result.
-%   \item The second sub-check transforms the list to retrieve its
-%     second element, and then applies the check specified by $y$ to
-%     this result.
-%   \item The third sub-check transforms the list to retrieve its second
-%     tail (the \texttt{cdr} of its \texttt{cdr}), and then applies the
-%     check specified by $xs$ to this sublist.
-%   \end{enumerate}
-%   A valid use of this criterion is:
-% \begin{verbatim}
-%   (def-check ccc1
-%       :carcarcdr (:eq 'a) (:eql 3) (:apply length :eql 2)
-%       '(a 3 2 1))
-% \end{verbatim}
-% \item Custom criteria are especially useful for defining checks on new
-%   class
-%   definitions:\index{classcheck@\texttt{classcheck}}\index{cc@\texttt{:cc}}\index{cc-1@\texttt{cc-1}}
-% \begin{verbatim}
-%   (defclass classcheck ()
-%      ((s1 :initarg :s1 :reader get-s1)
-%       (s2 :initarg :s2) (s3 :initarg :s3)))
-%   (def-check-criterion :cc
-%       :args (c1 c2 c3)
-%       :expansion `(:slots (s1 ,c1) (s2 ,c2) (s3 ,c3)))
-%   (def-check cc-1
-%       :cc (:eql 1) (:symbol p) (:eq 'd)
-%       (make-instance 'classcheck :s1 1 :s2 'p :s3 'd))
-% \end{verbatim}
-% \item Although keywords should not be specified through the
-%   \emph{args} list of names, keyword parameters can be used within one
-%   of the names in that list.  For example, as an alternative to
-%   \texttt{:cc} above we might
-%   use\index{cc@\texttt{:cc-keyed}}\index{cc-1@\texttt{cc-1-keyed}}:
-% \begin{verbatim}
-%   (def-check-criterion :cc-keyed
-%       :args (args)
-%       :expansion (destructuring-bind (&key s1 s2 s3) args
-%                    `(:slots (s1 ,s1) (s2 ,s2) (s3 ,s3))))
-%   (def-check cc-1-keyed
-%       :cc-keyed (:s1 (:eql 1)
-%                  :s2 (:symbol p)
-%                  :s3 (:eq 'd))
-%       (make-instance 'classcheck :s1 1 :s2 'p :s3 'd))
-% \end{verbatim}
-% \item Finally, this example shows a use of the \texttt{:rest}
-%   argument:
-% \begin{verbatim}
-%   (def-check-criterion :car-fits-any-but-first
-%       :args (x) :rest rr
-%       :expansion `(:apply car :any ,@rr))
-% \end{verbatim}
-%   This criterion operates on a list.  It expects the checked form to
-%   evaluate to a list whose first element satisfies at least one of the
-%   forms given after the \texttt{:car-fits-any-but-first}, excluding
-%   the first of these forms.  That first form would be bound to
-%   \texttt{x}, rather than being in \texttt{rr}.  So both of these
-%   tests succeed (note that the latter uses \texttt{:not}):
-% \begin{verbatim}
-%   (def-check cfabf1
-%       :car-fits-any-but-first (:eq 'c) (:eq 'a) (:eql 3)
-%                               (:apply length :eql 2)
-%       '(a 3 2 1))
-%   (def-check cfabf2
-%       :not
-%       :car-fits-any-but-first (:eq 'a) (:eq 'c) (:eql 3)
-%                               (:predicate listp)
-%       '(a 3 2 1))
-% \end{verbatim}
-% \end{itemize}
+\subsection{Defining check criteria}
+\subsubsection{Aliases over checks}
+{\ttfamily\begin{tabbing}
+\textrm{Syntax: 
+}(de\=f-check-alias (name \&rest args)
+\\ \> [ documentation ]
+\\ \> expansion)
+\end{tabbing}}
+Defines how a criterion should be rewritten as another criteria.
 
-\subsection{Low-level check definitions}
- \fbox{REWRITE}
-% While \texttt{def-check-criterion} should be completely adequate for
-% most extensions of \texttt{def-check}, some extensions require
-% lower-level access to the translation to \texttt{def-test}.  The
-% \texttt{def-check-form} command provides this access.  The syntax of
-% \texttt{def-check-form} is:
-% \begin{tabbing}
-%   ~~~~\textbf{def-}\=\textbf{check-form} \textit{name}
-%   \\ \> \texttt{\&optional} \textit{documentation}
-%   \\ \> \texttt{\&key} \= \textit{strip-suffix} \textit{args}
-%   \textit{require-min-bare-subforms}
-%   \\ \> \>  \textit{expose-subtests} \textit{expose-bare-subforms} \textit{body}
-% \end{tabbing}
-% Most of the standard check forms are defined using
-% \texttt{def-check-form}, and we refer the reader to file
-% \texttt{check.lisp} in this distribution for examples.
+Examples:
+\\ \texttt{(def-check-alias (:forms-eq) `(:predicate eq))}
+\\ \texttt{(def-check-alias (:symbol name) `(:eq ',name))}
+\par\fbox{Fill in details}
+
+\subsubsection{Reporting forms}
+\texttt{make-check-report}, \texttt{emit-failure}, \texttt{emit-warning}.
+\par\fbox{Fill in details}
+
+\subsubsection{Basic checks on values}
+The \texttt{check-forms} return a quoted Lisp expression calculating a
+checking report for the given forms.  
+{\ttfamily\begin{tabbing}
+\textrm{Syntax: 
+}(de\=f-value-check (na\=me \=subcriteria-lambda-list
+\\ \> \> \> test-forms-lambda-list
+\\ \> \> \&key \= blurb-format
+\\ \> \>        \> full-format
+\\ \> \>        \> stack-transformer)
+\\ \> expansion)
+\end{tabbing}}
+Comma-prefix names from the \texttt{subcriteria-lambda-list}, but do not
+comma-prefix names from the \texttt{test-forms-lambda-list}.
+Declarations are OK, but quote them.  Examples:
+\begin{verbatim}
+(def-value-check (:pass () (&rest chk))
+  `(declare (ignorable chk))
+  `(make-check-result))
+
+(def-value-check (:eq (eq-form) (check-form))
+  `(if (eq ,eq-form check-form)
+     (make-check-result)
+     (emit-failure :format "Not eq to ~s" :args '(,eq-form))))
+\end{verbatim}
+\par\fbox{Fill in details}
+
+\subsubsection{General checks}
+{\ttfamily\begin{tabbing}
+\textrm{Syntax: 
+}(de\=f-control-check (na\=me \=subcriteria-lambda-list
+\\ \>\> \> test-forms-formal-parameter
+\\ \>\> \&key \=stack-transformer
+\\ \>\> \> blurb-format
+\\ \>\> \> full-format)
+\\ \> check-forms)
+\end{tabbing}}
+Comma-prefix all the names.  \texttt{test-forms-formal-parameter} must
+be just a symbol.  Calls out to \texttt{continue-check} are useful;
+its second argument must be a Lisp expression which will evaluate to a
+list of values.
+\begin{verbatim}
+(def-control-check (:apply (transform criterion) forms)
+  (continue-check criterion
+		  `(multiple-value-list (apply #',transform ,forms))))
+\end{verbatim}
+\par\fbox{Fill in details}
 
 \section{The runtime system}
 The runtime system provides several operations for scheduling and

@@ -45,7 +45,7 @@
     :in-order-to ((test-op (load-op :test-nst)))
     :components ((:nst-file "nst-nst")
 		 (:module "check-v2"
-			  :components ((:nst-file "nst")))))
+			  :components ((:nst-file "nst-criteria")))))
 
 (defmethod perform ((op test-op)
 		    (system (eql (find-system :test-nst))))
