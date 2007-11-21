@@ -212,7 +212,7 @@ t if all tests completed with a non-nil return value, 'err if any tests
 exited with an error, or nil if all tests completed, but some with an
 unsuccessful nil result.")
 
-  (:method ((ts test) &key (report-stream *default-report-stream*))
+  (:method ((ts test) &key (report-stream cl-user::*nst-default-report-stream*))
      "Run a single test, bracketed by its group's setup and cleanup."
      (with-slots (group test-name) ts
        (verbose-out
@@ -229,7 +229,7 @@ unsuccessful nil result.")
 	       ;; value from the method core.
 	       test-result)))))
   
-  (:method ((g group) &key (report-stream *default-report-stream*))
+  (:method ((g group) &key (report-stream cl-user::*nst-default-report-stream*))
      "Run the group's tests, bracketed by its setup and cleanup."
      (remhash g *erred-groups*)
      (remhash g *erred-cleanup*)
