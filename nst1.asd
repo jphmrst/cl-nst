@@ -32,7 +32,7 @@
 
 (defsystem :test-nst
     :class nst-tester
-    :depends-on (:nst)
+    :depends-on (:nst1)
     :in-order-to ((test-op (load-op :test-nst)))
     :components ((:file "nst-nst")
 		 (:module "check-v1"

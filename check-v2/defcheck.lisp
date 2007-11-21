@@ -120,8 +120,8 @@ an expression evaluating to the stack of values to be tested."
     (let ((criterion-formals (lambda-list-names criterion-args))
 	  (stream (gensym "stream")) (id (gensym "id"))
 	  (args (gensym "args")))
-      (unless (symbolp forms-forms)
-	(error "Expected a symbol but got ~s" forms-forms))
+      (unless (symbolp forms-formal)
+	(error "Expected a symbol but got ~s" forms-formal))
       (unless blurb-format-supp-p
 	(setf blurb-format
 	  `("~s ~@<~{~s~^ ~:_~}~:>" ',name (list ,@criterion-formals))))
