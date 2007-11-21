@@ -15,29 +15,9 @@
 (defmacro def-check (name-or-name-and-args criterion &rest forms)
   "Define a test constructed according to the specified criterion."
 
-  (let (name setup setup-supp-p cleanup cleanup-supp-p
-	     fixtures fixtures-supp-p)
-    (cond
-      ((symbolp name-or-name-and-args)
-       (setf name name-or-name-and-args))
-      ((listp name-or-name-and-args)
-       (destructuring-bind (actual-name
-			    &key (actual-setup nil actual-setup-supp-p)
-				  (actual-cleanup
-				   nil actual-cleanup-supp-p)
-				  (actual-fixtures
-				   nil actual-fixtures-supp-p))
-	   name-or-name-and-args
-	 (setf name actual-name
-	       setup actual-setup
-	       setup-supp-p actual-setup-supp-p
-	       cleanup actual-cleanup
-	       cleanup-supp-p actual-cleanup-supp-p
-	       fixtures actual-fixtures
-	       fixtures-supp-p actual-fixtures-supp-p)))
-      (t
-       (error "~@<Expected symbol or list for def-check argument~_ ~s~:>"
-	      name-or-name-and-args)))
+  (multiple-value-bind (name setup setup-supp-p cleanup cleanup-supp-p
+			fixtures fixtures-supp-p)
+      (decode-name-or-name-and-args name-or-name-and-args)
     `(def-test ,name
 	 ,@(when setup-supp-p    `(:setup ,setup))
 	 ,@(when cleanup-supp-p  `(:cleanup ,cleanup))
@@ -48,6 +28,26 @@
 		      (null (check-result-errors check-result)))))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
+  
+  (defun decode-name-or-name-and-args (name-or-name-and-args)
+    (cond
+     ((symbolp name-or-name-and-args)
+      (return-from decode-name-or-name-and-args
+	(values name-or-name-and-args nil nil nil nil nil nil)))
+     ((listp name-or-name-and-args)
+      (destructuring-bind (name &key (setup nil setup-supp-p)
+				(cleanup nil cleanup-supp-p)
+				(fixtures nil fixtures-supp-p))
+	  name-or-name-and-args
+	(return-from decode-name-or-name-and-args
+	  (values name
+		  setup setup-supp-p
+		  cleanup cleanup-supp-p
+		  fixtures fixtures-supp-p))))
+     (t
+      (error "~@<Expected symbol or list for def-check argument~_ ~s~:>"
+	     name-or-name-and-args))))
+  
   (defgeneric build-check-form (criterion args formals)
     (:documentation "Put together an expression for a test."))
   
