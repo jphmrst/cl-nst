@@ -185,7 +185,7 @@ initialization and cleanup."
 	       ;; Convenience method for running this group by name.
 	       (defmethod run-group ((g (eql ',group-name))
 					&key (report-stream
-					      *default-report-stream*))
+					      cl-user::*nst-default-report-stream*))
 		 (let ((group-info (gethash g +groups+)))
 		   (run group-info :report-stream report-stream)))
 
@@ -333,7 +333,7 @@ initialization and cleanup."
 	       (defmethod run-test ((gr (eql ',*current-group-name*))
 				    (ts (eql ',test-name))
 				    &key (report-stream
-					  *default-report-stream*))
+					  cl-user::*nst-default-report-stream*))
 		 (run ,test-info :report-stream report-stream))))))
     
       (if *expanding-test-for-group*

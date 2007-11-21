@@ -142,7 +142,10 @@
 
 (defmacro report-last-run ()
   (let ((hash (gensym "hash-")))
-    `(format t "------------------------------------~%~
+    `(progn
+       (unless (eq cl-user::*nst-default-report-stream* t)
+	 (format cl-user::*nst-default-report-stream*
+		 "------------------------------------~%~
                 SUMMARY OF TEST RUN~%~
                 ~[No tests passed~:;~:*Tests passed: ~d~]~%~
                 ~[No tests failed~:;~:*Tests failed: ~d~]~%~
@@ -150,13 +153,28 @@
                 ~[~:;~:*Groups raising error in setup: ~d~%~]~
                 ~[~:;~:*Groups raising error in cleanup: ~d~%~]~
                 ------------------------------------~%"
-	     *passed-test-count*
-	     (loop for ,hash being the hash-values of *failed-tests*
-		   summing (hash-table-count ,hash))
-	     (loop for ,hash being the hash-values of *erred-tests*
-		   summing (hash-table-count ,hash))
-	     (hash-table-count *erred-groups*)
-	     (hash-table-count *erred-cleanup*))))
+		 *passed-test-count*
+		 (loop for ,hash being the hash-values of *failed-tests*
+		     summing (hash-table-count ,hash))
+		 (loop for ,hash being the hash-values of *erred-tests*
+		     summing (hash-table-count ,hash))
+		 (hash-table-count *erred-groups*)
+		 (hash-table-count *erred-cleanup*))
+	 (format t "------------------------------------~%~
+                SUMMARY OF TEST RUN~%~
+                ~[No tests passed~:;~:*Tests passed: ~d~]~%~
+                ~[No tests failed~:;~:*Tests failed: ~d~]~%~
+                ~[~:;~:*Tests raising error: ~d~%~]~
+                ~[~:;~:*Groups raising error in setup: ~d~%~]~
+                ~[~:;~:*Groups raising error in cleanup: ~d~%~]~
+                ------------------------------------~%"
+		 *passed-test-count*
+		 (loop for ,hash being the hash-values of *failed-tests*
+		     summing (hash-table-count ,hash))
+		 (loop for ,hash being the hash-values of *erred-tests*
+		     summing (hash-table-count ,hash))
+		 (hash-table-count *erred-groups*)
+		 (hash-table-count *erred-cleanup*))))))
 
 (defmacro give-blurb (group-name test-name)
   (let ((x (gensym "x-"))
