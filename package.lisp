@@ -20,6 +20,7 @@
 	     #:def-test
 	     #:def-check
 	     #:def-check-criterion
+	     #:def-check-alias
 	     #:def-check-form
 	     #:def-check-form-manip
 	     #:continue-check

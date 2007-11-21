@@ -565,7 +565,7 @@ fixing problems as they arise.
 			      group-name))
 		    (format t "ERROR: cannot find group ~s~%"
 			    group-name)))
-
+ 
 	    (command-case (:t) (group-name test-name)
 		(if (gethash group-name +groups+)
 		    (progn
@@ -611,8 +611,13 @@ fixing problems as they arise.
 			   collect (find-package pkg-name)))))
 
 	    (command-case (:run-group) (group)
-			  (under-empty-pendings
-			   (push group *pending-group-names*)))
+	      (under-empty-pendings
+	       (push group *pending-group-names*)))
+
+	    (command-case (:run-groups) (group-name-list)
+	      (under-empty-pendings
+	       (loop for group-name in group-name-list do
+		 (push group-name *pending-group-names*))))
 
 	    (command-case (:run-test) (group test)
 		(under-empty-pendings
