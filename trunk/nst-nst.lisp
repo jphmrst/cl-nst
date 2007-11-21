@@ -10,6 +10,9 @@
 (def-fixtures f1 ()
   (c 3) (d 'asdfg))
 
+(def-fixtures f1a ()
+  (e 'asdfg))
+
 (defclass classcheck ()
      ((s1 :initarg :s1 :reader get-s1)
       (s2 :initarg :s2) (s3 :initarg :s3)))
@@ -51,3 +54,10 @@
 (def-test-group g4 (f1)
   (def-test fix0 :form (boundp 'c))
   (def-test fix1 :form (not (boundp '*this-name-should-not-be-bound*))))
+
+(def-test-group h1 (f1 f1a)
+  (def-test two-fixtures :form (eq d e)))
+
+(def-test-group h2 ()
+  (def-test two-fixtures :fixtures (f1 f1a) :form (eq d e)))
+

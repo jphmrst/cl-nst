@@ -236,10 +236,10 @@ symbol.\index{symbol@\texttt{:symbol}}
 \\ Passing example: \texttt{(def-check sym1  () (:symbol a) (car '(a b c)))}
 \\ Failing example: \texttt{(def-check sym1x () (:symbol a) (cadr '(a b c)))}
 
-\subsubsection{The \texttt{:eql} check} 
-This test verifies that the form to be tested evaluates to a value
-\texttt{eql}-identified with the value of some designated
-form.\index{eql@\texttt{:eql}}
+\subsubsection{The \texttt{:eql} and \texttt{:equal} check} 
+These checks are similar to the \texttt{:eq} check, but using
+respectively the \texttt{eql} and \texttt{equal}
+predicates.\index{eql@\texttt{:eql}}\index{equal@\texttt{:equal}}
 \\ Syntax: (\texttt{:eql} \textit{correct-form})
 \\ Example: \texttt{(def-check eql1 (:eql 2) (cadr '(1 2 3)))}
 

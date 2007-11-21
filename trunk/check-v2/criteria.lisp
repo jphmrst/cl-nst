@@ -36,6 +36,11 @@
      (make-check-result)
      (emit-failure :format "Not eql to ~s" :args '(,eql-form))))
 
+(def-value-check (:equal (eql-form) (check-form))
+  `(if (equal ,eql-form check-form)
+     (make-check-result)
+     (emit-failure :format "Not eql to ~s" :args '(,eql-form))))
+
 (def-check-alias (:forms-eq)  `(:predicate eq))
 (def-check-alias (:forms-eql) `(:predicate eql))
 

@@ -48,4 +48,7 @@
     (make-instance 'classcheck :s1 10 :s2 'zz :s3 '(q w e r)))
   (def-check check-err1 (:check-err :forms-eq)
     'asdfgh (error "this should be caught"))
-  (def-check proj-1 (:proj (0 2) :forms-eq) 'a 3 (car '(a b))))
+  (def-check proj-1 (:proj (0 2) :forms-eq) 'a 3 (car '(a b)))
+
+  (def-check (two-fixtures :fixtures (f1 f1a)) :forms-eq d e))
+
