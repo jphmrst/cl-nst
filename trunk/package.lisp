@@ -20,11 +20,14 @@
 	     #:def-test
 	     #:def-check
 	     #:def-check-criterion
+	     #:def-value-check
 	     #:def-check-alias
 	     #:def-check-form
 	     #:def-check-form-manip
 	     #:continue-check
 	     #:run-nst-commands
+	     #:emit-failure
+	     #:emit-warning
 	     
 	     #:*default-report-stream*))
 
