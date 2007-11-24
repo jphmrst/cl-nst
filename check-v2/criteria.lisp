@@ -132,8 +132,13 @@
 			  ,info
 			  (nconc ,errors
 				 (check-result-info ,subcheck)))
-			(unless (or ,failures ,errors)
-			  ,(test-next other-args)))))))))
+			(cond
+			  ((or ,failures ,errors)
+			   (make-check-result :warnings ,warnings
+					      :failures ,failures
+					      :errors ,errors
+					      :info ,info))
+			  (t ,(test-next other-args))))))))))
       `(let ((,var ,expr-list-form) ,warnings ,failures ,errors ,info)
 	,(test-next args)))))
 
@@ -229,8 +234,9 @@
        (let ((,info nil) (,warnings nil))
 	 (destructuring-bind (,list) ,forms
 	   (unless (eql (length ,list) ,(length criteria))
-	     (emit-failure :format "Expected list of length ~d"
-			   :args '(,(length criteria))))
+	     (return-from ,block
+	       (emit-failure :format "Expected list of length ~d"
+			     :args '(,(length criteria)))))
 	   ,@(loop for criterion in criteria for idx from 0
 		   collect
 		   `(let ((,result
@@ -278,8 +284,9 @@
        (let ((,info nil) (,warnings nil))
 	 (destructuring-bind (,list) ,forms
 	   (unless (eql (length ,list) ,(length criteria))
-	     (emit-failure :format "Expected list of length ~d"
-			   :args '(,(length criteria))))
+	     (return-from ,block
+	       (emit-failure :format "Expected list of length ~d"
+			     :args '(,(length criteria)))))
 	   ,@(loop for criterion in criteria for idx from 0
 		   collect
 		   `(let ((,result

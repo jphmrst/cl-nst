@@ -25,12 +25,12 @@
 (defun emit-warning (format &rest args)
   (declare (special *nst-context* *nst-stack*))
   (make-check-result
-   :warnings (list
-	      (make-check-note :context *nst-context* :stack *nst-stack*
-			       :format format :args args))))
+   :warnings (list (make-check-note :context *nst-context*
+				    :stack *nst-stack*
+				    :format format :args args))))
 (defun emit-failure (format &rest args)
   (declare (special *nst-context* *nst-stack*))
   (make-check-result
-   :failures (list
-	      (make-check-note :context *nst-context* :stack *nst-stack*
-			       :format format :args args))))
+   :failures (list (make-check-note :context *nst-context*
+				    :stack *nst-stack*
+				    :format format :args args))))
