@@ -231,5 +231,5 @@ double-hash table."
 fixtures; this should be used for output selection only.")
 
 ;;; Redirecting output from NST to elsewhere.
-(defvar cl-user::*nst-default-report-stream* *standard-output*
+(defvar cl-user::*nst-default-report-stream* t
   "The default value for the stream to which NST reports output.")
