@@ -327,7 +327,11 @@ initialization and cleanup."
 		 ;; Declare the names provided by fixtures.
 		 (declare ,@specials (ignorable report-stream))
 		 ;; Run the test expression, and return its value.
-		 ,actual-form)
+		 
+		 (multiple-value-bind (primary report)
+		     ,actual-form
+		   (when (null report) (setf report t))
+		   (values primary report)))
 	 
 	       ;; Convenience method for running tests by name.
 	       (defmethod run-test ((gr (eql ',*current-group-name*))

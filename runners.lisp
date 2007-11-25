@@ -114,12 +114,12 @@ for output before and after indiviual tests."
 		 (add-test *erred-tests* test x)
 		 (unless *debug-on-error*
 		   (return-from single-test 'err)))))
-	 (let ((result (call-next-method test)))
+	 (multiple-value-bind (result report) (call-next-method test)
 	   (if result
 	       (progn
 		 (add-test *passed-tests* test)
 		 (setf *passed-test-count* (+ 1 *passed-test-count*)))
-	       (add-test *failed-tests* test))
+	       (add-test *failed-tests* test report))
 	   (if (use-verbose-output) 
 	       (format report-stream "   ~a~%"
 		 (if result "Passed" "Failed"))
