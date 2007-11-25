@@ -248,6 +248,11 @@ another form)."
 another form)."
   :args (target form) :body `(equal ,form ,target))
 
+(def-check-form :equalp
+    "Check that the form is equalp to an ideal (which may itself be
+another form)."
+  :args (target form) :body `(equalp ,form ,target))
+
 (def-check-form :forms-eq
     "Check that two forms are eq."
   :args (form1 form2) :body `(eq ,form1 ,form2))
