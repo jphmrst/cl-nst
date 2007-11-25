@@ -24,8 +24,10 @@
 	 ,@(when fixtures-supp-p `(:fixtures ,fixtures))
 	 :form (let ((check-result
 		      ,(continue-check criterion (cons 'list forms))))
-		 (and (null (check-result-failures check-result))
-		      (null (check-result-errors check-result)))))))
+		 (values
+		  (and (null (check-result-failures check-result))
+		       (null (check-result-errors check-result)))
+		  check-result)))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   
