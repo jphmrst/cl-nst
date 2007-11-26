@@ -166,30 +166,30 @@ for output before and after indiviual tests."
       (format report-stream
 	  " - Relayed to group bindings hook on ~s~%" (type-of g)))
      (block nil
-	 (let ((group-result t))
-	   (with-slots (group-name test-names tests-hash) g
-	     (loop for test-name across test-names do
-	       (verbose-out
-		(format report-stream
-		    " - ~@<Running test ~s ~_of group ~s~:>~%"
-		  test-name group-name))
-	       (let* ((test (gethash test-name tests-hash))
-		      (test-result
-		       (setup/cleanup-test test report-stream)))
+       (let ((group-result t))
+	 (with-slots (group-name test-names tests-hash) g
+	   (loop for test-name across test-names do
+	     (verbose-out
+	      (format report-stream
+		  " - ~@<Running test ~s ~_of group ~s~:>~%"
+		test-name group-name))
+	     (let* ((test (gethash test-name tests-hash))
+		    (test-result
+		     (setup/cleanup-test test report-stream)))
 		 
-		 ;; Here we check for the *break-on-...* flags.
-		 (cond
-		   ((eq test-result 'err)
-		    (if (or *break-on-error* *debug-on-error*)
-			(return 'err)
-			(setf group-result 'err)))
+	       ;; Here we check for the *break-on-...* flags.
+	       (cond
+		((eq test-result 'err)
+		 (if (or *break-on-error* *debug-on-error*)
+		   (return 'err)
+		   (setf group-result 'err)))
 	   
-		   ((not test-result)
-		    (if *break-on-wrong*
-			(return nil)
-			(unless (eq group-result 'err)
-			  (setf group-result nil))))))))
-	   group-result)))
+		((not test-result)
+		 (if *break-on-wrong*
+		   (return nil)
+		   (unless (eq group-result 'err)
+		     (setf group-result nil))))))))
+	 group-result)))
 
   (:method ((ts test) report-stream)
      (setup/cleanup-test ts report-stream)))

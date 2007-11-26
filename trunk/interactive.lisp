@@ -540,6 +540,21 @@ fixing problems as they arise.
 		      (format t "ERROR: cannot find package ~s~%"
 			      package-name))))
 
+	    (command-case (:np) (package-name)
+	      (let ((package (find-package package-name)))
+		(if package
+		  (progn
+		    (when (member package *interesting-packages*)
+		      (setf *interesting-packages*
+			    (delete package *interesting-packages*)))
+		    (when (member package *pending-packages*)
+		      (setf *pending-packages*
+			    (delete package *pending-packages*)))
+		    (format t "Removed package ~s from testing~%"
+		      package-name))
+		  (format t "ERROR: cannot find package ~s~%"
+		    package-name))))
+
 	    (command-case (:g) (group-name)
 		(if (gethash group-name +groups+)
 		    (progn
@@ -555,15 +570,31 @@ fixing problems as they arise.
 		    (format t "ERROR: cannot find group ~s~%"
 			    group-name)))
  
+	    (command-case (:ng) (group-name)
+		(if (gethash group-name +groups+)
+		    (progn
+		      (when (member group-name
+				      *interesting-group-names*)
+			(setf *interesting-group-names*
+			      (delete group-name
+				*interesting-group-names*)))
+		      (when (member group-name
+				    *pending-group-names*)
+			(setf *pending-group-names*
+			      (delete group-name *pending-group-names*)))
+		      (format t "Removed group ~s from testing~%"
+			group-name))
+		    (format t "ERROR: cannot find group ~s~%"
+		      group-name)))
+ 
 	    (command-case (:t) (group-name test-name)
 		(if (gethash group-name +groups+)
 		    (progn
 		      (let ((i-tests
-			     (gethash group-name
+			     (gethash group-name 
 				      *interesting-test-names*))
 			    (p-tests
-			     (gethash group-name
-				      *pending-test-names*)))
+			     (gethash group-name *pending-test-names*)))
 			(unless i-tests
 			  (setf i-tests (make-hash-table)
 				(gethash group-name
@@ -571,8 +602,7 @@ fixing problems as they arise.
 				i-tests))
 			(unless p-tests
 			  (setf p-tests (make-hash-table)
-				(gethash group-name
-					 *pending-test-names*)
+				(gethash group-name *pending-test-names*)
 				p-tests))
 			(setf (gethash test-name i-tests) t
 			      (gethash test-name p-tests) t))
@@ -582,6 +612,23 @@ fixing problems as they arise.
 				test-name group-name)))
 		    (format t "ERROR: cannot find group ~s~%"
 			    group-name)))
+ 
+	    (command-case (:nt) (group-name test-name)
+	      (when (gethash group-name +groups+)
+		(progn
+		  (let ((i-tests (gethash group-name
+					  *interesting-test-names*))
+			(p-tests (gethash group-name
+					  *pending-test-names*)))
+		    (when i-tests  (remhash test-name i-tests))
+		    (when p-tests  (remhash test-name p-tests))
+		    (when (eql (hash-table-count i-tests) 0)
+		      (remhash group-name *interesting-test-names*))
+		    (when (eql (hash-table-count p-tests) 0)
+		      (remhash group-name *pending-test-names*)))
+		  (when *verbose-output*
+		    (format t "Removed test ~s (group ~s) from testing."
+		      test-name group-name)))))
 
 	    (command-case (:run) ()
 		(reset-pending) (run-pending) (report-last-run))

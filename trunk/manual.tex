@@ -8,6 +8,7 @@
 
 \documentclass{article}
 \usepackage{makeidx}
+\usepackage[pdftex]{hyperref}
 \title{NST users' manual}
 \author{John Maraist\thanks{Smart Information Flow Technologies, 211 N.\ First St.\ Suite 300, Minneapolis, MN 55401; \textsl{jmaraist} at \textsl{sift.info}.}}
 \setcounter{tocdepth}{2}
@@ -236,10 +237,10 @@ symbol.\index{symbol@\texttt{:symbol}}
 \\ Passing example: \texttt{(def-check sym1  () (:symbol a) (car '(a b c)))}
 \\ Failing example: \texttt{(def-check sym1x () (:symbol a) (cadr '(a b c)))}
 
-\subsubsection{The \texttt{:eql} and \texttt{:equal} check} 
+\subsubsection{The \texttt{:eql}, \texttt{:equal} and \texttt{:equalp} check} 
 These checks are similar to the \texttt{:eq} check, but using
-respectively the \texttt{eql} and \texttt{equal}
-predicates.\index{eql@\texttt{:eql}}\index{equal@\texttt{:equal}}
+respectively the \texttt{eql}, \texttt{equal} and \texttt{equalp}
+predicates.\index{eql@\texttt{:eql}}\index{equal@\texttt{:equal}}\index{equalp@\texttt{:equalp}}
 \\ Syntax: (\texttt{:eql} \textit{correct-form})
 \\ Example: \texttt{(def-check eql1 (:eql 2) (cadr '(1 2 3)))}
 
