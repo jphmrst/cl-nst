@@ -351,8 +351,14 @@ MARKING TESTS OF INTEREST FOR EXECUTION
 	Mark a package as to be tested.
   :nst :g GROUP
 	Mark a group as to be tested.
-  :nst :t TEST
+  :nst :t GROUP TEST
 	Mark a single test as to be run.
+  :nst :np PACKAGE
+  :nst :ng GROUP
+  :nst :nt GROUP TEST
+	Unmark packages, tests or groups from being testable.
+  :nst :cancel
+	Remove all packages, tests and groups from being testable.
 
 CONTROLLING TEST SUITE EXECUTION BEHAVIOR
   :nst :break-on-wrong BOOL
@@ -526,6 +532,19 @@ fixing problems as they arise.
 	    (command-case (:blurb) (group-name test-name)
 			  (give-blurb group-name test-name))
 
+	    (command-case (:cancel) ()
+	      (setf *interesting-packages* nil
+		    *pending-packages* nil
+		    *interesting-group-names* nil
+		    *pending-group-names* nil)
+	      (clrhash *interesting-test-names*)
+	      (clrhash *pending-test-names*)
+	      (clrhash *erred-groups*)
+	      (clrhash *erred-cleanup*)
+	      (clrhash *failed-tests*)
+	      (clrhash *erred-tests*)
+	      (format t "Cancelled all scheduled tests~%"))
+
 	    (command-case (:p) (package-name)
 		(let ((package (find-package package-name)))
 		  (if package
@@ -682,8 +701,7 @@ fixing problems as they arise.
 			     (gethash group *pending-test-names*)))
 			(unless new-test-set
 			  (setf new-test-set (make-hash-table)
-				(gethash group
-					 *pending-test-names*)
+				(gethash group *pending-test-names*)
 				new-test-set))
 			(loop for test being the hash-keys in test-set
 			      using (hash-value flag)
