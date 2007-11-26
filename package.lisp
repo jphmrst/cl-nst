@@ -32,5 +32,10 @@
 	     #:*default-report-stream*))
 
 (defpackage :sift.nst-test
-    (:nicknames :nst-test)
+    (:nicknames :nst-test :nst-t)
     (:use :common-lisp :sift.nst))
+
+(defpackage :sift.nst-interact
+    (:nicknames :nst-interact :nst-i)
+    (:use :common-lisp :sift.nst))
+

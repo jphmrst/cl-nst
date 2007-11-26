@@ -44,6 +44,7 @@
     :depends-on (:nst)
     :in-order-to ((test-op (load-op :test-nst)))
     :components ((:nst-file "nst-nst")
+		 (:nst-file "nst-interact")
 		 (:module "check-v2"
 			  :components ((:nst-file "nst-criteria")))))
 
