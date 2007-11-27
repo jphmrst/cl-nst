@@ -25,10 +25,9 @@
 		 (:file "runners")
 		 (:file "fixtures")
 		 (:file "testforms")
-		 (:module "check-v2"
-			  :components ((:file "status")
-				       (:file "defcheck")
-				       (:file "criteria")))
+		 (:file "status")
+		 (:file "defcheck")
+		 (:file "criteria")
 		 (:file "interactive")
 		 (:file "format")))
 
@@ -45,8 +44,7 @@
     :in-order-to ((test-op (load-op :test-nst)))
     :components ((:nst-file "nst-nst")
 		 (:nst-file "nst-interact")
-		 (:module "check-v2"
-			  :components ((:nst-file "nst-criteria")))))
+		 (:nst-file "nst-criteria")))
 
 (defmethod perform ((op test-op)
 		    (system (eql (find-system :test-nst))))
