@@ -56,8 +56,12 @@
      (declare (ignorable colon) (ignorable at-sign))
      (with-slots (caught fixture-name var-name) info
        (format stream
-	       "~@<Error setting up fixture ~s element ~s: ~_~s~:>"
-	       fixture-name var-name caught)))
+	   "~@<Error ~:_setting ~:_up ~:_fixture ~:_~a ~
+               ~:_element ~:_~a ~:_(package ~:_~a):~
+             ~_ ~s~:>"
+	 (symbol-name fixture-name) (symbol-name var-name)
+	 (package-name (symbol-package fixture-name))
+	 caught)))
 
   (:method (stream (info failure-report) colon at-sign)
      "Default formatter for unspecialized failure report records."
