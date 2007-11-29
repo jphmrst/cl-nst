@@ -38,8 +38,11 @@
 	       (let ((,report ,record-form))
 		 (setf (gethash ,group *erred-groups*) ,report)
 		 (format ,stream
-		     "Error in group ~s setup:~%  ~/nst::nst-format/~%"
-		   (get-name ,group) ,report)))))
+		     "Error in setup of group ~a (package ~a):~
+                      ~%  ~/nst::nst-format/~%"
+		   (symbol-name (get-name ,group))
+		   (package-name (symbol-package (get-name ,group)))
+		   ,report)))))
        ,@forms)))
 
 (defmacro do-setup (group group-name group-setup-form report-stream
