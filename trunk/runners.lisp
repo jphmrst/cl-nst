@@ -14,6 +14,18 @@
 
 ;;; Macros we'll use in the methods for running tests.
 
+(defun error-interrupts (err)
+  "This function is used to determine whether a caught condition should
+be swallowed by NST and recorded as a test/group failure, or whether it
+should be the basis of a break to the Lisp debugger.  One would like to
+see that this function is the only way that *debug-on-error* is ever
+read (and similarly for *break-on-error* and so forth), but we're not
+quite there yet."
+  (cond
+    (*debug-on-error* t)
+    #+allegro ((typep err 'excl:interrupt-signal) t)
+    (t nil)))
+  
 (defmacro control-setup-errors (&rest forms)
   (let ((c (gensym)) (setup-block (gensym "setup-block")))
     `(block ,setup-block
@@ -24,8 +36,7 @@
        (handler-bind
 	   ((error
 	     #'(lambda (,c)
-		 (declare (ignorable ,c))
-		 (unless *debug-on-error*
+		 (unless (error-interrupts ,c)
 		   (return-from ,setup-block nil)))))
 	 ,@forms
 	 (return-from ,setup-block t)))))
@@ -115,7 +126,7 @@ for output before and after indiviual tests."
 			 "Test ~s (group ~s) raised error~%   ~s~%"
 		       test-name (get-name group) x))
 		 (add-test *erred-tests* test x)
-		 (unless *debug-on-error*
+		 (unless (error-interrupts x)
 		   (return-from single-test 'err)))))
 	 (multiple-value-bind (result report) (call-next-method test)
 	   (if result

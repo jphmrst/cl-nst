@@ -9,8 +9,7 @@
 
 (defpackage :sift.nst
     (:nicknames :nst)
-    (:use :common-lisp :jm-utils #+sbcl sb-mop #-sbcl mop)
-    (:import-from jm-utils #:def-string-constant #:defgeneric-when)
+    (:use :common-lisp #+sbcl sb-mop #-sbcl mop)
     (:import-from #+sbcl sb-mop #-sbcl mop
 		  #:generic-function-methods #:method-specializers
 		  #:eql-specializer-object)

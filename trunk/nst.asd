@@ -20,7 +20,7 @@
     :components ((:file "package")
 		 (:file "permuter")
 		 (:file "numbers")
-		 (:file "nst")
+		 (:file "globals")
 		 (:file "classes")
 		 (:file "runners")
 		 (:file "fixtures")
