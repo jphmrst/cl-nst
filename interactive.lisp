@@ -214,9 +214,9 @@
 	 (when ,x
 	   (if (eq ,x t)
 	     (format t "Test ~s/~s failed~%" ,group-name ,test-name)
-	     (format t "Test ~s/~s failed: ~a~%"
+	     (format t "Test ~s/~s failed: ~s~%"
 	       ,group-name ,test-name ,x))
-	   (return-from blurbing ,x)))
+	   (return-from blurbing)))
       
        (let ((,x (if-test *erred-tests* ,group-name ,test-name)))
 	 (when ,x
