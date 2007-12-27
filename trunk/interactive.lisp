@@ -28,6 +28,21 @@
      (run-pending)
      (report-last-run)))
 
+(defmacro in-empty-context (&rest forms)
+  `(let ((*pending-packages* ())
+	 (*pending-group-names* ())
+	 (*pending-test-names* (make-hash-table))
+	 (*passed-test-count* 0)
+	 (*erred-groups* (make-hash-table))
+	 (*erred-cleanup* (make-hash-table))
+	 (*failed-tests* (make-hash-table))
+	 (*passed-tests* (make-hash-table))
+	 (*erred-tests* (make-hash-table))
+	 )
+     ,@forms
+     (run-pending)
+     (report-last-run)))
+
 (defmacro reset-pending ()
   (let ((group-name   (gensym "-group-name"))
 	(test-set     (gensym "-test-set"))
@@ -79,7 +94,7 @@
 					  *debug-on-error*)
 				      (eq ,result 'err))
 				 (and *break-on-wrong*
-				      (eq ,result nil)))
+				      (null ,result)))
 			 (return-from pending-loop))))))
 
 	     ;; It's easiest to put this all this mess in a loop, and
@@ -199,9 +214,9 @@
 	 (when ,x
 	   (if (eq ,x t)
 	     (format t "Test ~s/~s failed~%" ,group-name ,test-name)
-	     (format t "Test ~s/~s failed: ~s~%"
+	     (format t "Test ~s/~s failed: ~a~%"
 	       ,group-name ,test-name ,x))
-	   (return-from blurbing)))
+	   (return-from blurbing ,x)))
       
        (let ((,x (if-test *erred-tests* ,group-name ,test-name)))
 	 (when ,x
@@ -675,12 +690,12 @@ fixing problems as they arise.
 		 (push group-name *pending-group-names*))))
 
 	    (command-case (:run-test) (group test)
-		(under-empty-pendings
-		 (let ((singleton (make-hash-table)))
-		   (setf 
-		    (gethash test singleton) t
-		    (gethash group 
-			     *pending-test-names*) singleton))))
+	      (in-empty-context
+	       (let ((singleton (make-hash-table)))
+		 (setf 
+		  (gethash test singleton) t
+		  (gethash group 
+			   *pending-test-names*) singleton))))
 
 	    (command-case (:retry) ()
 		(loop for group being the hash-keys of *erred-groups*
