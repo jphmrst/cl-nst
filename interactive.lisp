@@ -212,10 +212,17 @@
       
        (let ((,x (if-test *failed-tests* ,group-name ,test-name)))
 	 (when ,x
-	   (if (eq ,x t)
-	     (format t "Test ~s/~s failed~%" ,group-name ,test-name)
-	     (format t "Test ~s/~s failed: ~s~%"
-	       ,group-name ,test-name ,x))
+	   (cond
+	     ((eq ,x t)
+	      (format t "Test ~s/~s failed~%"
+		,group-name ,test-name))
+	     ((check-result-p ,x)
+	      (format t "~@<Test ~s/~s failed: ~
+                            ~_~/nst::format-check-result/~:>~%"
+		,group-name ,test-name ,x))
+	     (t
+	      (format t "~@<Test ~s/~s failed: ~_~s~:>~%"
+		,group-name ,test-name ,x)))
 	   (return-from blurbing)))
       
        (let ((,x (if-test *erred-tests* ,group-name ,test-name)))
@@ -229,9 +236,9 @@
 	 (return-from blurbing))
        
        (format t
-	       "Test ~s/~s not scheduled and not recently manually run~
-                ~%(or, perhaps you are not querying on atoms from the ~
-                   test package).~%"
+	       "Test ~s/~s not scheduled and not recently manually ~
+                run~%(or, perhaps you are not querying on atoms ~
+                from the test package).~%"
 	       ,group-name ,test-name)
        (return-from blurbing))))
 

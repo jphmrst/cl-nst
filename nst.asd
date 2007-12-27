@@ -44,7 +44,8 @@
     :in-order-to ((test-op (load-op :test-nst)))
     :components ((:nst-file "nst-nst")
 		 (:nst-file "nst-interact")
-		 (:nst-file "nst-criteria")))
+		 (:nst-file "nst-criteria")
+		 (:nst-file "nst-fails")))
 
 (defmethod perform ((op test-op)
 		    (system (eql (find-system :test-nst))))
