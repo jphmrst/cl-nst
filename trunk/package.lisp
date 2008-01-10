@@ -18,11 +18,10 @@
 	     #:def-test-group
 	     #:def-test
 	     #:def-check
-	     #:def-check-criterion
+	     #:def-check
 	     #:def-value-check
-	     #:def-check-alias
-	     #:def-check-form
-	     #:def-check-form-manip
+	     #:def-value-check
+	     #:def-control-check
 	     #:continue-check
 	     #:run-nst-commands
 	     #:emit-failure
