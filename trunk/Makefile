@@ -1,7 +1,10 @@
 
-all: check.ps classes.ps fixtures.ps format.ps interactive.ps manual.ps \
-	nst.ps nst-nst.ps numbers.ps package.ps permuter.ps runners.ps  \
-	test.ps test2.ps testforms.ps
+all: classes.ps globals.ps nst-nst.ps scratch.ps criteria.ps \
+	interactive.ps numbers.ps status.ps defcheck.ps \
+	nst-criteria.ps package.ps test2.ps fixtures.ps nst-fails.ps \
+	permuter.ps testforms.ps format.ps nst-interact.ps runners.ps \
+	test.ps \
+	manual.pdf
 	#
 
 %.pdf: %.tex
