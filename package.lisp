@@ -18,7 +18,7 @@
 	     #:def-test-group
 	     #:def-test
 	     #:def-check
-	     #:def-check
+	     #:def-check-alias
 	     #:def-value-check
 	     #:def-value-check
 	     #:def-control-check
