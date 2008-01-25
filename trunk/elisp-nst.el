@@ -8,6 +8,7 @@
 ;;; your local naming conventions.
 
 (defvar nst-lisp-mode nil)
+(make-variable-buffer-local 'nst-lisp-mode)
 (defvar nst-lisp-mode-hook nil)
 (defvar nst-lisp-mode-map (make-sparse-keymap "NST mode map"))
 (defvar nst-mode-known-check-stub-elements
@@ -62,15 +63,15 @@
 
 (defun nst-lisp-insert-fixture-set ()
   (interactive)
-  (insert "\n(def-fixtures NAME
-   :documentation nil
-   :uses () ; Other fixture sets which this set requires.
-   :outer () ; List of clauses to be declared outside of any
-             ; let-expression containing these bindings
-   :inner () ; List of clauses to be declared immediately inside any
-             ; let-expression containing these bindings
-   :bindings
-   ())\n"))
+  (insert "\n(def-fixtures NAME 
+    (:uses () ;; Other fixture sets which this set requires.
+     :documentation nil
+     :outer () ;; List of clauses to be declared outside of any
+               ;; let-expression containing these bindings.
+     :inner () ;; List of clauses to be declared immediately inside
+               ;; any let-expression containing these bindings.
+     )
+  )\n"))
 
 (defun nst-lisp-insert-fixture ()
   (interactive)
@@ -88,12 +89,16 @@
 
 (defun nst-lisp-insert-check ()
   (interactive)
-  (insert "\n(def-check (NAME :fixtures ()
+  (insert "\n\n  (def-check (NAME :fixtures ()
                  ;; :setup FORM
                  ;; :cleanup FORM
-            )
+              )
       CRITERION
-    FORMS)\n"))
+    FORMS)")
+  (backward-sexp 1)
+  (forward-char 1)
+  (forward-sexp 1)
+  (forward-char 2))
 
 (defun nst-lisp-insert-checkform ()
   (interactive)
