@@ -7,6 +7,13 @@
 ;;; and the lisp-specific preamble to that license.
 (in-package :sift.nst)
 
+#+allegro
+(defmacro extract-lambda-list (&rest args)
+  `(mop:extract-lambda-list ,@args))
+#-(or sbcl allegro)
+(eval-when (:compile-toplevel :load-toplevel)
+  (error "Don't have method for calling extract-lambda-list from the MOP for this list.  See nst/numbers.lisp."))
+
 ;;; Functions supporting tests on numbers.
 
 (defmacro log10 (v) `(/ (log ,v) (log 10)))
@@ -24,7 +31,7 @@
 	 (eql (round n1 rounder) (round n2 rounder)))))
 
 (defun lambda-list-names (lambda-list)
-  (let ((generic-list (mop:extract-lambda-list lambda-list))
+  (let ((generic-list (extract-lambda-list lambda-list))
 	(result))
     (labels ((descend (list)
 	        (unless (null list)
