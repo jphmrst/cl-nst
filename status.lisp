@@ -20,7 +20,7 @@
 
 (defparameter *nst-context* nil)
 (defparameter *nst-stack* nil)
-(declaim (dynamic-extent *nst-context* *nst-stack*))
+#+allegro(declaim (dynamic-extent *nst-context* *nst-stack*))
 
 (defun emit-warning (&key format args)
   (declare (special *nst-context* *nst-stack*))
