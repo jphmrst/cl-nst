@@ -153,8 +153,8 @@ for output before and after indiviual tests."
     (loop while classes do
       (let ((c (pop classes)))
 	(unless (member c result)
-	  (push (mop::class-name c) result)
-	  (loop for sc in (mop:class-direct-superclasses c) do
+	  (push (#+allegro mop::class-name #+sbcl class-name c) result)
+	  (loop for sc in (#+allegro mop:class-direct-superclasses #+sbcl class-direct-superclasses c) do
 	    (push sc classes)))))
     result))
 
