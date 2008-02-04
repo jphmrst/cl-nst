@@ -8,7 +8,6 @@
 ;;; your local naming conventions.
 
 (defvar nst-lisp-mode nil)
-(make-variable-buffer-local 'nst-lisp-mode)
 (defvar nst-lisp-mode-hook nil)
 (defvar nst-lisp-mode-map (make-sparse-keymap "NST mode map"))
 (defvar nst-mode-known-check-stub-elements
@@ -135,14 +134,16 @@
   (block nst-auto-mode-match-p
     (let* ((file-full-name (buffer-file-name (current-buffer)))
 	   (file-local-name (file-name-nondirectory file-full-name)))
-      (loop for pattern in nst-auto-mode-list
-	    do (when (string-match pattern file-local-name)
-		 (return-from nst-auto-mode-match-p t))))))
+      (loop for pattern in nst-auto-mode-list do
+	(when (string-match pattern file-local-name)
+	  (return-from nst-auto-mode-match-p t)))
+      (return-from nst-auto-mode-match-p nil))))
 
 (defun nst-lisp-filecheck-hook ()
   "Add this hook to your Lisp major mode to decide whether the NST
 minor mode should apply."
+  (make-variable-buffer-local 'nst-lisp-mode)
   (nst-lisp-mode 
    (block check-file
      (when (nst-auto-mode-match-p) (return-from check-file t))
-     (return-from check-file nil))))
+     (return-from check-file 0))))
