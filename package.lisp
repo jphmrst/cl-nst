@@ -9,8 +9,14 @@
 
 (defpackage :sift.nst
     (:nicknames :nst)
-    (:use :common-lisp #+sbcl sb-mop #-sbcl mop)
+    (:use :common-lisp #+sbcl sb-mop #+allegro mop)
+    #+(or sbcl allegro)
     (:import-from #+sbcl sb-mop #-sbcl mop
+		  #:generic-function-methods #:method-specializers
+		  #:eql-specializer-object)
+    #+(or openmcl clozure)
+    (:import-from ccl
+		  #:extract-lambda-list
 		  #:generic-function-methods #:method-specializers
 		  #:eql-specializer-object)
     (:export #:def-fixtures
