@@ -19,7 +19,7 @@
 
 (defclass permuter ()
      ((next-permutation :type (or null cons))
-      (perm-stack :type (or null (cons permuter)))
+      (perm-stack :type (or null (cons permuter-frame)))
       (has-next :initform t :reader has-next)
       (degenerate)))
 

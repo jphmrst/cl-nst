@@ -27,7 +27,7 @@ dispatch in groups and tests which use these fixtures."))
 		 "Record of information about the group")
       (test-name :initarg :name  :type symbol :reader get-name
 		 :documentation "Name of this test")
-      (documentation :initarg :documentation :type string
+      (documentation :initarg :documentation :type (or string null)
 		     :documentation
 		     "Documentation associated with this test"))
   (:documentation "Information associated with one single test."))
@@ -54,11 +54,11 @@ dispatch in groups and tests which use these fixtures."))
 		 :documentation
 		 "Symbolic name of the class which all test classes \
 associated with this group should subclass.")
-      (fixtures  :initarg :fixtures  :type (cons symbol)
+      (fixtures  :initarg :fixtures  :type (or (cons symbol) null)
 		 :reader get-fixtures
 		 :documentation
 		 "Names of fixtures to be used in this group's tests")
-      (documentation :initarg :documentation :type string
+      (documentation :initarg :documentation :type (or string null)
 		     :documentation
 		     "Documentation associated with this group"))
   (:documentation "Information associated with one group of tests."))
