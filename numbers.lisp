@@ -7,12 +7,6 @@
 ;;; and the lisp-specific preamble to that license.
 (in-package :sift.nst)
 
-#+allegro
-(defmacro extract-lambda-list (&rest args)
-  `(mop:extract-lambda-list ,@args))
-#-(or sbcl allegro)
-(eval-when (:compile-toplevel :load-toplevel)
-  (error "Don't have method for calling extract-lambda-list from the MOP for this list.  See nst/numbers.lisp."))
 
 ;;; Functions supporting tests on numbers.
 
