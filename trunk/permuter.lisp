@@ -8,8 +8,8 @@
 (in-package :sift.nst)
 
 (defclass permuter-frame ()
-     ((next-firsts :initarg :next :type cons)
-      (prev-firsts :initform nil :type cons)))
+     ((next-firsts :initarg :next :type (or null cons))
+      (prev-firsts :initform nil :type (or null cons))))
 
 (defun whittlable (pf)
   (if (null pf)
@@ -18,8 +18,8 @@
 	(null next-firsts))))
 
 (defclass permuter ()
-     ((next-permutation :type cons)
-      (perm-stack :type (cons permuter))
+     ((next-permutation :type (or null cons))
+      (perm-stack :type (or null (cons permuter)))
       (has-next :initform t :reader has-next)
       (degenerate)))
 
