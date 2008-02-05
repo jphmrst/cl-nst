@@ -184,7 +184,8 @@ or t if none is available.")
 (defparameter *passed-tests* (make-hash-table)
   "Set of tests which passed on their most recent run.")
 (defparameter *failed-tests* (make-hash-table)
-  "Set of tests failing on their most recent run.")
+  "Hash table that maps group names to another hash which represents a
+set of tests in that group failing on their most recent run.")
 (defparameter *erred-tests* (make-hash-table)
   "Map from tests raising an error condition during the current :run
 session of the NST runtime system to a reason for the error, or t if
