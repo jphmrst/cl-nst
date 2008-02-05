@@ -155,13 +155,15 @@
 			(format t "WARNING: no groups in package ~s~%"
 				,package)))))))))))
 
-(defmacro report-last-run (&optional
-			   (stream
-			    'cl-user::*nst-default-report-stream*))
-  (let ((hash (gensym "hash-")))
-    `(progn
-       (format ,stream
-	   "------------------------------------~%~
+(defun report-last-run (&optional
+			(stream
+			 cl-user::*nst-default-report-stream*))
+  (flet ((hash-keys (ht)
+	   (sort (loop for x being the hash-keys of ht
+		    collect x)
+		 #'string-lessp)))
+    (format stream
+	    "------------------------------------~%~
             SUMMARY OF TEST RUN~%~
             ~[No tests passed~:;~:*Tests passed: ~d~]~%~
             ~[No tests failed~:;~:*Tests failed: ~d~]~%~
@@ -169,77 +171,85 @@
             ~[~:;~:*Groups raising error in setup: ~d~%~]~
             ~[~:;~:*Groups raising error in cleanup: ~d~%~]~
             ------------------------------------~%"
-	 *passed-test-count*
-	 (loop for ,hash being the hash-values of *failed-tests*
-	     summing (hash-table-count ,hash))
-	 (loop for ,hash being the hash-values of *erred-tests*
-	     summing (hash-table-count ,hash))
-	 (hash-table-count *erred-groups*)
-	 (hash-table-count *erred-cleanup*)))))
+	    *passed-test-count*
+	    (loop for hash being the hash-values of *failed-tests*
+	       summing (hash-table-count hash))
+	    (loop for hash being the hash-values of *erred-tests*
+	       summing (hash-table-count hash))
+	    (hash-table-count *erred-groups*)
+	    (hash-table-count *erred-cleanup*))
+    (when *verbose-output*
+      (loop for failed-group in (hash-keys *failed-tests*)
+	 as failed-test-table = (gethash failed-group *failed-tests*)
+	 do (format stream "~&Failed tests for group ~S:~%  ~@<~{~s~^ ~:_~}~:>~%"
+		    failed-group
+		    (hash-keys failed-test-table)))
+      (loop for erred-group in (hash-keys *erred-tests*) 
+	 as erred-test-table = (gethash erred-group *erred-tests*)
+	 do (format stream "~&Erred tests for group ~S:~%  ~@<~{~s~^ ~:_~}~:>~%"
+		    erred-group (hash-keys erred-test-table))))))
 
-(defmacro give-blurb (group-name test-name)
-  (let ((x (gensym "x-"))
-	(p (gensym "p-"))
-	(package-hash (gensym "package-hash-"))
-	(package-name (gensym "package-name-")))
-    `(block blurbing
-       (when (member ,group-name *pending-group-names*)
-	 (format t "Group ~s is pending.~%" ,group-name)
+
+(defun give-blurb (group-name test-name)
+  (let (x p package-hash package-name)
+    (block blurbing
+       (when (member group-name *pending-group-names*)
+	 (format t "Group ~s is pending.~%" group-name)
 	 (return-from blurbing))
       
-       (when (gethash (gethash ,group-name +groups+) *erred-groups*)
+       (when (gethash (gethash group-name +groups+) *erred-groups*)
 	 (format t "Group ~s raised an error in setup.~%"
-		 ,group-name)
+		 group-name)
 	 (return-from blurbing))
 
-       (when (gethash (gethash ,group-name +groups+) *erred-cleanup*)
+       (when (gethash (gethash group-name +groups+) *erred-cleanup*)
 	 (format t "Group ~s raised an error in cleanup.~%"
-		 ,group-name))
+		 group-name))
       
-       (when (if-test *pending-test-names* ,group-name ,test-name)
+       (when (if-test *pending-test-names* group-name test-name)
 	 (format t "Test ~s/~s is pending.~%"
-		 ,group-name ,test-name)
+		 group-name test-name)
 	 (return-from blurbing))
 	
-       (loop for ,p being the hash-keys in +groups-by-package+
-	     using (hash-value ,package-hash)
+       (loop for p being the hash-keys in +groups-by-package+
+	     using (hash-value package-hash)
 	     do
-	  (when (gethash ,group-name ,package-hash)
-	    (let ((,package-name (package-name ,p)))
-	      (when (member ,package-name *pending-packages*)
-		(format t "Package ~a is pending.~%" ,package-name)
+	  (when (gethash group-name package-hash)
+	    (let ((package-name (package-name p)))
+	      (when (member package-name *pending-packages*)
+		(format t "Package ~a is pending.~%" package-name)
 		(return-from blurbing)))))
       
-       (let ((,x (if-test *failed-tests* ,group-name ,test-name)))
-	 (when ,x
+       (let ((x (if-test *failed-tests* group-name test-name)))
+	 (when x
 	   (cond
-	     ((eq ,x t)
+	     ((eq x t)
 	      (format t "Test ~s/~s failed~%"
-		,group-name ,test-name))
-	     ((check-result-p ,x)
+		group-name test-name))
+	     ((check-result-p x)
 	      (format t "~@<Test ~s/~s failed: ~
                             ~_~/nst::format-check-result/~:>~%"
-		,group-name ,test-name ,x))
+		group-name test-name x))
 	     (t
 	      (format t "~@<Test ~s/~s failed: ~_~s~:>~%"
-		,group-name ,test-name ,x)))
+		group-name test-name x)))
 	   (return-from blurbing)))
       
-       (let ((,x (if-test *erred-tests* ,group-name ,test-name)))
-	 (when ,x
+       (let ((x (if-test *erred-tests* group-name test-name)))
+	 (when x
 	   (format t "Test ~s/~s raised an error:~%  ~s~%"
-		   ,group-name ,test-name ,x)
+		   group-name test-name x)
 	   (return-from blurbing)))
       
-       (when (if-test *passed-tests* ,group-name ,test-name)
-	 (format t "Test ~s/~s passed.~%" ,group-name ,test-name)
+       (when (if-test *passed-tests* group-name test-name)
+	 (format t "Test ~s/~s passed.~%" group-name test-name)
 	 (return-from blurbing))
        
        (format t
 	       "Test ~s/~s not scheduled and not recently manually ~
                 run~%(or, perhaps you are not querying on atoms ~
                 from the test package).~%"
-	       ,group-name ,test-name)
+	       group-name test-name)
        (return-from blurbing))))
 
 ;;; Output functions for lists and other collections of testing
