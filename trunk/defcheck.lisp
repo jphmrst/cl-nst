@@ -130,7 +130,7 @@ an expression evaluating to the stack of values to be tested."
       (unless full-format-supp-p
 	(setf full-format
 	  (if stack-transformer
-	    (list "~@<~?~_~@<~:~{@_  ~s~}~:>~:>"
+	    (list "~@<~?~_~@<~:{~_  ~s~}~:>~:>"
 		  (car blurb-format) (cons 'list (cdr blurb-format))
 		  forms-formal)
 	    blurb-format)))
