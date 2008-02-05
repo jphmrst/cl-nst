@@ -154,12 +154,36 @@ an expression evaluating to the stack of values to be tested."
 	   (destructuring-bind ,criterion-args ,args
 	     ,@check-forms)))))
 
-  (defmacro def-check-alias ((name &rest args) documentation
-			     &optional (expansion nil exp-supp-p)
-			     &aux (documentation-supp-p t))
-    (unless exp-supp-p
-      (setf expansion documentation
-	    documentation nil  documentation-supp-p nil))
+  (defmacro def-check-alias ((name &rest args)
+			     &body forms
+			     &aux
+			     (documentation nil)
+			     (documentation-supp-p nil)
+			     (declaration-form nil)
+			     (declaration-form-supp-p nil)
+			     (expansion nil))
+    (when (stringp (car forms))
+      (setf documentation (pop forms)
+	    documentation-supp-p t))
+    (when (eq (caar forms) 'declare)
+      (setf declaration-form (pop forms)
+	    declaration-form-supp-p t))
+    (cond
+      ((eql (length forms) 1)
+       (setf expansion (pop forms)))
+      (t
+       (error "Ill-formed (d~@<ef-check-alias (~s~{ ~s~}) ~
+                            ~:[~*~;~:@_~s~]~
+                            ~:[~*~;~:@_~s~]~
+                            ~{~:@_~s~}~:>)"
+	      name args 
+	      documentation-supp-p documentation
+	      declaration-form-supp-p declaration-form
+	      forms)))
+    
+;;;    (unless exp-supp-p
+;;;      (setf expansion documentation
+;;;	    documentation nil  documentation-supp-p nil))
 
     (let* ((forms (gensym "forms")) (stream (gensym "stream"))
 	   (id (gensym "id")) (exp (gensym "exp"))
@@ -168,12 +192,14 @@ an expression evaluating to the stack of values to be tested."
 	 (defmethod blurb-context-line (,stream (,id (eql ',name))
 					,given-args ,forms)
 	   (destructuring-bind ,args ,given-args
+	     ,@(when declaration-form-supp-p `(,declaration-form))
 	     (let ((,exp ,expansion))	   
 	       (blurb-context-line ,stream
 				   (car ,exp) (cdr ,exp) ,forms))))
 	 (defmethod detail-context-line (,stream (,id (eql ',name))
 					 ,given-args ,forms)
 	   (destructuring-bind ,args ,given-args
+	     ,@(when declaration-form-supp-p `(,declaration-form))
 	     (let ((,exp ,expansion))	   
 	       (detail-context-line ,stream
 				    (car ,exp) (cdr ,exp) ,forms))))
@@ -183,5 +209,6 @@ an expression evaluating to the stack of values to be tested."
 	   ,@(when documentation-supp-p
 	       (when (stringp documentation) `(,documentation)))
 	   (destructuring-bind ,args ,given-args
+	     ,@(when declaration-form-supp-p `(,declaration-form))
 	     (let ((,exp ,expansion))	   
 	       (build-check-form (car ,exp) (cdr ,exp) ,forms))))))))

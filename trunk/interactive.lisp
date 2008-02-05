@@ -191,66 +191,65 @@
 
 
 (defun give-blurb (group-name test-name)
-  (let (x p package-hash package-name)
-    (block blurbing
-       (when (member group-name *pending-group-names*)
-	 (format t "Group ~s is pending.~%" group-name)
-	 (return-from blurbing))
+  (block blurbing
+    (when (member group-name *pending-group-names*)
+      (format t "Group ~s is pending.~%" group-name)
+      (return-from blurbing))
       
-       (when (gethash (gethash group-name +groups+) *erred-groups*)
-	 (format t "Group ~s raised an error in setup.~%"
-		 group-name)
-	 (return-from blurbing))
+    (when (gethash (gethash group-name +groups+) *erred-groups*)
+      (format t "Group ~s raised an error in setup.~%"
+	group-name)
+      (return-from blurbing))
 
-       (when (gethash (gethash group-name +groups+) *erred-cleanup*)
-	 (format t "Group ~s raised an error in cleanup.~%"
-		 group-name))
+    (when (gethash (gethash group-name +groups+) *erred-cleanup*)
+      (format t "Group ~s raised an error in cleanup.~%"
+	group-name))
       
-       (when (if-test *pending-test-names* group-name test-name)
-	 (format t "Test ~s/~s is pending.~%"
-		 group-name test-name)
-	 (return-from blurbing))
+    (when (if-test *pending-test-names* group-name test-name)
+      (format t "Test ~s/~s is pending.~%"
+	group-name test-name)
+      (return-from blurbing))
 	
-       (loop for p being the hash-keys in +groups-by-package+
-	     using (hash-value package-hash)
-	     do
+    (loop for p being the hash-keys in +groups-by-package+
+	using (hash-value package-hash)
+	do
 	  (when (gethash group-name package-hash)
 	    (let ((package-name (package-name p)))
 	      (when (member package-name *pending-packages*)
 		(format t "Package ~a is pending.~%" package-name)
 		(return-from blurbing)))))
       
-       (let ((x (if-test *failed-tests* group-name test-name)))
-	 (when x
-	   (cond
-	     ((eq x t)
-	      (format t "Test ~s/~s failed~%"
-		group-name test-name))
-	     ((check-result-p x)
-	      (format t "~@<Test ~s/~s failed: ~
+    (let ((x (if-test *failed-tests* group-name test-name)))
+      (when x
+	(cond
+	 ((eq x t)
+	  (format t "Test ~s/~s failed~%"
+	    group-name test-name))
+	 ((check-result-p x)
+	  (format t "~@<Test ~s/~s failed: ~
                             ~_~/nst::format-check-result/~:>~%"
-		group-name test-name x))
-	     (t
-	      (format t "~@<Test ~s/~s failed: ~_~s~:>~%"
-		group-name test-name x)))
-	   (return-from blurbing)))
+	    group-name test-name x))
+	 (t
+	  (format t "~@<Test ~s/~s failed: ~_~s~:>~%"
+	    group-name test-name x)))
+	(return-from blurbing)))
       
-       (let ((x (if-test *erred-tests* group-name test-name)))
-	 (when x
-	   (format t "Test ~s/~s raised an error:~%  ~s~%"
-		   group-name test-name x)
-	   (return-from blurbing)))
+    (let ((x (if-test *erred-tests* group-name test-name)))
+      (when x
+	(format t "Test ~s/~s raised an error:~%  ~s~%"
+	  group-name test-name x)
+	(return-from blurbing)))
       
-       (when (if-test *passed-tests* group-name test-name)
-	 (format t "Test ~s/~s passed.~%" group-name test-name)
-	 (return-from blurbing))
+    (when (if-test *passed-tests* group-name test-name)
+      (format t "Test ~s/~s passed.~%" group-name test-name)
+      (return-from blurbing))
        
-       (format t
-	       "Test ~s/~s not scheduled and not recently manually ~
+    (format t
+	"Test ~s/~s not scheduled and not recently manually ~
                 run~%(or, perhaps you are not querying on atoms ~
                 from the test package).~%"
-	       group-name test-name)
-       (return-from blurbing))))
+      group-name test-name)
+    (return-from blurbing)))
 
 ;;; Output functions for lists and other collections of testing
 ;;; artifacts for use in the runtime system.
