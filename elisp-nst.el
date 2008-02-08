@@ -42,6 +42,32 @@
 
 
 (defun nst-lisp-mode (arg)
+  "Minor mode for editing NST Lisp files.
+
+Adds the following key commands:
+
+ C-c C-n           Default common prefix for all nst-mode commands.  Can
+                   be customized; see below.
+ C-c C-n C-s       Prefix for all commands about sets
+ 
+ C-c C-n C-s C-f   Insert a fixture set skeleton at the point.
+ C-c C-n C-s C-t   Insert a test set skeleton at the point.
+ C-c C-n C-f       Insert a fixture skeleton at the point.
+ C-c C-n C-c       Insert a single check at the point.
+ C-c C-n C-k       Insert a check criterion skeleton; you will be
+                   prompted for the criterion name (e.g. :eq, :all)
+                   and a skeleton with appropriate arguments will be
+                   inserted at the point.
+
+Customization variables: Use nst-lisp-key-prefix to change the prefix
+for the key commands in this minor mode.  Note that this must be set
+BEFORE the mode is loaded, e.g. in the .xemacs/init.el file.
+
+Known shortcomings: 
+ - The skeleton inserters aren't aware of the context of point: it would
+   be nicer if they moved to the next appropriate place to make the
+   insertion, for example.
+"
   (interactive "p")
   (setq nst-lisp-mode
 	(if (null arg)
