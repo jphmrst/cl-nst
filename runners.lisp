@@ -25,6 +25,8 @@ quite there yet."
     (*debug-on-error* t)
     #+allegro ((typep err 'excl:interrupt-signal) t)
     (t nil)))
+
+(define-condition breaking-on-wrong () ())
   
 (defmacro control-setup-errors (&rest forms)
   (let ((c (gensym)) (setup-block (gensym "setup-block")))
@@ -129,11 +131,13 @@ for output before and after indiviual tests."
 		 (unless (error-interrupts x)
 		   (return-from single-test 'err)))))
 	 (multiple-value-bind (result report) (call-next-method test)
-	   (if result
-	       (progn
-		 (add-test *passed-tests* test)
-		 (setf *passed-test-count* (+ 1 *passed-test-count*)))
-	       (add-test *failed-tests* test report))
+	   (cond (result
+		  (add-test *passed-tests* test)
+		  (setf *passed-test-count* (+ 1 *passed-test-count*)))
+		 (t
+		  (add-test *failed-tests* test report)
+		  (when *break-on-wrong*
+		    (error 'breaking-on-wrong))))
 	   (if (use-verbose-output) 
 	       (format report-stream "   ~a~%"
 		 (if result "Passed" "Failed"))

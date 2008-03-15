@@ -43,127 +43,93 @@
      (run-pending)
      (report-last-run)))
 
-(defmacro reset-pending ()
-  (let ((group-name   (gensym "-group-name"))
-	(test-set     (gensym "-test-set"))
-	(new-test-set (gensym "-new-test-set"))
-	(test-name    (gensym "-test-name")))
-    `(progn
-       (setf *pending-packages* *interesting-packages*
-	     *pending-group-names* *interesting-group-names*
-	     *passed-test-count* 0)
+(defun reset-pending ()
+  (setf *pending-packages* *interesting-packages*
+	*pending-group-names* *interesting-group-names*
+	*passed-test-count* 0)
 
-       (clrhash *pending-test-names*)
-       (clrhash *failed-tests*)
-       (clrhash	*passed-tests*)
-       (clrhash	*erred-tests*)
-       (clrhash *erred-groups*)
-       (clrhash	*erred-cleanup*)
+  (clrhash *pending-test-names*)
+  (clrhash *failed-tests*)
+  (clrhash *passed-tests*)
+  (clrhash *erred-tests*)
+  (clrhash *erred-groups*)
+  (clrhash *erred-cleanup*)
        
-       (loop for ,group-name
-	       being the hash-keys of *interesting-test-names*
-	     using (hash-value ,test-set)
-	     do
-	  (let ((,new-test-set (make-hash-table)))
-	    (setf (gethash ,group-name *pending-test-names*)
-		  ,new-test-set)
-	    (loop for ,test-name being the hash-keys of ,test-set do
-	      (setf (gethash ,test-name ,new-test-set) t)))))))
+  (loop for group-name being the hash-keys of *interesting-test-names*
+	using (hash-value test-set)
+	do
+     (let ((new-test-set (make-hash-table)))
+       (setf (gethash group-name *pending-test-names*) new-test-set)
+       (loop for test-name being the hash-keys of test-set do
+	 (setf (gethash test-name new-test-set) t)))))
 
-(defmacro run-pending ()
+(defun run-pending ()
   "Run pending tests"
-  (let ((package-name (gensym "package-name-"))
-	(package (gensym "package-"))
-	(group-name (gensym "group-name-"))
-	(group-info (gensym "group-info-"))
-	(group-test-hash (gensym "group-test-hash-"))
-	(group-set (gensym "group-set-"))
-	(test-set (gensym "test-set-"))
-	(test-name (gensym "test-name-"))
-	(test-info (gensym "test-info-"))
-	(flag (gensym "flag-"))
-	(more (gensym "more-")))
-    `(progn
-       (let ((,more t))
-	 (block pending-loop
-	   (macrolet
-	       ((check-break (record)
-		  (let ((result (gensym "result-")))
-		    `(let ((,result (run ,record)))
-		       (when (or (and (or *break-on-error*
-					  *debug-on-error*)
-				      (eq ,result 'err))
-				 (and *break-on-wrong*
-				      (null ,result)))
-			 (return-from pending-loop))))))
+  (let ((more t))
+    (block pending-loop
+      (macrolet ((check-break (record)
+		   (let ((result (gensym "result-")))
+		     `(let ((,result (run ,record)))
+			(when (or (and (or *break-on-error* *debug-on-error*)
+				       (eq ,result 'err))
+				  (and *break-on-wrong* (null ,result)))
+			  (return-from pending-loop))))))
 
-	     ;; It's easiest to put this all this mess in a loop, and
-	     ;; cycle until it's all done.  Sloppy maybe, but
-	     ;; effective.
-	     (loop while ,more do
-	       (setf ,more nil)
+	;; It's easiest to put this all this mess in a loop and cycle
+	;; until it's all done.  Sloppy maybe, but effective.
+	(loop while more do
+	  
+	  (setf more nil)
 	       
-	       ;; Run individual pending tests (and tests left over
-	       ;; form groups after a break, etc.).
-	       (loop for ,group-name
-		       being the hash-keys of *pending-test-names*
-		     using (hash-value ,test-set)
-		     do
-		  (let ((,group-test-hash
-			 (get-tests-hash (gethash ,group-name
-						  +groups+))))
-		    (loop for ,test-name
-			    being the hash-keys of ,test-set
-			  using (hash-value ,flag)
-			  do
-		       (remhash ,test-name ,test-set)
-		       (when ,flag
-			 (let* ((,test-info
-				 (gethash ,test-name ,group-test-hash)))
-			   (unless ,test-info
-			     (error "No such test ~s in group ~s"
-				    ,test-name ,group-name))
-			   (check-break ,test-info)))))
-		  (remhash ,group-name *pending-test-names*))
+	  ;; Run individual pending tests (and tests left over form
+	  ;; groups after a break, etc.).
+	  (loop for group-name
+	      being the hash-keys of *pending-test-names*
+	      using (hash-value test-set)
+	      do
+	   (let ((group-test-hash 
+		  (get-tests-hash (gethash group-name +groups+))))
+	     (loop for test-name being the hash-keys of test-set
+		   using (hash-value flag)
+		   do
+		(remhash test-name test-set)
+		(when flag
+		  (let* ((test-info (gethash test-name group-test-hash)))
+		    (unless test-info
+		      (error "No such test ~s in group ~s" 
+			     test-name group-name))
+		    (check-break test-info)))))
+	   (remhash group-name *pending-test-names*))
 
-	       ;; Run pending groups.
-	       (loop as ,group-name = (pop *pending-group-names*)
-		     while ,group-name
-		     do
-		  (let ((,group-info (gethash ,group-name +groups+)))
-		    (if ,group-info
-			(check-break ,group-info)
-			(format t "WARNING: No such group ~s~%"
-				,group-name))))
+	  ;; Run pending groups.
+	  (loop as group-name = (pop *pending-group-names*) while group-name do
+	    (let ((group-info (gethash group-name +groups+)))
+	      (if group-info
+		(check-break group-info)
+		(format t "WARNING: No such group ~s~%" group-name))))
 
-	       ;; We don't actually run pending packages, we just make
-	       ;; their groups pending.
-	       (loop as ,package-name = (pop *pending-packages*)
-		     while ,package-name
-		     do
-		  (let* ((,package (find-package ,package-name))
-			 (,group-set (gethash ,package
-					      +groups-by-package+)))
-		    (if ,group-set
-			(loop for ,group-name
-				being the hash-keys of ,group-set
-			      using (hash-value ,flag)
-			      do
-			   (when ,flag
-			     (push ,group-name *pending-group-names*)
-			     (setf ,more t)))
-			(format t "WARNING: no groups in package ~s~%"
-				,package)))))))))))
+	  ;; We don't actually run pending packages, we just make
+	  ;; their groups pending.
+	  (loop as package-name = (pop *pending-packages*) while package-name do
+	    (let* ((package (find-package package-name))
+		   (group-set (gethash package +groups-by-package+)))
+	      (if group-set
+		  (loop for group-name
+		      being the hash-keys of group-set
+		      using (hash-value flag)
+		      do
+		   (when flag
+		     (push group-name *pending-group-names*)
+		     (setf more t)))
+		  (format t "WARNING: no groups in package ~s~%"
+		    package)))))))))
 
-(defun report-last-run (&optional
-			(stream
-			 cl-user::*nst-default-report-stream*))
+(defun report-last-run (&optional (stream cl-user::*nst-default-report-stream*))
   (flet ((hash-keys (ht)
-	   (sort (loop for x being the hash-keys of ht
-		    collect x)
+	   (sort (loop for x being the hash-keys of ht collect x)
 		 #'string-lessp)))
     (format stream
-	    "------------------------------------~%~
+	"------------------------------------~%~
             SUMMARY OF TEST RUN~%~
             ~[No tests passed~:;~:*Tests passed: ~d~]~%~
             ~[No tests failed~:;~:*Tests failed: ~d~]~%~
@@ -189,7 +155,6 @@
 	 do (format stream "~&Erred tests for group ~S:~%  ~@<~{~s~^ ~:_~}~:>~%"
 		    erred-group (hash-keys erred-test-table))))))
 
-
 (defun give-blurb (group-name test-name)
   (block blurbing
     (when (member group-name *pending-group-names*)
@@ -276,7 +241,6 @@
 (defun format-group-test-list (stream item s c)
   (declare (ignorable s) (ignorable c))
   (format stream "~s/~s" (car item) (cadr item)))
-
 
 (defun nst-dump (stream)
   (macrolet ((group-test-loop (hash group test content &rest forms)

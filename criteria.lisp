@@ -54,6 +54,11 @@
      (make-check-result)
      (emit-failure :format "Predicate ~s fails" :args '(,pred))))
 
+(def-value-check (:dump-forms (blurb) (&rest forms))
+  `(progn
+     (format t "~%~a~%~{~s~%~}" ,blurb forms)
+     (emit-failure :format "Arguments dumped" :args nil)))
+
 (def-control-check (:err () expr-form)
   (let ((x (gensym "x")))
     `(block ,x
