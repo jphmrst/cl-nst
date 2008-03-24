@@ -20,6 +20,7 @@
   (defvar *fixtures-for-group* nil)
   (defvar *fixtures-for-group-name* nil))
 
+#+allegro (excl::define-simple-parser def-test-group second :nst-group)
 (defmacro def-test-group (group-name given-fixtures &body forms)
   "Define a group of tests associated with certain fixtures,
 initialization and cleanup."
@@ -94,7 +95,7 @@ initialization and cleanup."
 		   test-fixture-defs actual-tests))
     
 	  `(progn
-
+	     #+allegro (excl:record-source-file ',group-name :type :nst-group)
 	     (eval-when (:compile-toplevel :load-toplevel :execute)
 	       ,@test-fixture-defs
 
@@ -231,6 +232,7 @@ initialization and cleanup."
 
 ;;; Exported macro for defining a boolean test.
 
+#+allegro (excl::define-simple-parser def-test second :nst-test)
 (defmacro def-test
     (test-name &key form 
 		    (setup nil setup-supplied-p)
@@ -310,6 +312,7 @@ initialization and cleanup."
 	      (format t "Compiling test ~s/~s (class ~s)~%"
 		      ',*current-group-name* ',test-name
 		      ',actual-test-class))
+	     #+allegro (excl:record-source-file ',test-name :type :nst-test)
 	     (let (;; Actual information record for this test.
 		   (,test-info (make-instance ',actual-test-class
 				 :group (gethash ',*current-group-name*
@@ -342,4 +345,4 @@ initialization and cleanup."
     
       (if *expanding-test-for-group*
 	  `(,fixtures-forms ,final-test-forms)
-	`(progn ,@fixtures-forms ,@final-test-forms)))))
+	  `(progn ,@fixtures-forms ,@final-test-forms)))))

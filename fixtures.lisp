@@ -16,6 +16,7 @@
   (defparameter *fixture-to-group-class* (make-hash-table :test 'eq))
   (defparameter *fixture-to-test-class* (make-hash-table :test 'eq)))
 
+#+allegro (excl::define-simple-parser def-fixtures second :nst-fixture-set)
 (defmacro def-fixtures (name
 			(&key uses assumes outer inner documentation)
 			     &body bindings)
@@ -67,6 +68,9 @@
     
     `(progn
        (declaim ,@(loop for n in names collect `(special ,n)))
+       #+allegro (excl:record-source-file ',name :type :nst-fixture-set)
+       #+allegro (loop for name in ',names do
+	 (excl:record-source-file name :type :nst-fixture))
        (eval-when (:compile-toplevel :load-toplevel :execute)
 	 (setf (gethash ',name *fixture-to-group-class*)
 	       ',class-for-group
