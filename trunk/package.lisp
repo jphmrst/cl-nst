@@ -8,6 +8,7 @@
 (in-package :common-lisp-user)
 
 (defpackage :sift.nst
+    (:documentation "Unit and regression testing for Common Lisp")
     (:nicknames :nst)
     (:use :common-lisp #+sbcl sb-mop #+allegro mop)
     #+(or sbcl allegro)
@@ -43,3 +44,9 @@
     (:nicknames :nst-interact :nst-i)
     (:use :common-lisp :sift.nst))
 
+(defun nst::make-package-documentation ()
+  "Write documentation for this package, using system package-doc."
+  (asdf:oos 'asdf:load-op 'package-doc)
+  (funcall (symbol-function (intern (symbol-name 'create-template)
+				    (find-package :package-doc)))
+	   (find-package :nst)))
