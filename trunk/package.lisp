@@ -47,6 +47,6 @@
 (defun nst::make-package-documentation ()
   "Write documentation for this package, using system package-doc."
   (asdf:oos 'asdf:load-op 'package-doc)
-  (funcall (symbol-function (intern (symbol-name 'create-template)
+  (funcall (symbol-function (intern (symbol-name 'package-doc)
 				    (find-package :package-doc)))
 	   (find-package :nst)))
