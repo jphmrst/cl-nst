@@ -19,7 +19,34 @@
 #+allegro (excl::define-simple-parser def-fixtures second :nst-fixture-set)
 (defmacro def-fixtures (name
 			(&key uses assumes outer inner documentation)
-			     &body bindings)
+			&body bindings)
+  "(def-fixtures (FIXTURE-NAME :uses USES :assumes ASSUMES
+		    :outer OUTER :inner INNER
+		    :documentation DOCUMENTATION)
+  (NAME FORM)
+  (NAME FORM)
+  ...
+  (NAME FORM))
+
+Associate names to values.  One or more fixtures may be applied to each test
+group, test or another fixture.  None of the keyword options are manditory.
+
+uses - fixtures whose names are assumed to be bound --- although not necessarily
+by those same fixtures --- whenever this fixture is used.
+
+assumes - names assumed to be bound at the point of any use of this fixture.
+
+inner - list of declarations to be made inside the let-binding of names of any
+use of this fixture.  Do not include the \"declare\" keyword here; NST adds
+these declarations to others, including a special declaration of all bound
+names.
+
+documentation - a documentation string for the fixture set.
+
+outer - list of declarations to be made outside the let-binding of names of any
+use of this fixture.
+"
+  
   (macro-dbg
    (format t "Expanding declaration of fixture ~s:~%" name))
   (let* ((err (gensym "err"))
