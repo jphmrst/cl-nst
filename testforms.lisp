@@ -313,6 +313,8 @@ initialization and cleanup."
 		      ',*current-group-name* ',test-name
 		      ',actual-test-class))
 	     #+allegro (excl:record-source-file ',test-name :type :nst-test)
+	     (unless *current-group-name*
+	       (error "Cannot use def-test except in the context of a group definition."))
 	     (let (;; Actual information record for this test.
 		   (,test-info (make-instance ',actual-test-class
 				 :group (gethash ',*current-group-name*
