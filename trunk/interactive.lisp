@@ -376,6 +376,9 @@ TEST SUITE EXECUTION
 	Retry failed or error-raising tests from the last run.
   :nst :blurb GROUPNAME TESTNAME
 	Describe the outcome of a test in the last run.
+  :nst :blurb-group GROUPNAME 
+	Describe the outcome of all tests in groupname.
+
 
 TEST DEFINITION
   :nst :defer-test-compile BOOL
@@ -526,6 +529,11 @@ fixing problems as they arise.
 
 	    (command-case (:blurb) (group-name test-name)
 			  (give-blurb group-name test-name))
+
+	    (command-case (:blurb-group) (group-name)
+              (let ((group-info (gethash group-name +groups+)))
+		(loop for test across (get-test-names group-info)
+		      do (give-blurb group-name test))))
 
 	    (command-case (:cancel) ()
 	      (setf *interesting-packages* nil
