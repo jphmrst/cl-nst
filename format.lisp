@@ -1,59 +1,61 @@
-;;; File format
+;;; File format.lisp
 ;;;
-;;; NST by John Maraist, based on RRT by Robert Goldman.
+;;; This file is part of the NST unit/regression testing system.
 ;;;
-;;; NST is Copyright (c) 2006, 2007 Smart Information Flow Technologies.
-;;; RRT is Copyright (c) 2005 Robert Goldman, released under the LGPL,
-;;; and the lisp-specific preamble to that license.
+;;; Copyright (c) 2006, 2007, 2008 Smart Information Flow Technologies.
+;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
+;;;
+;;; NST is free software: you can redistribute it and/or modify it
+;;; under the terms of the GNU General Public License as published by
+;;; the Free Software Foundation, either version 3 of the License, or
+;;; (at your option) any later version.
+;;;
+;;; NST is distributed in the hope that it will be useful, but WITHOUT
+;;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+;;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+;;; License for more details.
+;;;
+;;; You should have received a copy of the GNU General Public License
+;;; along with NST.  If not, see <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
-(defmethod print-object ((obj nst-class) stream)
-  "We route print-object calls to a wrapped use of nst-format"
-  (print-unreadable-object (obj stream :type t :identity t)
-    (format stream "~/nst::nst-format/" obj)))
-
-
-;;; Formatting the standard classes.
-
-(defgeneric nst-format (stream obj c s)
-  (:documentation
-   "Format-string compatible function for this package's classes")
-
-  (:method (stream (info test) colon at-sign)
+;;; Pretty-printing the standard classes.
+(set-pprint-dispatch 'test
+  '#(lambda (stream info)
      "Formatter for test info records."
-     (declare (ignorable colon) (ignorable at-sign))
      (with-slots (group test-name documentation) info
        (format stream "~@<~s (~s)~@[ ~_(~a)~]~:>"
-	       test-name (get-name group) documentation)))
+	 test-name (get-name group) documentation))))
 
-  (:method (stream (info group) colon at-sign)
+(set-pprint-dispatch 'group
+  '#(lambda (stream info)
      "Formatter for group info records."
-     (declare (ignorable colon) (ignorable at-sign))
      (with-slots (package group-name
-			  setup cleanup documentation) info
+		  setup cleanup documentation) info
        (format stream "~s ~@<in package ~a~
                              ~@[ ~_(~a)~]~
                              ~@[, ~_setup ~s~]~
                              ~@[, ~_cleanup ~s~]~
                           ~:>"
-	       group-name (package-name package)
-	       documentation
-	       (caddr setup) (caddr cleanup))))
+	 group-name (package-name package)
+	 documentation
+	 (caddr setup) (caddr cleanup)))))
 
-  (:method (stream (info error-or-failure-report) colon at-sign)
+(set-pprint-dispatch 'error-or-failure-report
+  '#(lambda (stream info)
      "Default formatter for unspecialized non-success records."
-     (declare (ignorable colon) (ignorable at-sign))
-     (format stream "Unspecified non-success"))
+     (declare (ignorable info))
+     (format stream "Unspecified non-success")))
 
-  (:method (stream (info error-report) colon at-sign)
+(set-pprint-dispatch 'error-report
+  '#(lambda (stream info)
      "Default formatter for unspecialized error report records."
-     (declare (ignorable colon) (ignorable at-sign))
      (with-slots (caught) info
-       (format stream "Error: ~s" caught)))
+       (format stream "Error: ~s" caught))))
 
-  (:method (stream (info fixture-error-report) colon at-sign)
+(set-pprint-dispatch 'fixture-error-report
+  '#(lambda (stream info)
      "Default formatter for error reports from fixture setup"
-     (declare (ignorable colon) (ignorable at-sign))
      (with-slots (caught fixture-name var-name) info
        (format stream
 	   "~@<Error ~:_setting ~:_up ~:_fixture ~:_~a ~
@@ -61,14 +63,10 @@
              ~_ ~s~:>"
 	 (symbol-name fixture-name) (symbol-name var-name)
 	 (package-name (symbol-package fixture-name))
-	 caught)))
+	 caught))))
 
-  (:method (stream (info failure-report) colon at-sign)
+(set-pprint-dispatch 'failure-report
+  '#(lambda (stream info)
      "Default formatter for unspecialized failure report records."
-     (declare (ignorable colon) (ignorable at-sign))
-     (format stream "Test failure"))
-
-  (:method (stream misc colon at-sign)
-     "Fall-through for non-NST stuff.  Shouldn't be called."
-     (declare (ignorable colon) (ignorable at-sign))
-     (format stream "Non-NST object ~s" misc)))
+     (declare (ignorable info))
+     (format stream "Test failure")))
