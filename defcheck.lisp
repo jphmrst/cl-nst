@@ -25,6 +25,16 @@
 
 ;;; Some shorthand we'll use below.
 
+(defun first-symbol (name-or-name-and-args)
+  (cond ((symbolp name-or-name-and-args) name-or-name-and-args)
+	((listp name-or-name-and-args) (first name-or-name-and-args))
+	(t (cerror "Return nil" "Unable to parse ~S to find the name in it."
+		   name-or-name-and-args)
+	   nil)))	      
+
+#+allegro
+(excl::define-simple-parser def-check first-symbol :nst-test)
+
 (defmacro def-check (name-or-name-and-args criterion &rest forms)
   "Define a test constructed according to the specified criterion.
 
@@ -101,6 +111,7 @@ an expression evaluating to the stack of values to be tested."
 		 (ignorable *nst-context* *nst-stack*))
 	(build-check-form criterion-name criterion-args forms))))
 
+  #+allegro (excl::define-simple-parser def-value-check caadr :nst-criterion)
   (defmacro def-value-check ((name criterion-args check-args &key
 				   (blurb-format nil blurb-format-supp-p)
 				   (full-format nil full-format-supp-p)
@@ -122,6 +133,7 @@ an expression evaluating to the stack of values to be tested."
 		  forms)
 	    blurb-format)))
       `(eval-when (:compile-toplevel :load-toplevel :execute)
+	 #+allegro (excl:record-source-file ',name :type :nst-criterion)
 	 (defmethod blurb-context-line (,stream
 					(,id (eql ',name)) ,args ,forms)
 	   (destructuring-bind ,criterion-args ,args
@@ -143,6 +155,7 @@ an expression evaluating to the stack of values to be tested."
 	     (list 'destructuring-bind ',check-args ,forms
 		   ,@expansion))))))
 
+  #+allegro (excl::define-simple-parser def-control-check caadr :nst-criterion)
   (defmacro def-control-check ((name criterion-args forms-formal
 				 &key (stack-transformer t)
 				 (blurb-format nil blurb-format-supp-p)
@@ -164,6 +177,7 @@ an expression evaluating to the stack of values to be tested."
 		  forms-formal)
 	    blurb-format)))
       `(eval-when (:compile-toplevel :load-toplevel :execute)
+	 #+allegro (excl:record-source-file ',name :type :nst-criterion)
 	 (defmethod blurb-context-line (,stream (,id (eql ',name))
 						,args ,forms-formal)
 	   (declare (ignorable ,forms-formal))
@@ -183,6 +197,8 @@ an expression evaluating to the stack of values to be tested."
 	   (destructuring-bind ,criterion-args ,args
 	     ,@check-forms)))))
 
+  #+allegro (excl::define-simple-parser def-check-alias caadr :nst-criterion)
+
   (defmacro def-check-alias ((name &rest args)
 			     &body forms
 			     &aux
@@ -191,6 +207,14 @@ an expression evaluating to the stack of values to be tested."
 			     (declaration-form nil)
 			     (declaration-form-supp-p nil)
 			     (expansion nil))
+    "Defines how a criterion should be rewritten as another criterion
+or criteria.
+     The name is the name of the alias, and the args are the arguments
+that appear with it.
+     The FORMS argument needs quotation, since the body provides forms
+that will be substituted for the \(name &rest args\) where they appear
+in a def-check.  Typically the ARGS will be substituted into the forms
+when def-check-alias is macroexpanded."
     (when (stringp (car forms))
       (setf documentation (pop forms)
 	    documentation-supp-p t))
@@ -217,6 +241,7 @@ an expression evaluating to the stack of values to be tested."
 	   (id (gensym "id")) (exp (gensym "exp"))
 	   (given-args (gensym "given-args")))
       `(eval-when (:compile-toplevel :load-toplevel :execute)
+	 #+allegro (excl:record-source-file ',name :type :nst-criterion)
 	 (defmethod blurb-context-line (,stream (,id (eql ',name))
 					,given-args ,forms)
 	   (destructuring-bind ,args ,given-args

@@ -251,6 +251,8 @@ forms - zero or more test forms, given by def-check or def-test."
 	       nil)))))))
 
 ;;; Exported macro for defining a boolean test.
+#+allegro
+(excl::define-simple-parser def-test second :nst-test)
 
 #+allegro (excl::define-simple-parser def-test second :nst-test)
 (defmacro def-test
@@ -342,7 +344,7 @@ forms - zero or more test forms, given by def-check or def-test."
 						 +groups+)
 				 :name ',test-name
 				 :documentation nil)))
-	 
+
 	       ;; File away this test's name and information.
 	       (push ',test-name *test-names-acc*)
 	       (setf (gethash ',test-name *test-info-hash*) ,test-info)
