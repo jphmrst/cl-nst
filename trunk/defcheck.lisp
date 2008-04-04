@@ -28,12 +28,21 @@
 (defmacro def-check (name-or-name-and-args criterion &rest forms)
   "Define a test constructed according to the specified criterion.
 
-name-or-name-and-args - either a symbol, or a list of symbols.  The first symbol
-is the name of the test being defined; the remaining symbols are options.
+name-or-name-and-args - either a symbol, or a list of a symbol followed by
+keyword arguments.  The symbol is the name of the test being defined; the
+optional keyword arguments are described below.
 
 criterion - the criterion for the forms to pass this test.
 
-forms - forms to be evaluated and assessed by the criterion."
+forms - forms to be evaluated and assessed by the criterion.
+
+Optional keyword arguments in the name-and-args form:
+
+setup - Form to be evaluated as the setup for this test only.
+
+cleanup - Form to be evaluated as the setup for this test only.
+
+fixtures - Fixtures to be applied to this test only."
 
   (multiple-value-bind (name setup setup-supp-p cleanup cleanup-supp-p
 			fixtures fixtures-supp-p)
@@ -201,8 +210,7 @@ an expression evaluating to the stack of values to be tested."
 	      declaration-form-supp-p declaration-form
 	      forms)))
     
-;;;    (unless exp-supp-p
-;;;      (setf expansion documentation
+;;;    (unless exp-supp-p (setf expansion documentation
 ;;;	    documentation nil  documentation-supp-p nil))
 
     (let* ((forms (gensym "forms")) (stream (gensym "stream"))
