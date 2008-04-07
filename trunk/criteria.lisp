@@ -1,4 +1,4 @@
-;;; File defcheck.lisp
+;;; File criteria.lisp
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
