@@ -1,4 +1,4 @@
-;;; File nst.lisp
+;;; File globals.lisp
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
@@ -19,17 +19,6 @@
 ;;; License along with NST.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
-
-
-;;; Some general code remarks:
-;;;
-;;;   1. There's probably some "hangover" code here having to do with
-;;;   my unfamiliarity with some of the dark corners of macro
-;;;   expansion.  One of these days, this could use a good,
-;;;   comprehensive code review.
-;;;
-;;;   2. Should the nst-run-command function be turned into a macro?
-;;;
 
 ;;; This file contains settings, global variables and flags.
 
@@ -98,152 +87,171 @@
 	  :documentation "Set to t to defer compilation of test forms\
                           until runtime.")
 
+;;; -----------------------------------------------------------------
+
+(defclass group-base-class () ()
+  (:documentation "Base class of group behavior."))
+
+;;; -----------------------------------------------------------------
+
 ;;; The fixtures, groups and tests that have been defined.
 ;;;
 (defvar +fixtures+ nil
   "For user echo of fixture forms and other debugging." )
-(defvar +fixture-def-names+ (make-hash-table)
-  "The names bound by each fixture.")
-(defvar +group-def-names+ (make-hash-table)
-  "The names bound by each group" )
-(defvar +groups+ (make-hash-table)
-  "Declared test NST groups")
-(defvar +groups-by-package+ (make-hash-table)
-  "Hash table from packages to sets of groups, that is, to
-other hash tables each mapping group records to t or nil.")
-
 
-;;; Options for breaking at failed and erroneous tests in the
-;;; interactive system.
-;;;
-(defvar *break-on-wrong* nil
-  "When set to t, directs the test runner to return to the command
-line whenever a test does not succeed.")
-(defvar *break-on-error* nil
-  "When set to t, directs the test runner to return to the command
-line whenever a test raises an error condition, rather than returning
-a boolean value.")
-(defvar *debug-on-error* nil
-  "When set to t, directs the test runner to return in debugging mode
-whenever a test raises an error condition, rather than returning a
-boolean value.")
+(defgeneric test-names (fixture-or-group)
+  (:documentation "The names of tests in a group.  Will be given an eql-method
+by the macros which expand tests and groups."))
 
-;;; Options for opening fictures into the interactive system.
-;;;
-(defvar *open-used-fixtures* t
-  "If t, then (re-)opening a fixture will always (re-)open the fixtures
-it uses.")
-(defvar *reopen-fixtures* nil
-  "If nil, then will will never open the same fixture twice.")
-;;; The packages, groups and tests that have been marked as
-;;; interesting for quick execution in the runtime system.
-;;;
-(defvar *interesting-packages* nil
-  "The names of packages whose tests should be checked by the :run
-command to the NST runtime system.")
-(defvar *interesting-group-names* nil
-  "The names of groups whose tests should be checked by the :run
-command to the NST runtime system.")
-(defvar *interesting-test-names* (make-hash-table)
-  "The names of groups whose tests should be checked by the :run
-command to the NST runtime system.  The hash is against first group
-names, and then test names.")
+(defgeneric group-name (group-instance)
+  (:documentation "Map from a group instance back to its symbolic name."))
 
-(defmacro have-interesting-tests ()
-  "Poll the above variables to check for interesting tests."
-  `(or *interesting-packages*
-       *interesting-group-names*
-       (> (hash-table-count *interesting-test-names*) 0)))
+(defgeneric bound-names (fixture-or-group)
+  (:documentation "The names defined by each fixture.  Will be given
+an eql-method by the macros which expand tests and groups."))
 
+(defgeneric groups-package (public-package)
+  (:documentation
+   "Map from packages to the private package NST associates with each for
+housing the names of the groups in each package.")
+  (:method (default) (declare (ignorable default)) nil))
 
-;;; The packages, groups and tests that remain to be run in the
-;;; current :run session.
-;;;
-(defvar *pending-packages* nil
-  "The names of packages whose tests remain to be checked under the
-current :run session of the NST runtime system.")
-(defvar *pending-group-names* nil
-  "The names of groups whose tests remain to be checked under the
-current :run session of the NST runtime system.")
-(defvar *pending-test-names* (make-hash-table)
-  "The names of groups whose tests remain to be checked under the
-current :run session of the NST runtime system.  The hash is against
-first group names, and then test names.")
-(defmacro have-pending-tests ()
-  "Poll the above variables to check for pending tests."
-  `(or *pending-packages*
-       *pending-group-names*
-       (> (hash-table-count *pending-test-names*) 0)))
+(defgeneric group-class-name (group-name)
+  (:documentation
+   "Map from groups to the private name with which NST associates the class of
+group-specific activities.")
+  (:method (default) (declare (ignorable default)) nil))
 
-(defparameter *passed-test-count* 0
-  "The number of tests passed under the current :run session of the NST
-runtime system.")
-
-;;; The groups and tests that failed or caused an error in the current
-;;; :run session.
-;;;
-(defparameter *erred-groups* (make-hash-table)
-  "Map from groups raising an error in setup during the current
-:run session of the NST runtime system to a reason for the error,
-or t if none is available.")
-(defparameter *erred-cleanup* (make-hash-table)
-  "Map from groups raising an error in cleanup during the current
-:run session of the NST runtime system to a reason for the error,
-or t if none is available.")
+(defgeneric group-fixture-classes (group-name)
+  (:documentation
+   "Map from groups to the private names of the group's fixtures."))
 
-;;; These maps and sets are implemented as double-hash tables, and
-;;; managed by the macros below.
-;;;
-(defparameter *passed-tests* (make-hash-table)
-  "Set of tests which passed on their most recent run.")
-(defparameter *failed-tests* (make-hash-table)
-  "Hash table that maps group names to another hash which represents a
-set of tests in that group failing on their most recent run.")
-(defparameter *erred-tests* (make-hash-table)
-  "Map from tests raising an error condition during the current :run
-session of the NST runtime system to a reason for the error, or t if
-none is available.")
+(defgeneric test-in-group-class-name (group-name)
+  (:documentation
+   "Map from groups to the private name with which NST associates the class of
+")
+  (:method (default) (declare (ignorable default)) nil))
 
-(defmacro if-test (storage group-name test-name)
-  "Where storage is some double hash table, return what, if anything,
-is stored against group-name and test-name."
-  (let ((group-hash (gensym "group-hash-")))
-    `(let ((,group-hash (gethash ,group-name ,storage)))
-       (when ,group-hash
-	 (gethash ,test-name ,group-hash)))))
+(defgeneric standalone-test-in-group-class-name (group-name)
+  (:documentation
+   "Map from groups to the private name with which NST associates the class of
+")
+  (:method (default) (declare (ignorable default)) nil))
 
-(defmacro clear-test (storage group-name test-name)
-  "Remove anything stored against group-name and test-name in the given
-double-hash table."
-  (let ((group-hash (gensym "group-hash-")))
-    `(let ((,group-hash (gethash ,group-name ,storage)))
-       (when ,group-hash
-	 (remhash ,test-name ,group-hash)))))
+(defgeneric suite-class-name (group-name test-name)
+  (:documentation
+   "Map from tests to the private name with which NST associates the class of
+")
+  (:method (group class) (declare (ignorable group class)) nil))
 
-(defmacro add-test (test-record-hash test-record &optional (value t))
-  (let ((group-hash (gensym "group-hash")))
-    `(with-slots (group test-name) ,test-record
-       (with-slots (group-name) group
-	 (let ((,group-hash (gethash group-name ,test-record-hash)))
-	   (unless ,group-hash
-	     (setf ,group-hash (make-hash-table)
-		   (gethash group-name ,test-record-hash) ,group-hash))
-	   (setf (gethash test-name ,group-hash) ,value))))))
+(defgeneric standalone-class-name (group-name test-name)
+  (:documentation
+   "Map from tests to the private name with which NST associates the class of
+")
+  (:method (group class) (declare (ignorable group class)) nil))
 
-(defmacro have-erred-tests ()
-  "Poll the above variables to check for erred tests."
-  `(or (> (hash-table-count *erred-groups*) 0)
-       (> (hash-table-count *erred-cleanup*) 0)
-       (> (hash-table-count *failed-tests*) 0)
-       (> (hash-table-count *erred-tests*) 0)))
+(defgeneric test-config-class-name (group-name test-name)
+  (:documentation
+   "Map from tests to the private name with which NST associates the class of
+")
+  (:method (group class) (declare (ignorable group class)) nil))
 
-;;; Remembering the fixtures which have been opened.
-(defvar *opened-fixtures* (make-hash-table)
-  "Maps fixture names to t to show that they have been opened.")
-(defvar *opening-at-top* t
-  "This tag will be dynamically set to nil when recurring over opening
-fixtures; this should be used for output selection only.")
+(defgeneric fixture-class-name (fixture-name)
+  (:documentation
+   "Map from fixture names to the private name with which NST associates the
+corresponding internal name-binding NST class.")
+  (:method (default) (declare (ignorable default)) nil))
 
-;;; Redirecting output from NST to elsewhere.
-(defvar cl-user::*nst-default-report-stream* t
-  "The default value for the stream to which NST reports output.")
+(defgeneric open-fixture (fixture-name &optional package)
+  (:documentation
+   "Inject the names defined by the named fixture into the current package."))
+
+(defgeneric trace-fixture (fx)
+  (:method (fx) (format t "No known fixture ~s~%" fx)))
+(defgeneric trace-group (gr)
+  (:method (gr) (format t "No known group ~s~%" gr)))
+(defgeneric trace-test (gr ts)
+  (:method (gr ts) (format t "No known test ~s in group ~s~%" ts gr)))
+
+(defgeneric run (test)
+  (:documentation
+   "Fixtures provide name-binding :around methods to this generic function")
+  (:method ((group-inst group-base-class))
+     (let ((group-name (group-name group-inst)))
+       (format t "Starting run loop for ~s~%" group-inst)
+       (loop for test in (test-names group-inst) do
+	 (format t "  Starting loop entry ~s~%" test)
+	 (let ((suite-class-name (suite-class-name group-name test)))
+	   ;; (format t "    Suite class name ~s~%" suite-class-name)
+	   ;; (format t "    Actual class ~s~%" (find-class suite-class-name))
+	   ;; (describe (find-class suite-class-name))
+	   (let ((test-inst (make-instance suite-class-name)))
+	     ;; (format t "    Instance ~s~%" test-inst)
+	     (run test-inst)))
+	 (format t "  Exiting loop entry ~s~%" test))
+       (format t "Exiting run loop for ~s~%" group-inst))))
+
+;;; -----------------------------------------------------------------
+
+(defgeneric blurb-context-line (stream id args forms)
+  (:documentation "Give a short description of a context."))
+
+(defgeneric detail-context-line (stream id args forms)
+  (:documentation "Give a longer blurb of a context."))
+
+(defgeneric stack-transformer (id)
+  (:documentation "Check form-specific stack transformation."))
+
+;;; -----------------------------------------------------------------
+
+(defun first-symbol (name-or-name-and-args)
+  (cond ((symbolp name-or-name-and-args) name-or-name-and-args)
+	((listp name-or-name-and-args) (first name-or-name-and-args))
+	(t (cerror "Return nil" "Unable to parse ~S to find the name in it."
+		   name-or-name-and-args)
+	   nil)))
+
+(defun cdr-or-nil (name-or-name-and-args)
+  (cond ((symbolp name-or-name-and-args) nil)
+	((listp name-or-name-and-args) (cdr name-or-name-and-args))
+	(t (cerror "Return nil" "Unable to parse ~S to find the name in it."
+		   name-or-name-and-args)
+	   nil)))
+
+;;; -----------------------------------------------------------------
+
+;;; Functions supporting tests on numbers.
+
+(defmacro log10 (v) `(/ (log ,v) (log 10)))
+
+(defun sig-place (n value)
+  "Returns the n-th significant place of value"
+  (let* ((xlog (if (zerop value) 0 (log10 (abs value))))
+	 (xlog-up (floor xlog)))
+    (expt 10 (- xlog-up (- n 1)))))
+
+(defun eql-for-sigdigits (digits n1 n2)
+  (and (numberp n1)
+       (numberp n2)
+       (let ((rounder (sig-place digits n1)))
+	 (eql (round n1 rounder) (round n2 rounder)))))
+
+(defun lambda-list-names (lambda-list)
+  (let ((generic-list (extract-lambda-list lambda-list))
+	(result))
+    (labels ((descend (list)
+	        (unless (null list)
+		  (let ((item (car list)))
+		    (cond 
+		     ((listp item)
+		      (descend item))
+		     ((symbolp item)
+		      (unless (member item
+				      #+allegro '(&allow-other-keys &aux
+						  &body &environment &key
+						  &optional &rest &whole)
+				      #-allegro lambda-list-keywords)
+			(push item result))))
+		    (descend (cdr list))))))
+      (descend generic-list)
+      (nreverse result))))

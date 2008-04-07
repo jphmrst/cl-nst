@@ -35,6 +35,7 @@
 		  #:eql-specializer-object)
     (:export #:def-fixtures
 	     #:def-capture/restore-fixtures
+	     #:def-group
 	     #:def-test-group
 	     #:def-test
 	     #:def-check
@@ -49,9 +50,20 @@
 	     
 	     #:*default-report-stream*))
 
-(defpackage :sift.nst-test
-    (:nicknames :nst-test :nst-t)
-    (:use :common-lisp :sift.nst))
+(defpackage :sift.nst.fixture-class-names
+    (:nicknames :nst-fixture))
+
+(defpackage :sift.nst.group-class-names
+    (:nicknames :nst-group))
+
+(defpackage :sift.nst.each-test-in-group-class-names
+    (:nicknames :nst-each-test-in-group))
+
+(defpackage :sift.nst.test-within-group-class-names
+    (:nicknames :nst-tests-within-group))
+
+(defpackage :sift.nst.test-standalone-class-names
+    (:nicknames :nst-test-standalone))
 
 (defpackage :sift.nst-interact
     (:nicknames :nst-interact :nst-i)

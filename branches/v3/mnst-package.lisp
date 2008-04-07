@@ -1,4 +1,4 @@
-;;; File defcheck.lisp
+;;; File mnst-package.lisp
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
@@ -18,13 +18,8 @@
 ;;; You should have received a copy of the GNU Lesser General Public
 ;;; License along with NST.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
-(in-package :nst-interact)
+(in-package :common-lisp-user)
 
-;;; Some examples of failing tests.
-
-
-(nst:def-test-group failing1 ()
-  (nst:def-check bad-symbol
-      (:eq 'r)
-    's))
-
+(defpackage :mnst
+    (:documentation "Testing and utilities for NST")
+    (:use :common-lisp :nst))
