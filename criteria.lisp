@@ -61,6 +61,12 @@
 
 (def-check-alias (:forms-eq)  `(:predicate eq))
 (def-check-alias (:forms-eql) `(:predicate eql))
+(def-check-alias (:forms-equal) `(:predicate equal))
+
+(def-control-check (:values (criterion) forms)
+  (let ((form (gensym)))
+    `(destructuring-bind (,form) ,forms
+       ,(continue-check criterion `(multiple-value-list ,form)))))
 
 (def-value-check (:predicate (pred) (&rest forms))
   `(if (apply #',pred forms)
