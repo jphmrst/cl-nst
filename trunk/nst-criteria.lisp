@@ -36,6 +36,7 @@
   (def-check pred-2 (:predicate eql) (+ 1 2) 3)
   (def-check forms-eq-1 :forms-eq (car '(a b c)) (cadr '(c a b)))
   (def-check forms-eql-1 :forms-eql (+ 1 2) 3)
+  (def-check forms-equal-1 :forms-equal (mapcar #'1+ '(1 10 100)) '(2 11 101))
   (def-check err-1 :err (error "Catch this error"))
   (def-check any-1 (:any (:eql 0) (:eql 1) (:eql 2)) 1)
   (def-check any-2 (:not (:any (:eql 0) (:eql 1) (:eql 2))) 3)
@@ -47,6 +48,7 @@
   (def-check each1 (:each (:symbol a)) '(a a a a a))
   (def-check seq-1 (:seq (:symbol a) (:eql 2) (:eq 'b)) '(a 2 b))
   (def-check permute1 (:permute (:each (:eq 'a))) '(a a))
+  (def-check values1 (:values (:seq (:eq 'a) (:eq 'b))) (values 'a 'b))
   (def-check permute2
       (:permute (:seq (:symbol b)
 		      (:predicate symbolp) (:predicate numberp)))
