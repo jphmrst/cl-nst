@@ -414,6 +414,9 @@ OPENING FIXTURES
   :nst :open FIXTURE-NAME
         Bring the names bound in the fixture into the runtime
         environment.
+  :nst :open-group-fixtures GROUP-NAME
+        Bring the names bound in the fixtures used by GROUP-NAME 
+        into the runtime environment.
   :nst :open-used BOOL
         Set whether opening a fixture should always also open the
         fixtures it uses.  Default is t.
@@ -732,7 +735,29 @@ fixing problems as they arise.
 		(unknown-fixture (cnd)
 		  (format t "Can't find fixture ~s ~
                              ~_(check current package)." (name cnd))
-		  (return-from run-nst-commands)))))
+		  (return-from run-nst-commands))))
+
+	    (command-case (:open-group-fixtures) (group-name)
+	      (labels ((open-one (fixture-name)
+			 (handler-case (open-fixture fixture-name)
+			   (unknown-fixture (cnd)
+			     (format t "Can't find fixture ~s ~
+                             ~_(check current package)." (name cnd))
+			     (return-from run-nst-commands))))
+		       (get-group-info (group-name)
+			 (or (gethash group-name +groups+)
+			     (format t "Cannot find test-group ~s ~
+                                      \(check current package\)"
+				    group-name)
+			     (return-from run-nst-commands (values)))))
+		;; possibly, because of :open using :uses, it's
+		;; unnecessary to loop over all group names.  Not
+		;; sure.  Writing a search routine to prune extras
+		;; seems painful. [2008/04/10:rpg]
+		(loop for fixture in (get-fixtures (get-group-info group-name))
+		      do (open-one fixture))))
+
+	    )
 	  
 	  (format t "Unrecognized NST command ~s~%~
                      For more options, use :nst :help~%~%"
