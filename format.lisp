@@ -22,14 +22,14 @@
 
 ;;; Pretty-printing the standard classes.
 (set-pprint-dispatch 'test
-  '#(lambda (stream info)
+  #'(lambda (stream info)
      "Formatter for test info records."
      (with-slots (group test-name documentation) info
        (format stream "~@<~s (~s)~@[ ~_(~a)~]~:>"
 	 test-name (get-name group) documentation))))
 
 (set-pprint-dispatch 'group
-  '#(lambda (stream info)
+  #'(lambda (stream info)
      "Formatter for group info records."
      (with-slots (package group-name
 		  setup cleanup documentation) info
@@ -43,19 +43,19 @@
 	 (caddr setup) (caddr cleanup)))))
 
 (set-pprint-dispatch 'error-or-failure-report
-  '#(lambda (stream info)
+  #'(lambda (stream info)
      "Default formatter for unspecialized non-success records."
      (declare (ignorable info))
      (format stream "Unspecified non-success")))
 
 (set-pprint-dispatch 'error-report
-  '#(lambda (stream info)
+  #'(lambda (stream info)
      "Default formatter for unspecialized error report records."
      (with-slots (caught) info
        (format stream "Error: ~s" caught))))
 
 (set-pprint-dispatch 'fixture-error-report
-  '#(lambda (stream info)
+  #'(lambda (stream info)
      "Default formatter for error reports from fixture setup"
      (with-slots (caught fixture-name var-name) info
        (format stream
@@ -67,7 +67,7 @@
 	 caught))))
 
 (set-pprint-dispatch 'failure-report
-  '#(lambda (stream info)
+  #'(lambda (stream info)
      "Default formatter for unspecialized failure report records."
      (declare (ignorable info))
      (format stream "Test failure")))

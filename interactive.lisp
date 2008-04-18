@@ -241,12 +241,12 @@
   (loop for info being the hash-values of groups
 	using (hash-key name)
 	do
-     (format stream "Group ~/nst::nst-format/~%" info)
+     (format stream "Group ~w~%" info)
      (with-slots (test-names tests-hash) info
        (if (eql (length test-names) 0)
 	   (format stream " - No tests in group.~%")
 	   (loop for test-name across test-names do
-	     (format stream " - Test ~/nst::nst-format/~%"
+	     (format stream " - Test ~w~%"
 			    (gethash test-name tests-hash)))))))
 
 (defmacro group-test-name-formatter ()
