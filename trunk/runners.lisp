@@ -65,7 +65,7 @@ quite there yet."
 		 (setf (gethash ,group *erred-groups*) ,report)
 		 (format ,stream
 		     "Error in setup of group ~a (package ~a):~
-                      ~%  ~/nst::nst-format/~%"
+                      ~%  ~w~%"
 		   (symbol-name (get-name ,group))
 		   (package-name (symbol-package (get-name ,group)))
 		   ,report)))))
