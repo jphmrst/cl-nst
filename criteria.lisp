@@ -25,6 +25,12 @@
 
 ;;; Some shorthand we'll use below.
 
+(def-control-check (:dbg () forms)
+  (format t "Check at forms expression: ~s~%" forms)
+  `(progn
+     (format t "Forms evaluate to: ~@<~{~s~^~:_ ~}~:>~%" ,forms)
+     (make-check-result)))
+
 (def-value-check (:pass () (&rest chk))
   `(declare (ignorable chk))
   `(make-check-result))
