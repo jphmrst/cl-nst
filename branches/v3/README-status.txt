@@ -2,7 +2,8 @@
 Look at sample.lisp for the working snippet.
 
 [April 2008]
-The order of calls is now correct.  To verify:
+The order of calls is now correct for groups, but not standalone
+tests.  To verify:
 
  :als nst
  :pa nst
