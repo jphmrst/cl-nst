@@ -92,12 +92,13 @@
 (defclass group-base-class () ()
   (:documentation "Base class of group behavior."))
 
+(defclass standalone-test-base-class () ()
+  (:documentation "Base class of standalone test execution behavior."))
+
 ;;; -----------------------------------------------------------------
 
 ;;; The fixtures, groups and tests that have been defined.
 ;;;
-(defvar +fixtures+ nil
-  "For user echo of fixture forms and other debugging." )
 
 (defgeneric test-names (fixture-or-group)
   (:documentation "The names of tests in a group.  Will be given an eql-method
@@ -141,13 +142,13 @@ group-specific activities.")
 (defgeneric suite-class-name (group-name test-name)
   (:documentation
    "Map from tests to the private name with which NST associates the class of
-")
+the instance of this test for runs within a group run.")
   (:method (group class) (declare (ignorable group class)) nil))
 
 (defgeneric standalone-class-name (group-name test-name)
   (:documentation
    "Map from tests to the private name with which NST associates the class of
-")
+the instance of this test for standalone runs, not part of a run with a group.")
   (:method (group class) (declare (ignorable group class)) nil))
 
 (defgeneric test-config-class-name (group-name test-name)
@@ -181,15 +182,20 @@ corresponding internal name-binding NST class.")
        (format t "Starting run loop for ~s~%" group-inst)
        (loop for test in (test-names group-inst) do
 	 (format t "  Starting loop entry ~s~%" test)
-	 (let ((suite-class-name (suite-class-name group-name test)))
+	 (let ((in-suite-class-name (suite-class-name group-name test)))
 	   ;; (format t "    Suite class name ~s~%" suite-class-name)
 	   ;; (format t "    Actual class ~s~%" (find-class suite-class-name))
 	   ;; (describe (find-class suite-class-name))
-	   (let ((test-inst (make-instance suite-class-name)))
+	   (let ((test-inst (make-instance in-suite-class-name)))
 	     ;; (format t "    Instance ~s~%" test-inst)
 	     (run test-inst)))
 	 (format t "  Exiting loop entry ~s~%" test))
        (format t "Exiting run loop for ~s~%" group-inst))))
+
+;;; This is probably disused.
+;;;
+;;;(defvar +fixtures+ nil
+;;;  "For user echo of fixture forms and other debugging." )
 
 ;;; -----------------------------------------------------------------
 

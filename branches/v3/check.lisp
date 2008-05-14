@@ -20,8 +20,11 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
-
 (defun decode-defcheck-name-and-args (name-or-name-and-args)
+  "This function unpacks the information inside the first form of a def-check
+block, which can be either a single symbol naming the test, or a list whose
+first element is that symbol and whose remaining elements are options."
+  
   (cond
    ((symbolp name-or-name-and-args)
     (return-from decode-defcheck-name-and-args
@@ -41,25 +44,30 @@
 	   name-or-name-and-args))))
   
 (defgeneric build-check-form (criterion args formals)
-  (:documentation "Put together an expression for a test."))
+  (:documentation
+   "Assemble a Lisp expression corresponding to the logic of a single test."))
   
-  (defun continue-check (criterion forms)
-    "criterion is a expression denoting a check to be made.  forms is
-an expression evaluating to the stack of values to be tested."
-    (declare (special *nst-context*))
-    (let (criterion-name criterion-args)
-      (cond ((symbolp criterion)
-	     (setf criterion-name criterion criterion-args nil))
-	    ((listp criterion)
-	     (setf criterion-name (car criterion)
-		   criterion-args (cdr criterion)))
-	    (t
-	     (error "Malformed criterion in def-check: ~s" criterion)))
-      (let ((*nst-context* (cons (cons criterion-name criterion-args)
-				 *nst-context*))
-	    (*nst-stack* forms))
-	(declare (special *nst-context* *nst-stack*))
-	(build-check-form criterion-name criterion-args forms))))
+(defun continue-check (criterion forms)
+  "This function is available from within the check-defining forms to process
+subsequences of a current check definition.
+ - criterion is an expression denoting a check to be made.
+ - forms is an expression which at runtime will evaluate to the stack of values
+   to be tested."
+  
+  (declare (special *nst-context*))
+  (let (criterion-name criterion-args)
+    (cond ((symbolp criterion)
+	   (setf criterion-name criterion criterion-args nil))
+	  ((listp criterion)
+	   (setf criterion-name (car criterion)
+		 criterion-args (cdr criterion)))
+	  (t
+	   (error "Malformed criterion in def-check: ~s" criterion)))
+    (let ((*nst-context* (cons (cons criterion-name criterion-args)
+			       *nst-context*))
+	  (*nst-stack* forms))
+      (declare (special *nst-context* *nst-stack*))
+      (build-check-form criterion-name criterion-args forms))))
 
 #+allegro (excl::define-simple-parser def-value-check caadr :nst-criterion)
 (defmacro def-value-check ((name criterion-args check-args &key

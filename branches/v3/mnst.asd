@@ -22,8 +22,6 @@
 (defpackage :mnst-asd (:use :common-lisp :asdf))
 (in-package :mnst-asd)
 
-(defclass mnst (system) ())
-
 (defsystem :mnst
     :serial t
     :depends-on (:nst)
