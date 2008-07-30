@@ -1,10 +1,7 @@
 
-all: classes.ps globals.ps nst-nst.ps scratch.ps criteria.ps \
-	interactive.ps numbers.ps status.ps defcheck.ps \
-	nst-criteria.ps package.ps test2.ps fixtures.ps nst-fails.ps \
-	permuter.ps testforms.ps format.ps nst-interact.ps runners.ps \
-	test.ps \
-	manual.pdf
+all: check.ps globals.ps mnst-package.ps sample.ps criteria.ps group.ps      \
+	package.ps status.ps fixture.ps interactive.ps permuter.ps test.ps   \
+	#manual.pdf
 	#
 
 %.pdf: %.tex
@@ -20,7 +17,7 @@ all: classes.ps globals.ps nst-nst.ps scratch.ps criteria.ps \
 	dvips -f $< > $@
 
 %.ps: %.lisp
-	enscript -2r --lines-per-page=57 -o $@ $<
+	a2ps -2r -o $@ $<
 
 clean:
 	rm -f *.fasl *.ps *.dvi *.aux *.log *.toc

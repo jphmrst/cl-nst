@@ -245,8 +245,9 @@ when def-check-alias is macroexpanded."
       (declare (special *nst-context*))
       `(block ,name
 	 
-	 (multiple-value-bind (,check-fixture-classes ,anon-fixture-forms)
+	 (multiple-value-bind (z ,check-fixture-classes ,anon-fixture-forms)
 	     (process-fixture-list ',fixtures)
+	   (declare (ignorable z))
 	   (loop for form in ,anon-fixture-forms do (eval form))
 	   
 	   (let (;; In this block we make our local binding to the
@@ -295,25 +296,33 @@ when def-check-alias is macroexpanded."
 			  ,,test-config-class-name
 			 ,@,check-fixture-classes)
 		      ()))
-	     (eval `(defmethod run ((obj ,,suite-class-name))
-		      ,',(continue-check criterion (cons 'list forms))))
-	   
-	     (eval `(defclass ,,standalone-class-name
-			(,(standalone-test-in-group-class-name ',*the-group*)
-			 ,,test-config-class-name
+
+	     (let ((standalone-decl `(defclass ,,standalone-class-name
+			(,(group-class-name ',*the-group*)
+			 ,@,fixtures-from-group
 			 ,@,check-fixture-classes
-			 ,@,fixtures-from-group)
-		      ()))
+			 ,(standalone-test-in-group-class-name ',*the-group*)
+			 ,,test-in-group-class-name
+			 ,,test-config-class-name)
+					  ())))
+	       ;; (format t "~%~%~s~%~%" standalone-decl)
+	       (eval standalone-decl))
+
+	     (eval `(defmethod run-test ((obj ,,suite-class-name))
+		      ,',(continue-check criterion (cons 'list forms))))
 	     (eval `(defmethod run ((obj ,,standalone-class-name))
+		      (run-test obj)))
+	     (eval `(defmethod run-test ((obj ,,standalone-class-name))
 		      ,',(continue-check criterion (cons 'list forms))))
 
 	     ,@(when setup-supp-p
-		 `((eval `(defmethod run
+		 `((eval `(defmethod run-test
 			      :before ((obj ,,test-config-class-name))
 			    ,',setup))))
 
 	     ,@(when cleanup-supp-p
-		 `((eval `(defmethod run :after ((obj ,,test-config-class-name))
+		 `((eval `(defmethod run-test
+			      :after ((obj ,,test-config-class-name))
 			    ,',cleanup))))
 	     
 	     (defmethod trace-test ((gr (eql ',*the-group*))
@@ -335,7 +344,8 @@ when def-check-alias is macroexpanded."
 	     
 	       (format t " - Standalone class name: ~s~%"
 		 (standalone-class-name ',*the-group* ',name))
-	       (format t "                expected: ~s~%" ,standalone-class-name)
+	       (format t "                expected: ~s~%"
+		 ,standalone-class-name)
 	       (format t "   Superclasses: ~@<~{~s~^ ~:_~}~:>~%"
 		 (loop for super
 		     in (class-direct-superclasses

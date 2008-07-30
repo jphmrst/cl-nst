@@ -26,15 +26,15 @@
 ;;; Some shorthand we'll use below.
 
 (def-value-check (:pass () (&rest chk))
-  `(declare (ignorable chk))
+  ;; `(declare (ignorable chk))
   `(make-check-result))
 
 (def-value-check (:fail (&rest args) (&rest chk))
-  `(declare (ignorable chk))
+  ;; `(declare (ignorable chk))
   `(emit-failure :format ,(car args) :args ,(cdr args)))
 
 (def-value-check (:warn (&rest args) (&rest chk))
-  `(declare (ignorable chk))
+  ;; `(declare (ignorable chk))
   `(emit-warning :format ,(car args) :args ,(cdr args)))
 
 (def-value-check (:eq (eq-form) (check-form))

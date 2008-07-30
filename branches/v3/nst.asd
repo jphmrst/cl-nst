@@ -23,18 +23,17 @@
 (in-package :nst-asd)
 
 (defsystem :nst
-    :serial t
     :version "0.3.0"
     ;; :depends-on (:jm-defs)
     :in-order-to ((test-op (test-op :mnst)))
     :components ((:file "package")
-		 (:file "permuter")
-		 (:file "globals")
-		 (:file "check")
-		 (:file "group")
-		 (:file "fixture")
-		 (:file "criteria")
-		 (:file "status")
+		 (:file "permuter" :depends-on ("package"))
+		 (:file "globals"  :depends-on ("package"))
+		 (:file "group" :depends-on ("globals"))
+		 (:file "check" :depends-on ("globals"))
+		 (:file "fixture"  :depends-on ("globals"))
+		 (:file "criteria" :depends-on ("globals" "permuter"))
+		 (:file "status"   :depends-on ("globals"))
 ;;;		 (:file "classes")
 ;;;		 (:file "runners")
 ;;;		 (:file "testforms")

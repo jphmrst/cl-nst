@@ -53,24 +53,36 @@ use of this fixture.
 "
   (declare (ignorable name uses assumes outer inner documentation bindings))
   
-  (let ((fixture-class-name (gensym "fixture-class-name")))
+  (let ((group-fixture-class-name (gensym "group-fixture-class-name"))
+	(test-fixture-class-name (gensym "test-fixture-class-name")))
     `(eval-when (:load-toplevel :execute)
-       (let* ((,fixture-class-name (fixture-class-name ',name)))
-	 (unless ,fixture-class-name
-	   (setf ,fixture-class-name
+       (let* ((,group-fixture-class-name (group-fixture-class-name ',name))
+	      (,test-fixture-class-name (test-fixture-class-name ',name)))
+	 (unless ,group-fixture-class-name
+	   (setf ,group-fixture-class-name
 		 (gentemp (concatenate 'string (symbol-name ',name) ".class.")
 			  :nst-fixture))
-	   (defmethod fixture-class-name ((f (eql ',name)))
-	     ,fixture-class-name))
-	 (eval `(defclass ,,fixture-class-name () ()))
+	   (defmethod group-fixture-class-name ((f (eql ',name)))
+	     ,group-fixture-class-name))
+	 (unless ,test-fixture-class-name
+	   (setf ,test-fixture-class-name
+		 (gentemp (concatenate 'string (symbol-name ',name) ".class.")
+			  :nst-fixture))
+	   (defmethod test-fixture-class-name ((f (eql ',name)))
+	     ,test-fixture-class-name))
+	 (eval `(defclass ,,group-fixture-class-name () ()))
+	 (eval `(defclass ,,test-fixture-class-name () ()))
 
 	 ;; WARNING!  This line causes Allegro to crash
-	 #-allegro (set-pprint-dispatch ',fixture-class-name
+	 #-allegro (set-pprint-dispatch ',group-fixture-class-name
 		     '#(lambda (stream object)
 			(format stream "Fixture set ~s" ',name)))
 	 
-	 (eval `(defmethod run :around ((test ,,fixture-class-name))
+	 (eval `(defmethod run :around ((group ,,group-fixture-class-name))
 		  (let ,',bindings (call-next-method))))
+	 (eval `(defmethod run-test :around ((test ,,test-fixture-class-name))
+		  (let ,',bindings (call-next-method))))
+
 	 (defmethod open-fixture ((f (eql ',name))
 				  &optional (in-package *package*))
 	   (unless (packagep in-package)
@@ -92,29 +104,35 @@ use of this fixture.
 	   (format t " - Outer bindings: ~@<~{~s~^ ~_~}~:>~%" ',outer)
 	   (format t " - Inner bindings: ~@<~{~s~^ ~_~}~:>~%" ',inner)
 	   (format t " - Documentation string: ~s~%" ,documentation)
-	   (format t " - Internal class name: ~s~%" ,fixture-class-name)))
+	   (format t " - Internal class names:~%")
+	   (format t "     For groups - ~s~%" ,group-fixture-class-name)
+	   (format t "     For tests  - ~s~%" ,test-fixture-class-name)))
        ',name)))
 
 (defun process-fixture-list (fixture-list)
-  (let ((fixture-class-names nil)
+  (let ((group-fixture-class-names nil)
+	(test-fixture-class-names nil)
 	(anonymous-fixture-forms nil))
     (loop for f in fixture-list do
-	  (cond
-	   ;; A named fixture
-	   ((symbolp f)
-	    (let ((class-name (fixture-class-name f)))
-	      (unless class-name
-		(error "~f does not correspond to a defined fixture" f))
-	      (push class-name fixture-class-names)))
-	   ;; Miscellaneous garbage 1
-	   ((not (listp f))
-	    (error "Expected a fixture name or anonymous fixture; found ~s" f))
-	   ;; Anonymous fixture
-	   ((eq (car f) :fixture)
-	    (error "Have not yet re-implemented anonymous fixtures."))
-	   ;; Miscellaneous garbage 2
-	   (t
-	    (error "Expected a fixture name or anonymous fixture; found ~s" f))))
-    (values (nreverse fixture-class-names)
+      (cond
+       ;; A named fixture
+       ((symbolp f)
+	(let ((group-class-name (group-fixture-class-name f))
+	      (test-class-name (test-fixture-class-name f)))
+	  (unless (and group-class-name test-class-name)
+	    (error "~f does not correspond to a defined fixture" f))
+	  (push group-class-name group-fixture-class-names)
+	  (push test-class-name  test-fixture-class-names)))
+       ;; Miscellaneous garbage 1
+       ((not (listp f))
+	(error "Expected a fixture name or anonymous fixture; found ~s" f))
+       ;; Anonymous fixture
+       ((eq (car f) :fixture)
+	(error "Have not yet re-implemented anonymous fixtures."))
+       ;; Miscellaneous garbage 2
+       (t
+	(error "Expected a fixture name or anonymous fixture; found ~s" f))))
+    (values (nreverse group-fixture-class-names)
+	    (nreverse test-fixture-class-names)
 	    (nreverse anonymous-fixture-forms))))
 

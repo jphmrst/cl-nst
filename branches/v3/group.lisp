@@ -47,7 +47,7 @@
     (values (nreverse checks)
 	    setup setup-supp-p cleanup cleanup-supp-p
 	    each-setup each-setup-supp-p each-cleanup each-cleanup-supp-p)))
-
+
 #+allegro (excl::define-simple-parser def-group second :nst-group)
 (defmacro def-group (group-name given-fixtures &body forms)
   "Define a group of tests associated with certain fixtures,
@@ -97,11 +97,11 @@ forms - zero or more test forms, given by def-check or def-test."
 	`(eval-when (:load-toplevel :execute)
 
 	   ;; Fixture processing.
-	   (multiple-value-bind (,group-fixture-classes ,anon-fixture-forms)
+	   (multiple-value-bind (,group-fixture-classes z ,anon-fixture-forms)
 	       (process-fixture-list ',given-fixtures)
+	     (declare (ignorable z))
 	     (loop for form in ,anon-fixture-forms do (eval form))
-	     (eval `(defmethod group-fixture-classes
-			((cl (eql ',',*the-group*)))
+	     (eval `(defmethod group-fixture-classes ((g (eql ',',*the-group*)))
 		      ',,group-fixture-classes))
 
 	     (let ((,group-pkg (groups-package ,group-orig-pkg))
@@ -109,7 +109,8 @@ forms - zero or more test forms, given by def-check or def-test."
 		   (,test-in-group-class-name
 		    (test-in-group-class-name ',group-name))
 		   (,standalone-in-group-class-name
-		    (standalone-test-in-group-class-name ',group-name)))
+		    (standalone-test-in-group-class-name ',group-name))
+		   )
 	       (unless ,group-pkg
 		 (setf ,group-pkg
 		   (make-package (symbol-name
@@ -161,12 +162,14 @@ forms - zero or more test forms, given by def-check or def-test."
 	       (eval `(defmethod group-name ((g ,,group-class-name))
 			',',group-name))
 
-	       (eval `(defclass ,,test-in-group-class-name ()
-			()))
+	       (eval `(defclass ,,test-in-group-class-name () ()))
 	       (eval `(defclass ,,standalone-in-group-class-name
-			  (,,test-in-group-class-name ,,group-class-name)
-			()))
+			   ;; (,,group-class-name ,,test-in-group-class-name)
+			   () ()))
 
+	       (eval `(defmethod run ((obj ,,standalone-in-group-class-name))
+			(run-test obj)))
+		 
 	       (when ,setup-supp-p
 		 (eval `(defmethod run :before ((obj ,,group-class-name))
 			  ,',setup)))
@@ -176,12 +179,13 @@ forms - zero or more test forms, given by def-check or def-test."
 			  ,',cleanup)))
 
 	       (when ,each-setup-supp-p
-		 (eval `(defmethod run
+		 (eval `(defmethod run-test
 			    :before ((obj ,,test-in-group-class-name))
 			  ,',each-setup)))
 	       
 	       (when ,each-cleanup-supp-p
-		 (eval `(defmethod run :after ((obj ,,test-in-group-class-name))
+		 (eval `(defmethod run-test
+			    :after ((obj ,,test-in-group-class-name))
 			  ,',each-cleanup)))
 
 	       (eval `(defmethod test-names ((group ,,group-class-name))
@@ -216,7 +220,8 @@ forms - zero or more test forms, given by def-check or def-test."
                         ~:@_                  expected: ~s~
                       ~:@_extends ~@<~s ~:_~s~:>~:>~%"
 		     standalone-class-actual ,standalone-in-group-class-name
-		     ,test-in-group-class-name ,group-class-name))))
+		     ,test-in-group-class-name ,group-class-name)
+		   )))
 	     ,@expanded-check-forms
 	     ',group-name))))))
 

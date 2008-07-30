@@ -157,10 +157,16 @@ the instance of this test for standalone runs, not part of a run with a group.")
 ")
   (:method (group class) (declare (ignorable group class)) nil))
 
-(defgeneric fixture-class-name (fixture-name)
+(defgeneric group-fixture-class-name (fixture-name)
   (:documentation
    "Map from fixture names to the private name with which NST associates the
-corresponding internal name-binding NST class.")
+corresponding internal name-binding NST class for adding fixtures to a group.")
+  (:method (default) (declare (ignorable default)) nil))
+
+(defgeneric test-fixture-class-name (fixture-name)
+  (:documentation
+   "Map from fixture names to the private name with which NST associates the
+corresponding internal name-binding NST class for adding fixtures to a test.")
   (:method (default) (declare (ignorable default)) nil))
 
 (defgeneric open-fixture (fixture-name &optional package)
@@ -179,18 +185,18 @@ corresponding internal name-binding NST class.")
    "Fixtures provide name-binding :around methods to this generic function")
   (:method ((group-inst group-base-class))
      (let ((group-name (group-name group-inst)))
-       (format t "Starting run loop for ~s~%" group-inst)
+       (format t "    Starting run loop for ~s~%" group-inst)
        (loop for test in (test-names group-inst) do
-	 (format t "  Starting loop entry ~s~%" test)
+	 (format t "      Starting loop entry ~s~%" test)
 	 (let ((in-suite-class-name (suite-class-name group-name test)))
 	   ;; (format t "    Suite class name ~s~%" suite-class-name)
 	   ;; (format t "    Actual class ~s~%" (find-class suite-class-name))
 	   ;; (describe (find-class suite-class-name))
 	   (let ((test-inst (make-instance in-suite-class-name)))
 	     ;; (format t "    Instance ~s~%" test-inst)
-	     (run test-inst)))
-	 (format t "  Exiting loop entry ~s~%" test))
-       (format t "Exiting run loop for ~s~%" group-inst))))
+	     (run-test test-inst)))
+	 (format t "      Exiting loop entry ~s~%" test))
+       (format t "    Exiting run loop for ~s~%" group-inst))))
 
 ;;; This is probably disused.
 ;;;
