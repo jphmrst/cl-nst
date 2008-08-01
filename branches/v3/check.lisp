@@ -91,7 +91,8 @@ subsequences of a current check definition.
 		forms)
 	  blurb-format)))
     `(eval-when (:compile-toplevel :load-toplevel)
-       #+allegro (excl:record-source-file ',name :type :nst-criterion)
+       #+allegro (eval-when (:load-toplevel)
+		   (excl:record-source-file ',name :type :nst-criterion))
        (defmethod blurb-context-line (,stream
 				      (,id (eql ',name)) ,args ,forms)
 	 (destructuring-bind ,criterion-args ,args

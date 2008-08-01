@@ -46,48 +46,48 @@
                           about certain macro expansions")
 (def-flag *debug-fixtures* nil ()
 	  :runtime-macro fixture-dbg
-	  :documentation "Set to t to generate debugging information \
-                          about fixtures")
+	  :documentation
+	  "Set to t to generate debugging information about fixtures")
 (def-flag *debug-class-hierarchy* nil ()
 	  :runtime-macro class-dbg
-	  :documentation "Set to t to generate debugging information \
-                          about the class hierarchy of tests and \
-                          groups")
+	  :documentation "Set to t to generate debugging information about the \
+                          class hierarchy of tests and groups")
 (def-flag *debug-macrotime* nil
   (*debug-class-hierarchy* *debug-fixtures* *debug-forms-manip*)
 	  :runtime-macro macro-dbg
-	  :documentation "Set to t for extensive macro expansion \
-                          debugging output")
+	  :documentation
+	  "Set to t for extensive macro expansion debugging output")
 (def-flag *debug-compile* nil (*debug-forms-manip* *debug-fixtures*)
 	  :runtime-macro compile-dbg
-	  :documentation "Set to t for extensive debugging output for \
-                          expanded macros")
+	  :documentation
+	  "Set to t for extensive debugging output for expanded macros")
 (def-flag *debug-bindings* nil (*debug-fixtures*)
 	  :runtime-macro bind-dbg
 	  :documentation "Set to t to generate debugging information \
                           about fixture bindings in tests and groups")
 (def-flag *debug-output* nil (*debug-class-hierarchy* *debug-bindings*)
 	  :runtime-macro run-dbg
-	  :documentation "Set to t for extensive runtime debugging \
-                          output")
+	  :documentation "Set to t for extensive runtime debugging output")
 (def-flag *verbose-output* nil (*debug-output*)
 	  :function-name use-verbose-output
 	  :runtime-macro verbose-out
-	  :documentation "Set to t for verbose output during test\
-                          execution.  This setting is implied by\
-                          *debug-output*.")
+	  :documentation "Set to t for verbose output during test execution. \
+                          This setting is implied by *debug-output*.")
 
 (def-flag *scheduled-summary-output* t ()
-	  :documentation "Set to t for summaries of runs of scheduled\
-                          tests.")
+	  :documentation "Set to t for summaries of runs of scheduled tests.")
 (def-flag *scheduled-single-output* nil ()
-	  :documentation "Set to t for summaries of single test, group\
-                          or package runs.")
+	  :documentation
+	  "Set to t for summaries of single test, group or package runs.")
 (def-flag *defer-test-compile* t ()
-	  :documentation "Set to t to defer compilation of test forms\
-                          until runtime.")
+	  :documentation
+	  "Set to t to defer compilation of test forms until runtime.")
 
 ;;; -----------------------------------------------------------------
+
+;;;
+;;; Base classes.
+;;;
 
 (defclass group-base-class () ()
   (:documentation "Base class of group behavior."))
@@ -95,8 +95,7 @@
 (defclass standalone-test-base-class () ()
   (:documentation "Base class of standalone test execution behavior."))
 
-;;; -----------------------------------------------------------------
-
+;;;
 ;;; The fixtures, groups and tests that have been defined.
 ;;;
 
@@ -129,14 +128,15 @@ group-specific activities.")
 
 (defgeneric test-in-group-class-name (group-name)
   (:documentation
-   "Map from groups to the private name with which NST associates the class of
-")
+   "Map from groups to the private name with which NST associates a class with
+which every test in the group is associated for testing the whole group of
+tests.")
   (:method (default) (declare (ignorable default)) nil))
 
 (defgeneric standalone-test-in-group-class-name (group-name)
   (:documentation
-   "Map from groups to the private name with which NST associates the class of
-")
+   "Map from groups to the private name with which NST associates a class with
+which every test in the group is associated for a standalone test.")
   (:method (default) (declare (ignorable default)) nil))
 
 (defgeneric suite-class-name (group-name test-name)
@@ -153,8 +153,9 @@ the instance of this test for standalone runs, not part of a run with a group.")
 
 (defgeneric test-config-class-name (group-name test-name)
   (:documentation
-   "Map from tests to the private name with which NST associates the class of
-")
+   "Map from tests to the private name with which NST associates a class for
+each test for methods to apply whether the test is called standalone or as part
+of a group.")
   (:method (group class) (declare (ignorable group class)) nil))
 
 (defgeneric group-fixture-class-name (fixture-name)
@@ -174,15 +175,19 @@ corresponding internal name-binding NST class for adding fixtures to a test.")
    "Inject the names defined by the named fixture into the current package."))
 
 (defgeneric trace-fixture (fx)
+  (:documentation "Provide debugging information about a fixture.")
   (:method (fx) (format t "No known fixture ~s~%" fx)))
 (defgeneric trace-group (gr)
+  (:documentation "Provide debugging information about a group.")
   (:method (gr) (format t "No known group ~s~%" gr)))
 (defgeneric trace-test (gr ts)
+  (:documentation "Provide debugging information about a test.")
   (:method (gr ts) (format t "No known test ~s in group ~s~%" ts gr)))
 
-(defgeneric run (test)
+(defgeneric run (group-or-test)
   (:documentation
-   "Fixtures provide name-binding :around methods to this generic function")
+   "Group fixtures provide name-binding :around methods to this generic
+function; group setup and cleanup become :before and :after methods.")
   (:method ((group-inst group-base-class))
      (let ((group-name (group-name group-inst)))
        (format t "    Starting run loop for ~s~%" group-inst)
@@ -197,6 +202,12 @@ corresponding internal name-binding NST class for adding fixtures to a test.")
 	     (run-test test-inst)))
 	 (format t "      Exiting loop entry ~s~%" test))
        (format t "    Exiting run loop for ~s~%" group-inst))))
+
+(defgeneric run-test (test)
+  (:documentation
+   "Test fixtures provide name-binding :around methods to this generic function
+for individual tests.  Every-test and test-specific setup and cleanup are
+encoded as :before and :after methods."))
 
 ;;; This is probably disused.
 ;;;
@@ -217,6 +228,7 @@ corresponding internal name-binding NST class for adding fixtures to a test.")
 ;;; -----------------------------------------------------------------
 
 (defun first-symbol (name-or-name-and-args)
+  "Return the first element given a list, or return a symbol."
   (cond ((symbolp name-or-name-and-args) name-or-name-and-args)
 	((listp name-or-name-and-args) (first name-or-name-and-args))
 	(t (cerror "Return nil" "Unable to parse ~S to find the name in it."
@@ -224,6 +236,7 @@ corresponding internal name-binding NST class for adding fixtures to a test.")
 	   nil)))
 
 (defun cdr-or-nil (name-or-name-and-args)
+  "Return the cdr given a list, or return nil if given a symbol."
   (cond ((symbolp name-or-name-and-args) nil)
 	((listp name-or-name-and-args) (cdr name-or-name-and-args))
 	(t (cerror "Return nil" "Unable to parse ~S to find the name in it."

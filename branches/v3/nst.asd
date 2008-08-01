@@ -23,17 +23,39 @@
 (in-package :nst-asd)
 
 (defsystem :nst
+    :description "The NST unit/regression testing system"
     :version "0.3.0"
-    ;; :depends-on (:jm-defs)
+    :author "John Maraist <lisper@maraist.org>"
+    :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :mnst)))
-    :components ((:file "package")
-		 (:file "permuter" :depends-on ("package"))
+    :components (;; The NST package, plus internal packages and
+		 ;; documentation generation.
+		 (:file "package")
+		 
+		 ;; Flags, generic function declarations, and helper
+		 ;; functions.
 		 (:file "globals"  :depends-on ("package"))
+		 
+		 ;; The def-group macro.
 		 (:file "group" :depends-on ("globals"))
+		 
+		 ;; The def-check macro, and the general expansion and
+		 ;; handling of check criteria.
 		 (:file "check" :depends-on ("globals"))
+		 
+		 ;; The def-fixture macro, and processing anonymous
+		 ;; fixture declarations.
 		 (:file "fixture"  :depends-on ("globals"))
+		 
+		 ;; Helper functions for permuting lists.
+		 (:file "permuter" :depends-on ("package"))
+		 
+		 ;; Standard criteria declarations.
 		 (:file "criteria" :depends-on ("globals" "permuter"))
+		 
+		 ;; Receiving and bookkeeping the results of tests.
 		 (:file "status"   :depends-on ("globals"))
+
 ;;;		 (:file "classes")
 ;;;		 (:file "runners")
 ;;;		 (:file "testforms")

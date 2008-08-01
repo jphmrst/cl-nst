@@ -23,6 +23,7 @@
 (in-package :mnst-asd)
 
 (defsystem :mnst
+    :description "M as is meta: NST- (or otherwise) testing NST."
     :serial t
     :depends-on (:nst)
     :components ((:file "mnst-package")

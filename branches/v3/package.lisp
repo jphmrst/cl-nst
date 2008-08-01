@@ -50,6 +50,17 @@
 	     
 	     #:*default-report-stream*))
 
+(defun nst::make-package-documentation ()
+  "Write documentation for this package, using system package-doc."
+  (asdf:oos 'asdf:load-op 'package-doc)
+  (funcall (symbol-function (intern (symbol-name 'package-doc)
+				    (find-package :package-doc)))
+	   (find-package :nst)))
+
+;;; The packages below are internal --- user symbols map to NST
+;;; internal symbols which live in thse packages.  By "hiding" these
+;;; symbols here, we avoid the need to gensym into user packages.
+
 (defpackage :sift.nst.fixture-class-names
     (:nicknames :nst-fixture))
 
@@ -68,10 +79,3 @@
 (defpackage :sift.nst-interact
     (:nicknames :nst-interact :nst-i)
     (:use :common-lisp :sift.nst))
-
-(defun nst::make-package-documentation ()
-  "Write documentation for this package, using system package-doc."
-  (asdf:oos 'asdf:load-op 'package-doc)
-  (funcall (symbol-function (intern (symbol-name 'package-doc)
-				    (find-package :package-doc)))
-	   (find-package :nst)))
