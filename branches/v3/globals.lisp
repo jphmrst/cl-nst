@@ -21,9 +21,23 @@
 (in-package :sift.nst)
 
 ;;; This file contains settings, global variables and flags.
+
+;;; ----------------------------------------------------------------------
+
+;;;
+;;; Base classes.
+;;;
+
+(defclass group-base-class () ()
+  (:documentation "Base class of group behavior."))
+
+(defclass standalone-test-base-class () ()
+  (:documentation "Base class of standalone test execution behavior."))
 
+;;;
 ;;; Options for output in the interactive system.
 ;;;
+
 (defmacro def-flag (flag-name flag-value implying-flags
 			      &key (documentation nil doc-sup-p)
 			      runtime-macro function-name)
@@ -82,39 +96,19 @@
 (def-flag *defer-test-compile* t ()
 	  :documentation
 	  "Set to t to defer compilation of test forms until runtime.")
-
-;;; -----------------------------------------------------------------
-
+
 ;;;
-;;; Base classes.
+;;; Generic functions whose methods are defined by the various macros.
 ;;;
 
-(defclass group-base-class () ()
-  (:documentation "Base class of group behavior."))
-
-(defclass standalone-test-base-class () ()
-  (:documentation "Base class of standalone test execution behavior."))
-
-;;;
-;;; The fixtures, groups and tests that have been defined.
-;;;
-
-(defgeneric test-names (fixture-or-group)
-  (:documentation "The names of tests in a group.  Will be given an eql-method
-by the macros which expand tests and groups."))
+;; Properties of groups.
 
 (defgeneric group-name (group-instance)
   (:documentation "Map from a group instance back to its symbolic name."))
 
-(defgeneric bound-names (fixture-or-group)
-  (:documentation "The names defined by each fixture.  Will be given
-an eql-method by the macros which expand tests and groups."))
-
-(defgeneric groups-package (public-package)
-  (:documentation
-   "Map from packages to the private package NST associates with each for
-housing the names of the groups in each package.")
-  (:method (default) (declare (ignorable default)) nil))
+(defgeneric test-names (fixture-or-group)
+  (:documentation "The names of tests in a group.  Will be given an eql-method
+by the macros which expand tests and groups."))
 
 (defgeneric group-class-name (group-name)
   (:documentation
@@ -139,6 +133,16 @@ tests.")
 which every test in the group is associated for a standalone test.")
   (:method (default) (declare (ignorable default)) nil))
 
+;; Information by Lisp package.
+
+(defgeneric groups-package (public-package)
+  (:documentation
+   "Map from packages to the private package NST associates with each for
+housing the names of the groups in each package.")
+  (:method (default) (declare (ignorable default)) nil))
+
+;; Properties of tests.
+
 (defgeneric suite-class-name (group-name test-name)
   (:documentation
    "Map from tests to the private name with which NST associates the class of
@@ -158,6 +162,12 @@ each test for methods to apply whether the test is called standalone or as part
 of a group.")
   (:method (group class) (declare (ignorable group class)) nil))
 
+;; Fixture properties and operations.
+
+(defgeneric bound-names (fixture-or-group)
+  (:documentation "The names defined by each fixture.  Will be given
+an eql-method by the macros which expand tests and groups."))
+
 (defgeneric group-fixture-class-name (fixture-name)
   (:documentation
    "Map from fixture names to the private name with which NST associates the
@@ -174,15 +184,37 @@ corresponding internal name-binding NST class for adding fixtures to a test.")
   (:documentation
    "Inject the names defined by the named fixture into the current package."))
 
+;; Diagnostic information display.
+
+(defgeneric blurb-context-line (stream id args forms)
+  (:documentation "Give a short description of a context."))
+
+(defgeneric detail-context-line (stream id args forms)
+  (:documentation "Give a longer blurb of a context."))
+
+(defgeneric stack-transformer (id)
+  (:documentation "Check form-specific stack transformation."))
+
+;; Extracting information for debugging.
+
 (defgeneric trace-fixture (fx)
   (:documentation "Provide debugging information about a fixture.")
   (:method (fx) (format t "No known fixture ~s~%" fx)))
+
 (defgeneric trace-group (gr)
   (:documentation "Provide debugging information about a group.")
   (:method (gr) (format t "No known group ~s~%" gr)))
+
 (defgeneric trace-test (gr ts)
   (:documentation "Provide debugging information about a test.")
   (:method (gr ts) (format t "No known test ~s in group ~s~%" ts gr)))
+
+;;;
+;;; More generic functions whose methods are defined by the various
+;;; macros.
+;;;
+
+;; Internal test execution functions.
 
 (defgeneric run (group-or-test)
   (:documentation
@@ -208,29 +240,18 @@ function; group setup and cleanup become :before and :after methods.")
    "Test fixtures provide name-binding :around methods to this generic function
 for individual tests.  Every-test and test-specific setup and cleanup are
 encoded as :before and :after methods."))
-
-;;; This is probably disused.
+
 ;;;
-;;;(defvar +fixtures+ nil
-;;;  "For user echo of fixture forms and other debugging." )
+;;; Helper functions
+;;;
 
-;;; -----------------------------------------------------------------
+;; Versions of car and cdr for when we expect to have either a list or
+;; a symbol.
 
-(defgeneric blurb-context-line (stream id args forms)
-  (:documentation "Give a short description of a context."))
-
-(defgeneric detail-context-line (stream id args forms)
-  (:documentation "Give a longer blurb of a context."))
-
-(defgeneric stack-transformer (id)
-  (:documentation "Check form-specific stack transformation."))
-
-;;; -----------------------------------------------------------------
-
-(defun first-symbol (name-or-name-and-args)
+(defun symbol-or-car (name-or-name-and-args)
   "Return the first element given a list, or return a symbol."
   (cond ((symbolp name-or-name-and-args) name-or-name-and-args)
-	((listp name-or-name-and-args) (first name-or-name-and-args))
+	((consp name-or-name-and-args) (car name-or-name-and-args))
 	(t (cerror "Return nil" "Unable to parse ~S to find the name in it."
 		   name-or-name-and-args)
 	   nil)))
@@ -243,9 +264,7 @@ encoded as :before and :after methods."))
 		   name-or-name-and-args)
 	   nil)))
 
-;;; -----------------------------------------------------------------
-
-;;; Functions supporting tests on numbers.
+;; Tests on numbers.
 
 (defmacro log10 (v) `(/ (log ,v) (log 10)))
 
@@ -260,6 +279,8 @@ encoded as :before and :after methods."))
        (numberp n2)
        (let ((rounder (sig-place digits n1)))
 	 (eql (round n1 rounder) (round n2 rounder)))))
+
+;; Operations on lambda lists, for processing test specs.
 
 (defun lambda-list-names (lambda-list)
   (let ((generic-list (extract-lambda-list lambda-list))

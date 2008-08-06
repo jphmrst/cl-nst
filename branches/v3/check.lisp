@@ -68,7 +68,7 @@ subsequences of a current check definition.
 	  (*nst-stack* forms))
       (declare (special *nst-context* *nst-stack*))
       (build-check-form criterion-name criterion-args forms))))
-
+
 #+allegro (excl::define-simple-parser def-value-check caadr :nst-criterion)
 (defmacro def-value-check ((name criterion-args check-args &key
 				 (blurb-format nil blurb-format-supp-p)
@@ -113,7 +113,7 @@ subsequences of a current check definition.
 	 (destructuring-bind ,criterion-args ,args
 	   (list 'destructuring-bind ',check-args ,forms
 		 ,@expansion))))))
-
+
 #+allegro (excl::define-simple-parser def-control-check caadr :nst-criterion)
 (defmacro def-control-check ((name criterion-args forms-formal
 			      &key (stack-transformer t)
@@ -155,9 +155,8 @@ subsequences of a current check definition.
 				    ,args ,forms-formal)
 	 (destructuring-bind ,criterion-args ,args
 	   ,@check-forms)))))
-
+
 #+allegro (excl::define-simple-parser def-check-alias caadr :nst-criterion)
-
 (defmacro def-check-alias ((name &rest args)
 			   &body forms
 			   &aux
@@ -224,7 +223,7 @@ when def-check-alias is macroexpanded."
 	   ,@(when declaration-form-supp-p `(,declaration-form))
 	   (let ((,exp ,expansion))	   
 	     (build-check-form (car ,exp) (cdr ,exp) ,forms)))))))
-
+
 (defmacro def-check (name-or-name-and-args criterion &rest forms)
   (declare (special *the-group*))	; The def-group we're within.
 

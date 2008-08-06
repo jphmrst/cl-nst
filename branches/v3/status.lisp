@@ -21,7 +21,7 @@
 (in-package :sift.nst)
 
 ;;; Result records for high-level checks.
-
+
 (defstruct (check-result (:type vector) :named)
   "Overall result structure, containing notes of four distinct types.  A note is
 an instance of the check-note structure below.  The four note types are:
@@ -47,7 +47,7 @@ instances, and the info field is of any value."
  criterion-args - arguments to the criterion
  given-stack - the stack of values assessed by the criterion"
   criterion criterion-args given-stack)
-
+
 (defparameter *nst-context* nil
   "Dynamic-scoped variable recording the criteria under test - a list of
 context-layer instances.")

@@ -20,10 +20,7 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
-;;; Exported macro providing a more expressive test-definition
-;;; facility.
-
-;;; Some shorthand we'll use below.
+;;; Built-in basic testing criteria.
 
 (def-value-check (:pass () (&rest chk))
   ;; `(declare (ignorable chk))
@@ -66,6 +63,7 @@
   `(if (apply #',pred forms)
      (make-check-result)
      (emit-failure :format "Predicate ~s fails" :args '(,pred))))
+
 
 (def-value-check (:dump-forms (blurb) (&rest forms))
   `(progn
@@ -127,6 +125,7 @@
 	(t
 	 (emit-failure :format "Expected failure from ~s"
 		       :args '(,subcriterion)))))))
+
 
 (def-control-check (:all (&rest args) expr-list-form)
   (let ((var (gensym "var")) (warnings (gensym "warnings"))
@@ -194,6 +193,7 @@
 (def-control-check (:apply (transform criterion) forms)
   (continue-check criterion
 		  `(multiple-value-list (apply #',transform ,forms))))
+
 
 (def-control-check (:check-err (criterion) forms)
   (let ((x (gensym "x")))
@@ -248,6 +248,7 @@
 		       (append ,warnings
 			       (check-result-warnings ,result))))))))
 	 (make-check-result :info ,info :warnings ,warnings)))))
+
 
 (def-control-check (:seq (&rest criteria) forms)
   (let ((block (gensym)) (list (gensym "list"))
@@ -298,6 +299,7 @@
 		       (null (check-result-failures ,result)))
 		  (return-from ,permute-block
 		    (make-check-result)))))))))))
+
 
 (def-control-check (:across (&rest criteria) forms)
   (let ((block (gensym)) (list (gensym "list"))
@@ -332,6 +334,7 @@
 			       ,warnings
 			       (check-result-warnings ,result))))))))
 	 (make-check-result :info ,info :warnings ,warnings)))))
+
 
 (def-control-check (:slots (&rest clauses) forms)
   (let ((block (gensym "oblock-")) (obj (gensym "o-"))

@@ -1,8 +1,10 @@
 
-all: check.ps globals.ps mnst-package.ps sample.ps criteria.ps group.ps      \
-	package.ps status.ps fixture.ps interactive.ps permuter.ps test.ps   \
-	#manual.pdf
-	#
+all: package.ps \
+	globals.ps group.ps check.ps fixture.ps \
+	permuter.ps criteria.ps status.ps \
+	mnst-package.ps \
+	sample.ps \
+	interactive.ps test.ps \
 
 %.pdf: %.tex
 	pdflatex $<

@@ -19,11 +19,11 @@
 ;;; License along with NST.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
-
-(defun symbol-or-car (item)
-  (cond
-   ((consp item) (car item))
-   (t item)))
+
+
+;;;
+;;; Helper functions for the macros.
+;;;
 
 (defun pull-test-name-list (form)
   (unless (listp form) (return-from pull-test-name-list nil))
@@ -47,6 +47,8 @@
     (values (nreverse checks)
 	    setup setup-supp-p cleanup cleanup-supp-p
 	    each-setup each-setup-supp-p each-cleanup each-cleanup-supp-p)))
+
+;;; This page is intentionally left blank.
 
 #+allegro (excl::define-simple-parser def-group second :nst-group)
 (defmacro def-group (group-name given-fixtures &body forms)
