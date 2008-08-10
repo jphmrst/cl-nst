@@ -22,9 +22,19 @@
 
 ;;; Result records for high-level checks.
 
-(defstruct (check-result (:type vector) :named)
-  "Overall result structure, containing notes of four distinct types.  A note is
-an instance of the check-note structure below.  The four note types are:
+(defstruct package-result
+  "Overall package result structure, mapping groups to results by name."
+  package-name
+  (group-results (make-hash-table :test 'eq)))
+
+(defstruct group-result
+  "Overall group result structure, mapping checks to results by name."
+  group-name
+  (check-results (make-hash-table :test 'eq)))
+
+(defstruct check-result
+  "Overall check result structure, containing notes of four distinct types.  A
+note is an instance of the check-note structure below.  The four note types are:
  warnings - generated warnings
  failures - criteria which are not met, but not a Lisp error
  errors - Lisp errors
@@ -67,16 +77,89 @@ current criterion.")
   "For use within user-defined check criteria: explain a failure."
   (declare (special *nst-context* *nst-stack*))
   (make-check-result
-   :failures (list (make-check-note :context *nst-context*
-				    :stack *nst-stack*
+   :failures (list (make-check-note :context *nst-context* :stack *nst-stack* 
 				    :format format :args args))
    :info info))
+
+;;; -----------------------------------------------------------------
+
+(defun package-report (&optional (package *package*))
+  "Top-level function for reporting the results of a package."
+  (let* ((result (make-package-result))
+	 (user-package (find-package package))
+	 (sym-pack (groups-package user-package)))
+    (with-accessors ((name package-result-package-name)
+		     (checks package-result-group-results)) result
+      (do-symbols (remote-group sym-pack)
+	(let ((local-group (intern (symbol-name remote-group) user-package)))
+	  (setf (gethash local-group checks) (group-report local-group)))))
+    result))
+
+(defun group-report (group)
+  "Top-level function for reporting the results of a group."
+  (let ((result (make-group-result)))
+    (with-accessors ((name group-result-group-name)
+		     (checks group-result-check-results)) result
+      (setf name group)
+      (loop for test in (test-names group) do
+	(setf (gethash test checks) (test-report group test))))
+    result))
+
+(defun test-report (group test)
+  "Top-level function for reporting the results of a test."
+  (gethash (canonical-storage-name (standalone-class-name group test))
+	   +results-record+))
+
+;;; -----------------------------------------------------------------
+
+(defun report-package (&optional (package *package*)
+				 (*nst-local-verbosity* (get-verbosity-level)))
+  "Top-level function for reporting the results of a package."
+  (format *nst-output-stream* "~w" (package-report package)))
+
+(defun report-group (group &optional
+			   (*nst-local-verbosity* (get-verbosity-level)))
+  "Top-level function for reporting the results of a group."
+  (format *nst-output-stream* "~w" (group-report group)))
+
+(defun report-test (group test &optional
+			       (*nst-local-verbosity* (get-verbosity-level)))
+  "Top-level function for reporting the results of a test."
+  (format *nst-output-stream* "~w" (test-report group test)))
 
 ;;; -----------------------------------------------------------------
 
 (defmacro count-nonnulls (&rest bools)
   (let ((b (gensym)))
     `(loop for ,b in ,bools sum (if ,b 1 0))))
+
+(set-pprint-dispatch 'package-result
+  #'(lambda (s pr) 
+      (with-accessors ((name package-result-package-name)
+		       (checks package-result-group-results)) pr
+	(let ((groups
+	       (loop for group being the hash-keys of checks collect group)))
+	  (pprint-logical-block (s groups)
+	    (format s "Package ~a" name)
+	    (loop while (not (pprint-exit-if-list-exhausted)) do
+	      (pprint-newline :mandatory s)
+	      (let ((name (pprint-pop)))
+		(format s " - Group ~a: ~@<~w~:>"
+		  name (gethash name checks)))))))))
+
+(set-pprint-dispatch 'group-result
+  #'(lambda (s gr) 
+      (with-accessors ((name group-result-group-name)
+		       (checks group-result-check-results)) gr
+	(let ((tests
+	       (loop for check being the hash-keys of checks collect check)))
+	  (pprint-logical-block (s tests)
+	    (format s "Group ~a" name)
+	    (loop while (not (pprint-exit-if-list-exhausted)) do
+	      (pprint-newline :mandatory s)
+	      (let ((name (pprint-pop)))
+		(format s " - Test ~a: ~@<~w~:>"
+		  name (gethash name checks)))))))))
 
 (set-pprint-dispatch 'check-result
   #'(lambda (s cr) 

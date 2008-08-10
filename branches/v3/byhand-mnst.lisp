@@ -1,4 +1,4 @@
-;;; File sample.lisp
+;;; File byhand-mnst.lisp
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
@@ -18,7 +18,11 @@
 ;;; You should have received a copy of the GNU Lesser General Public
 ;;; License along with NST.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
-(in-package :mnst)
+(defpackage :mnst-manual
+    (:documentation "Manually-run tests and utilities for NST")
+    (:use :common-lisp :nst))
+
+(in-package :mnst-manual)
 
 ;;; This file contains a sample test block under development.
 
@@ -32,10 +36,10 @@
 (def-fixtures fix2 () (z2 (format t "        Bindings from fix2~%")))
 (def-fixtures fix3 () (z3 (format t "Bindings from fix3~%")))
 
-(def-group gr0 (fix1))
-(def-group gr1 (fix1) (def-check t1 :echo ()))
-(def-group gr2a (fix1) (def-check ts1 :echo ()) (def-check ts2 :echo ()))
-(def-group gr2b (fix1)
+(def-test-group gr0 (fix1))
+(def-test-group gr1 (fix1) (def-check t1 :echo ()))
+(def-test-group gr2a (fix1) (def-check ts1 :echo ()) (def-check ts2 :echo ()))
+(def-test-group gr2b (fix1)
   (:setup   (format t "  Setup for group gr2b~%"))
   (:cleanup (format t "  Cleanup for group gr2b~%"))
   (:each-setup   (format t "          Setup for each test of group gr2b~%"))

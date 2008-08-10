@@ -45,8 +45,11 @@ first element is that symbol and whose remaining elements are options."
   
 (defgeneric build-check-form (criterion args formals)
   (:documentation
-   "Assemble a Lisp expression corresponding to the logic of a single test."))
-  
+   "Assemble a Lisp expression corresponding to the logic of a single test.")
+  (:method (unknown-criterion args formals)
+     (declare (ignorable args formals))
+     (error "Undefined criterion ~s" unknown-criterion)))
+
 (defun continue-check (criterion forms)
   "This function is available from within the check-defining forms to process
 subsequences of a current check definition.
@@ -87,21 +90,18 @@ subsequences of a current check definition.
       (setf full-format
 	(if stack-transformer
 	  (list "~@<~?~_~@<~:~{@_  ~s~}~:>~:>"
-		(car blurb-format) (cdr blurb-format)
-		forms)
+		(car blurb-format) (cdr blurb-format) forms)
 	  blurb-format)))
     `(eval-when (:compile-toplevel :load-toplevel)
        #+allegro (eval-when (:load-toplevel)
 		   (excl:record-source-file ',name :type :nst-criterion))
-       (defmethod blurb-context-line (,stream
-				      (,id (eql ',name)) ,args ,forms)
+       (defmethod blurb-context-line (,stream (,id (eql ',name)) ,args ,forms)
 	 (destructuring-bind ,criterion-args ,args
 	   (declare (ignorable ,@criterion-formals))
 	   (destructuring-bind ,check-args ,forms
 	     (declare (ignorable ,@check-formals))
 	     (format ,stream ,@blurb-format))))
-       (defmethod detail-context-line (,stream
-				       (,id (eql ',name)) ,args ,forms)
+       (defmethod detail-context-line (,stream (,id (eql ',name)) ,args ,forms)
 	 (destructuring-bind ,criterion-args ,args
 	   (declare (ignorable ,@criterion-formals))
 	   (destructuring-bind ,check-args ,forms
@@ -111,8 +111,7 @@ subsequences of a current check definition.
 	 ,stack-transformer)
        (defmethod build-check-form ((,id (eql ',name)) ,args ,forms)
 	 (destructuring-bind ,criterion-args ,args
-	   (list 'destructuring-bind ',check-args ,forms
-		 ,@expansion))))))
+	   (list 'destructuring-bind ',check-args ,forms ,@expansion))))))
 
 #+allegro (excl::define-simple-parser def-control-check caadr :nst-criterion)
 (defmacro def-control-check ((name criterion-args forms-formal
@@ -244,116 +243,137 @@ when def-check-alias is macroexpanded."
 	  (test-in-group-class-name (gensym "test-in-group-class-name")))
       (declare (special *nst-context*))
       `(block ,name
-	 
-	 (multiple-value-bind (z ,check-fixture-classes ,anon-fixture-forms)
-	     (process-fixture-list ',fixtures)
-	   (declare (ignorable z))
-	   (loop for form in ,anon-fixture-forms do (eval form))
+	 (macrolet ((eval-dbg (form) `(progn (format t "~%~s~%" ,form)
+					     (eval ,form)
+					     (format t "OK~%"))))
+	   (multiple-value-bind (z ,check-fixture-classes ,anon-fixture-forms)
+	       (process-fixture-list ',fixtures)
+	     (declare (ignorable z))
+	     (loop for form in ,anon-fixture-forms do (eval form))
 	   
-	   (let (;; In this block we make our local binding to the
-		 ;; information stored to methods from earlier
-		 ;; load-time NST forms.
-		 (,suite-class-name (suite-class-name ',*the-group* ',name))
-		 (,standalone-class-name
-		  (standalone-class-name ',*the-group* ',name))
-		 (,test-config-class-name
-		  (test-config-class-name ',*the-group* ',name))
-		 (,fixtures-from-group (group-fixture-classes ',*the-group*))
-		 (,test-in-group-class-name
-		  (test-in-group-class-name ',*the-group*)))
-	     (unless ,suite-class-name
-	       (setf ,suite-class-name
-		 (gentemp ,(concatenate 'string
-			     (symbol-name *the-group*) "/"
-			     (symbol-name name) ".suite.")
-			  :sift.nst.test-within-group-class-names))
-	       (defmethod suite-class-name ((g (eql ',*the-group*))
-					    (c (eql ',name)))
-		 ,suite-class-name))
-	     (unless ,standalone-class-name
-	       (setf ,standalone-class-name
-		 (gentemp ,(concatenate 'string
-			     (symbol-name *the-group*) "/"
-			     (symbol-name name) ".standalone.")
-			  :sift.nst.test-within-group-class-names))
-	       (defmethod standalone-class-name ((g (eql ',*the-group*))
-						 (c (eql ',name)))
-		 ,standalone-class-name))
-	     (unless ,test-config-class-name
-	       (setf ,test-config-class-name
-		 (gentemp ,(concatenate 'string
-			     (symbol-name *the-group*) "/"
-			     (symbol-name name) ".testconfig.")
-			  :sift.nst.test-within-group-class-names))
-	       (defmethod test-config-class-name ((g (eql ',*the-group*))
-						  (c (eql ',name)))
-		 ,test-config-class-name))
+	     (let (;; In this block we make our local binding to the
+		   ;; information stored to methods from earlier
+		   ;; load-time NST forms.
+		   (,suite-class-name (suite-class-name ',*the-group* ',name))
+		   (,standalone-class-name
+		    (standalone-class-name ',*the-group* ',name))
+		   (,test-config-class-name
+		    (test-config-class-name ',*the-group* ',name))
+		   (,fixtures-from-group (group-fixture-classes ',*the-group*))
+		   (,test-in-group-class-name
+		    (test-in-group-class-name ',*the-group*)))
+	       (unless ,suite-class-name
+		 (setf ,suite-class-name
+		   (gentemp ,(concatenate 'string
+			       (symbol-name *the-group*) "/"
+			       (symbol-name name) ".suite.")
+			    :sift.nst.test-within-group-class-names))
+		 (defmethod suite-class-name ((g (eql ',*the-group*))
+					      (c (eql ',name)))
+		   ,suite-class-name))
+	       (unless ,standalone-class-name
+		 (setf ,standalone-class-name
+		   (gentemp ,(concatenate 'string
+			       (symbol-name *the-group*) "/"
+			       (symbol-name name) ".standalone.")
+			    :sift.nst.test-within-group-class-names))
+		 (defmethod standalone-class-name ((g (eql ',*the-group*))
+						   (c (eql ',name)))
+		   ,standalone-class-name))
+	       (unless ,test-config-class-name
+		 (setf ,test-config-class-name
+		   (gentemp ,(concatenate 'string
+			       (symbol-name *the-group*) "/"
+			       (symbol-name name) ".testconfig.")
+			    :sift.nst.test-within-group-class-names))
+		 (defmethod test-config-class-name ((g (eql ',*the-group*))
+						    (c (eql ',name)))
+		   ,test-config-class-name))
 
-	     (eval `(defclass ,,test-config-class-name () ()))
+	       (eval `(defclass ,,test-config-class-name () ()))
 	     
-	     (eval `(defclass ,,suite-class-name
-			 (,,test-in-group-class-name
-			  ,,test-config-class-name
-			 ,@,check-fixture-classes)
-		      ()))
+	       (eval `(defclass ,,suite-class-name
+			      (,,test-in-group-class-name
+			       ,,test-config-class-name
+			       ,@,check-fixture-classes)
+			    ()))
 
-	     (let ((standalone-decl `(defclass ,,standalone-class-name
-			(,(group-class-name ',*the-group*)
-			 ,@,fixtures-from-group
-			 ,@,check-fixture-classes
-			 ,(standalone-test-in-group-class-name ',*the-group*)
-			 ,,test-in-group-class-name
-			 ,,test-config-class-name)
-					  ())))
-	       ;; (format t "~%~%~s~%~%" standalone-decl)
-	       (eval standalone-decl))
+	       (eval `(defclass ,,standalone-class-name
+			  (,(group-class-name ',*the-group*)
+			   ,@,fixtures-from-group
+			   ,@,check-fixture-classes
+			   ,(standalone-test-in-group-class-name ',*the-group*)
+			   ,,test-in-group-class-name
+			   ,,test-config-class-name)
+			()))
 
-	     (eval `(defmethod run-test ((obj ,,suite-class-name))
-		      ,',(continue-check criterion (cons 'list forms))))
-	     (eval `(defmethod run ((obj ,,standalone-class-name))
-		      (run-test obj)))
-	     (eval `(defmethod run-test ((obj ,,standalone-class-name))
-		      ,',(continue-check criterion (cons 'list forms))))
+	       (eval `(defmethod core-run-test ((obj ,,suite-class-name))
+			    ,',(continue-check criterion (cons 'list forms))))
+	       (eval `(defmethod core-run ((obj ,,standalone-class-name))
+			    (core-run-test obj)))
+	       (eval `(defmethod core-run-test ((obj ,,standalone-class-name))
+			    ,',(continue-check criterion (cons 'list forms))))
 
-	     ,@(when setup-supp-p
-		 `((eval `(defmethod run-test
-			      :before ((obj ,,test-config-class-name))
-			    ,',setup))))
+	       ,@(when setup-supp-p
+		   `((eval `(defmethod core-run-test
+				    :before ((obj ,,test-config-class-name))
+				  ,',setup))))
 
-	     ,@(when cleanup-supp-p
-		 `((eval `(defmethod run-test
-			      :after ((obj ,,test-config-class-name))
-			    ,',cleanup))))
+	       ,@(when cleanup-supp-p
+		   `((eval `(defmethod core-run-test
+				    :after ((obj ,,test-config-class-name))
+				  ,',cleanup))))
+
+	       ;; Test results are stored under a canonical name.
+	       (eval `(defmethod canonical-storage-name 
+			  ((inst ,,suite-class-name))
+			',,suite-class-name))
+	       (eval `(defmethod canonical-storage-name
+			  ((inst ,,standalone-class-name))
+			',,suite-class-name))
+	       (eval `(defmethod canonical-storage-name
+			  ((inst (eql ',,suite-class-name)))
+			',,suite-class-name))
+	       (eval `(defmethod canonical-storage-name
+			  ((inst (eql ',,standalone-class-name)))
+			',,suite-class-name))
 	     
-	     (defmethod trace-test ((gr (eql ',*the-group*))
-				    (ts (eql ',name)))
-	       (format t "Test ~s (group ~s)~%" gr ts)
-	       (format t " - Given name and args: ~s~%" ',name-or-name-and-args)
-	       (format t " - Given criterion: ~s~%" ',criterion)
-	       (format t " - Given forms: ~@<~{~s~^ ~:_~}~:>~%" ',forms)
+	       ;; Clear any previous stored results, since we've just
+	       ;; (re-)defined this check.
+	       (when (boundp '+results-record+)
+		 (remhash ',suite-class-name (symbol-value '+results-record+)))
+	       
+	       ;; Provide debugging information about this test.
+	       (defmethod trace-test ((gr (eql ',*the-group*))
+				      (ts (eql ',name)))
+		 (format t "Test ~s (group ~s)~%" gr ts)
+		 (format t " - Given name and args: ~s~%"
+		   ',name-or-name-and-args)
+		 (format t " - Given criterion: ~s~%" ',criterion)
+		 (format t " - Given forms: ~@<~{~s~^ ~:_~}~:>~%" ',forms)
 	     
-	       (format t " - In-suite class name: ~s~%"
-		 (suite-class-name ',*the-group* ',name))
-	       (format t "              expected: ~s~%" ,suite-class-name)
-	       (format t "   Superclasses: ~@<~{~s~^ ~:_~}~:>~%"
-		 (loop for super
-		     in (class-direct-superclasses
-			 (find-class (suite-class-name ',*the-group* ',name)))
-		     collect (class-name super)))
-	       (format t "       expected: ~s~%" ,test-in-group-class-name)
+		 (format t " - In-suite class name: ~s~%"
+		   (suite-class-name ',*the-group* ',name))
+		 (format t "              expected: ~s~%" ,suite-class-name)
+		 (format t "   Superclasses: ~@<~{~s~^ ~:_~}~:>~%"
+		   (loop for super
+		       in (class-direct-superclasses
+			   (find-class (suite-class-name ',*the-group* ',name)))
+		       collect (class-name super)))
+		 (format t "       expected: ~s~%" ,test-in-group-class-name)
 	     
-	       (format t " - Standalone class name: ~s~%"
-		 (standalone-class-name ',*the-group* ',name))
-	       (format t "                expected: ~s~%"
-		 ,standalone-class-name)
-	       (format t "   Superclasses: ~@<~{~s~^ ~:_~}~:>~%"
-		 (loop for super
-		     in (class-direct-superclasses
-			 (find-class (standalone-class-name ',*the-group*
-							    ',name)))
-		     collect (class-name super)))
-	       (format t "       expected: ~@<~s ~:_~@<~{~s~^ ~:_~}~:>~:>~%" 
-		 (standalone-test-in-group-class-name ',*the-group*)
-		 ,fixtures-from-group)
+		 (format t " - Standalone class name: ~s~%"
+		   (standalone-class-name ',*the-group* ',name))
+		 (format t "                expected: ~s~%"
+		   ,standalone-class-name)
+		 (format t "   Superclasses: ~@<~{~s~^ ~:_~}~:>~%"
+		   (loop for super
+		       in (class-direct-superclasses
+			   (find-class (standalone-class-name ',*the-group*
+							      ',name)))
+		       collect (class-name super)))
+		 (format t "       expected: ~@<~s ~:_~@<~{~s~^ ~:_~}~:>~:>~%" 
+		   (standalone-test-in-group-class-name ',*the-group*)
+		   ,fixtures-from-group)
 	     
-	       )))))))
+		 ))))))))

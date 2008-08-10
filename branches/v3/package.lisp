@@ -47,6 +47,8 @@
 	     #:run-nst-commands
 	     #:emit-failure
 	     #:emit-warning
+	     #:run-group
+	     #:run-test
 	     
 	     #:*default-report-stream*))
 

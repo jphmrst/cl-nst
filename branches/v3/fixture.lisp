@@ -55,59 +55,74 @@ use of this fixture.
   
   (let ((group-fixture-class-name (gensym "group-fixture-class-name"))
 	(test-fixture-class-name (gensym "test-fixture-class-name")))
-    `(eval-when (:load-toplevel :execute)
-       (let* ((,group-fixture-class-name (group-fixture-class-name ',name))
-	      (,test-fixture-class-name (test-fixture-class-name ',name)))
-	 (unless ,group-fixture-class-name
-	   (setf ,group-fixture-class-name
-		 (gentemp (concatenate 'string (symbol-name ',name) ".class.")
-			  :nst-fixture))
-	   (defmethod group-fixture-class-name ((f (eql ',name)))
-	     ,group-fixture-class-name))
-	 (unless ,test-fixture-class-name
-	   (setf ,test-fixture-class-name
-		 (gentemp (concatenate 'string (symbol-name ',name) ".class.")
-			  :nst-fixture))
-	   (defmethod test-fixture-class-name ((f (eql ',name)))
-	     ,test-fixture-class-name))
-	 (eval `(defclass ,,group-fixture-class-name () ()))
-	 (eval `(defclass ,,test-fixture-class-name () ()))
+    `(eval-when (:compile-toplevel :load-toplevel :execute)
 
-	 ;; WARNING!  This line causes Allegro to crash
-	 #-allegro (set-pprint-dispatch ',group-fixture-class-name
-		     '#(lambda (stream object)
-			(format stream "Fixture set ~s" ',name)))
+       ;; This eval-when block contains method definitions which will
+       ;; be called later in the compile of this same file, so they
+       ;; must be evaluated as soon as possible.
+       (eval-when (:compile-toplevel :load-toplevel :execute)
+	 (defmethod bound-names ((f (eql ',name)))
+	   ',(loop for binding in bindings collect (car binding))))
+       
+       ;; This eval-when block contains definition which will be used
+       ;; only after this file is loaded.
+       (eval-when (:load-toplevel :execute)
+	 (let* ((,group-fixture-class-name (group-fixture-class-name ',name))
+		(,test-fixture-class-name (test-fixture-class-name ',name)))
+	   (unless ,group-fixture-class-name
+	     (setf ,group-fixture-class-name
+	       (gentemp (concatenate 'string (symbol-name ',name) ".class.")
+			:nst-fixture))
+	     (defmethod group-fixture-class-name ((f (eql ',name)))
+	       ,group-fixture-class-name))
+	   (unless ,test-fixture-class-name
+	     (setf ,test-fixture-class-name
+	       (gentemp (concatenate 'string (symbol-name ',name) ".class.")
+			:nst-fixture))
+	     (defmethod test-fixture-class-name ((f (eql ',name)))
+	       ,test-fixture-class-name))
+	   (eval `(defclass ,,group-fixture-class-name () ()))
+	   (eval `(defclass ,,test-fixture-class-name () ()))
+
+	   ;; WARNING!  This line causes Allegro to crash
+	   #-allegro (set-pprint-dispatch ',group-fixture-class-name
+		       '#(lambda (stream object)
+			  (format stream "Fixture set ~s" ',name)))
 	 
-	 (eval `(defmethod run :around ((group ,,group-fixture-class-name))
-		  (let ,',bindings (call-next-method))))
-	 (eval `(defmethod run-test :around ((test ,,test-fixture-class-name))
-		  (let ,',bindings (call-next-method))))
+	   (eval `(defmethod core-run :around ((group ,,group-fixture-class-name))
+		    (let ,',bindings (call-next-method))))
+	   (eval `(defmethod core-run-test :around ((test
+						     ,,test-fixture-class-name))
+		    (let ,',bindings (call-next-method))))
 
-	 (defmethod open-fixture ((f (eql ',name))
-				  &optional (in-package *package*))
-	   (unless (packagep in-package)
-	     (setf in-package (find-package in-package)))
-	   (setf ,@(loop for (var form) in bindings
+	   (defmethod open-fixture ((f (eql ',name))
+				    &optional (in-package *package*))
+	     (declare (special ,@(loop for used-fixture in uses
+				       append (bound-names used-fixture))
+			       ,@assumes))
+	     (unless (packagep in-package)
+	       (setf in-package (find-package in-package)))
+	     (setf ,@(loop for (var form) in bindings
 			 append
-			 (cond
-			  (name `((symbol-value (intern (symbol-name ',var)
-							in-package))
-				  ,form))
-				  (t nil))))
-	   ',name)
-	 (defmethod trace-fixture ((f (eql ',name)))
-	   (format t "Fixture ~s~% - Bindings:~%" f)
-	   ,@(loop for (var form) in bindings
+			   (cond
+			    (name `((symbol-value (intern (symbol-name ',var)
+							  in-package))
+				    ,form))
+			    (t nil))))
+	     ',name)
+	   (defmethod trace-fixture ((f (eql ',name)))
+	     (format t "Fixture ~s~% - Bindings:~%" f)
+	     ,@(loop for (var form) in bindings
 		   collect `(format t "   (~s ~s)~%" ',var ',form))
-	   (format t " - Other fixtures: ~@<~{~s~^ ~_~}~:>~%" ',uses)
-	   (format t " - Names expected: ~@<~{~s~^ ~_~}~:>~%" ',assumes)
-	   (format t " - Outer bindings: ~@<~{~s~^ ~_~}~:>~%" ',outer)
-	   (format t " - Inner bindings: ~@<~{~s~^ ~_~}~:>~%" ',inner)
-	   (format t " - Documentation string: ~s~%" ,documentation)
-	   (format t " - Internal class names:~%")
-	   (format t "     For groups - ~s~%" ,group-fixture-class-name)
-	   (format t "     For tests  - ~s~%" ,test-fixture-class-name)))
-       ',name)))
+	     (format t " - Other fixtures: ~@<~{~s~^ ~_~}~:>~%" ',uses)
+	     (format t " - Names expected: ~@<~{~s~^ ~_~}~:>~%" ',assumes)
+	     (format t " - Outer bindings: ~@<~{~s~^ ~_~}~:>~%" ',outer)
+	     (format t " - Inner bindings: ~@<~{~s~^ ~_~}~:>~%" ',inner)
+	     (format t " - Documentation string: ~s~%" ,documentation)
+	     (format t " - Internal class names:~%")
+	     (format t "     For groups - ~s~%" ,group-fixture-class-name)
+	     (format t "     For tests  - ~s~%" ,test-fixture-class-name)))
+	 ',name))))
 
 (defun process-fixture-list (fixture-list)
   (let ((group-fixture-class-names nil)

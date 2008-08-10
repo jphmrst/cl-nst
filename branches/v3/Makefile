@@ -2,8 +2,8 @@
 all: package.ps \
 	globals.ps group.ps check.ps fixture.ps \
 	permuter.ps criteria.ps status.ps \
-	mnst-package.ps \
-	sample.ps \
+	test-packages.ps \
+	byhand-mnst.ps \
 	interactive.ps test.ps \
 
 %.pdf: %.tex

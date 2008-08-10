@@ -34,6 +34,11 @@
   ;; `(declare (ignorable chk))
   `(emit-warning :format ,(car args) :args ,(cdr args)))
 
+(def-value-check (:true () (bool))
+  `(if bool
+     (make-check-result)
+     (emit-failure :format "Form not t: ~s" :args (list bool))))
+
 (def-value-check (:eq (eq-form) (check-form))
   `(if (eq ,eq-form check-form)
      (make-check-result)
@@ -56,8 +61,9 @@
      (make-check-result)
      (emit-failure :format "Not equalp to ~s" :args '(,eql-form))))
 
-(def-check-alias (:forms-eq)  `(:predicate eq))
-(def-check-alias (:forms-eql) `(:predicate eql))
+(def-check-alias (:forms-eq)    `(:predicate eq))
+(def-check-alias (:forms-eql)   `(:predicate eql))
+(def-check-alias (:forms-equal) `(:predicate equal))
 
 (def-value-check (:predicate (pred) (&rest forms))
   `(if (apply #',pred forms)
@@ -193,6 +199,9 @@
 (def-control-check (:apply (transform criterion) forms)
   (continue-check criterion
 		  `(multiple-value-list (apply #',transform ,forms))))
+
+(def-control-check (:values (criterion) forms)
+  (continue-check criterion `(multiple-value-list (car ,forms))))
 
 
 (def-control-check (:check-err (criterion) forms)

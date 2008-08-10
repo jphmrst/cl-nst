@@ -26,8 +26,16 @@
     :description "M as is meta: NST- (or otherwise) testing NST."
     :serial t
     :depends-on (:nst)
-    :components ((:file "mnst-package")
-		 (:file "sample")))
+    :components (;; Manually-run tests, for inspecting the order of
+		 ;; fixture, setup, cleanup and test execution.
+		 (:file "byhand-mnst")
+		 
+		 ;; A simple test suite
+		 (:file "simple-mnst")
+
+;;;		 ;; Checks with anonymous fixtures
+;;;		 (:file "anon-fixtures-mnst")
+		 ))
 
 (defclass nst-file (cl-source-file) ())
 (defmethod perform ((o compile-op) (c nst-file)) nil)

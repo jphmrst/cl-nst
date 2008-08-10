@@ -50,8 +50,8 @@
 
 ;;; This page is intentionally left blank.
 
-#+allegro (excl::define-simple-parser def-group second :nst-group)
-(defmacro def-group (group-name given-fixtures &body forms)
+#+allegro (excl::define-simple-parser def-test-group second :nst-group)
+(defmacro def-test-group (group-name given-fixtures &body forms)
   "Define a group of tests associated with certain fixtures,
 initialization and cleanup.
 
@@ -108,17 +108,17 @@ forms - zero or more test forms, given by def-check or def-test."
 
 	     (let ((,group-pkg (groups-package ,group-orig-pkg))
 		   (,group-class-name (group-class-name ',group-name))
-		   (,test-in-group-class-name
+		   (,test-in-group-class-name 
 		    (test-in-group-class-name ',group-name))
 		   (,standalone-in-group-class-name
-		    (standalone-test-in-group-class-name ',group-name))
-		   )
+		    (standalone-test-in-group-class-name ',group-name)))
 	       (unless ,group-pkg
 		 (setf ,group-pkg
 		   (make-package (symbol-name
 				  (gentemp ,(concatenate 'string
 					      (package-name group-orig-pkg)
-					      ".testgroups.")))))
+					      ".testgroups.")))
+				 :use nil))
 		 (defmethod groups-package ((pkg (eql ,group-orig-pkg)))
 		   ,group-pkg))
 	       (intern (symbol-name ',group-name) ,group-pkg)
@@ -148,11 +148,8 @@ forms - zero or more test forms, given by def-check or def-test."
 		     ((g (eql ',group-name)))
 		   ,standalone-in-group-class-name))
 
-	       (let ((form `(defclass ,,group-class-name
-				(group-base-class ,@,group-fixture-classes)
-			      ())))
-		 ;; (format t "~%~s~%~%" form)
-		 (eval form))
+	       (eval `(defclass ,,group-class-name (group-base-class
+						    ,@,group-fixture-classes) ()))
 
 	       ;; WARNING!  This hook crashes Allegro Lisp.
 	       #-allegro (set-pprint-dispatch ',group-class-name
@@ -169,28 +166,30 @@ forms - zero or more test forms, given by def-check or def-test."
 			   ;; (,,group-class-name ,,test-in-group-class-name)
 			   () ()))
 
-	       (eval `(defmethod run ((obj ,,standalone-in-group-class-name))
-			(run-test obj)))
+	       (eval `(defmethod core-run ((obj ,,standalone-in-group-class-name))
+			(core-run-test obj)))
 		 
 	       (when ,setup-supp-p
-		 (eval `(defmethod run :before ((obj ,,group-class-name))
+		 (eval `(defmethod core-run :before ((obj ,,group-class-name))
 			  ,',setup)))
 	       
 	       (when ,cleanup-supp-p
-		 (eval `(defmethod run :after ((obj ,,group-class-name))
+		 (eval `(defmethod core-run :after ((obj ,,group-class-name))
 			  ,',cleanup)))
 
 	       (when ,each-setup-supp-p
-		 (eval `(defmethod run-test
+		 (eval `(defmethod core-run-test
 			    :before ((obj ,,test-in-group-class-name))
 			  ,',each-setup)))
 	       
 	       (when ,each-cleanup-supp-p
-		 (eval `(defmethod run-test
+		 (eval `(defmethod core-run-test
 			    :after ((obj ,,test-in-group-class-name))
 			  ,',each-cleanup)))
 
 	       (eval `(defmethod test-names ((group ,,group-class-name))
+			',',test-names))
+	       (eval `(defmethod test-names ((group (eql ',',group-name)))
 			',',test-names))
 
 	       (defmethod trace-group ((g (eql ',group-name)))

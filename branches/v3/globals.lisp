@@ -96,6 +96,12 @@
 (def-flag *defer-test-compile* t ()
 	  :documentation
 	  "Set to t to defer compilation of test forms until runtime.")
+
+(defun get-verbosity-level ()
+  :verbose)
+
+(defvar *nst-local-verbosity* :default)
+(defvar *nst-output-stream* *standard-output*)
 
 ;;;
 ;;; Generic functions whose methods are defined by the various macros.
@@ -162,6 +168,11 @@ each test for methods to apply whether the test is called standalone or as part
 of a group.")
   (:method (group class) (declare (ignorable group class)) nil))
 
+(defgeneric canonical-storage-name (test-name)
+  (:documentation
+   "Map from various test names and instances to the private name against which NST
+associates test results."))
+
 ;; Fixture properties and operations.
 
 (defgeneric bound-names (fixture-or-group)
@@ -208,6 +219,11 @@ corresponding internal name-binding NST class for adding fixtures to a test.")
 (defgeneric trace-test (gr ts)
   (:documentation "Provide debugging information about a test.")
   (:method (gr ts) (format t "No known test ~s in group ~s~%" ts gr)))
+
+(defun trace-results ()
+  "Dump the results hash."
+  (loop for ts being the hash-keys of +results-record+ using (hash-value rs) do
+    (format t "~s -> ~s~%" ts rs)))
 
 ;;;
 ;;; More generic functions whose methods are defined by the various
@@ -216,30 +232,70 @@ corresponding internal name-binding NST class for adding fixtures to a test.")
 
 ;; Internal test execution functions.
 
-(defgeneric run (group-or-test)
+(defgeneric core-run (group-or-test)
   (:documentation
    "Group fixtures provide name-binding :around methods to this generic
 function; group setup and cleanup become :before and :after methods.")
   (:method ((group-inst group-base-class))
      (let ((group-name (group-name group-inst)))
-       (format t "    Starting run loop for ~s~%" group-inst)
+       ;; (format t "    Starting run loop for ~s~%" group-inst)
        (loop for test in (test-names group-inst) do
-	 (format t "      Starting loop entry ~s~%" test)
+	 ;; (format t "      Starting loop entry ~s~%" test)
 	 (let ((in-suite-class-name (suite-class-name group-name test)))
 	   ;; (format t "    Suite class name ~s~%" suite-class-name)
 	   ;; (format t "    Actual class ~s~%" (find-class suite-class-name))
 	   ;; (describe (find-class suite-class-name))
 	   (let ((test-inst (make-instance in-suite-class-name)))
 	     ;; (format t "    Instance ~s~%" test-inst)
-	     (run-test test-inst)))
-	 (format t "      Exiting loop entry ~s~%" test))
-       (format t "    Exiting run loop for ~s~%" group-inst))))
+	     (core-run-test test-inst)))
+	 ;; (format t "      Exiting loop entry ~s~%" test)
+	     )
+	 ;;(format t "    Exiting run loop for ~s~%" group-inst)
+       )
+     nil))
 
-(defgeneric run-test (test)
+(defgeneric core-run-test (test)
   (:documentation
    "Test fixtures provide name-binding :around methods to this generic function
 for individual tests.  Every-test and test-specific setup and cleanup are
-encoded as :before and :after methods."))
+encoded as :before and :after methods.")
+
+  (:method :around (test)
+    "Capture the result of the test."
+    (let ((result (call-next-method)))
+      (setf (gethash (canonical-storage-name (type-of test)) +results-record+)
+	    result)
+      result)))
+
+;;;
+;;; Programmatic starters for a test from Lisp.  Other starters such
+;;; as via ASDF and vendor-specific REPL macros call these functions;
+;;; from pure Lisp these are the top-level calls.
+;;;
+(defun run-package (&optional (package-or-name *package*))
+  "Run all groups in a package."
+  (let* ((user-package (find-package package-or-name))
+	 (sym-pack (groups-package user-package)))
+    (do-symbols (group sym-pack)
+      (run-group (intern (symbol-name group) user-package)))))
+
+(defun run-group (group)
+  "Run a group by its user-given name."
+  (core-run (make-instance (group-class-name group))))
+
+(defun run-test (group test)
+  "Run a test standalone by its user-given name (and its group's name)."
+  (core-run (make-instance (standalone-class-name group test))))
+
+;;;
+;;; Recording of results.  We use a hash table here --- unlike the
+;;; method-based recording of test symbols, we're not worried about
+;;; straddling the compile/load/run-time borders for result recording.
+;;;
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (unless (boundp '+results-record+)
+    (defconstant +results-record+ (make-hash-table :test 'eq)
+      "Results of test runs.")))
 
 ;;;
 ;;; Helper functions

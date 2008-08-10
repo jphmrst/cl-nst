@@ -51,7 +51,7 @@
 		 (:file "permuter" :depends-on ("package"))
 		 
 		 ;; Standard criteria declarations.
-		 (:file "criteria" :depends-on ("globals" "permuter"))
+		 (:file "criteria" :depends-on ("permuter" "check"))
 		 
 		 ;; Receiving and bookkeeping the results of tests.
 		 (:file "status"   :depends-on ("globals"))
@@ -62,4 +62,5 @@
 ;;;		 (:file "defcheck")
 ;;;		 (:file "interactive")
 ;;;		 (:file "format")
+
 		 ))
