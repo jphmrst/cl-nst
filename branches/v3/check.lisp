@@ -307,6 +307,11 @@ when def-check-alias is macroexpanded."
 			   ,,test-config-class-name)
 			()))
 
+	       (eval `(defmethod check-name ((obj ,,suite-class-name))
+			',',name))
+	       (eval `(defmethod check-name ((obj ,,standalone-class-name))
+			',',name))
+       
 	       (eval `(defmethod core-run-test ((obj ,,suite-class-name))
 			    ,',(continue-check criterion (cons 'list forms))))
 	       (eval `(defmethod core-run ((obj ,,standalone-class-name))
@@ -325,13 +330,13 @@ when def-check-alias is macroexpanded."
 				  ,',cleanup))))
 
 	       ;; Test results are stored under a canonical name.
-	       (eval `(defmethod canonical-storage-name 
-			  ((inst ,,suite-class-name))
+	       (eval `(defmethod canonical-storage-name ((inst
+							  ,,suite-class-name))
 			',,suite-class-name))
 	       (eval `(defmethod canonical-storage-name
 			  ((inst ,,standalone-class-name))
 			',,suite-class-name))
-	       (eval `(defmethod canonical-storage-name
+	       (eval `(defmethod canonical-storage-name 
 			  ((inst (eql ',,suite-class-name)))
 			',,suite-class-name))
 	       (eval `(defmethod canonical-storage-name

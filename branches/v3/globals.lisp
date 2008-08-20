@@ -147,7 +147,10 @@ which every test in the group is associated for a standalone test.")
 housing the names of the groups in each package.")
   (:method (default) (declare (ignorable default)) nil))
 
-;; Properties of tests.
+;; Properties of checks.
+
+(defgeneric check-name (check-instance)
+  (:documentation "Map from a check instance back to its symbolic name."))
 
 (defgeneric suite-class-name (group-name test-name)
   (:documentation
@@ -230,6 +233,8 @@ corresponding internal name-binding NST class for adding fixtures to a test.")
 ;;; macros.
 ;;;
 
+(defparameter *nst-check-name* nil)
+
 ;; Internal test execution functions.
 
 (defgeneric core-run (group-or-test)
@@ -262,10 +267,11 @@ encoded as :before and :after methods.")
 
   (:method :around (test)
     "Capture the result of the test."
-    (let ((result (call-next-method)))
-      (setf (gethash (canonical-storage-name (type-of test)) +results-record+)
-	    result)
-      result)))
+    (let ((*nst-check-name* (check-name test)))
+      (let ((result (call-next-method)))
+	(setf (gethash (canonical-storage-name (type-of test)) +results-record+)
+	  result)
+	result))))
 
 ;;;
 ;;; Programmatic starters for a test from Lisp.  Other starters such

@@ -1,21 +1,27 @@
 
 Current using simple-mnst.lisp.
 
-[August 2008]
-Working now on the status reporting.  Want something in place that
-shows results even if it's not perfect.
+:pa mnst-simple
+(nst::run-package)
+(nst::report-package)
+
+ - Print contexts and stacks on test asks.
+ - The ones with info.
 
 Open tickets:
 
-  #30  Context-preserving error reporting scheme
-  #31  Wrap instance-based run methods in eql-methods on group and test names
+  #37  Refine printing of test details --- contexts, expression stacks, info
   #32  Redesign interaction schemes
   #36  Document class/method setup
   #33  Add SBCL compatibility
-
-Add ticket about anonymous fixtures.
+  #38  Add ASDF compatibility
+  #39  Anonymous fixtures are broken
 
 Also need to comment and doc-comment everything that's in place.
+
+[August 2008]
+Working now on the status reporting.  Want something in place that
+shows results even if it's not perfect.
 
 [July 2008]
 The order of calls is now correct for both groups and standalone
