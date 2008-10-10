@@ -414,6 +414,9 @@ OPENING FIXTURES
   :nst :open FIXTURE-NAME
         Bring the names bound in the fixture into the runtime
         environment.
+  :nst :open* FIXTURE-NAME+
+        Bring the names bound in each of the fixtures into the 
+        runtime environment, in order.
   :nst :open-group-fixtures GROUP-NAME
         Bring the names bound in the fixtures used by GROUP-NAME 
         into the runtime environment.
