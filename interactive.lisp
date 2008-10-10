@@ -35,7 +35,7 @@
 ;;;	 (*erred-cleanup* (make-hash-table))
 ;;;	 (*failed-tests* (make-hash-table))
 ;;;	 (*passed-tests* (make-hash-table))
-;;;	 (*erred-tests* (make-hash-table))
+	 (*erred-tests* (make-hash-table))
 	 )
      ,@forms
      (run-pending)
@@ -736,6 +736,14 @@ fixing problems as they arise.
 		  (format t "Can't find fixture ~s ~
                              ~_(check current package)." (name cnd))
 		  (return-from run-nst-commands))))
+
+	    (command-case (:open*) (fixture-names)
+              (dolist (fixture-name fixture-names)
+	        (handler-case (open-fixture fixture-name)
+		  (unknown-fixture (cnd)
+		    (format t "Can't find fixture ~s ~
+                             ~_(check current package)." (name cnd))
+		    (return-from run-nst-commands)))))
 
 	    (command-case (:open-group-fixtures) (group-name)
 	      (labels ((open-one (fixture-name)
