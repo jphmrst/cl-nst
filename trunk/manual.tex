@@ -678,7 +678,16 @@ interactive namespace for debugging with the
   Opened fixture SMALL-FIXTURE.
   CL-USER(78): fix-var1
   3
-  CL-USER(79): \end{verbatim}
+  CL-USER(79): 
+\end{verbatim}
+
+\subsubsection{The \texttt{:open{\textasteriskcentered}} operation}
+\index{open{\textasteriskcentered}@\texttt{:open{\textasteriskcentered}}}%
+Multiple fixtures\index{fixtures!debugging} can be \emph{opened} into the
+interactive namespace with a single command using the
+\texttt{:nst~:open} command:
+\\ Syntax: \texttt{:nst :open\* } {\textit{FIXTURE-NAME}{\textasteriskcentered}}
+
 
 \subsubsection{The \texttt{:open-used} operation}
 \index{open-used@\texttt{:open-used}}%
