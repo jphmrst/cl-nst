@@ -44,7 +44,9 @@ optional keyword arguments are described below.
 
 criterion - the criterion for the forms to pass this test.
 
-forms - forms to be evaluated and assessed by the criterion.
+forms - forms to be evaluated and assessed by the criterion.  The results of 
+each of the individual forms will be collected, and a list of the
+results evaluated by the criterion.
 
 Optional keyword arguments in the name-and-args form:
 
