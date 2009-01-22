@@ -71,7 +71,7 @@ use of this fixture.
 	 ;; The names defined in the other fixtures which this fixture
 	 ;; is declared to use.
 	 (fix-used
-	  (loop for f in uses
+	  (loop for f in (if (listp uses) uses (list uses))
 		append (loop for id in (gethash f +fixture-def-names+)
 			     collect id)))
 	 
@@ -141,7 +141,7 @@ use of this fixture.
 	   (declare ,@outer
 		    ,@(loop for f in fix-used collect `(special ,f))
 		    ,@(loop for f in fix-used collect `(ignorable ,f))
-		    ,@(loop for v in assumes collect `(special ,v)))
+		    ,@(loop for v in (if (listp assumes) assumes (list assumes)) collect `(special ,v)))
 	   (bind-dbg
 	    (format ,report-stream
 		"       ~@<Binding names:~{ ~s~} ~_(by ~s via ~s)~:>~%"
