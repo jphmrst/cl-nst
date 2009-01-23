@@ -26,22 +26,22 @@
 
 (defsystem :nst
     :serial t
-    :version "0.2.1"
+    :version "0.3.0"
     ;; :depends-on (:jm-defs)
     :in-order-to ((test-op (test-op :test-nst)))
     :components ((:file "package")
-		 (:file "permuter")
-		 (:file "numbers")
-		 (:file "globals")
-		 (:file "classes")
-		 (:file "runners")
-		 (:file "fixtures")
-		 (:file "testforms")
-		 (:file "status")
-		 (:file "defcheck")
-		 (:file "criteria")
-		 (:file "interactive")
-		 (:file "format")))
+                 (:file "permuter")
+                 (:file "numbers")
+                 (:file "globals")
+                 (:file "classes")
+                 (:file "runners")
+                 (:file "fixtures")
+                 (:file "testforms")
+                 (:file "status")
+                 (:file "defcheck")
+                 (:file "criteria")
+                 (:file "interactive")
+                 (:file "format")))
 
 (defclass nst-file (cl-source-file) ())
 (defmethod perform ((o compile-op) (c nst-file)) nil)
@@ -55,17 +55,17 @@
     :depends-on (:nst)
     :in-order-to ((test-op (load-op :test-nst)))
     :components ((:nst-file "nst-nst")
-		 (:nst-file "nst-interact")
-		 (:nst-file "nst-criteria")
-		 (:nst-file "nst-fails")))
+                 (:nst-file "nst-interact")
+                 (:nst-file "nst-criteria")
+                 (:nst-file "nst-fails")))
 
 (defmethod perform ((op test-op)
-		    (system (eql (find-system :test-nst))))
+                    (system (eql (find-system :test-nst))))
   (eval (list (intern (symbol-name '#:run-nst-commands)
-		      (find-package :nst))
-	      :run-package
-	      (quote (intern (symbol-name 'nst-test)
-			     (find-package 'cl-user))))))
+                      (find-package :nst))
+              :run-package
+              (quote (intern (symbol-name 'nst-test)
+                             (find-package 'cl-user))))))
 
 (defmethod operation-done-p ((o test-op) (c nst-tester))
   "We need to make sure that operation-done-p doesn't return its
