@@ -1,28 +1,15 @@
 ;;; File permuter.lisp
 ;;;
-;;; This file is part of the NST unit/regression testing system.
+;;; NST by John Maraist, based on RRT by Robert Goldman.
 ;;;
-;;; Copyright (c) 2006, 2007, 2008 Smart Information Flow Technologies.
-;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
-;;;
-;;; NST is free software: you can redistribute it and/or modify it
-;;; under the terms of the GNU Lesser General Public License as
-;;; published by the Free Software Foundation, either version 3 of the
-;;; License, or (at your option) any later version.
-;;;
-;;; NST is distributed in the hope that it will be useful, but WITHOUT
-;;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-;;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General
-;;; Public License for more details.
-;;;
-;;; You should have received a copy of the GNU Lesser General Public
-;;; License along with NST.  If not, see
-;;; <http://www.gnu.org/licenses/>.
+;;; NST is Copyright (c) 2006 Smart Information Flow Technologies.
+;;; RRT is Copyright (c) 2005 Robert Goldman, released under the LGPL,
+;;; and the lisp-specific preamble to that license.
 (in-package :sift.nst)
 
 (defclass permuter-frame ()
-     ((next-firsts :initarg :next :type (or null cons))
-      (prev-firsts :initform nil :type (or null cons))))
+     ((next-firsts :initarg :next :type cons)
+      (prev-firsts :initform nil :type cons)))
 
 (defun whittlable (pf)
   (if (null pf)
@@ -31,8 +18,8 @@
 	(null next-firsts))))
 
 (defclass permuter ()
-     ((next-permutation :type (or null cons))
-      (perm-stack :type (or null (cons permuter-frame)))
+     ((next-permutation :type cons)
+      (perm-stack :type (cons permuter))
       (has-next :initform t :reader has-next)
       (degenerate)))
 
@@ -50,8 +37,6 @@
 (defmethod print-object ((p permuter) stream)
   (print-unreadable-object (p stream :type t :identity nil)
     (format stream "~/nst::fmt-permuter/" p)))
-
-(defgeneric fmt-permuter (stream p c s))
 
 (defmethod fmt-permuter (stream (p permuter) c s)
   (declare (ignorable c) (ignorable s))

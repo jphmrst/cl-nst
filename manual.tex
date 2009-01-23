@@ -8,7 +8,6 @@
 
 \documentclass{article}
 \usepackage{makeidx}
-\usepackage[pdftex]{hyperref}
 \title{NST users' manual}
 \author{John Maraist\thanks{Smart Information Flow Technologies, 211 N.\ First St.\ Suite 300, Minneapolis, MN 55401; \textsl{jmaraist} at \textsl{sift.info}.}}
 \setcounter{tocdepth}{2}
@@ -38,7 +37,6 @@ referred to by name during testing.  NST provides the ability to use
 fixtures across multiple tests and test groups, and to inject fixtures
 into the runtime namespace for debugging.
 
-\fbox{Outdated --- see the docstring} 
 A set of fixtures is defined using the \texttt{def-fixtures}
 macro:\index{def-fixtures@\texttt{def-fixtures}}
 \begin{center}
@@ -187,575 +185,6 @@ The
 form allows a higher-level description of tests.  The basic syntax of
 the form is
 \begin{tabbing}\hspace*{1cm}
-(\textbf{de}\=\textbf{f-}\=\textbf{check} (\textit{name}
-	\texttt{\&key} \= \textit{setup}
-	     \textit{cleanup} \textit{fixtures})
-\\ \>\> \textit{criterion}
-\\ \>\texttt{\&rest} \textit{forms})
-\end{tabbing}
-The \textit{setup}, \textit{cleanup} and \textit{fixtures} forms are
-passed as-is to the underlying \texttt{def-test}, and work the same
-way.  The \textit{criterion} is a list or symbol specifying the
-properties which should hold for the \textit{forms}.  When there are
-no \textit{setup}, \textit{cleanup} or \textit{fixtures} arguments,
-the \textit{name} may be given without parentheses.  Likewise, any
-criterion consisting of a single symbol, e.g.\ \texttt{(:pass)}, may
-be abbreviated as just the symbol without the parentheses, e.g.\
-\texttt{:pass}.
-\subsection{Basic checks}
-\subsubsection{The \texttt{:pass} check} 
-This check always passes.\index{pass@\texttt{:pass}}
-\\ Syntax: \texttt{(:pass)}
-\\ Example: \texttt{(def-check passing-test () (:pass) 3 4 "sd")}
-
-\subsubsection{The \texttt{:fail} check} 
-This check always fails.\index{fail@\texttt{:fail}}
-\\ Syntax: \texttt{(:fail)}
-\\ Example: \texttt{(def-check failing-test () (:fail) 312)}
-
-\subsubsection{The \texttt{:warn} check} 
-This check is considered not to fail, but associates a warning message
-with the test.\index{warn@\texttt{:warn}}
-\\ Syntax: \texttt{(:warn \emph{format} \&rest \emph{args})}
-\\ Example:
-\begin{tabbing}
-\texttt{(de}\=\texttt{f-}\=\texttt{check warn-me ()}
-\\ \>\>\texttt{(:warn "\~{}d is not a perfect square" 5)}
-\\ \>\texttt{"asdf")}
-\end{tabbing}
-
-\subsubsection{The \texttt{:eq} check} 
-This test verifies that the form to be tested evaluates to a value
-\texttt{eq}-identified with the value of some designated
-form.\index{eq@\texttt{:eq}}
-\\ Syntax: (\texttt{:eq} \textit{correct-form})
-\\ Example: \texttt{(def-check eq1 () (:eq 'b) (cadr '(a b c)))}
-
-\subsubsection{The \texttt{:symbol} check} 
-This test verifies that a form evaluates to some named
-symbol.\index{symbol@\texttt{:symbol}}
-\\ Syntax: \texttt{(:symbol \emph{symbol-name})}
-\\ Passing example: \texttt{(def-check sym1  () (:symbol a) (car '(a b c)))}
-\\ Failing example: \texttt{(def-check sym1x () (:symbol a) (cadr '(a b c)))}
-
-\subsubsection{The \texttt{:eql}, \texttt{:equal} and \texttt{:equalp} check} 
-These checks are similar to the \texttt{:eq} check, but using
-respectively the \texttt{eql}, \texttt{equal} and \texttt{equalp}
-predicates.\index{eql@\texttt{:eql}}\index{equal@\texttt{:equal}}\index{equalp@\texttt{:equalp}}
-\\ Syntax: (\texttt{:eql} \textit{correct-form})
-\\ Example: \texttt{(def-check eql1 (:eql 2) (cadr '(1 2 3)))}
-
-\subsubsection{The \texttt{:forms-eq} check} 
-This test verifies that two forms evaluate to \texttt{eq}-identified
-values.\index{forms-eq@\texttt{:forms-eq}}
-\\ Syntax: (\texttt{:forms-eq})
-{\ttfamily\begin{tabbing}
-\textrm{Example:}\ (de\=f-check eqforms1 :forms-eq
-\\ \>  (cadr '(a b c)) (caddr '(a c b)))
-\end{tabbing}}
-
-\subsubsection{The \texttt{:forms-eql} check} 
-This test verifies that two forms evaluate to \texttt{eql}-identified
-values.\index{forms-eql@\texttt{:forms-eql}}
-\\ Syntax: \texttt{:forms-eql}
-{\ttfamily\begin{tabbing}
-\textrm{Example:}\ (de\=f-check eqlforms1 :forms-eq
-\\ \>  (cadr '(a 3 c)) (caddr '(a c 3)))
-\end{tabbing}}
-
-\subsubsection{The \texttt{:predicate} check} 
-This test applies some predicate function to a form, and verifies that
-the result is non-null.\index{predicate@\texttt{:predicate}}
-\\ Syntax: \texttt{(:predicate \emph{function})}
-\\ Examples:
-\\ $~~\bullet$ \texttt{(def-check pred1 (:predicate numberp) 3)}
-\\ $~~\bullet$ \texttt{(def-check pred2 (:predicate eql) (+ 1 2) 3)}
-\\
-Note that the predicate is applied to \emph{all} of the forms
-following the criterion.
-
-\subsubsection{The \texttt{:err} check} 
-This test verifies that a form throws an error.  Note that this
-criterion should only be used as the top-level criterion in a
-\texttt{def-check}; use within one of the compound forms below may
-have unexpected results.\index{err@\texttt{:err}}
-\\ Syntax: (\texttt{:err})
-\\ Example: \texttt{(def-check err1 (:err) (error "this should be caught"))}
-
-\subsubsection{The \texttt{:perf} check}
-This test sets minimum performance requirements for evaluation of a
-form  Note that this form should only be
-used as the top-level criterion in a \texttt{def-check};
-use within one of the compound forms below may have
-unexpected results.\index{err@\texttt{:perf}}
-\\ Syntax: (\texttt{:perf} [ \texttt{:min} $|$ \texttt{:sec} $|$ \texttt{:ms} ] \textit{num})
-\\Examples: \texttt{(def-check perf1 (:perf :min 2) (ack 3 5))}
-
-% \subsection{Use of fixtures}
-% 
-% Fixtures can be used on a per-test basis with \texttt{def-check} just
-% as with \texttt{def-test}.  The syntax is the same, for example,
-% \begin{verbatim}
-% \end{verbatim}
-
-\subsection{Compound forms}
-
-\subsubsection{The \texttt{:not} check} 
-This check verifies that some other check fails (but does not throw an
-error).\index{not@\texttt{:not}}
-\\ Syntax: \texttt{(:not \emph{criterion})}
-\\ Example: \texttt{(def-check not1 (:not (:symbol b)) 'a)}
-
-\subsubsection{The \texttt{:all} check} 
-This criterion brings several other criteria under one check, and
-verifies that they all pass.\index{all@\texttt{:all}}
-\\ Syntax: \texttt{(:all \&rest \emph{criteria})}
-\\ Example:
-\begin{tabbing}
-\texttt{(de}\=\texttt{f-}\=\texttt{check not1 ()}
-\\ \>\>\texttt{(:all }\=\texttt{(:predicate even-p)}
-\\ \>\>\>\texttt{(:predicate prime-p))}
-\\ \>\texttt{2)}
-\end{tabbing}
-
-\subsubsection{The \texttt{:any} check} 
-This criterion brings several other criteria under one check, and
-verifies that at least one passes.\index{all@\texttt{:all}}
-\\ Syntax: \texttt{(:any \&rest \emph{criteria})}
-\\ Example:
-\begin{tabbing}
-\texttt{(de}\=\texttt{f-}\=\texttt{check not1 ()}
-\\ \>\>\texttt{(:anl }\=\texttt{(:predicate even-p)}
-\\ \>\>\>\texttt{(:predicate prime-p))}
-\\ \>\texttt{5)}
-\end{tabbing}
-
-\subsubsection{The \texttt{:apply} check}
-This check applies some transforming function to a form, and applies
-another check to the result.\index{apply@\texttt{:apply}}
-\\ Syntax: \texttt{(:apply \textit{function} \textit{subcriterion})}
-\\ Example: \texttt{(def-check applycheck (:apply cadr (:eql 10)) '(0 10 20))}
-
-\subsubsection{The \texttt{:check-err} check}
-This test verifies that evaluating a check throws an
-error.\index{err@\texttt{:check-err}} The difference between
-\texttt{:check-err} and \texttt{:err} is that the latter deals only
-with evaluation of a form, whereas \texttt{:check-err} is more about
-the unit testing process.  This form is mostly useful for temporarily
-disregarding certain checks until some later fix, when they
-\emph{won't} throw an error.
-%
-\\ Syntax: \texttt{(:check-err \textit{criterion})}
-\\ Example: \texttt{(def-check check-err1 (:check-err :forms-eq) 'asdfgh (error "this should be caught"))}
-
-\subsubsection{The \texttt{:progn} check}
-This check evaluate a list of Lisp forms before evaluating the
-remaining check criteria.
-\\ Syntax: (\texttt{:progn} \textit{form} \ldots\ \textit{form} \textit{criterion})
-\\ Example: Assuming that \texttt{zz} is defined as some variable,
-\\ \hspace*{2em}\texttt{(def-check form1 (:progn (setf zz 3) (:eql 3)) zz)}
-
-\subsubsection{The \texttt{:proj} check}
-This check projects certain values from the current stack of forms
-(numbering from 0) for another criterion.  This check is useful for
-composing new checks as aliases.
-\\ Syntax: \texttt{(:proj (\textit{num} \ldots\  \textit{num}) \textit{criterion})}
-\\ Example: \texttt{(def-check proj-1 (:proj (0 2) :forms-eq) 'a 3 (car '(a b)))}
-
-\subsubsection{The \texttt{:with} check}
-\fbox{UNIMPLEMENTED --- is this still needed?}
-\par
-This check assumes that the next item is a list, whose contents are
-expanded into the methods-and-forms.\index{with@\texttt{:with}} This
-check is especially useful with the \texttt{def-check-cri\-ter\-ion}
-command below.
-\\ Syntax: \texttt{(:with \emph{criterion})}
-\\ Example: The following two \texttt{def-check}s are equivalent.
-\begin{verbatim}
-  (def-check seq1
-      (:seq (:predicate symbolp) (:eql 1) (:symbol d))
-      '(a 1 d))
-  (def-check with-seq1
-      (:with (:seq (:predicate symbolp) (:eql 1) (:symbol d)))
-      '(a 1 d))
-\end{verbatim}
-
-\subsection{Checks on lists}
-
-\subsubsection{The \texttt{:each} check}
-This check verifies that every member of the list to which a form
-evaluates satisfies some other check.\index{each@\texttt{:each}}
-\\ Syntax: \texttt{(:each \emph{criterion})}
-\\ Example: \texttt{(def-check each1 (:each (:symbol a)) '(a a a a a))}
-
-\subsubsection{The \texttt{:seq} check}
-This check verifies, for each element $n$ of the $n$-element list to
-which the form evaluates, that that element satisfies the respective
-check.\index{seq@\texttt{:seq}}
-\\ Syntax: \texttt{(:seq \emph{criteria} \ldots\ \emph{criteria})}
-{\ttfamily\begin{tabbing}
-\textrm{Example:}\ (de\=f-\=check seqcheck
-\\ \>\>  (:seq (:predicate symbolp) (:eql 1) (:symbol d))
-\\ \>  '(a 1 d))
-\end{tabbing}}
-
-\subsubsection{The \texttt{:permute} check}
-The permute check verifies that some permutation of the list to which
-the form evaluates satisfies some other check.
-\index{permute@\texttt{:permute}}
-\\ Syntax: \texttt{(:permute \textit{criterion}}
-{\ttfamily\begin{tabbing}
-\textrm{Examples:}\ \=(def-check permute1 (:permute (:each (:eq 'a))) '(a a))
-\\ \> (de\=f-\=check permute2
-\\ \> \> \> (:permute (:seq \=(:symbol b)
-\\ \> \> \>             \>(:predicate symbolp)
-\\ \> \> \>             \>(:predicate numberp)))
-\\ \> \>'(1 a b))
-\end{tabbing}}
-
-\subsection{Checks on vectors}
-
-\subsubsection{The \texttt{:across} check}
-Like the \texttt{seq} check, but for vectors rather than
-lists.\index{across@\texttt{:across}}
-\\ Syntax: \texttt{(:across \emph{criteria} \ldots\ \emph{criteria})}
-{\ttfamily\begin{tabbing}
-\textrm{Example:}\ (de\=f-\=check across1
-\\ \>\>  (:across (:predicate symbolp) (:eql 1))
-\\ \>  (vector 'a 1))
-\end{tabbing}}
-
-\subsection{Checks on class instances}
-
-\subsubsection{The \texttt{:slots} check} 
-This check specifies checks for some or all of the slots of a class
-member.\index{slots@\texttt{:slots}}
-\\ Syntax: \texttt{(:slots  (\textit{slot} \textit{criterion})  \ldots\ (\textit{slot} \textit{criterion}))}
-{\ttfamily\begin{tabbing}
-\textrm{Example:}\ \= (defc\=lass classcheck ()
-\\ \> \> (\=(s1 :initarg :s1 :reader get-s1)
-\\ \> \> \> (s2 :initarg :s2)
-\\ \> \> \> (s3 :initarg :s3)))
-\\ \> (def-check \=slot1
-\\ \> \>  (:slots \=(s1 (:eql 10))
-\\ \> \>  \>(s2 (:symbol zz))
-\\ \> \>  \>(s3 (:seq \=(:symbol q) (:symbol w)
-\\ \> \>  \> \> (:symbol e) (:symbol r))))
-\\ \> \>  (m\=ake-instance 'classcheck
-\\ \> \> \>  :s1 10 :s2 'zz :s3 '(q w e r)))
-\end{tabbing}}
-
-\subsection{Defining check criteria}
-\subsubsection{Aliases over checks}
-{\ttfamily\begin{tabbing}
-\textrm{Syntax: 
-}(de\=f-check-alias (name \&rest args)
-\\ \> [ documentation ]
-\\ \> expansion)
-\end{tabbing}}
-Defines how a criterion should be rewritten as another criteria.
-
-Examples:
-\\ \texttt{(def-check-alias (:forms-eq) `(:predicate eq))}
-\\ \texttt{(def-check-alias (:symbol name) `(:eq ',name))}
-\par\fbox{Fill in details}
-
-\subsubsection{Reporting forms}
-\texttt{make-check-report}, \texttt{emit-failure}, \texttt{emit-warning}.
-\par\fbox{Fill in details}
-
-\subsubsection{Basic checks on values}
-The \texttt{check-forms} return a quoted Lisp expression calculating a
-checking report for the given forms.  
-{\ttfamily\begin{tabbing}
-\textrm{Syntax: 
-}(de\=f-value-check (na\=me \=subcriteria-lambda-list
-\\ \> \> \> test-forms-lambda-list
-\\ \> \> \&key \= blurb-format
-\\ \> \>        \> full-format
-\\ \> \>        \> stack-transformer)
-\\ \> expansion)
-\end{tabbing}}
-Comma-prefix names from the \texttt{subcriteria-lambda-list}, but do not
-comma-prefix names from the \texttt{test-forms-lambda-list}.
-Declarations are OK, but quote them.  Examples:
-\begin{verbatim}
-(def-value-check (:pass () (&rest chk))
-  `(declare (ignorable chk))
-  `(make-check-result))
-
-(def-value-check (:eq (eq-form) (check-form))
-  `(if (eq ,eq-form check-form)
-     (make-check-result)
-     (emit-failure :format "Not eq to ~s" :args '(,eq-form))))
-\end{verbatim}
-\par\fbox{Fill in details}
-
-\subsubsection{General checks}
-{\ttfamily\begin{tabbing}
-\textrm{Syntax: 
-}(de\=f-control-check (na\=me \=subcriteria-lambda-list
-\\ \>\> \> test-forms-formal-parameter
-\\ \>\> \&key \=stack-transformer
-\\ \>\> \> blurb-format
-\\ \>\> \> full-format)
-\\ \> check-forms)
-\end{tabbing}}
-Comma-prefix all the names.  \texttt{test-forms-formal-parameter} must
-be just a symbol.  Calls out to \texttt{continue-check} are useful;
-its second argument must be a Lisp expression which will evaluate to a
-list of values.
-\begin{verbatim}
-(def-control-check (:apply (transform criterion) forms)
-  (continue-check criterion
-		  `(multiple-value-list (apply #',transform ,forms))))
-\end{verbatim}
-\par\fbox{Fill in details}
-
-\section{The runtime system}
-The runtime system provides several operations for scheduling and
-running tests, and debugging failing and erring tests.  The operations
-are accessible from the
-\texttt{run-nst-commands}\index{run-nst-commands@\texttt{run-nst-commands}}
-function.  Under Allegro, the top-level alias
-\texttt{:nst}\index{nst@\texttt{:nst}} provides a shorthand to this
-function; for the sake of brevity we use this shorthand below.
-
-\subsection{Output control}
-\subsubsection{The \texttt{:help} operation}
-\index{help@\texttt{:help}}%
-Shows a brief summary of the runtime system operations.
-\\ Syntax: \texttt{:nst :help}
-
-\subsubsection{The \texttt{:verbose} operation}
-\index{verbose@\texttt{:verbose}}%
-Sets whether the runtime system should show verbose output.
-\\ Syntax: \texttt{:nst :verbose FORM}
-
-\subsubsection{The \texttt{:debug} operation}
-\index{debug@\texttt{:debug}}%
-Sets whether NST debugging messages should be generated.
-\\ Syntax: \texttt{:nst :debug BOOL}
-
-\subsubsection{The \texttt{:summarize-scheduled} operation}
-\index{summarize-scheduled@\texttt{:summarize-scheduled}}%
-If \texttt{BOOL} evaluates to non-null, then the runtime system will
-print a summary after running scheduled tests with \texttt{:run},
-\texttt{:continue}, etc.
-\\ Syntax: \texttt{:nst :summarize-scheduled BOOL}
-
-\subsubsection{The \texttt{:summarize-single} operation}
-\index{summarize-single@\texttt{:summarize-single}}%
-If \texttt{BOOL} evaluates to non-null, then the runtime system will
-print a summary after one-time test runs initiated by
-\texttt{:run-test}, \texttt{:run-group}, etc.
-\\ Syntax: \texttt{:nst :summarize-single BOOL}
-
-\subsubsection{The \texttt{:dump} operation}
-\index{dump@\texttt{:dump}}%
-Prints the state of the test system.
-\\ Syntax: \texttt{:nst :dump}
-
-\subsection{Marking tests of interest for execution}
-\label{nominating-tests}
-NST allows tests to be marked for execution by the \texttt{:run}
-command.  Tests can be marked by package or group, or as an individual
-test.
-
-\subsubsection{The \texttt{:p} operation}
-\index{p@\texttt{:p}}%
-Indicates that all tests in a particular package should be run.
-\\ Syntax: \texttt{:nst :p PACKAGE}
-
-\subsubsection{The \texttt{:g} operation}
-\index{g@\texttt{:g}}%
-Indicates that all tests in a particular group should be run.
-\\ Syntax: \texttt{:nst :g GROUP}
-
-\subsubsection{The \texttt{:t} operation}
-\index{t@\texttt{:t}}%
-Indicates that the named test should be run.
-\\ Syntax: \texttt{:nst :t TEST}
-
-\subsection{Test suite execution}
-These commands control execution of tests selected by the commands of
-the previous section.
-
-\subsubsection{The \texttt{:run} operation}
-\index{run@\texttt{:run}}%
-Runs all marked tests.
-\\ Syntax: \texttt{:nst :run}
-
-\subsubsection{The \texttt{:continue} operation}
-\index{continue@\texttt{:continue}}%
-Resumes running tests after an interruption arising from one of the
-three switch setting above.
-\\ Syntax: \texttt{:nst :continue}
-
-\subsubsection{The \texttt{:retry} operation}
-\index{retry@\texttt{:retry}}%
-Retries failed or error-raising tests from the last run.
-\\ Syntax: \texttt{:nst :retry}
-
-\subsubsection{The \texttt{:blurb} operation}
-\index{blurb@\texttt{:blurb}}%
-Describes the outcome of the last run of a test.
-\\ Syntax: \texttt{:nst :blurb GROUPNAME TESTNAME}
-
-\subsection{Controlling test suite execution behavior}
-The following commands control options governing how the runtime
-system should behave when a test fails or raises an error.
-
-\subsubsection{The \texttt{:break-on-wrong} operation}
-\index{break-on-wrong@\texttt{:break-on-wrong}}%
-If \texttt{BOOL} evaluates to non-null, then a failing test will cause
-test execution to pause.
-\\ Syntax: \texttt{:nst :break-on-wrong BOOL}
-
-\subsubsection{The \texttt{:break-on-error} operation}
-\index{break-on-error@\texttt{:break-on-error}}%
-If \texttt{BOOL} evaluates to non-null, then any error in a test run
-will cause test execution to pause.
-\\ Syntax: \texttt{:nst :break-on-error BOOL}
-
-\subsubsection{The \texttt{:debug-on-error} operation}
-\index{debug-on-error@\texttt{:debug-on-error}}%
-If \texttt{BOOL} evaluates to non-null, then an error in a test run
-will pause test execution and enter debug mode.
-\\ Syntax: \texttt{:nst :debug-on-error BOOL}
-
-\subsection{Test definition}
-\subsubsection{The \texttt{:defer-test-compile} operation}
-\index{defer-test-compile@\texttt{:defer-test-compile}}%
-Sets whether tests defined subsequently should, by default, defer
-compilation of their forms until actually running the test.  This
-feature is useful when debugging code involving macros, but changing
-this feature in the runtime system can lead to confusion.  It is
-surely almost always the right thing to set this flag locally via
-def-test-group and def-test.  In fact, this operation may be removed
-in a future version of the runtime system.
-\\ Syntax: \texttt{:nst :defer-test-compile BOOL}
-
-\subsection{One-off execution}
-The following commands allow one-time execution of tests without
-altering the settings made by the commands of
-Section~\ref{nominating-tests}.
-
-\subsubsection{The \texttt{:run-package} operation}
-\index{run-package@\texttt{:run-package}}%
-Runs all of the tests in a package.
-\\ Syntax: \texttt{:nst :run-package PACKAGE}
-
-\subsubsection{The \texttt{:run-group} operation}
-\index{run-group@\texttt{:run-group}}%
-Runs all of the tests in a single group.
-\\ Syntax: \texttt{:nst :run-group GROUP}
-
-\subsubsection{The \texttt{:run-test} operation}
-\index{run-test@\texttt{:run-test}}%
-Runs a single test.
-\\ Syntax: \texttt{:nst :run-test GROUP TEST}
-
-\subsection{Opening fixtures}
-The use of fixtures would make debugging tedious without access to
-these named values.  Fortunately, it is straightforward to inject
-these names into the runtime system.
-
-\subsubsection{The \texttt{:open} operation}
-\index{open@\texttt{:open}}%
-Fixtures\index{fixtures!debugging} can be \emph{opened} into the
-interactive namespace for debugging with the
-\texttt{:nst~:open}\index{open@\texttt{:open}} command:
-\\ Syntax: \texttt{:nst :open FIXTURE-NAME}
-\\ Example:
-\begin{verbatim}
-  CL-USER(75): (nst:def-fixtures small-fixture
-                  :bindings ((fix-var1 3) (fix-var2 'asdfg)))
-  NIL
-  CL-USER(76): (boundp 'fix-var1)
-  NIL
-  CL-USER(77): :nst :open small-fixture
-  Opened fixture SMALL-FIXTURE.
-  CL-USER(78): fix-var1
-  3
-  CL-USER(79): 
-\end{verbatim}
-
-\subsubsection{The \texttt{:open{\textasteriskcentered}} operation}
-\index{open{\textasteriskcentered}@\texttt{:open{\textasteriskcentered}}}%
-Multiple fixtures\index{fixtures!debugging} can be \emph{opened} into the
-interactive namespace with a single command using the
-\texttt{:nst~:open} command:
-\\ Syntax: \texttt{:nst :open\* } {\textit{FIXTURE-NAME}{\textasteriskcentered}}
-
-
-\subsubsection{The \texttt{:open-used} operation}
-\index{open-used@\texttt{:open-used}}%
-If \texttt{BOOL} evaluates to non-null, then opening a fixture will
-always also open the fixtures it uses.  Default is t.
-\\ Syntax: \texttt{:nst :open-used BOOL}
-
-\subsubsection{The \texttt{:reopen} operation}
-\index{reopen@\texttt{:reopen}}%
-If \texttt{BOOL} evaluates to non-null, then fixtures will be
-re-opened \emph{e.g.}\ when required multiple times by opening
-different fixtures that use them.
-\\ Syntax: \texttt{:nst :reopen BOOL}
-
-%
-
-\section{Integration with ASDF}
-Try something like the following, where \texttt{PACKAGE} is where
-your code lives, and \texttt{test-PACKAGE} is where your tests on that
-code live.\index{ASDF}
-\begin{verbatim}
-(defmethod perform ((op test-op)
-                    (system (eql (find-system :test-PACKAGE))))
-  (eval (list (intern (symbol-name '#:run-nst-commands)
-                      (find-package :sift.nst))
-              :run-package
-              (quote (intern (symbol-name 'PACKAGE)
-                             (find-package 'cl-user))))))
-\end{verbatim}
-
-\section{Known bugs and enhancement ideas}\index{bugs}\index{enhancements}
-\begin{enumerate}
-\item We do a poor job of printing the conditions that come back from
-  erring tests.  Moreover, the
-  \texttt{def-check}\index{def-check@\texttt{def-check}} macro should
-  be able to provide better feedback about the context of an error
-  when failing (the kind of failing that doesn't throw an error), not
-  just at the time, but also when
-  \texttt{:blurb}ing\index{blurb@\texttt{:blurb}} tests
-  after-the-fact.
-\item There are still, sometimes, warnings from the use of fixture
-  names in other fixtures.
-\item We are not yet catching errors arising from
-  \texttt{:cleanup}\index{cleanup@\texttt{:cleanup}} blocks.
-\item Clobbering of test/group names should be caught by the macros,
-  not by the lower-level expansions arising from those methods.
-\item In the runtime system, the implementations of
-  \texttt{:blurb}\index{blurb@\texttt{:blurb}},
-  \texttt{:open-used}\index{open-used@\texttt{:open-used}} and
-  \texttt{:reopen}\index{reopen@\texttt{:reopen}} are questionable.
-\item Possibly,
-  \texttt{run-nst-commands}\index{run-nst-commands@\texttt{run-nst-commands}}
-  should be turned into a macro.
-\item The def-check form \texttt{:perf} might be extended to provide
-  (implementation-dependent) checks on memory limits as well as time
-  limits.
-\item Some sort of timeout mechanism (again, possibly
-  implementation-dependent) could be helpful for measuring correctness
-  via termination in more complicated algorithms.
-\end{enumerate}
-
-\appendix
-
-\section{Checks protocol 1}
-The initial protocol for checks was slightly different than the current syntax.  This section documents this syntax, which can be used via system \texttt{nst1} rather than \texttt{nst}.
-The basic syntax of
-the form is
-\begin{tabbing}\hspace*{1cm}
 \textbf{de}\=\textbf{f-check} \textit{name}
 	( \= [ \texttt{:setup} \textit{setup} ]
 	     [ \texttt{:cleanup} \textit{cleanup} ]
@@ -875,19 +304,6 @@ disregarding certain checks until some later fix, when they
 %
 \\ Syntax: \texttt{:check-err} \textit{methods-and-forms}
 \\ Example: \texttt{(def-check check-err1 :check-err :forms-eq 'asdfgh (error "this should be caught"))}
-
-\subsubsection{The \texttt{:prog} and \texttt{:progn} checks} 
-These checks evaluate the next item as a form (resp.\ list of forms)
-before evaluating the remaining check forms.
-\\ Syntax:
-\\ \texttt{:prog} \textit{form} \textit{methods-and-forms}
-\\ \texttt{:progn} (\textit{form} \ldots\ \textit{form}) \textit{methods-and-forms}
-\\ Example: Assuming that \texttt{zz} is defined as some variable,
-\begin{verbatim}
-  (def-check form1
-      :prog (setf zz 3) (:eql 3)
-      zz)
-\end{verbatim}
 
 \subsubsection{The \texttt{:with} check} 
 This check assumes that the next item is a list, whose contents are
@@ -1110,6 +526,234 @@ lower-level access to the translation to \texttt{def-test}.  The
 Most of the standard check forms are defined using
 \texttt{def-check-form}, and we refer the reader to file
 \texttt{check.lisp} in this distribution for examples.
+
+\section{The runtime system}
+The runtime system provides several operations for scheduling and
+running tests, and debugging failing and erring tests.  The operations
+are accessible from the
+\texttt{run-nst-commands}\index{run-nst-commands@\texttt{run-nst-commands}}
+function.  Under Allegro, the top-level alias
+\texttt{:nst}\index{nst@\texttt{:nst}} provides a shorthand to this
+function; for the sake of brevity we use this shorthand below.
+
+\subsection{Output control}
+\subsubsection{The \texttt{:help} operation}
+\index{help@\texttt{:help}}%
+Shows a brief summary of the runtime system operations.
+\\ Syntax: \texttt{:nst :help}
+
+\subsubsection{The \texttt{:verbose} operation}
+\index{verbose@\texttt{:verbose}}%
+Sets whether the runtime system should show verbose output.
+\\ Syntax: \texttt{:nst :verbose FORM}
+
+\subsubsection{The \texttt{:debug} operation}
+\index{debug@\texttt{:debug}}%
+Sets whether NST debugging messages should be generated.
+\\ Syntax: \texttt{:nst :debug BOOL}
+
+\subsubsection{The \texttt{:summarize-scheduled} operation}
+\index{summarize-scheduled@\texttt{:summarize-scheduled}}%
+If \texttt{BOOL} evaluates to non-null, then the runtime system will
+print a summary after running scheduled tests with \texttt{:run},
+\texttt{:continue}, etc.
+\\ Syntax: \texttt{:nst :summarize-scheduled BOOL}
+
+\subsubsection{The \texttt{:summarize-single} operation}
+\index{summarize-single@\texttt{:summarize-single}}%
+If \texttt{BOOL} evaluates to non-null, then the runtime system will
+print a summary after one-time test runs initiated by
+\texttt{:run-test}, \texttt{:run-group}, etc.
+\\ Syntax: \texttt{:nst :summarize-single BOOL}
+
+\subsubsection{The \texttt{:dump} operation}
+\index{dump@\texttt{:dump}}%
+Prints the state of the test system.
+\\ Syntax: \texttt{:nst :dump}
+
+\subsection{Marking tests of interest for execution}
+\label{nominating-tests}
+NST allows tests to be marked for execution by the \texttt{:run}
+command.  Tests can be marked by package or group, or as an individual
+test.
+
+\subsubsection{The \texttt{:p} operation}
+\index{p@\texttt{:p}}%
+Indicates that all tests in a particular package should be run.
+\\ Syntax: \texttt{:nst :p PACKAGE}
+
+\subsubsection{The \texttt{:g} operation}
+\index{g@\texttt{:g}}%
+Indicates that all tests in a particular group should be run.
+\\ Syntax: \texttt{:nst :g GROUP}
+
+\subsubsection{The \texttt{:t} operation}
+\index{t@\texttt{:t}}%
+Indicates that the named test should be run.
+\\ Syntax: \texttt{:nst :t TEST}
+
+\subsection{Test suite execution}
+These commands control execution of tests selected by the commands of
+the previous section.
+
+\subsubsection{The \texttt{:run} operation}
+\index{run@\texttt{:run}}%
+Runs all marked tests.
+\\ Syntax: \texttt{:nst :run}
+
+\subsubsection{The \texttt{:continue} operation}
+\index{continue@\texttt{:continue}}%
+Resumes running tests after an interruption arising from one of the
+three switch setting above.
+\\ Syntax: \texttt{:nst :continue}
+
+\subsubsection{The \texttt{:retry} operation}
+\index{retry@\texttt{:retry}}%
+Retries failed or error-raising tests from the last run.
+\\ Syntax: \texttt{:nst :retry}
+
+\subsubsection{The \texttt{:blurb} operation}
+\index{blurb@\texttt{:blurb}}%
+Describes the outcome of the last run of a test.
+\\ Syntax: \texttt{:nst :blurb GROUPNAME TESTNAME}
+
+\subsection{Controlling test suite execution behavior}
+The following commands control options governing how the runtime
+system should behave when a test fails or raises an error.
+
+\subsubsection{The \texttt{:break-on-wrong} operation}
+\index{break-on-wrong@\texttt{:break-on-wrong}}%
+If \texttt{BOOL} evaluates to non-null, then a failing test will cause
+test execution to pause.
+\\ Syntax: \texttt{:nst :break-on-wrong BOOL}
+
+\subsubsection{The \texttt{:break-on-error} operation}
+\index{break-on-error@\texttt{:break-on-error}}%
+If \texttt{BOOL} evaluates to non-null, then any error in a test run
+will cause test execution to pause.
+\\ Syntax: \texttt{:nst :break-on-error BOOL}
+
+\subsubsection{The \texttt{:debug-on-error} operation}
+\index{debug-on-error@\texttt{:debug-on-error}}%
+If \texttt{BOOL} evaluates to non-null, then an error in a test run
+will pause test execution and enter debug mode.
+\\ Syntax: \texttt{:nst :debug-on-error BOOL}
+
+\subsection{Test definition}
+\subsubsection{The \texttt{:defer-test-compile} operation}
+\index{defer-test-compile@\texttt{:defer-test-compile}}%
+Sets whether tests defined subsequently should, by default, defer
+compilation of their forms until actually running the test.  This
+feature is useful when debugging code involving macros, but changing
+this feature in the runtime system can lead to confusion.  It is
+surely almost always the right thing to set this flag locally via
+def-test-group and def-test.  In fact, this operation may be removed
+in a future version of the runtime system.
+\\ Syntax: \texttt{:nst :defer-test-compile BOOL}
+
+\subsection{One-off execution}
+The following commands allow one-time execution of tests without
+altering the settings made by the commands of
+Section~\ref{nominating-tests}.
+
+\subsubsection{The \texttt{:run-package} operation}
+\index{run-package@\texttt{:run-package}}%
+Runs all of the tests in a package.
+\\ Syntax: \texttt{:nst :run-package PACKAGE}
+
+\subsubsection{The \texttt{:run-group} operation}
+\index{run-group@\texttt{:run-group}}%
+Runs all of the tests in a single group.
+\\ Syntax: \texttt{:nst :run-group GROUP}
+
+\subsubsection{The \texttt{:run-test} operation}
+\index{run-test@\texttt{:run-test}}%
+Runs a single test.
+\\ Syntax: \texttt{:nst :run-test GROUP TEST}
+
+\subsection{Opening fixtures}
+The use of fixtures would make debugging tedious without access to
+these named values.  Fortunately, it is straightforward to inject
+these names into the runtime system.
+
+\subsubsection{The \texttt{:open} operation}
+\index{open@\texttt{:open}}%
+Fixtures\index{fixtures!debugging} can be \emph{opened} into the
+interactive namespace for debugging with the
+\texttt{:nst~:open}\index{open@\texttt{:open}} command:
+\\ Syntax: \texttt{:nst :open FIXTURE-NAME}
+\\ Example:
+\begin{verbatim}
+  CL-USER(75): (nst:def-fixtures small-fixture
+                  :bindings ((fix-var1 3) (fix-var2 'asdfg)))
+  NIL
+  CL-USER(76): (boundp 'fix-var1)
+  NIL
+  CL-USER(77): :nst :open small-fixture
+  Opened fixture SMALL-FIXTURE.
+  CL-USER(78): fix-var1
+  3
+  CL-USER(79): \end{verbatim}
+
+\subsubsection{The \texttt{:open-used} operation}
+\index{open-used@\texttt{:open-used}}%
+If \texttt{BOOL} evaluates to non-null, then opening a fixture will
+always also open the fixtures it uses.  Default is t.
+\\ Syntax: \texttt{:nst :open-used BOOL}
+
+\subsubsection{The \texttt{:reopen} operation}
+\index{reopen@\texttt{:reopen}}%
+If \texttt{BOOL} evaluates to non-null, then fixtures will be
+re-opened \emph{e.g.}\ when required multiple times by opening
+different fixtures that use them.
+\\ Syntax: \texttt{:nst :reopen BOOL}
+
+%
+
+\section{Integration with ASDF}
+Try something like the following, where \texttt{PACKAGE} is where
+your code lives, and \texttt{test-PACKAGE} is where your tests on that
+code live.\index{ASDF}
+\begin{verbatim}
+(defmethod perform ((op test-op)
+                    (system (eql (find-system :test-PACKAGE))))
+  (eval (list (intern (symbol-name '#:run-nst-commands)
+                      (find-package :sift.nst))
+              :run-package
+              (quote (intern (symbol-name 'PACKAGE)
+                             (find-package 'cl-user))))))
+\end{verbatim}
+
+\section{Known bugs and enhancement ideas}\index{bugs}\index{enhancements}
+\begin{enumerate}
+\item We do a poor job of printing the conditions that come back from
+  erring tests.  Moreover, the
+  \texttt{def-check}\index{def-check@\texttt{def-check}} macro should
+  be able to provide better feedback about the context of an error
+  when failing (the kind of failing that doesn't throw an error), not
+  just at the time, but also when
+  \texttt{:blurb}ing\index{blurb@\texttt{:blurb}} tests
+  after-the-fact.
+\item There are still, sometimes, warnings from the use of fixture
+  names in other fixtures.
+\item We are not yet catching errors arising from
+  \texttt{:cleanup}\index{cleanup@\texttt{:cleanup}} blocks.
+\item Clobbering of test/group names should be caught by the macros,
+  not by the lower-level expansions arising from those methods.
+\item In the runtime system, the implementations of
+  \texttt{:blurb}\index{blurb@\texttt{:blurb}},
+  \texttt{:open-used}\index{open-used@\texttt{:open-used}} and
+  \texttt{:reopen}\index{reopen@\texttt{:reopen}} are questionable.
+\item Possibly,
+  \texttt{run-nst-commands}\index{run-nst-commands@\texttt{run-nst-commands}}
+  should be turned into a macro.
+\item The def-check form \texttt{:perf} might be extended to provide
+  (implementation-dependent) checks on memory limits as well as time
+  limits.
+\item Some sort of timeout mechanism (again, possibly
+  implementation-dependent) could be helpful for measuring correctness
+  via termination in more complicated algorithms.
+\end{enumerate}
 
 \printindex
 \end{document}

@@ -1,41 +1,33 @@
 ;;; File classes.lisp
 ;;;
-;;; This file is part of the NST unit/regression testing system.
+;;; NST by John Maraist, based on RRT by Robert Goldman.
 ;;;
-;;; Copyright (c) 2006, 2007, 2008 Smart Information Flow Technologies.
-;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
-;;;
-;;; NST is free software: you can redistribute it and/or modify it
-;;; under the terms of the GNU Lesser General Public License as
-;;; published by the Free Software Foundation, either version 3 of the
-;;; License, or (at your option) any later version.
-;;;
-;;; NST is distributed in the hope that it will be useful, but WITHOUT
-;;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-;;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General
-;;; Public License for more details.
-;;;
-;;; You should have received a copy of the GNU Lesser General Public
-;;; License along with NST.  If not, see
-;;; <http://www.gnu.org/licenses/>.
+;;; NST is Copyright (c) 2006, 2007 Smart Information Flow Technologies.
+;;; RRT is Copyright (c) 2005 Robert Goldman, released under the LGPL,
+;;; and the lisp-specific preamble to that license.
 (in-package :sift.nst)
 
 
 ;;; Class and generic function definitions for the core of test
 ;;; execution.
 
-(defclass fixture () ()
+(defclass nst-class () ()
+  (:documentation
+   "This superclass consolidates print-object and format pretty-
+printing for all of the classes we define here."))
+
+(defclass fixture (nst-class) ()
   (:documentation
    "Class of bindings usable in tests.  This class is used only for
 dispatch in groups and tests which use these fixtures."))
 
-(defclass test ()
+(defclass test (nst-class)
      ((group     :initarg :group :type group
 		 :documentation
 		 "Record of information about the group")
       (test-name :initarg :name  :type symbol :reader get-name
 		 :documentation "Name of this test")
-      (documentation :initarg :documentation :type (or string null)
+      (documentation :initarg :documentation :type string
 		     :documentation
 		     "Documentation associated with this test"))
   (:documentation "Information associated with one single test."))
@@ -43,7 +35,7 @@ dispatch in groups and tests which use these fixtures."))
 ;;; Class and generic function definitions for the core of test
 ;;; execution.
 
-(defclass group ()
+(defclass group (nst-class)
      ((package :initarg :package
 	       :documentation "Package where this group lives")
       (group-name :initarg :name :type symbol :reader get-name
@@ -62,11 +54,11 @@ dispatch in groups and tests which use these fixtures."))
 		 :documentation
 		 "Symbolic name of the class which all test classes \
 associated with this group should subclass.")
-      (fixtures  :initarg :fixtures  :type (or (cons symbol) null)
+      (fixtures  :initarg :fixtures  :type (cons symbol)
 		 :reader get-fixtures
 		 :documentation
 		 "Names of fixtures to be used in this group's tests")
-      (documentation :initarg :documentation :type (or string null)
+      (documentation :initarg :documentation :type string
 		     :documentation
 		     "Documentation associated with this group"))
   (:documentation "Information associated with one group of tests."))
