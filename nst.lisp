@@ -1,23 +1,10 @@
 ;;; File nst.lisp
 ;;;
-;;; This file is part of the NST unit/regression testing system.
+;;; NST by John Maraist, based on RRT by Robert Goldman.
 ;;;
-;;; Copyright (c) 2006, 2007, 2008 Smart Information Flow Technologies.
-;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
-;;;
-;;; NST is free software: you can redistribute it and/or modify it
-;;; under the terms of the GNU Lesser General Public License as
-;;; published by the Free Software Foundation, either version 3 of the
-;;; License, or (at your option) any later version.
-;;;
-;;; NST is distributed in the hope that it will be useful, but WITHOUT
-;;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-;;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General
-;;; Public License for more details.
-;;;
-;;; You should have received a copy of the GNU Lesser General Public
-;;; License along with NST.  If not, see
-;;; <http://www.gnu.org/licenses/>.
+;;; NST is Copyright (c) 2006, 2007 Smart Information Flow Technologies.
+;;; RRT is Copyright (c) 2005 Robert Goldman, released under the LGPL,
+;;; and the lisp-specific preamble to that license.
 (in-package :sift.nst)
 
 
@@ -29,7 +16,7 @@
 ;;;   comprehensive code review.
 ;;;
 ;;;   2. Should the nst-run-command function be turned into a macro?
-;;;
+
 
 ;;; This file contains settings, global variables and flags.
 
@@ -197,8 +184,7 @@ or t if none is available.")
 (defparameter *passed-tests* (make-hash-table)
   "Set of tests which passed on their most recent run.")
 (defparameter *failed-tests* (make-hash-table)
-  "Hash table that maps group names to another hash which represents a
-set of tests in that group failing on their most recent run.")
+  "Set of tests failing on their most recent run.")
 (defparameter *erred-tests* (make-hash-table)
   "Map from tests raising an error condition during the current :run
 session of the NST runtime system to a reason for the error, or t if
@@ -244,6 +230,3 @@ double-hash table."
   "This tag will be dynamically set to nil when recurring over opening
 fixtures; this should be used for output selection only.")
 
-;;; Redirecting output from NST to elsewhere.
-(defvar cl-user::*nst-default-report-stream* t
-  "The default value for the stream to which NST reports output.")
