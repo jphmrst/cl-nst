@@ -26,7 +26,7 @@
 
 (defsystem :nst
     :serial t
-    :version "0.3.0"
+    :version "0.2.2"
     ;; :depends-on (:jm-defs)
     :in-order-to ((test-op (test-op :test-nst)))
     :components ((:file "package")
