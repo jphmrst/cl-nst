@@ -1,10 +1,18 @@
 
-all: package.ps \
-	globals.ps group.ps check.ps fixture.ps \
-	permuter.ps criteria.ps status.ps \
-	test-packages.ps \
+all: anon-fixtures-mnst.ps \
 	byhand-mnst.ps \
-	interactive.ps test.ps \
+	check.ps \
+	criteria.ps \
+	fixture.ps \
+	globals.ps \
+	group.ps \
+	interactive.ps \
+	package.ps \
+	permuter.ps \
+	simple-mnst.ps \
+	status.ps \
+	test.ps
+	#
 
 %.pdf: %.tex
 	pdflatex $<

@@ -38,10 +38,10 @@
   (def-check triv :pass))
 
 (def-test-group g1a ()
-  (def-check (fix0 :fixtures (f1))              :true (boundp 'c)))
+  (def-check (fix0 :fixtures (f1)) :true (boundp 'c)))
 
 (def-test-group g1a1 ()
-  (def-check (fix0 :fixtures (f1))              :true (boundp 'c)))
+  (def-check (fix0 :fixtures (f1)) :true (boundp 'c)))
 
 (def-fixtures f2 (:uses (f1))
   (d 4) (e 'asdfg) (f c))

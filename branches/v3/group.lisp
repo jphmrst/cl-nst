@@ -204,21 +204,21 @@ forms - zero or more test forms, given by def-check or def-test."
 			(suite-class-actual (test-in-group-class-name g))
 			(class-object (find-class group-class-actual)))
 		   (format t
-		       " - ~@<Group class name: ~s~
-                         ~:_        expected: ~s~
-                        ~:@_superclasses: ~@<~{~s~^ ~:_~}~:>~
-                        ~:@_    expected: ~@<~s ~:_~{~s~^ ~:_~}~:>~:>~%"
+		       " - ~@<Group cl~@<ass name: ~s ~
+                                      ~:_expected: ~s~:>~
+                        ~:@_supe~@<rclasses: ~@<~{~s~^ ~:_~}~:> ~
+                               ~:@_expected: ~@<~s ~:_~{~s~^ ~:_~}~:>~:>~:>~%"
 		     group-class-actual ,group-class-name
 		     (loop for sup in (class-direct-superclasses class-object)
 			 collect (class-name sup))
 		     'group-base-class ,group-fixture-classes)
 		   (format t
-		       " - ~@<Test in suite class name: ~s~
-                        ~:@_                expected: ~s~:>~%"
+		       " - ~@<Test in suite cl~@<ass name: ~s ~
+                                             ~:@_expected: ~s~:>~:>~%"
 		     suite-class-actual ,test-in-group-class-name)
 		   (format t
-		       " - ~@<Standalone test class name: ~s~
-                        ~:@_                  expected: ~s~
+		       " - ~@<Standalone test cl~@<ass name: ~s ~
+                                               ~:@_expected: ~s~:>~
                       ~:@_extends ~@<~s ~:_~s~:>~:>~%"
 		     standalone-class-actual ,standalone-in-group-class-name
 		     ,test-in-group-class-name ,group-class-name)

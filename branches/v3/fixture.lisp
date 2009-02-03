@@ -19,7 +19,6 @@
 ;;; License along with NST.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
-
 
 #+allegro (excl::define-simple-parser def-fixtures second :nst-fixture-set)
 (defmacro def-fixtures (name
@@ -51,52 +50,75 @@ documentation - a documentation string for the fixture set.
 outer - list of declarations to be made outside the let-binding of names of any
 use of this fixture.
 "
-  (declare (ignorable name uses assumes outer inner documentation bindings))
-  
+
+  (declare (ignorable assumes outer inner))
+
   (let ((group-fixture-class-name (gensym "group-fixture-class-name"))
-	(test-fixture-class-name (gensym "test-fixture-class-name")))
+	(test-fixture-class-name (gensym "test-fixture-class-name"))
+	(bound-names (loop for binding in bindings collect (car binding))))
+  
     `(eval-when (:compile-toplevel :load-toplevel :execute)
 
        ;; This eval-when block contains method definitions which will
        ;; be called later in the compile of this same file, so they
        ;; must be evaluated as soon as possible.
        (eval-when (:compile-toplevel :load-toplevel :execute)
-	 (defmethod bound-names ((f (eql ',name)))
-	   ',(loop for binding in bindings collect (car binding))))
+	 (defmethod bound-names ((f (eql ',name))) ',bound-names))
        
        ;; This eval-when block contains definition which will be used
        ;; only after this file is loaded.
        (eval-when (:load-toplevel :execute)
 	 (let* ((,group-fixture-class-name (group-fixture-class-name ',name))
 		(,test-fixture-class-name (test-fixture-class-name ',name)))
+	   
+	   ;; Record the class to be inherited by the classes of
+	   ;; groups which apply this fixture.
 	   (unless ,group-fixture-class-name
 	     (setf ,group-fixture-class-name
 	       (gentemp (concatenate 'string (symbol-name ',name) ".class.")
 			:nst-fixture))
 	     (defmethod group-fixture-class-name ((f (eql ',name)))
 	       ,group-fixture-class-name))
+	   
+	   ;; Record the class to be inherited by the classes of tests
+	   ;; which apply this fixture.
 	   (unless ,test-fixture-class-name
 	     (setf ,test-fixture-class-name
 	       (gentemp (concatenate 'string (symbol-name ',name) ".class.")
 			:nst-fixture))
 	     (defmethod test-fixture-class-name ((f (eql ',name)))
 	       ,test-fixture-class-name))
-	   (eval `(defclass ,,group-fixture-class-name () ()))
-	   (eval `(defclass ,,test-fixture-class-name () ()))
+	   
+	   ;; Create the group-inherited class, and apply the bindings
+	   ;; to included methods.
+	   (eval `(defclass ,,group-fixture-class-name () ()
+		    ,@(when ,documentation
+			`((:documentation ,,documentation)))
+		    ))
+	   (eval `(defmethod core-run :around ((group
+						,,group-fixture-class-name))
+		    (let ,',bindings
+		      (declare (special ,@',bound-names))
+		      (call-next-method))))
 
-	   ;; WARNING!  This line causes Allegro to crash
-	   #-allegro (set-pprint-dispatch ',group-fixture-class-name
-		       '#(lambda (stream object)
-			  (format stream "Fixture set ~s" ',name)))
-	 
-	   (eval `(defmethod core-run :around ((group ,,group-fixture-class-name))
-		    (let ,',bindings (call-next-method))))
+	   ;; Create the test-inherited class, and apply the bindings
+	   ;; to included methods.
+	   (eval `(defclass ,,test-fixture-class-name () ()
+		    ,@(when ,documentation
+			`((:documentation ,,documentation)))
+		    ))
 	   (eval `(defmethod core-run-test :around ((test
 						     ,,test-fixture-class-name))
-		    (let ,',bindings (call-next-method))))
+		    (let ,',bindings
+		      (declare (special ,@',bound-names))
+		      (call-next-method))))
+
 
+
+	   ;; Function for expanding names into the current namespace.
 	   (defmethod open-fixture ((f (eql ',name))
 				    &optional (in-package *package*))
+	     ,@(when documentation `(,documentation))
 	     (declare (special ,@(loop for used-fixture in uses
 				       append (bound-names used-fixture))
 			       ,@assumes))
@@ -110,6 +132,12 @@ use of this fixture.
 				    ,form))
 			    (t nil))))
 	     ',name)
+	   
+	   ;; WARNING!  This line causes Allegro to crash
+	   #-allegro (set-pprint-dispatch ',group-fixture-class-name
+		       '#(lambda (stream object)
+			  (format stream "Fixture set ~s" ',name)))
+
 	   (defmethod trace-fixture ((f (eql ',name)))
 	     (format t "Fixture ~s~% - Bindings:~%" f)
 	     ,@(loop for (var form) in bindings
