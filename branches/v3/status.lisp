@@ -258,8 +258,8 @@ nil at the top level; set via dynamically-scoped bindings.")
 	      check-name errors))
 
 	   ((and (eql 1 total-items) warnings)
-	    (format s "~@<Check ~a succeeded with warning: ~_~w~:>"
-	      check-name errors))
+	    (format s "~@<Check ~a succeeded with warning~p:~{~:@_ - ~w~}~:>"
+	      check-name warnings warnings))
 
 	   ((and (eql 1 total-items) failures)
 	    (format s "Check ~a failed" check-name))
@@ -290,7 +290,11 @@ nil at the top level; set via dynamically-scoped bindings.")
 		       (format check-note-format)
 		       (args check-note-args)) cn
 	(declare (ignorable context stack))
-	(format s "~?" format args))))
+	
+	(when format (format s "~?" format args))
+	(format s "~@<~:[~2*~;~?~:@_~]in context: ~w~:@_stack: ~w~:>"
+	  format format args context stack)
+	)))
 
 ;;;
 ;;; Report printers.

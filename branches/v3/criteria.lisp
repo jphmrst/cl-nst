@@ -198,10 +198,14 @@
 
 (def-control-check (:apply (transform criterion) forms)
   (continue-check criterion
-		  `(multiple-value-list (apply #',transform ,forms))))
+		  `(multiple-value-call #'list (apply #',transform ,forms))))
 
 (def-control-check (:values (criterion) forms)
-  (continue-check criterion `(multiple-value-list (car ,forms))))
+  (cond
+    ((and (listp forms) (eq (car forms) 'list))
+     (continue-check criterion (cons 'list `(multiple-value-call #'list ,(cadr forms)))))
+    (t
+     (continue-check criterion (cons 'list `(multiple-value-call #'list (car ,forms)))))))
 
 
 (def-control-check (:check-err (criterion) forms)

@@ -240,7 +240,13 @@ when def-check-alias is macroexpanded."
 	  (fixtures-from-group (gensym "fixtures-from-group"))
 	  (check-fixture-classes (gensym "check-fixture-classes"))
 	  (anon-fixture-forms (gensym "anon-fixture-forms"))
-	  (test-in-group-class-name (gensym "test-in-group-class-name")))
+	  (test-in-group-class-name (gensym "test-in-group-class-name"))
+	  (core-run-body
+	   (cond
+	     ((eql 1 (length forms))
+	      (continue-check criterion `(common-lisp:multiple-value-list ,(car forms))))
+	     (t
+	      (continue-check criterion (cons 'list forms))))))
       (declare (special *nst-context*))
       `(block ,name
 	 (macrolet ((eval-dbg (form) `(progn (format t "~%~s~%" ,form)
@@ -312,12 +318,13 @@ when def-check-alias is macroexpanded."
 	       (eval `(defmethod check-name ((obj ,,standalone-class-name))
 			',',name))
        
-	       (eval `(defmethod core-run-test ((obj ,,suite-class-name))
-			    ,',(continue-check criterion (cons 'list forms))))
 	       (eval `(defmethod core-run ((obj ,,standalone-class-name))
 			    (core-run-test obj)))
+
+	       (eval `(defmethod core-run-test ((obj ,,suite-class-name))
+			,',core-run-body))
 	       (eval `(defmethod core-run-test ((obj ,,standalone-class-name))
-			    ,',(continue-check criterion (cons 'list forms))))
+			,',core-run-body))
 
 	       ,@(when setup-supp-p
 		   `((eval `(defmethod core-run-test
