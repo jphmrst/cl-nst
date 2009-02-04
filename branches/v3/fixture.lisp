@@ -53,6 +53,11 @@ use of this fixture.
 
   (declare (ignorable assumes outer inner))
 
+  ;; Some arguments can be either a singleton or a list; correct the
+  ;; latter into the former so that internally it's all uniform.
+  (unless (listp uses) (setf uses (list uses)))
+  (unless (listp assumes) (setf assumes (list assumes)))
+  
   (let ((group-fixture-class-name (gensym "group-fixture-class-name"))
 	(test-fixture-class-name (gensym "test-fixture-class-name"))
 	(bound-names (loop for binding in bindings collect (car binding))))
