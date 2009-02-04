@@ -64,6 +64,8 @@
 (def-check-alias (:forms-eq)    `(:predicate eq))
 (def-check-alias (:forms-eql)   `(:predicate eql))
 (def-check-alias (:forms-equal) `(:predicate equal))
+(def-check-alias (:value-list further) `(:apply list ,further))
+(def-check-alias (:values &rest args) `(:apply list (:seq ,@args)))
 
 (def-value-check (:predicate (pred) (&rest forms))
   `(if (apply #',pred forms)
