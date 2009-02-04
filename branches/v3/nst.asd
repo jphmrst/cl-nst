@@ -24,7 +24,7 @@
 
 (defsystem :nst
     :description "The NST unit/regression testing system"
-    :version "0.3.0"
+    :version "1.0.0"
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :mnst)))
