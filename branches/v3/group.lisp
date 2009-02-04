@@ -148,8 +148,8 @@ forms - zero or more test forms, given by def-check or def-test."
 		     ((g (eql ',group-name)))
 		   ,standalone-in-group-class-name))
 
-	       (eval `(defclass ,,group-class-name (group-base-class
-						    ,@,group-fixture-classes) ()))
+	       (eval `(defclass ,,group-class-name
+			   (group-base-class ,@,group-fixture-classes) ()))
 
 	       ;; WARNING!  This hook crashes Allegro Lisp.
 	       #-allegro (set-pprint-dispatch ',group-class-name
@@ -166,7 +166,8 @@ forms - zero or more test forms, given by def-check or def-test."
 			   ;; (,,group-class-name ,,test-in-group-class-name)
 			   () ()))
 
-	       (eval `(defmethod core-run ((obj ,,standalone-in-group-class-name))
+	       (eval `(defmethod core-run
+			  ((obj ,,standalone-in-group-class-name))
 			(core-run-test obj)))
 		 
 	       (when ,setup-supp-p
@@ -204,23 +205,28 @@ forms - zero or more test forms, given by def-check or def-test."
 			(suite-class-actual (test-in-group-class-name g))
 			(class-object (find-class group-class-actual)))
 		   (format t
-		       " - ~@<Group cl~@<ass name: ~s ~
-                                      ~:_expected: ~s~:>~
-                        ~:@_supe~@<rclasses: ~@<~{~s~^ ~:_~}~:> ~
-                               ~:@_expected: ~@<~s ~:_~{~s~^ ~:_~}~:>~:>~:>~%"
-		     group-class-actual ,group-class-name
+		       " - ~@<Group cl~@<ass name: ~s~
+                                      ~:[~*~;~:@_expected: ~s~]~:>~
+                        ~:@_supe~@<rclasses: ~@<~{~s~^ ~:_~}~:>~
+                               ~:[~2*~;~:@_expected: ~
+                                         ~@<~s ~:_~{~s~^ ~:_~}~:>~]~:>~:>~%"
+		     group-class-actual
+		     *nst-info-shows-expected* ,group-class-name
 		     (loop for sup in (class-direct-superclasses class-object)
 			 collect (class-name sup))
+		     *nst-info-shows-expected* 
 		     'group-base-class ,group-fixture-classes)
 		   (format t
-		       " - ~@<Test in suite cl~@<ass name: ~s ~
-                                             ~:@_expected: ~s~:>~:>~%"
-		     suite-class-actual ,test-in-group-class-name)
+		       " - ~@<Test in suite cl~@<ass name: ~s~
+                                ~:[~*~;~:@_expected: ~s~]~:>~:>~%"
+		     suite-class-actual
+		     *nst-info-shows-expected* ,test-in-group-class-name)
 		   (format t
-		       " - ~@<Standalone test cl~@<ass name: ~s ~
-                                               ~:@_expected: ~s~:>~
+		       " - ~@<Standalone test cl~@<ass name: ~s~
+                                   ~:[~*~;~:@_expected: ~s~]~:>~
                       ~:@_extends ~@<~s ~:_~s~:>~:>~%"
-		     standalone-class-actual ,standalone-in-group-class-name
+		     standalone-class-actual
+		     *nst-info-shows-expected* ,standalone-in-group-class-name
 		     ,test-in-group-class-name ,group-class-name)
 		   )))
 	     ,@expanded-check-forms

@@ -233,6 +233,8 @@ corresponding internal name-binding NST class for adding fixtures to a test.")
 ;;; macros.
 ;;;
 
+(defparameter *nst-info-shows-expected* nil)
+
 (defparameter *nst-check-name* nil)
 
 ;; Internal test execution functions.

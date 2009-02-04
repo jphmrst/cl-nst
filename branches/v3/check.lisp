@@ -244,7 +244,8 @@ when def-check-alias is macroexpanded."
 	  (core-run-body
 	   (cond
 	     ((eql 1 (length forms))
-	      (continue-check criterion `(common-lisp:multiple-value-list ,(car forms))))
+	      (continue-check criterion
+			      `(common-lisp:multiple-value-list ,(car forms))))
 	     (t
 	      (continue-check criterion (cons 'list forms))))))
       (declare (special *nst-context*))
@@ -372,20 +373,24 @@ when def-check-alias is macroexpanded."
 		       in (class-direct-superclasses
 			   (find-class (suite-class-name ',*the-group* ',name)))
 		       collect (class-name super)))
-		 (format t "       expected: ~s~%" ,test-in-group-class-name)
+		 (when *nst-info-shows-expected*
+		   (format t "       expected: ~s~%" ,test-in-group-class-name))
 	     
 		 (format t " - Standalone class name: ~s~%"
 		   (standalone-class-name ',*the-group* ',name))
-		 (format t "                expected: ~s~%"
-		   ,standalone-class-name)
+		 (when *nst-info-shows-expected*
+		   (format t "                expected: ~s~%"
+		     ,standalone-class-name))
 		 (format t "   Superclasses: ~@<~{~s~^ ~:_~}~:>~%"
 		   (loop for super
 		       in (class-direct-superclasses
 			   (find-class (standalone-class-name ',*the-group*
 							      ',name)))
 		       collect (class-name super)))
-		 (format t "       expected: ~@<~s ~:_~@<~{~s~^ ~:_~}~:>~:>~%" 
-		   (standalone-test-in-group-class-name ',*the-group*)
-		   ,fixtures-from-group)
+		 (when *nst-info-shows-expected*
+		   (format t
+		       "       expected: ~@<~s ~:_~@<~{~s~^ ~:_~}~:>~:>~%" 
+		     (standalone-test-in-group-class-name ',*the-group*)
+		     ,fixtures-from-group))
 	     
 		 ))))))))

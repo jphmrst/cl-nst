@@ -203,9 +203,11 @@
 (def-control-check (:values (criterion) forms)
   (cond
     ((and (listp forms) (eq (car forms) 'list))
-     (continue-check criterion (cons 'list `(multiple-value-call #'list ,(cadr forms)))))
+     (continue-check criterion
+		     (cons 'list `(multiple-value-call #'list ,(cadr forms)))))
     (t
-     (continue-check criterion (cons 'list `(multiple-value-call #'list (car ,forms)))))))
+     (continue-check criterion
+		     (cons 'list `(multiple-value-call #'list (car ,forms)))))))
 
 
 (def-control-check (:check-err (criterion) forms)
