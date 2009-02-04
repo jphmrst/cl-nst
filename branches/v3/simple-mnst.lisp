@@ -66,9 +66,6 @@
 
 (defparameter zzz 0)
 
-;;;(def-test-group vg ()
-;;;  (def-check vc (:values (:seq (:symbol a) (:eq 'b))) (values 'a 'b)))
-
 (def-test-group core-checks ()
   (def-check pass-1 :pass 'a)
   (def-check fail-1 (:not :fail) 'a)  
@@ -95,6 +92,7 @@
   (def-check each1 (:each (:symbol a)) '(a a a a a))
   (def-check seq-1 (:seq (:symbol a) (:eql 2) (:eq 'b)) '(a 2 b))
   (def-check permute1 (:permute (:each (:eq 'a))) '(a a))
+  (def-check values-drop (:apply (lambda (x y) x) (:symbol a)) (values 'a 'b))
 ;;;  (def-check values1 (:values (:seq (:symbol a) (:eq 'b))) (values 'a 'b))
   (def-check permute2
       (:permute (:seq (:symbol b)
