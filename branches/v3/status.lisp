@@ -54,6 +54,10 @@ instances, and the info field is of any value."
                 cl:format"
   context stack format args)
 
+(defstruct (error-check-note (:include check-note))
+  "A note issued in regards to a thrown error."
+  error)
+
 (defstruct (context-layer (:type vector) :named)
   "A record of test criterion
  criterion - the criterion symbol itself
@@ -254,7 +258,7 @@ nil at the top level; set via dynamically-scoped bindings.")
 	   ;; don't bother with bullet points.
 	   ;;
 	   ((and (eql 1 total-items) errors)
-	    (format s "~@<Check ~a raised an error: ~_~w~:>"
+	    (format s "~@<Check ~a raised an error:~{~:@_ . ~w~}~:>"
 	      check-name errors))
 
 	   ((and (eql 1 total-items) warnings)
@@ -295,6 +299,19 @@ nil at the top level; set via dynamically-scoped bindings.")
 	(format s "~@<~:[~2*~;~?~:@_~]in context: ~w~:@_stack: ~w~:>"
 	  format format args context stack)
 	)))
+
+(set-pprint-dispatch 'error-check-note
+  #'(lambda (s cn) 
+      (with-accessors ((context check-note-context)
+		       (stack check-note-stack)
+		       (format check-note-format)
+		       (args check-note-args)
+		       (error error-check-note-args)) cn
+	(declare (ignorable context stack))
+	(format s "~@<~w~:[~2*~;~:@_~?~]~
+                        ~:@_~:[nil context~;~:*in context: ~w~]~
+                        ~:@_~:[nil values~;~:*values: ~w~]~:>"
+	  error format format args context stack))))
 
 ;;;
 ;;; Report printers.

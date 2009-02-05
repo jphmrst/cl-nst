@@ -50,7 +50,10 @@ first element is that symbol and whose remaining elements are options."
      (declare (ignorable args formals))
      (error "Undefined criterion ~s" unknown-criterion)))
 
-(defvar *error-checking* nil)
+(defvar *error-checking* nil
+  "Criteria such as :check-err set this variable to t (and declare it special)
+to suppress error-handling in continue-check, and thus become able to handle
+all further errors themselves.")
 
 (defun continue-check (criterion forms)
   "This function is available from within the check-defining forms to process
@@ -83,7 +86,14 @@ subsequences of a current check definition.
 		 ((error #'(lambda (e)
 			     (unless *debug-on-error*
 			       (return-from ,checker-block
-				 (make-check-result :errors (list e)))))))
+				 (make-check-result
+				  :errors (list (make-error-check-note
+						 :context *nst-context*
+						 :stack *nst-stack*
+						 :format "~a"
+						 :args (list (format nil
+								 "~w" e))
+						 :error e))))))))
 	       ,body))))))))
 
 #+allegro (excl::define-simple-parser def-value-check caadr :nst-criterion)
