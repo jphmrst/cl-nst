@@ -24,7 +24,10 @@
 
 (defsystem :masdfnst
     :class nst-testable
+    
+    :in-order-to ((test-op (load-op :masdfnst)))
+    :nst-package :asdf-nst-test
+    
     :components ((:module "asdf" :components
 			  ;; A simple test suite
-			  ((:file "tests"))))
-    :nst-package :asdf-nst-test)
+			  ((:file "tests")))))
