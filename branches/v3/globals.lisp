@@ -102,6 +102,8 @@
 
 (defvar *nst-local-verbosity* :default)
 (defvar *nst-output-stream* *standard-output*)
+
+(defvar *debug-on-error* nil)
 
 ;;;
 ;;; Generic functions whose methods are defined by the various macros.

@@ -50,6 +50,8 @@ first element is that symbol and whose remaining elements are options."
      (declare (ignorable args formals))
      (error "Undefined criterion ~s" unknown-criterion)))
 
+(defvar *error-checking* nil)
+
 (defun continue-check (criterion forms)
   "This function is available from within the check-defining forms to process
 subsequences of a current check definition.
@@ -68,9 +70,21 @@ subsequences of a current check definition.
 	   (error "Malformed criterion in def-check: ~s" criterion)))
     (let ((*nst-context* (cons (cons criterion-name criterion-args)
 			       *nst-context*))
-	  (*nst-stack* forms))
+	  (*nst-stack* forms)
+	  (checker-block (gensym "block.")))
       (declare (special *nst-context* *nst-stack*))
-      (build-check-form criterion-name criterion-args forms))))
+      (let ((body (build-check-form criterion-name criterion-args forms)))
+	(cond
+	 (*error-checking*
+	  body)
+	 (t
+	  `(block ,checker-block
+	     (handler-bind
+		 ((error #'(lambda (e)
+			     (unless *debug-on-error*
+			       (return-from ,checker-block
+				 (make-check-result :errors (list e)))))))
+	       ,body))))))))
 
 #+allegro (excl::define-simple-parser def-value-check caadr :nst-criterion)
 (defmacro def-value-check ((name criterion-args check-args &key
@@ -111,7 +125,9 @@ subsequences of a current check definition.
 	 ,stack-transformer)
        (defmethod build-check-form ((,id (eql ',name)) ,args ,forms)
 	 (destructuring-bind ,criterion-args ,args
-	   (list 'destructuring-bind ',check-args ,forms ,@expansion))))))
+	   ;; `(destructuring-bind ,',check-args ,',forms ,@',expansion)
+	   (list 'destructuring-bind ',check-args ,forms ,@expansion)
+	   )))))
 
 #+allegro (excl::define-simple-parser def-control-check caadr :nst-criterion)
 (defmacro def-control-check ((name criterion-args forms-formal

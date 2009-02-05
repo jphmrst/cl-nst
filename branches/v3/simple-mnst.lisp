@@ -64,6 +64,9 @@
   (def-check two-fixtures :true (eq d e))
   )
 
+(def-test-group err (f1 f1a) (def-check error1 (:eql 3) (error "blah")))
+
+
 (defparameter zzz 0)
 
 (def-test-group core-checks ()

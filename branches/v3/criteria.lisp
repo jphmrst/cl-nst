@@ -65,7 +65,6 @@
 (def-check-alias (:forms-eql)   `(:predicate eql))
 (def-check-alias (:forms-equal) `(:predicate equal))
 (def-check-alias (:value-list further) `(:apply list ,further))
-(def-check-alias (:values &rest args) `(:apply list (:seq ,@args)))
 
 (def-value-check (:predicate (pred) (&rest forms))
   `(if (apply #',pred forms)
@@ -201,19 +200,12 @@
 (def-control-check (:apply (transform criterion) forms)
   (continue-check criterion
 		  `(multiple-value-call #'list (apply #',transform ,forms))))
-
-(def-control-check (:values (criterion) forms)
-  (cond
-    ((and (listp forms) (eq (car forms) 'list))
-     (continue-check criterion
-		     (cons 'list `(multiple-value-call #'list ,(cadr forms)))))
-    (t
-     (continue-check criterion
-		     (cons 'list `(multiple-value-call #'list (car ,forms)))))))
 
 
 (def-control-check (:check-err (criterion) forms)
-  (let ((x (gensym "x")))
+  (let ((x (gensym "x"))
+	(*error-checking* t))
+    (declare (special *error-checking*))
     `(block ,x
        (handler-bind ((error #'(lambda (,x)
 				 (declare (ignorable ,x))
@@ -241,6 +233,9 @@
 			`(list ,@(loop for idx in indices collect
 				       `(nth ,idx ,var)))))))
 
+(def-control-check (:values (&rest args) forms)
+  (continue-check `(:apply list (:seq ,@args)) forms))
+
 (def-control-check (:each (criterion) forms)
   (let ((block (gensym)) (list (gensym "list")) (var (gensym "var"))
 	(result (gensym "result"))
@@ -265,6 +260,7 @@
 		       (append ,warnings
 			       (check-result-warnings ,result))))))))
 	 (make-check-result :info ,info :warnings ,warnings)))))
+
 
 
 (def-control-check (:seq (&rest criteria) forms)
