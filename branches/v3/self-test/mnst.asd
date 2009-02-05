@@ -26,7 +26,7 @@
     :description "M as in meta: NST- (or otherwise) testing NST."
     :serial t
     :depends-on (:nst)
-    :components ((:module "self-test" :components
+    :components ((:module "core" :components
 			  (;; Manually-run tests, for inspecting the
 			   ;; order of fixture, setup, cleanup and
 			   ;; test execution.
