@@ -44,11 +44,13 @@
 	     #:def-value-check
 	     #:def-control-check
 	     #:continue-check
-	     #:run-nst-commands
 	     #:emit-failure
 	     #:emit-warning
-	     #:run-group
-	     #:run-test
+
+;;;	     #:run-nst-commands
+
+	     #:run-package #:run-group #:run-test
+	     #:report-package #:report-group #:report-test
 	     
 	     #:*default-report-stream*))
 
