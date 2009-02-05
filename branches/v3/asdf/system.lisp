@@ -103,10 +103,10 @@ of a package name, the test's group name, and the test name."))
 	 (nst:report-group group-actual)))
 
       (single-test
-       (let ((group-actual (intern (symbol-name (cadr single-group))
-				   (find-package (car single-group))))
-	     (test-actual (intern (symbol-name (caddr single-group))
-				  (find-package (car single-group)))))
+       (let ((group-actual (intern (symbol-name (cadr single-test))
+				   (find-package (car single-test))))
+	     (test-actual (intern (symbol-name (caddr single-test))
+				  (find-package (car single-test)))))
 	 (nst:run-test group-actual test-actual)
 	 (nst:report-test group-actual test-actual))))))
 
