@@ -13,4 +13,5 @@
 
 (in-package :cl-user)
 
-(nst::def-group group1t () (nst::def-check check1t (:pass) ()) (nst::def-check check2t (:pass) ()))
+(nst::def-group group1t ()
+  (nst::def-check check1t (:pass) ()) (nst::def-check check2t (:pass) ()))
