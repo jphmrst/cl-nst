@@ -55,12 +55,14 @@
 		 
 		 ;; Receiving and bookkeeping the results of tests.
 		 (:file "status"   :depends-on ("globals"))
+		 
+		 ;; Interaction with NST via the REPL.
+		 (:file "command"   :depends-on ("globals" "status"))
 
 ;;;		 (:file "classes")
 ;;;		 (:file "runners")
 ;;;		 (:file "testforms")
 ;;;		 (:file "defcheck")
-;;;		 (:file "interactive")
 ;;;		 (:file "format")
 
 		 ))
