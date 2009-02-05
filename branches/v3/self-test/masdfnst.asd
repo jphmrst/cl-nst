@@ -27,10 +27,19 @@
     
     :in-order-to ((test-op (load-op :masdfnst)))
 
-    :nst-package :asdf-nst-test
+    ;; :nst-package :asdf-nst-test
     ;; :nst-group (:asdf-nst-test . core-checks)
     ;; :nst-test (:asdf-nst-test core-checks pass-1)
+
+    ;; :nst-packages (:asdf-nst-test :asdf-nst-test2)
+
+    ;; :nst-packages (:asdf-nst-test)
+    ;; :nst-groups ((:asdf-nst-test2 . :g1a))
+    
+    :nst-groups ((:asdf-nst-test2 . :g1))
+    :nst-tests ((:asdf-nst-test2 :g1a :fix0)
+		(:asdf-nst-test :core-checks :warn-1))
     
     :components ((:module "asdf" :components
 			  ;; A simple test suite
-			  ((:file "tests")))))
+			  ((:file "tests") (:file "moretests")))))

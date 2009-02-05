@@ -50,7 +50,7 @@
 ;;;	     #:run-nst-commands
 
 	     #:run-package #:run-group #:run-test
-	     #:report-package #:report-group #:report-test
+	     #:report-multiple #:report-package #:report-group #:report-test
 	     
 	     #:*default-report-stream*))
 

@@ -90,7 +90,11 @@ of a package name, the test's group name, and the test name."))
 (defmethod perform ((o asdf:test-op) (c nst-testable))
   (with-accessors ((single-package nst-package)
 		   (single-group nst-group)
-		   (single-test nst-test)) c
+		   (single-test nst-test)
+
+		   (packages nst-packages)
+		   (group-specs nst-groups)
+		   (test-specs nst-tests)) c
     (cond 
       (single-package
        (nst:run-package single-package)
@@ -108,5 +112,21 @@ of a package name, the test's group name, and the test name."))
 	     (test-actual (intern (symbol-name (caddr single-test))
 				  (find-package (car single-test)))))
 	 (nst:run-test group-actual test-actual)
-	 (nst:report-test group-actual test-actual))))))
-
+	 (nst:report-test group-actual test-actual)))
+      
+      (t
+       (loop for pk in packages do (nst:run-package pk))
+       (let ((groups
+	      (loop for (pk . gr) in group-specs
+		    collect
+		    (let ((group (intern (symbol-name gr) (find-package pk))))
+		      (nst:run-group group)
+		      group)))
+	     (tests
+	      (loop for (pk gr ts) in test-specs
+		    collect
+		    (let ((group (intern (symbol-name gr) (find-package pk)))
+			  (test (intern (symbol-name ts) (find-package pk))))
+		      (nst:run-test group test)
+		      (cons group test)))))
+	 (report-multiple packages groups tests))))))
