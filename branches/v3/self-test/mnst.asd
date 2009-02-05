@@ -2,7 +2,7 @@
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
-;;; Copyright (c) 2006, 2007, 2008 Smart Information Flow Technologies.
+;;; Copyright (c) 2006-2009 Smart Information Flow Technologies.
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
 ;;; NST is free software: you can redistribute it and/or modify it
@@ -47,13 +47,13 @@
   (list (component-pathname file)))
 (defmethod output-files ((o compile-op) (c nst-file)) nil)
 
-(defmethod perform ((op test-op)
-		    (system (eql (find-system :mnst))))
-  (eval (list (intern (symbol-name '#:run-nst-commands)
-		      (find-package :mnst))
-	      :run-package
-	      (quote (intern (symbol-name :mnst)
-			     (find-package 'cl-user))))))
+;;;(defmethod perform ((op test-op)
+;;;		    (system (eql (find-system :mnst))))
+;;;  (eval (list (intern (symbol-name '#:run-nst-commands)
+;;;		      (find-package :mnst))
+;;;	      :run-package
+;;;	      (quote (intern (symbol-name :mnst)
+;;;			     (find-package 'cl-user))))))
 
 (defmethod operation-done-p ((o test-op) (sys (eql (find-system :mnst))))
   "We need to make sure that operation-done-p doesn't return its
