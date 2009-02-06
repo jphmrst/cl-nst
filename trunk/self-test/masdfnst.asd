@@ -19,6 +19,7 @@
 ;;; License along with NST.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
 
+(asdf:oos 'asdf:load-op :asdf-nst)
 (defpackage :masdfnst-asd (:use :common-lisp :asdf :asdf-nst))
 (in-package :masdfnst-asd)
 
