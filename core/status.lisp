@@ -281,13 +281,14 @@ six-value summary of the results:
   (let* ((result (make-package-result))
 	 (user-package (find-package package))
 	 (sym-pack (groups-package user-package)))
-    (with-accessors ((name package-result-package-name)
-		     (checks package-result-group-results)) result
-      (setf name (package-name user-package))
-      (do-symbols (remote-group sym-pack)
-	(let ((local-group (intern (symbol-name remote-group) user-package)))
-	  (setf (gethash local-group checks)
-		(group-report local-group)))))
+    (when sym-pack
+      (with-accessors ((name package-result-package-name)
+		       (checks package-result-group-results)) result
+	(setf name (package-name user-package))
+	(do-symbols (remote-group sym-pack)
+	  (let ((local-group (intern (symbol-name remote-group) user-package)))
+	    (setf (gethash local-group checks)
+	      (group-report local-group))))))
     result))
 
 (defun group-report (group)

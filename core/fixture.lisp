@@ -102,7 +102,7 @@ use of this fixture.
 		    ))
 	   (eval `(defmethod core-run :around ((group
 						,,group-fixture-class-name))
-		    (let ,',bindings
+		    (let* ,',bindings
 		      (declare (special ,@',bound-names))
 		      (call-next-method))))
 
@@ -114,7 +114,7 @@ use of this fixture.
 		    ))
 	   (eval `(defmethod core-run-test :around ((test
 						     ,,test-fixture-class-name))
-		    (let ,',bindings
+		    (let* ,',bindings
 		      (declare (special ,@',bound-names))
 		      (call-next-method))))
 

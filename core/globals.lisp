@@ -211,6 +211,16 @@ corresponding internal name-binding NST class for adding fixtures to a test.")
 (defgeneric stack-transformer (id)
   (:documentation "Check form-specific stack transformation."))
 
+;;;
+;;; Recording of results.  We use a hash table here --- unlike the
+;;; method-based recording of test symbols, we're not worried about
+;;; straddling the compile/load/run-time borders for result recording.
+;;;
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (unless (boundp '+results-record+)
+    (defconstant +results-record+ (make-hash-table :test 'eq)
+      "Results of test runs.")))
+
 ;; Extracting information for debugging.
 
 (defgeneric trace-fixture (fx)
@@ -286,8 +296,9 @@ encoded as :before and :after methods.")
   "Run all groups in a package."
   (let* ((user-package (find-package package-or-name))
 	 (sym-pack (groups-package user-package)))
-    (do-symbols (group sym-pack)
-      (run-group (intern (symbol-name group) user-package)))))
+    (when sym-pack
+      (do-symbols (group sym-pack)
+	(run-group (intern (symbol-name group) user-package))))))
 
 (defun run-group (group)
   "Run a group by its user-given name."
@@ -296,16 +307,6 @@ encoded as :before and :after methods.")
 (defun run-test (group test)
   "Run a test standalone by its user-given name (and its group's name)."
   (core-run (make-instance (standalone-class-name group test))))
-
-;;;
-;;; Recording of results.  We use a hash table here --- unlike the
-;;; method-based recording of test symbols, we're not worried about
-;;; straddling the compile/load/run-time borders for result recording.
-;;;
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (unless (boundp '+results-record+)
-    (defconstant +results-record+ (make-hash-table :test 'eq)
-      "Results of test runs.")))
 
 ;;;
 ;;; Helper functions
