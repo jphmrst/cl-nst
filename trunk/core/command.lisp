@@ -28,21 +28,30 @@
 ;;; is here; further below we define platform-specific command-line
 ;;; interfaces.
 
+(defvar *last-repl-call* '(:help))
+(defgeneric consider-repl-call-save (name args)
+  (:method (name args) (declare (ignorable name args))))
+
 (defgeneric run-command-actual (command &rest args)
   (:documentation "Top-level command interpreter for the NST tester")
   (:method (command &rest args)
      (declare (ignorable args))
      (format t "Unrecognized NST command ~s~%~
-                Use :nst :help for a list of NST commands." command)))
+                Use :nst :help for a list of NST commands." command))
+  (:method :before (command &rest args) (consider-repl-call-save command args)))
 (defgeneric nst-short-help (command)
   (:documentation "Return the short help message for an NST REPL command."))
 (defgeneric nst-long-help (command)
   (:documentation "Return the long help message for an NST REPL command."))
 
 (defvar +nst-repl-commands+ nil)
+(defvar +nst-repl-properties+ nil)
 (defmacro def-nst-interactive-command ((name &key short-help
 					     (long-help nil long-help-supp-p)
-					     (args nil args-supp-p))
+					     (long-help-special
+					      nil long-help-special-supp-p)
+					     (args nil args-supp-p)
+					     (repeatable))
 				       &body forms)
   (let* ((args-var (gensym))
 	 (command-run-forms (if args-supp-p
@@ -51,12 +60,37 @@
     `(progn
        (defmethod run-command-actual ((cmd (eql ,name)) &rest ,args-var)
 	 ,@command-run-forms)
+       ,(when repeatable
+	  `(defmethod consider-repl-call-save ((cmd (eql ,name)) args)
+	     (setf *last-repl-call* (cons cmd args))))
        (defmethod nst-short-help ((cmd (eql ,name)))
 	 ,short-help)
        (defmethod nst-long-help ((cmd (eql ,name)))
-	 ,(if long-help-supp-p long-help short-help))
+	 ,@(cond
+	    (long-help-special-supp-p long-help-special)
+	    (long-help-supp-p (list long-help))
+	    (t (list short-help))))
        (unless (member ,name +nst-repl-commands+)
 	 (setf +nst-repl-commands+ (nconc +nst-repl-commands+ (list ,name)))))))
+
+(defgeneric set-nst-property (name value)
+  (:method (name value)
+     (declare (ignorable value))
+     (format t "No such property ~s~%" name))
+  (:method ((name (eql :debug-on-error)) value)
+     (setf *debug-on-error* value)))
+
+(defmacro def-nst-property (name variable &key (doc ""))
+  `(progn
+     (defmethod set-nst-property ((name (eql ,name)) value)
+       (setf ,variable value))
+     (defmethod nst-repl-property-doc ((n (eql ,name)))
+       ,doc)
+     (unless (member ,name +nst-repl-properties+)
+       (push ,name +nst-repl-properties+))))
+
+(def-nst-property :debug-on-error *debug-on-error*
+  :doc "When non-nil, break into the debugger when NST encounters an error.")
 
 (def-nst-interactive-command (:help :short-help "Print a list of commands."
 				    :long-help "Print this help message.")
@@ -64,33 +98,51 @@
                NST unit testing system --- interactive REPL commands~%~
                -----------------------------------------------------~%")
   (loop for cmd in +nst-repl-commands+ do
-    (format t "~%~s~%~a~%" cmd (nst-long-help cmd))))
+    (format t "~%~s~%~a~%" cmd (nst-short-help cmd)))
+  (format t "~%Without an explicit command, :nst repeats the last interesting ~
+              command~%(currently, :nst~{ ~s~})" *last-repl-call*))
 
 (def-nst-interactive-command
     (:open :short-help "Inject fixtures into the current name space."
-	   :args (&rest fixtures))
+	   :args (&rest fixtures)
+	   :repeatable t)
     (loop for fixture in fixtures do
       (open-fixture fixture)))
 
 (def-nst-interactive-command
     (:run-package :short-help "Run all NST tests stored in the given packages."
-		  :args (&rest packages))
+		  :args (&rest packages)
+		  :repeatable t)
   (loop for package in packages do (run-package package))
   (report-multiple packages nil nil))
 
 (def-nst-interactive-command
     (:run-group :short-help "Run all NST tests in the given groups."
-		:args (&rest groups))
+		:args (&rest groups)
+		:repeatable t)
   (loop for group in groups do (run-group group))
   (report-multiple nil groups nil))
 
 (def-nst-interactive-command
     (:run-test :short-help "Run a single NST test."
-	       :args (group test))
+	       :args (group test)
+	       :repeatable t)
   (run-test group test)
   (report-multiple nil nil (list (cons group test))))
 
+(def-nst-interactive-command
+    (:set :short-help "Set an NST property."
+	  :long-help-special
+	  ((with-output-to-string (*standard-output*)
+	     (format t "Set an NST property.  Available properties:~%")
+	     (loop for prop in +nst-repl-properties+ do
+	       (format t "~%~s~%~a~%" prop (nst-repl-property-doc prop)))))
+	  :args (name value))
+    (set-nst-property name value))
 
+(def-nst-interactive-command
+    (:unset :short-help "Clear an NST property." :args (name))
+    (set-nst-property name nil))
 
 ;;;	    (command-case (:open*) (fixture-names)
 ;;;              (dolist (fixture-name fixture-names)
@@ -103,25 +155,21 @@
 (defun run-nst-command (&rest args)
   (cond 
     ((null args)
-     (format t "Default action not yet built-in."))
+     (apply #'run-command-actual *last-repl-call*))
     
     (t
      (destructuring-bind (command-name &rest command-args) args
        (cond
 	 ((eq :help (car command-args))
-	  (format t "~a" (nst-long-help (car command-args))))
+	  (format t "~a" (nst-long-help command-name)))
 
-	 (t
-	  (apply #'run-command-actual command-name command-args)))))))
-
+	 (t (apply #'run-command-actual command-name command-args)))))))
 
 ;;; Platform-specific command-line interpreter interfaces.
 
 #+(or allegro sbcl)
 (#+allegro top-level:alias #+sbcl sb-aclrepl:alias "nst" (&rest args)
 	   (apply #'run-nst-command args))
-
-
 
 ;;; ----------------------------------------------------------------------
 ;;; The old code
