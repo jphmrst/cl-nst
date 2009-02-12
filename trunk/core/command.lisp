@@ -20,13 +20,115 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
-;;; This file contains the interactive command language.
+;;; This file defines the interactive REPL commands.
 
 ;;; ----------------------------------------------------------------------
 
-(defvar *nst-level* :package)
-(defvar *nst-unit* nil)
-(defvar *nst-test* nil)
+;;; Function version of the command-line interpreter.  The main logic
+;;; is here; further below we define platform-specific command-line
+;;; interfaces.
+
+(defgeneric run-command-actual (command &rest args)
+  (:documentation "Top-level command interpreter for the NST tester")
+  (:method (command &rest args)
+     (declare (ignorable args))
+     (format t "Unrecognized NST command ~s~%~
+                Use :nst :help for a list of NST commands." command)))
+(defgeneric nst-short-help (command)
+  (:documentation "Return the short help message for an NST REPL command."))
+(defgeneric nst-long-help (command)
+  (:documentation "Return the long help message for an NST REPL command."))
+
+(defvar +nst-repl-commands+ nil)
+(defmacro def-nst-interactive-command ((name &key short-help
+					     (long-help nil long-help-supp-p)
+					     (args nil args-supp-p))
+				       &body forms)
+  (let* ((args-var (gensym))
+	 (command-run-forms (if args-supp-p
+				`((destructuring-bind ,args ,args-var ,@forms))
+				forms)))
+    `(progn
+       (defmethod run-command-actual ((cmd (eql ,name)) &rest ,args-var)
+	 ,@command-run-forms)
+       (defmethod nst-short-help ((cmd (eql ,name)))
+	 ,short-help)
+       (defmethod nst-long-help ((cmd (eql ,name)))
+	 ,(if long-help-supp-p long-help short-help))
+       (unless (member ,name +nst-repl-commands+)
+	 (setf +nst-repl-commands+ (nconc +nst-repl-commands+ (list ,name)))))))
+
+(def-nst-interactive-command (:help :short-help "Print a list of commands."
+				    :long-help "Print this help message.")
+    (format t "-----------------------------------------------------~%~
+               NST unit testing system --- interactive REPL commands~%~
+               -----------------------------------------------------~%")
+  (loop for cmd in +nst-repl-commands+ do
+    (format t "~%~s~%~a~%" cmd (nst-long-help cmd))))
+
+(def-nst-interactive-command
+    (:open :short-help "Inject fixtures into the current name space."
+	   :args (&rest fixtures))
+    (loop for fixture in fixtures do
+      (open-fixture fixture)))
+
+(def-nst-interactive-command
+    (:run-package :short-help "Run all NST tests stored in the given packages."
+		  :args (&rest packages))
+  (loop for package in packages do (run-package package))
+  (report-multiple packages nil nil))
+
+(def-nst-interactive-command
+    (:run-group :short-help "Run all NST tests in the given groups."
+		:args (&rest groups))
+  (loop for group in groups do (run-group group))
+  (report-multiple nil groups nil))
+
+(def-nst-interactive-command
+    (:run-test :short-help "Run a single NST test."
+	       :args (group test))
+  (run-test group test)
+  (report-multiple nil nil (list (cons group test))))
+
+
+
+;;;	    (command-case (:open*) (fixture-names)
+;;;              (dolist (fixture-name fixture-names)
+;;;	        (handler-case (open-fixture fixture-name)
+;;;		  (unknown-fixture (cnd)
+;;;		    (format t "Can't find fixture ~s ~
+;;;                             ~_(check current package)." (name cnd))
+;;;		    (return-from run-nst-commands)))))
+
+(defun run-nst-command (&rest args)
+  (cond 
+    ((null args)
+     (format t "Default action not yet built-in."))
+    
+    (t
+     (destructuring-bind (command-name &rest command-args) args
+       (cond
+	 ((eq :help (car command-args))
+	  (format t "~a" (nst-long-help (car command-args))))
+
+	 (t
+	  (apply #'run-command-actual command-name command-args)))))))
+
+
+;;; Platform-specific command-line interpreter interfaces.
+
+#+(or allegro sbcl)
+(#+allegro top-level:alias #+sbcl sb-aclrepl:alias "nst" (&rest args)
+	   (apply #'run-nst-command args))
+
+
+
+;;; ----------------------------------------------------------------------
+;;; The old code
+
+;;; (defvar *nst-level* :package)
+;;; (defvar *nst-unit* nil)
+;;; (defvar *nst-test* nil)
 
 ;;;(defun run-nst-commands (&rest args)
 ;;;  "Top-level command interpreter for the NST tester"
@@ -362,10 +464,3 @@
 ;;;	  (format t "Unrecognized NST command ~s~%~
 ;;;                     For more options, use :nst :help~%~%"
 ;;;		  head))))))
-
-;;; Platform-specific command-line interpreter interfaces.
-
-;;;#+(or allegro sbcl)
-;;;(#+allegro top-level:alias #+sbcl sb-aclrepl:alias "nst" (&rest args)
-;;;	   (apply #'run-nst-commands args))
-
