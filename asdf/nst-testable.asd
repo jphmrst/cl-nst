@@ -1,9 +1,8 @@
-;;; File package.lisp
+;;; File nst-testable.asd
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
 ;;; Copyright (c) 2009 Smart Information Flow Technologies.
-;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
 ;;; NST is free software: you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as
@@ -18,15 +17,14 @@
 ;;; You should have received a copy of the GNU Lesser General Public
 ;;; License along with NST.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
-(in-package :common-lisp-user)
+(defpackage :nst-testable-asd
+    (:use :common-lisp :asdf)
+    )
+(in-package :nst-testable-asd)
 
-(defpackage :sift.asdf-nst
-    (:documentation "Unit and regression testing for Common Lisp")
-    (:nicknames :asdf-nst)
-    (:use :common-lisp :asdf :nst)
-    (:export #:nst-testable))
+(defsystem nst-testable
+    :components ((:file "package")
+                 (:file "system"))
+    :serial t)
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (import '(sift.asdf-nst:nst-testable) (find-package :asdf))
-  (export '(asdf::nst-testable) (find-package :asdf)))
 
