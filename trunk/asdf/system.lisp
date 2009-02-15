@@ -61,21 +61,21 @@ package name, the test's group name, and the test name."
        :initform nil
        :documentation "A list of NST tests, each given as a three-element list
 of a package name, the test's group name, and the test name."))
-  
+
   (:documentation "Class of ASDF systems that use NST for their test-op."))
 
 (defmethod initialize-instance :after ((sys nst-testable)
-				       &key &allow-other-keys)
+                                       &key &allow-other-keys)
 
   (when (and (or (nst-package sys)  (nst-group sys)  (nst-test sys))
-	     (or (nst-packages sys) (nst-groups sys) (nst-tests sys)))
+             (or (nst-packages sys) (nst-groups sys) (nst-tests sys)))
     (error "Do not mix single-item testing via :nst-package, :nst-group, \
 :nst-test with multiple-item testing via :nst-packages, :nst-groups, \
 :nst-tests"))
-  
+
   (when (< 1 (+ (if (nst-package sys) 1 0)
-		(if (nst-group sys) 1 0)
-		(if (nst-test sys) 1 0)))
+                (if (nst-group sys) 1 0)
+                (if (nst-test sys) 1 0)))
     (error "Do not use more than one of :nst-package, :nst-group, :nst-test \
 \(use :nst-packages, :nst-groups, :nst-tests\)"))
 
@@ -89,44 +89,44 @@ of a package name, the test's group name, and the test name."))
 
 (defmethod perform ((o asdf:test-op) (c nst-testable))
   (with-accessors ((single-package nst-package)
-		   (single-group nst-group)
-		   (single-test nst-test)
+                   (single-group nst-group)
+                   (single-test nst-test)
 
-		   (packages nst-packages)
-		   (group-specs nst-groups)
-		   (test-specs nst-tests)) c
-    (cond 
+                   (packages nst-packages)
+                   (group-specs nst-groups)
+                   (test-specs nst-tests)) c
+    (cond
       (single-package
        (nst:run-package single-package)
        (nst:report-package single-package))
 
       (single-group
        (let ((group-actual (intern (symbol-name (cdr single-group))
-				   (find-package (car single-group)))))
-	 (nst:run-group group-actual)
-	 (nst:report-group group-actual)))
+                                   (find-package (car single-group)))))
+         (nst:run-group group-actual)
+         (nst:report-group group-actual)))
 
       (single-test
        (let ((group-actual (intern (symbol-name (cadr single-test))
-				   (find-package (car single-test))))
-	     (test-actual (intern (symbol-name (caddr single-test))
-				  (find-package (car single-test)))))
-	 (nst:run-test group-actual test-actual)
-	 (nst:report-test group-actual test-actual)))
-      
+                                   (find-package (car single-test))))
+             (test-actual (intern (symbol-name (caddr single-test))
+                                  (find-package (car single-test)))))
+         (nst:run-test group-actual test-actual)
+         (nst:report-test group-actual test-actual)))
+
       (t
        (loop for pk in packages do (nst:run-package pk))
        (let ((groups
-	      (loop for (pk . gr) in group-specs
-		    collect
-		    (let ((group (intern (symbol-name gr) (find-package pk))))
-		      (nst:run-group group)
-		      group)))
-	     (tests
-	      (loop for (pk gr ts) in test-specs
-		    collect
-		    (let ((group (intern (symbol-name gr) (find-package pk)))
-			  (test (intern (symbol-name ts) (find-package pk))))
-		      (nst:run-test group test)
-		      (cons group test)))))
-	 (report-multiple packages groups tests))))))
+              (loop for (pk . gr) in group-specs
+                    collect
+                    (let ((group (intern (symbol-name gr) (find-package pk))))
+                      (nst:run-group group)
+                      group)))
+             (tests
+              (loop for (pk gr ts) in test-specs
+                    collect
+                    (let ((group (intern (symbol-name gr) (find-package pk)))
+                          (test (intern (symbol-name ts) (find-package pk))))
+                      (nst:run-test group test)
+                      (cons group test)))))
+         (report-multiple packages groups tests))))))
