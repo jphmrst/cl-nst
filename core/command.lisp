@@ -59,7 +59,11 @@
 				forms)))
     `(progn
        (defmethod run-command-actual ((cmd (eql ,name)) &rest ,args-var)
-	 ,@command-run-forms)
+	 (block nst-command
+	   (handler-bind ((nst-error #'(lambda (e)
+					 (format t "~w~%" e)
+					 (return-from nst-command))))
+	     ,@command-run-forms)))
        ,(when repeatable
 	  `(defmethod consider-repl-call-save ((cmd (eql ,name)) args)
 	     (setf *last-repl-call* (cons cmd args))))
@@ -100,7 +104,7 @@
   (loop for cmd in +nst-repl-commands+ do
     (format t "~%~s~%~a~%" cmd (nst-short-help cmd)))
   (format t "~%Without an explicit command, :nst repeats the last interesting ~
-              command~%(currently, :nst~{ ~s~})" *last-repl-call*))
+              command~%(currently, ~s~{ ~s~})" :nst *last-repl-call*))
 
 (def-nst-interactive-command
     (:open :short-help "Inject fixtures into the current name space."
