@@ -22,47 +22,96 @@
 
 
 (defclass nst-testable (system)
-     ((nst-packages
-       :initarg :nst-packages
-       :reader nst-packages
-       :initform nil
-       :documentation "Package whose def-test-groups are to be run."
-       )
-      (nst-package
-       :initarg :nst-package
-       :reader nst-package
-       :initform nil
-       :documentation "Packages whose def-test-groups are to be run."
-       )
-      (nst-group
-       :initarg :nst-group
-       :reader nst-group
-       :initform nil
-       :documentation "An NST test group, given as a dotted pair of a package
-name plus the name of a test group in that package."
-       )
-      (nst-groups
-       :initarg :nst-groups
-       :reader nst-groups
-       :initform nil
-       :documentation "A list of NST test groups, each given as a dotted pair
-of a package name plus the name of a test group in that package."
-       )
-      (nst-test
-       :initarg :nst-test
-       :reader nst-test
-       :initform nil
-       :documentation "A single NST test, given as a three-element list of a
-package name, the test's group name, and the test name."
-       )
-      (nst-tests
-       :initarg :nst-tests
-       :reader nst-tests
-       :initform nil
-       :documentation "A list of NST tests, each given as a three-element list
-of a package name, the test's group name, and the test name."))
+     ((nst-systems :initarg :nst-systems
+		   :reader nst-systems
+		   :initform nil
+		   :documentation
+		   "Other systems to which NST testing is delegated")
+      
+      (nst-packages :initarg :nst-packages
+		    :reader nst-packages
+		    :initform nil
+		    :documentation
+		    "Package whose def-test-groups are to be run.")
+      (nst-package :initarg :nst-package
+		   :reader nst-package
+		   :initform nil
+		   :documentation
+		   "Packages whose def-test-groups are to be run.")
+
+      (nst-group :initarg :nst-group
+		 :reader nst-group
+		 :initform nil
+		 :documentation
+		 "An NST test group, given as a dotted pair of a package
+                  name plus the name of a test group in that package.")
+      (nst-groups :initarg :nst-groups
+		  :reader nst-groups
+		  :initform nil
+		  :documentation
+		  "A list of NST test groups, each given as a dotted pair
+                   of a package name plus the name of a test group in that
+                   package.")
+
+      (nst-test :initarg :nst-test
+		:reader nst-test
+		:initform nil
+		:documentation
+		"A single NST test, given as a three-element list of a
+                 package name, the test's group name, and the test name.")
+      (nst-tests :initarg :nst-tests
+		 :reader nst-tests
+		 :initform nil
+		 :documentation
+		 "A list of NST tests, each given as a three-element list
+                  of a package name, the test's group name, and the test
+                  name."))
 
   (:documentation "Class of ASDF systems that use NST for their test-op."))
+
+(defun all-nst-tested (nst-testable &optional
+				    (all-packages (make-hash-table :test 'eq))
+				    (all-groups (make-hash-table :test 'eq))
+				    (all-tests-by-group (make-hash-table
+							 :test 'eq)))
+  (with-accessors ((systems nst-systems)
+		   (packages nst-packages) (package nst-package)
+		   (group nst-group) (groups nst-groups)
+		   (test nst-test) (tests nst-tests)) nst-testable
+
+    ;; First grab symbols from subsystems.
+    (loop for system in systems do
+      (all-nst-tested (find-system system)
+	  all-packages all-groups all-tests-by-group))
+    
+    ;; Add local symbols
+    (cond
+     (test
+      (multiple-value-bind (g ts) (test-spec-symbols test)
+	(note-test-by-group all-tests-by-group g ts)))
+
+     (group
+      (setf (gethash (group-spec-symbol group) all-groups) t))
+      
+     (package (setf (gethash package all-packages) t))
+      
+     (t
+      (loop for spec in tests do
+	(multiple-value-bind (g ts) (test-spec-symbols spec)
+	  (note-test-by-group all-tests-by-group g ts)))
+      (loop for spec in groups do
+	(setf (gethash (group-spec-symbol spec) all-groups) t))
+      (loop for p in packages do
+	(setf (gethash p all-packages) t))))
+
+    (values all-packages all-groups all-tests-by-group)))
+
+(defun note-test-by-group (table group test)
+  (let ((group-table (gethash group table)))
+    (unless group-table
+      (setf group-table (make-hash-table :test 'eq)
+	    (gethash group table) group-table))
+    (setf (gethash test group-table) t)))
 
 (defmethod initialize-instance :after ((sys nst-testable)
                                        &key &allow-other-keys)
@@ -88,6 +137,7 @@ of a package name, the test's group name, and the test name."))
   (values nil))
 
 (defmethod perform ((o asdf:test-op) (c nst-testable))
+  ;; First, run the tests that are local to this system.
   (with-accessors ((single-package nst-package)
                    (single-group nst-group)
                    (single-test nst-test)
@@ -96,37 +146,51 @@ of a package name, the test's group name, and the test name."))
                    (group-specs nst-groups)
                    (test-specs nst-tests)) c
     (cond
+      
+      ;; For running a single package.
       (single-package
-       (nst:run-package single-package)
-       (nst:report-package single-package))
+       (nst:run-package single-package))
 
+      ;; For running a single group.
       (single-group
        (let ((group-actual (intern (symbol-name (cdr single-group))
                                    (find-package (car single-group)))))
-         (nst:run-group group-actual)
-         (nst:report-group group-actual)))
+         (nst:run-group group-actual)))
 
+      ;; For running a single test.
       (single-test
        (let ((group-actual (intern (symbol-name (cadr single-test))
                                    (find-package (car single-test))))
              (test-actual (intern (symbol-name (caddr single-test))
                                   (find-package (car single-test)))))
-         (nst:run-test group-actual test-actual)
-         (nst:report-test group-actual test-actual)))
+         (nst:run-test group-actual test-actual)))
 
+      ;; For running possibly several (or none) of each.
       (t
        (loop for pk in packages do (nst:run-package pk))
-       (let ((groups
-              (loop for (pk . gr) in group-specs
-                    collect
-                    (let ((group (intern (symbol-name gr) (find-package pk))))
-                      (nst:run-group group)
-                      group)))
-             (tests
-              (loop for (pk gr ts) in test-specs
-                    collect
-                    (let ((group (intern (symbol-name gr) (find-package pk)))
-                          (test (intern (symbol-name ts) (find-package pk))))
-                      (nst:run-test group test)
-                      (cons group test)))))
-         (report-multiple packages groups tests))))))
+       (loop for spec in group-specs do
+	 (let ((group (group-spec-symbol spec)))
+	   (nst:run-group group)))
+       (loop for spec in test-specs do
+	 (multiple-value-bind (group test) (test-spec-symbols spec)
+	   (nst:run-test group test)
+	   (cons group test))))))
+  
+  ;; Now, report all the results from both this system, and
+  ;; subordinated systems.
+  (multiple-value-bind (package-set group-set test-set) (all-nst-tested c)
+    (report-multiple (loop for s being the hash-keys of package-set collect s)
+		     (loop for s being the hash-keys of group-set collect s)
+		     (loop for g being the hash-keys of test-set
+			   using (hash-value hash)
+			   append (loop for ts being the hash-keys of hash
+					collect (cons g ts))))))
+
+(defun group-spec-symbol (spec)
+  (destructuring-bind (pk . gr) spec
+    (intern (symbol-name gr) (find-package pk))))
+
+(defun test-spec-symbols (spec)
+  (destructuring-bind (pk gr ts) spec
+    (values (intern (symbol-name gr) (find-package pk))
+	    (intern (symbol-name ts) (find-package pk)))))

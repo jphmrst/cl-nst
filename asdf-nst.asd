@@ -32,5 +32,10 @@
 			  (;; The ASDF-NST package.
 			   (:file "package")
 		 
-			   ;; Extensions to the ASDF system class.
-			   (:file "system"  :depends-on ("package"))))))
+			   ;; An NST-testable ASDF class
+			   (:file "system"  :depends-on ("package"))
+		 
+;;;			   ;; An ASDF system class providing a summary
+;;;			   ;; of other NST-testable systems.
+;;;			   (:file "summary"  :depends-on ("package"))
+			   ))))
