@@ -241,6 +241,34 @@ corresponding internal name-binding NST class for adding fixtures to a test.")
     (format t "~s -> ~s~%" ts rs)))
 
 ;;;
+;;; Error conditions.
+;;;
+
+(define-condition nst-error () ())
+
+(defmacro define-nst-error (name fields (stream exp) &body printer)
+  `(progn
+     (define-condition ,name (nst-error) ,fields
+		       (:report (lambda (,exp ,stream) ,@printer)))
+     (set-pprint-dispatch ',name (lambda (,stream ,exp) ,@printer))))
+
+(define-nst-error no-nst-groups-in-package
+    ((package :initarg :package :reader package-of))
+  (stream exp)
+  (format stream "No NST packages in package ~s" (package-of exp)))
+
+(define-nst-error no-such-nst-group
+    ((group :initarg :group :reader group))
+  (stream exp)
+  (format stream "No such NST group ~s" (group exp)))
+
+(define-nst-error no-such-nst-test
+    ((group :initarg :group :reader group)
+     (test :initarg :test :reader test))
+  (stream exp)
+  (format stream "No such NST test ~s in group ~s" (test exp) (group exp)))
+
+;;;
 ;;; More generic functions whose methods are defined by the various
 ;;; macros.
 ;;;
@@ -296,17 +324,27 @@ encoded as :before and :after methods.")
   "Run all groups in a package."
   (let* ((user-package (find-package package-or-name))
 	 (sym-pack (groups-package user-package)))
-    (when sym-pack
+    (cond
+     (sym-pack
       (do-symbols (group sym-pack)
-	(run-group (intern (symbol-name group) user-package))))))
+	(run-group (intern (symbol-name group) user-package))))
+     (t
+      (error 'no-nst-groups-in-package :package package-or-name)))))
 
 (defun run-group (group)
   "Run a group by its user-given name."
-  (core-run (make-instance (group-class-name group))))
+  (let ((group-class (group-class-name group)))
+    (unless group-class
+      (error 'no-such-nst-group :group group))
+    (core-run (make-instance group-class))))
 
 (defun run-test (group test)
   "Run a test standalone by its user-given name (and its group's name)."
-  (core-run (make-instance (standalone-class-name group test))))
+  (let ((test-class (standalone-class-name group test)))
+    (unless test-class
+      (error 'no-such-nst-test :group group :test test))
+    (core-run (make-instance test-class))))
+
 
 ;;;
 ;;; Helper functions
