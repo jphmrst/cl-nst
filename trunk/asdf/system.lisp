@@ -69,6 +69,52 @@
 
   (:documentation "Class of ASDF systems that use NST for their test-op."))
 
+;;; THIS METHOD DOES NOT WORK.  None of the system's slots are filled
+;;; in when this method is called; ASDF apparantly plugs these values
+;;; in later.
+;;;
+(defmethod initialize-instance :after ((sys nst-testable)
+                                       &key &allow-other-keys)
+
+  (when (and (or (nst-package sys)  (nst-group sys)  (nst-test sys))
+             (or (nst-packages sys) (nst-groups sys) (nst-tests sys)))
+    (error "Do not mix single-item testing via :nst-package, :nst-group, \
+:nst-test with multiple-item testing via :nst-packages, :nst-groups, \
+:nst-tests"))
+
+  (when (< 1 (+ (if (nst-package sys) 1 0)
+                (if (nst-group sys) 1 0)
+                (if (nst-test sys) 1 0)))
+    (error "Do not use more than one of :nst-package, :nst-group, :nst-test \
+\(use :nst-packages, :nst-groups, :nst-tests\)"))
+
+  (when (or (nst-packages sys) (nst-groups sys) (nst-tests sys))
+    (error
+     "Not currently implemented: :nst-packages, :nst-groups, :nst-tests"))
+
+  ;; Now push in additional in-order-to's corresponding to
+  ;; nst-systems.
+  (let ((nst-systems (nst-systems sys))
+	(in-order-to (slot-value sys 'asdf::in-order-to)))
+    (format t "***For ~s~%systems ~s~%in-order-to ~s~%"
+      sys nst-systems in-order-to)
+    (when nst-systems
+      (let* ((the-load-steps `((load-op ,@nst-systems)))
+	     (the-test-steps `((test-op ,@nst-systems)))
+	     other-ops)
+	(format t "***~%the-load-steps ~s~%the-test-steps ~s~%"
+	  the-load-steps the-test-steps)
+	(loop for op-steps in in-order-to do
+	  (destructuring-bind (op . steps) op-steps
+	    (case op
+	      (asdf:load-op (setf the-load-steps (nconc steps the-load-steps)))
+	      (asdf:test-op (setf the-test-steps (nconc steps the-test-steps)))
+	      (otherwise (push op-steps other-ops)))))
+	(setf (slot-value sys 'asdf::in-order-to)
+	      `((asdf:load-op ,@the-load-steps)
+		(asdf:test-op ,@the-test-steps)
+		,@other-ops))))))
+
 (defun all-nst-tested (nst-testable &optional
 				    (all-packages (make-hash-table :test 'eq))
 				    (all-groups (make-hash-table :test 'eq))
@@ -112,25 +158,6 @@
       (setf group-table (make-hash-table :test 'eq)
 	    (gethash group table) group-table))
     (setf (gethash test group-table) t)))
-
-(defmethod initialize-instance :after ((sys nst-testable)
-                                       &key &allow-other-keys)
-
-  (when (and (or (nst-package sys)  (nst-group sys)  (nst-test sys))
-             (or (nst-packages sys) (nst-groups sys) (nst-tests sys)))
-    (error "Do not mix single-item testing via :nst-package, :nst-group, \
-:nst-test with multiple-item testing via :nst-packages, :nst-groups, \
-:nst-tests"))
-
-  (when (< 1 (+ (if (nst-package sys) 1 0)
-                (if (nst-group sys) 1 0)
-                (if (nst-test sys) 1 0)))
-    (error "Do not use more than one of :nst-package, :nst-group, :nst-test \
-\(use :nst-packages, :nst-groups, :nst-tests\)"))
-
-  (when (or (nst-packages sys) (nst-groups sys) (nst-tests sys))
-    (error
-     "Not currently implemented: :nst-packages, :nst-groups, :nst-tests")))
 
 (defmethod operation-done-p ((o asdf:test-op) (c nst-testable))
   "Always re-run NST."
