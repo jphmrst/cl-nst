@@ -335,28 +335,34 @@ six-value summary of the results:
   "Control parameter for building report structures.  Should not be reset from
 nil at the top level; set via dynamically-scoped bindings.")
 
-(defun report-multiple (packages groups tests &optional
+(defun report-multiple (packages groups tests &key
 				 (stream *nst-output-stream*)
-				 (*nst-local-verbosity* (get-verbosity-level)))
-  (let ((reports
-	 (nconc (loop for p in packages
+				 (verbosity (get-verbosity-level))
+				 (system nil system-supp-p))
+  (let ((*nst-local-verbosity* verbosity))
+    (declare (special *nst-local-verbosity*))
+    (when system-supp-p
+      (format stream "~%Summary of results for system ~a:~%"
+	(slot-value system 'asdf::name)))
+    (let ((reports
+	   (nconc (loop for p in packages
 		      for report = (package-report p)
 		      collect (let ((*nst-report-driver* :package))
 				(format stream "~w~%" report)
 				report))
-		(loop for g in groups
+		  (loop for g in groups
 		      for report = (group-report g)
 		      collect (let ((*nst-report-driver* :group))
 				(format stream "~w~%" report)
 				report))
-		(loop for (g . ts) in tests
+		  (loop for (g . ts) in tests
 		      for report = (test-report g ts)
 		      collect (let ((*nst-report-driver* :test))
 				(format stream "~w~%" report)
 				report)))))
-    (multiple-value-bind (code total passed erred failed warned)
-	(result-summary reports)
-      (declare (ignorable code))
-      (format stream
-	  "~%TOTAL: ~d of ~d passed (~d failed, ~d error~p; ~d warning~p)~%"
-	passed total failed erred erred warned warned))))
+      (multiple-value-bind (code total passed erred failed warned)
+	  (result-summary reports)
+	(declare (ignorable code))
+	(format stream
+	    "TOTAL: ~d of ~d passed (~d failed, ~d error~p, ~d warning~p)~%"
+	  passed total failed erred erred warned warned)))))
