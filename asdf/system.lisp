@@ -69,6 +69,14 @@
 
   (:documentation "Class of ASDF systems that use NST for their test-op."))
 
+(defmethod asdf::component-depends-on :around ((op load-op) (sys nst-testable))
+  (append (loop for sub in (nst-systems sys) collect (list 'asdf:load-op sub))
+	  (call-next-method)))
+
+(defmethod asdf::component-depends-on :around ((op test-op) (sys nst-testable))
+  (append (loop for sub in (nst-systems sys) collect (list 'asdf:test-op sub))
+	  (call-next-method)))
+
 ;;; THIS METHOD DOES NOT WORK.  None of the system's slots are filled
 ;;; in when this method is called; ASDF apparantly plugs these values
 ;;; in later.
@@ -96,14 +104,10 @@
   ;; nst-systems.
   (let ((nst-systems (nst-systems sys))
 	(in-order-to (slot-value sys 'asdf::in-order-to)))
-    (format t "***For ~s~%systems ~s~%in-order-to ~s~%"
-      sys nst-systems in-order-to)
     (when nst-systems
       (let* ((the-load-steps `((load-op ,@nst-systems)))
 	     (the-test-steps `((test-op ,@nst-systems)))
 	     other-ops)
-	(format t "***~%the-load-steps ~s~%the-test-steps ~s~%"
-	  the-load-steps the-test-steps)
 	(loop for op-steps in in-order-to do
 	  (destructuring-bind (op . steps) op-steps
 	    (case op
@@ -211,7 +215,8 @@
 		     (loop for g being the hash-keys of test-set
 			   using (hash-value hash)
 			   append (loop for ts being the hash-keys of hash
-					collect (cons g ts))))))
+					collect (cons g ts)))
+		     :system c)))
 
 (defun group-spec-symbol (spec)
   (destructuring-bind (pk . gr) spec
