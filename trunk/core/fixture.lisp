@@ -140,7 +140,7 @@ use of this fixture.
 	   
 	   ;; WARNING!  This line causes Allegro to crash
 	   #-allegro (set-pprint-dispatch ',group-fixture-class-name
-		       '#(lambda (stream object)
+		       #'(lambda (stream object)
 			  (format stream "Fixture set ~s" ',name)))
 
 	   (defmethod trace-fixture ((f (eql ',name)))
