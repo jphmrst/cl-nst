@@ -112,6 +112,10 @@ instances, and the info field is of any value."
   (check-name *nst-check-name*)
   (warnings nil) (failures nil) (errors nil) (info nil))
 
+(defparameter *nst-report-driver* nil
+  "Control parameter for building report structures.  Should not be reset from
+nil at the top level; set via dynamically-scoped bindings.")
+
 (set-pprint-dispatch 'check-result
   #'(lambda (s cr) 
       (with-accessors ((check-name check-result-check-name)
@@ -330,10 +334,6 @@ six-value summary of the results:
   "Top-level function for reporting the results of a test."
   (let ((*nst-report-driver* :test))
     (format stream "~w" (test-report group test))))
-
-(defparameter *nst-report-driver* nil
-  "Control parameter for building report structures.  Should not be reset from
-nil at the top level; set via dynamically-scoped bindings.")
 
 (defun report-multiple (packages groups tests &key
 				 (stream *nst-output-stream*)

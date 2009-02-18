@@ -59,6 +59,7 @@
 				forms)))
     `(progn
        (defmethod run-command-actual ((cmd (eql ,name)) &rest ,args-var)
+	 ,@(unless args-supp-p `((declare (ignorable ,args-var))))
 	 (block nst-command
 	   (handler-bind ((nst-error #'(lambda (e)
 					 (format t "~w~%" e)
