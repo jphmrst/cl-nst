@@ -138,6 +138,8 @@ use of this fixture.
 			    (t nil))))
 	     ',name)
 	   
+	   ;; WARNING: this call crashes Allegro CL.
+	   #-allegro
 	   (set-pprint-dispatch ',group-fixture-class-name
 	     #'(lambda (stream object)
 		 (format stream "Fixture set ~s" ',name)))
