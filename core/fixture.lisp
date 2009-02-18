@@ -20,6 +20,13 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
+(defclass fixture-metaclass (standard-class)
+     ((bound-names :initarg :bound-names :reader bound-names)))
+(defmethod validate-superclass ((sub fixture-metaclass) (sup standard-class)) t)
+
+(defmethod bound-names ((s symbol))
+  (bound-names (find-class (group-fixture-class-name s))))
+
 #+allegro (excl::define-simple-parser def-fixtures second :nst-fixture-set)
 (defmacro def-fixtures (name
 			(&key uses assumes outer inner documentation)
@@ -63,12 +70,6 @@ use of this fixture.
 	(bound-names (loop for binding in bindings collect (car binding))))
   
     `(eval-when (:compile-toplevel :load-toplevel :execute)
-
-       ;; This eval-when block contains method definitions which will
-       ;; be called later in the compile of this same file, so they
-       ;; must be evaluated as soon as possible.
-       (eval-when (:compile-toplevel :load-toplevel :execute)
-	 (defmethod bound-names ((f (eql ',name))) ',bound-names))
        
        ;; This eval-when block contains definition which will be used
        ;; only after this file is loaded.
@@ -99,6 +100,8 @@ use of this fixture.
 	   (eval `(defclass ,,group-fixture-class-name () ()
 		    ,@(when ,documentation
 			`((:documentation ,,documentation)))
+		    (:metaclass fixture-metaclass)
+		    (:bound-names ,@',bound-names)
 		    ))
 	   (eval `(defmethod core-run :around ((group
 						,,group-fixture-class-name))
@@ -142,6 +145,7 @@ use of this fixture.
 	   #-allegro
 	   (set-pprint-dispatch ',group-fixture-class-name
 	     #'(lambda (stream object)
+		 (declare (ignorable object))
 		 (format stream "Fixture set ~s" ',name)))
 
 	   (defmethod trace-fixture ((f (eql ',name)))
