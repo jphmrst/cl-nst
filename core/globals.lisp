@@ -216,10 +216,8 @@ corresponding internal name-binding NST class for adding fixtures to a test.")
 ;;; method-based recording of test symbols, we're not worried about
 ;;; straddling the compile/load/run-time borders for result recording.
 ;;;
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (unless (boundp '+results-record+)
-    (defconstant +results-record+ (make-hash-table :test 'eq)
-      "Results of test runs.")))
+(defvar +results-record+ (make-hash-table :test 'eq)
+  "Results of test runs.")
 
 ;; Extracting information for debugging.
 
