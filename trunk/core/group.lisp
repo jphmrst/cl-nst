@@ -153,9 +153,10 @@ forms - zero or more test forms, given by def-check or def-test."
 
 	       ;; WARNING!  This hook crashes Allegro Lisp.
 	       #-allegro (set-pprint-dispatch ',group-class-name
-			   '#(lambda (stream object)
-			      (format stream "Group ~s internal NST class"
-				',group-name)))
+			   #'(lambda (stream object)
+			       (declare (ignorable object))
+			       (format stream "Group ~s internal NST class"
+				 ',group-name)))
 	       
 	       ;; Retrieve a group name from its instance
 	       (eval `(defmethod group-name ((g ,,group-class-name))
