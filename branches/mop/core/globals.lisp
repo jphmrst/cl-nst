@@ -321,17 +321,19 @@ encoded as :before and :after methods.")
 (defun run-package (&optional (package-or-name *package*))
   "Run all groups in a package."
   (let* ((user-package (find-package package-or-name))
-	 (sym-pack (groups-package user-package)))
+	 (group-names (package-groups user-package)))
+    (format t "** ~s ~s~%** ~s~%" package-or-name user-package group-names)
     (cond
-     (sym-pack
-      (do-symbols (group sym-pack)
-	(run-group (intern (symbol-name group) user-package))))
+     (group-names
+      (loop for group-name in group-names do
+	(run-group group-name)))
      (t
       (error 'no-nst-groups-in-package :package package-or-name)))))
 
 (defun run-group (group)
   "Run a group by its user-given name."
   (let ((group-class (group-class-name group)))
+    (format t ">> ~s --> ~s~%" group group-class)
     (unless group-class
       (error 'no-such-nst-group :group group))
     (core-run (make-instance group-class))))
