@@ -63,6 +63,10 @@
 			   ;; Interaction with NST via the REPL.
 			   (:file "command"
 				  :depends-on ("globals" "status"))
+		 
+			   ;; Generating JUnit-friendly XML.
+			   (:file "junit"
+				  :depends-on ("status"))
 
 ;;;		 (:file "classes")
 ;;;		 (:file "runners")

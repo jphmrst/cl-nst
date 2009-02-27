@@ -28,6 +28,7 @@
 
 (def-test-group core-checks ()
   (def-check pass-1 :pass 'a)
+  
   (def-check fail-1 (:not :fail) 'a)  
   (def-check warn-1 (:warn) 3 (+ 1 3))
   (def-check all-1 (:all (:pass) (:warn)) 3 (+ 1 3))

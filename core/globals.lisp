@@ -97,10 +97,10 @@
 	  :documentation
 	  "Set to t to defer compilation of test forms until runtime.")
 
-(defun get-verbosity-level ()
-  :verbose)
-
+(defvar *nst-verbosity* :quiet
+  ":quiet, :default, :verbose, :vverbose")
 (defvar *nst-local-verbosity* :default)
+(defvar *nst-report-default-verbosity* :verbose)
 (defvar *nst-output-stream* *standard-output*)
 
 (defvar *debug-on-error* nil)
@@ -143,11 +143,11 @@ which every test in the group is associated for a standalone test.")
 
 ;; Information by Lisp package.
 
-(defgeneric groups-package (public-package)
-  (:documentation
-   "Map from packages to the private package NST associates with each for
-housing the names of the groups in each package.")
-  (:method (default) (declare (ignorable default)) nil))
+;;;(defgeneric groups-package (public-package)
+;;;  (:documentation
+;;;   "Map from packages to the private package NST associates with each for
+;;;housing the names of the groups in each package.")
+;;;  (:method (default) (declare (ignorable default)) nil))
 
 ;; Properties of checks.
 
@@ -283,15 +283,23 @@ corresponding internal name-binding NST class for adding fixtures to a test.")
 function; group setup and cleanup become :before and :after methods.")
   (:method ((group-inst group-base-class))
      (let ((group-name (group-name group-inst)))
-       ;; (format t "    Starting run loop for ~s~%" group-inst)
+       (case *nst-verbosity*
+	 ((:vverbose)
+	  (format t "    Starting run loop for ~s~%" group-inst)))
        (loop for test in (test-names group-inst) do
-	 ;; (format t "      Starting loop entry ~s~%" test)
+	 (case *nst-verbosity*
+	   ((:vverbose)
+	    (format t "      Starting loop entry ~s~%" test)))
 	 (let ((in-suite-class-name (suite-class-name group-name test)))
-	   ;; (format t "    Suite class name ~s~%" suite-class-name)
-	   ;; (format t "    Actual class ~s~%" (find-class suite-class-name))
-	   ;; (describe (find-class suite-class-name))
+	   (case *nst-verbosity*
+	     ((:vverbose)
+	      (format t "    Suite class name ~s~%" in-suite-class-name)
+	      (format t "    Actual class ~s~%"
+		(find-class in-suite-class-name))))
 	   (let ((test-inst (make-instance in-suite-class-name)))
-	     ;; (format t "    Instance ~s~%" test-inst)
+	     (case *nst-verbosity*
+	       ((:vverbose)
+		(format t "    Instance ~s~%" test-inst)))
 	     (core-run-test test-inst)))
 	 ;; (format t "      Exiting loop entry ~s~%" test)
 	     )
@@ -308,9 +316,14 @@ encoded as :before and :after methods.")
   (:method :around (test)
     "Capture the result of the test."
     (let ((*nst-check-name* (check-name test)))
+      (case *nst-verbosity*
+	((:default t :verbose :vverbose)
+	 (format t " - Executing test ~s~%" (check-name test))))
       (let ((result (call-next-method)))
 	(setf (gethash (canonical-storage-name (type-of test)) +results-record+)
 	  result)
+	(case *nst-verbosity*
+	  ((:default t :verbose :vverbose) (format t "   ~s~%" result)))
 	result))))
 
 ;;;
@@ -321,17 +334,26 @@ encoded as :before and :after methods.")
 (defun run-package (&optional (package-or-name *package*))
   "Run all groups in a package."
   (let* ((user-package (find-package package-or-name))
-	 (sym-pack (groups-package user-package)))
+	 (group-names (package-groups user-package)))
+    (case *nst-verbosity*
+      ((:default t :verbose :vverbose)
+       (format t "~@<Running package ~s (groups ~{~s~^ ~:_~})~:>~%" 
+	 (package-name user-package) group-names)))
     (cond
-     (sym-pack
-      (do-symbols (group sym-pack)
-	(run-group (intern (symbol-name group) user-package))))
+     (group-names
+      (loop for group-name in group-names do
+	(run-group group-name)))
      (t
       (error 'no-nst-groups-in-package :package package-or-name)))))
 
 (defun run-group (group)
   "Run a group by its user-given name."
   (let ((group-class (group-class-name group)))
+    (case *nst-verbosity*
+      ((:default t :verbose)
+       (format t "Running group ~s~%" group))
+      ((:vverbose)
+       (format t "Running group ~s --> ~s~%" group group-class)))
     (unless group-class
       (error 'no-such-nst-group :group group))
     (core-run (make-instance group-class))))
@@ -339,6 +361,9 @@ encoded as :before and :after methods.")
 (defun run-test (group test)
   "Run a test standalone by its user-given name (and its group's name)."
   (let ((test-class (standalone-class-name group test)))
+    (case *nst-verbosity*
+      ((:default t :verbose :vverbose)
+       (format t "Running test ~s (group ~s)~%" test group)))
     (unless test-class
       (error 'no-such-nst-test :group group :test test))
     (core-run (make-instance test-class))))

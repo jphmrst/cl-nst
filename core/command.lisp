@@ -96,6 +96,8 @@
 
 (def-nst-property :debug-on-error *debug-on-error*
   :doc "When non-nil, break into the debugger when NST encounters an error.")
+(def-nst-property :verbose *nst-verbosity*
+  :doc "Valid settings: nil, :quiet, :default, :verbose, t, :vverbose")
 
 (def-nst-interactive-command (:help :short-help "Print a list of commands."
 				    :long-help "Print this help message.")
