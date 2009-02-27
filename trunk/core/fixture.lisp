@@ -21,11 +21,27 @@
 (in-package :sift.nst)
 
 (defclass fixture-metaclass (standard-class)
-     ((bound-names :initarg :bound-names :reader bound-names)))
+     ((bound-names :initarg :bound-names :reader bound-names)
+      (test-fixture-class-name :initarg :test-fixture-class-name
+			       :reader test-fixture-class-name)
+      (group-fixture-class-name :initarg :group-fixture-class-name
+				:reader group-fixture-class-name)))
+
 (defmethod validate-superclass ((sub fixture-metaclass) (sup standard-class)) t)
 
 (defmethod bound-names ((s symbol))
-  (bound-names (find-class (group-fixture-class-name s))))
+  (bound-names (find-class s)))
+(defmethod test-fixture-class-name ((s symbol))
+  (test-fixture-class-name (find-class s)))
+(defmethod group-fixture-class-name ((s symbol))
+  (group-fixture-class-name (find-class s)))
+(defmethod open-fixture ((s symbol) &optional (in-package *package*))
+  (open-fixture (make-instance s) in-package))
+(defmethod trace-fixture ((f symbol))
+  (trace-fixture (make-instance f)))
+
+(defpackage :nst-fixture-group-class-names)
+(defpackage :nst-fixture-test-class-names)
 
 #+allegro (excl::define-simple-parser def-fixtures second :nst-fixture-set)
 (defmacro def-fixtures (name
@@ -65,102 +81,82 @@ use of this fixture.
   (unless (listp uses) (setf uses (list uses)))
   (unless (listp assumes) (setf assumes (list assumes)))
   
-  (let ((group-fixture-class-name (gensym "group-fixture-class-name"))
-	(test-fixture-class-name (gensym "test-fixture-class-name"))
-	(bound-names (loop for binding in bindings collect (car binding))))
-  
-    `(eval-when (:compile-toplevel :load-toplevel :execute)
+  (let* ((base-rename (concatenate 'string
+			(package-name (symbol-package name))
+			"///" (symbol-name name)))
+	 (group-fixture-class-name (intern base-rename
+					   :nst-fixture-group-class-names))
+	 (test-fixture-class-name (intern base-rename
+					  :nst-fixture-test-class-names))
+	 (bound-names (loop for binding in bindings collect (car binding))))
+
+    `(eval-when (:compile-toplevel :load-toplevel)
+
+       (defclass ,name () ()
+	 (:metaclass fixture-metaclass)
+	 (:bound-names ,@bound-names)
+	 (:test-fixture-class-name . ,test-fixture-class-name)
+	 (:group-fixture-class-name . ,group-fixture-class-name))
+	   
+       ;; Create the group-inherited class, and apply the bindings
+       ;; to included methods.
+       (defclass ,group-fixture-class-name () ()
+	 (:metaclass fixture-metaclass)
+	 (:bound-names ,@bound-names)
+	 (:test-fixture-class-name . ,test-fixture-class-name)
+	 (:group-fixture-class-name . ,group-fixture-class-name)
+	 ,@(when documentation `((:documentation ,documentation))))
+       (defmethod core-run :around ((group ,group-fixture-class-name))
+	 (let* ,bindings
+	   (declare (special ,@bound-names))
+	   (call-next-method)))
+
+       ;; Create the test-inherited class, and apply the bindings
+       ;; to included methods.
+       (defclass ,test-fixture-class-name () ()
+	 (:metaclass fixture-metaclass)
+	 (:bound-names ,@bound-names)
+	 (:test-fixture-class-name . ,test-fixture-class-name)
+	 (:group-fixture-class-name . ,group-fixture-class-name)
+	 ,@(when documentation `((:documentation ,documentation))))
+       (defmethod core-run-test :around ((test ,test-fixture-class-name))
+	 (let* ,bindings
+	   (declare (special ,@bound-names))
+	   (call-next-method)))
+
+       ;; Function for expanding names into the current namespace.
+       (defmethod open-fixture ((f ,name) &optional (in-package *package*))
+	 ,@(when documentation `(,documentation))
+	 (declare (special ,@(loop for used-fixture in uses
+				 append (bound-names used-fixture))
+			   ,@assumes))
+	 (unless (packagep in-package)
+	   (setf in-package (find-package in-package)))
+	 (setf ,@(loop for (var form) in bindings
+		     append
+		       (cond
+			(name `((symbol-value (intern (symbol-name ',var)
+						      in-package))
+				,form))
+			(t nil))))
+	 ',name)
+
+       (defmethod trace-fixture ((f ,name))
+	 (format t "Fixture ~s~% - Bindings:~%" ',name)
+	 ,@(loop for (var form) in bindings
+	       collect `(format t "   (~s ~s)~%" ',var ',form))
+	 (format t " - Other fixtures: ~@<~{~s~^ ~_~}~:>~%" ',uses)
+	 (format t " - Names expected: ~@<~{~s~^ ~_~}~:>~%" ',assumes)
+	 (format t " - Outer bindings: ~@<~{~s~^ ~_~}~:>~%" ',outer)
+	 (format t " - Inner bindings: ~@<~{~s~^ ~_~}~:>~%" ',inner)
+	 (format t " - Documentation string: ~s~%" ,documentation)
+	 (format t " - Internal class names:~%")
+	 (format t "     For groups - ~s~%" ',group-fixture-class-name)
+	 (format t "     For tests  - ~s~%" ',test-fixture-class-name))
        
-       ;; This eval-when block contains definition which will be used
-       ;; only after this file is loaded.
-       (eval-when (:load-toplevel :execute)
-	 (let* ((,group-fixture-class-name (group-fixture-class-name ',name))
-		(,test-fixture-class-name (test-fixture-class-name ',name)))
-	   
-	   ;; Record the class to be inherited by the classes of
-	   ;; groups which apply this fixture.
-	   (unless ,group-fixture-class-name
-	     (setf ,group-fixture-class-name
-	       (gentemp (concatenate 'string (symbol-name ',name) ".class.")
-			:nst-fixture))
-	     (defmethod group-fixture-class-name ((f (eql ',name)))
-	       ,group-fixture-class-name))
-	   
-	   ;; Record the class to be inherited by the classes of tests
-	   ;; which apply this fixture.
-	   (unless ,test-fixture-class-name
-	     (setf ,test-fixture-class-name
-	       (gentemp (concatenate 'string (symbol-name ',name) ".class.")
-			:nst-fixture))
-	     (defmethod test-fixture-class-name ((f (eql ',name)))
-	       ,test-fixture-class-name))
-	   
-	   ;; Create the group-inherited class, and apply the bindings
-	   ;; to included methods.
-	   (eval `(defclass ,,group-fixture-class-name () ()
-		    ,@(when ,documentation
-			`((:documentation ,,documentation)))
-		    (:metaclass fixture-metaclass)
-		    (:bound-names ,@',bound-names)
-		    ))
-	   (eval `(defmethod core-run :around ((group
-						,,group-fixture-class-name))
-		    (let* ,',bindings
-		      (declare (special ,@',bound-names))
-		      (call-next-method))))
-
-	   ;; Create the test-inherited class, and apply the bindings
-	   ;; to included methods.
-	   (eval `(defclass ,,test-fixture-class-name () ()
-		    ,@(when ,documentation
-			`((:documentation ,,documentation)))
-		    ))
-	   (eval `(defmethod core-run-test :around ((test
-						     ,,test-fixture-class-name))
-		    (let* ,',bindings
-		      (declare (special ,@',bound-names))
-		      (call-next-method))))
-
-
-
-	   ;; Function for expanding names into the current namespace.
-	   (defmethod open-fixture ((f (eql ',name))
-				    &optional (in-package *package*))
-	     ,@(when documentation `(,documentation))
-	     (declare (special ,@(loop for used-fixture in uses
-				       append (bound-names used-fixture))
-			       ,@assumes))
-	     (unless (packagep in-package)
-	       (setf in-package (find-package in-package)))
-	     (setf ,@(loop for (var form) in bindings
-			 append
-			   (cond
-			    (name `((symbol-value (intern (symbol-name ',var)
-							  in-package))
-				    ,form))
-			    (t nil))))
-	     ',name)
-	   
-	   ;; WARNING: this call crashes Allegro CL.
-	   #-allegro
-	   (set-pprint-dispatch ',group-fixture-class-name
-	     #'(lambda (stream object)
-		 (declare (ignorable object))
-		 (format stream "Fixture set ~s" ',name)))
-
-	   (defmethod trace-fixture ((f (eql ',name)))
-	     (format t "Fixture ~s~% - Bindings:~%" f)
-	     ,@(loop for (var form) in bindings
-		   collect `(format t "   (~s ~s)~%" ',var ',form))
-	     (format t " - Other fixtures: ~@<~{~s~^ ~_~}~:>~%" ',uses)
-	     (format t " - Names expected: ~@<~{~s~^ ~_~}~:>~%" ',assumes)
-	     (format t " - Outer bindings: ~@<~{~s~^ ~_~}~:>~%" ',outer)
-	     (format t " - Inner bindings: ~@<~{~s~^ ~_~}~:>~%" ',inner)
-	     (format t " - Documentation string: ~s~%" ,documentation)
-	     (format t " - Internal class names:~%")
-	     (format t "     For groups - ~s~%" ,group-fixture-class-name)
-	     (format t "     For tests  - ~s~%" ,test-fixture-class-name)))
-	 ',name))))
+       ',name)
+    )
+  )
 
 (defun process-fixture-list (fixture-list)
   (let ((group-fixture-class-names nil)

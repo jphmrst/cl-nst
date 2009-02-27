@@ -249,8 +249,30 @@ when def-check-alias is macroexpanded."
 	   (let ((,exp ,expansion))	   
 	     (build-check-form (car ,exp) (cdr ,exp) ,forms)))))))
 
+(defclass test-metaclass (standard-class)
+     ((suite-class-name-by-class :initarg :suite-class-name-by-class
+				 :reader suite-class-name-by-class)
+      (standalone-class-name-by-class :initarg :standalone-class-name-by-class
+			     :reader standalone-class-name-by-class)
+      (test-config-class-name-by-class :initarg :test-config-class-name-by-class
+			      :reader test-config-class-name-by-class)
+      (fixtures-from-group-by-class :initarg :fixtures-from-group-by-class
+			   :reader fixtures-from-group-by-class)
+      (test-in-group-class-name-by-class
+       :initarg :test-in-group-class-name-by-class
+       :reader test-in-group-class-name-by-class)))
+(defmethod validate-superclass ((sub test-metaclass) (sup standard-class)) t)
+
+(defpackage :nst-suite-class-names)
+(defpackage :nst-standalone-class-names)
+(defpackage :nst-test-config-class-names)
+(defpackage :nst-fixtures-from-groups)
+(defpackage :nst-test-in-group-class-names)
+
 (defmacro def-check (name-or-name-and-args criterion &rest forms)
-  (declare (special *the-group*))	; The def-group we're within.
+  (declare (special *the-group* *group-class-name* *group-fixture-classes*
+		    *test-in-group-class* *standalone-test-in-group-class*))
+					; The def-group we're within.
 
   ;; Decode the name-or-name-and-args, pulling out the individual
   ;; components, and indicating which are given in this test.
@@ -259,123 +281,142 @@ when def-check-alias is macroexpanded."
       (decode-defcheck-name-and-args name-or-name-and-args)
     (declare (ignorable fixtures-supp-p))
 
-    (let ((*nst-context* nil)
-	  (suite-class-name (gensym "suite-class-name"))
-	  (standalone-class-name (gensym "standalone-class-name"))
-	  (test-config-class-name (gensym "test-config-class-name"))
-	  (fixtures-from-group (gensym "fixtures-from-group"))
-	  (check-fixture-classes (gensym "check-fixture-classes"))
-	  (anon-fixture-forms (gensym "anon-fixture-forms"))
-	  (test-in-group-class-name (gensym "test-in-group-class-name"))
-	  (core-run-body
-	   (cond
+    (let* ((*nst-context* nil)
+	   (base-rename (concatenate 'string
+			  (package-name (symbol-package name)) "///"
+			  (symbol-name *the-group*) "///"
+			  (symbol-name name)))
+	  
+	   (test-config-class-name (intern base-rename 
+					   :nst-test-config-class-names))
+	   (suite-class-name (intern base-rename :nst-suite-class-names))
+	   (test-in-group-class-name (intern base-rename
+					     :nst-test-in-group-class-names))
+	   (standalone-class-name (intern base-rename
+					  :nst-standalone-class-names))
+
+;;;	  (fixtures-from-group (gensym "fixtures-from-group"))
+;;;	  (check-fixture-classes (gensym "check-fixture-classes"))
+;;;	  (anon-fixture-forms (gensym "anon-fixture-forms"))
+	   (core-run-body
+	    (cond
 	     ((eql 1 (length forms))
 	      (continue-check criterion
 			      `(common-lisp:multiple-value-list ,(car forms))))
 	     (t
 	      (continue-check criterion (cons 'list forms))))))
       (declare (special *nst-context*))
-      `(block ,name
-	 (macrolet ((eval-dbg (form) `(progn (format t "~%~s~%" ,form)
-					     (eval ,form)
-					     (format t "OK~%"))))
-	   (multiple-value-bind (z ,check-fixture-classes ,anon-fixture-forms)
-	       (process-fixture-list ',fixtures)
-	     (declare (ignorable z))
+      (multiple-value-bind (z check-fixture-classes anon-fixture-forms)
+	  (process-fixture-list fixtures)
+	(declare (ignorable z))
+	
+	`(block ,name
+	   (macrolet ((eval-dbg (form) `(progn (format t "~%~s~%" ,form)
+					       (eval ,form)
+					       (format t "OK~%"))))
 	     (loop for form in ,anon-fixture-forms do (eval form))
 	   
 	     (let (;; In this block we make our local binding to the
 		   ;; information stored to methods from earlier
 		   ;; load-time NST forms.
-		   (,suite-class-name (suite-class-name ',*the-group* ',name))
-		   (,standalone-class-name
-		    (standalone-class-name ',*the-group* ',name))
-		   (,test-config-class-name
-		    (test-config-class-name ',*the-group* ',name))
-		   (,fixtures-from-group (group-fixture-classes ',*the-group*))
-		   (,test-in-group-class-name
-		    (test-in-group-class-name ',*the-group*)))
-	       (unless ,suite-class-name
-		 (setf ,suite-class-name
-		   (gentemp ,(concatenate 'string
-			       (symbol-name *the-group*) "/"
-			       (symbol-name name) ".suite.")
-			    :sift.nst.test-within-group-class-names))
-		 (defmethod suite-class-name ((g (eql ',*the-group*))
-					      (c (eql ',name)))
-		   ,suite-class-name))
-	       (unless ,standalone-class-name
-		 (setf ,standalone-class-name
-		   (gentemp ,(concatenate 'string
-			       (symbol-name *the-group*) "/"
-			       (symbol-name name) ".standalone.")
-			    :sift.nst.test-within-group-class-names))
-		 (defmethod standalone-class-name ((g (eql ',*the-group*))
-						   (c (eql ',name)))
-		   ,standalone-class-name))
-	       (unless ,test-config-class-name
-		 (setf ,test-config-class-name
-		   (gentemp ,(concatenate 'string
-			       (symbol-name *the-group*) "/"
-			       (symbol-name name) ".testconfig.")
-			    :sift.nst.test-within-group-class-names))
-		 (defmethod test-config-class-name ((g (eql ',*the-group*))
-						    (c (eql ',name)))
-		   ,test-config-class-name))
+;;;		   (,suite-class-name (suite-class-name ',*the-group* ',name))
+;;;		   (,test-config-class-name
+;;;		    (test-config-class-name ',*the-group* ',name))
+;;;		   (,test-in-group-class-name
+;;;		    (test-in-group-class-name ',*the-group*))
+;;;		   (,standalone-class-name
+;;;		    (standalone-class-name ',*the-group* ',name))
+;;;		   (,fixtures-from-group (group-fixture-classes ',*the-group*))
+		   )
 
-	       (eval `(defclass ,,test-config-class-name () ()))
+	       (defclass ,test-config-class-name () ()
+		 (:metaclass test-metaclass)
+		 (:suite-class-name-by-class . ,suite-class-name)
+		 (:test-config-class-name-by-class . ,test-config-class-name)
+		 (:test-in-group-class-name-by-class
+		  . ,test-in-group-class-name)
+		 (:standalone-class-name-by-class . ,standalone-class-name)
+		 ;; (:fixtures-from-group-by-class . )
+		 )
 	     
-	       (eval `(defclass ,,suite-class-name
-			      (,,test-in-group-class-name
-			       ,,test-config-class-name
-			       ,@,check-fixture-classes)
-			    ()))
+	       (defclass ,suite-class-name
+		    (,*group-class-name*
+		     ;; ,test-in-group-class-name
+		     ,*test-in-group-class*
+		     ;;  ,test-config-class-name
+		     ,@check-fixture-classes)
+		    ()
+		 (:metaclass test-metaclass)
+		 (:suite-class-name-by-class . ,suite-class-name)
+		 (:test-config-class-name-by-class . ,test-config-class-name)
+		 (:test-in-group-class-name-by-class
+		  . ,test-in-group-class-name)
+		 (:standalone-class-name-by-class . ,standalone-class-name)
+		 ;; (:fixtures-from-group-by-class . )
+		 )
 
-	       (eval `(defclass ,,standalone-class-name
-			  (,(group-class-name ',*the-group*)
-			   ,@,fixtures-from-group
-			   ,@,check-fixture-classes
-			   ,(standalone-test-in-group-class-name ',*the-group*)
-			   ,,test-in-group-class-name
-			   ,,test-config-class-name)
-			()))
+	       (defclass ,standalone-class-name
+		    (,*group-class-name*
+		      ,@*group-fixture-classes*
+		      ,@check-fixture-classes
+		      ,*standalone-test-in-group-class*
+		      ;; ,test-in-group-class-name
+		      ;; ,test-config-class-name
+		      )
+		    ()
+		 (:metaclass test-metaclass)
+		 (:suite-class-name-by-class . ,suite-class-name)
+		 (:test-config-class-name-by-class . ,test-config-class-name)
+		 (:test-in-group-class-name-by-class
+		  . ,test-in-group-class-name)
+		 (:standalone-class-name-by-class . ,standalone-class-name)
+		 ;; (:fixtures-from-group-by-class . )
+		 )
 
-	       (eval `(defmethod check-name ((obj ,,suite-class-name))
-			',',name))
-	       (eval `(defmethod check-name ((obj ,,standalone-class-name))
-			',',name))
+	       (defmethod suite-class-name ((g (eql ',*the-group*))
+					    (c (eql ',name)))
+		 ',suite-class-name)
+	       (defmethod standalone-class-name ((g (eql ',*the-group*))
+						 (c (eql ',name)))
+		 ',standalone-class-name)
+	       (defmethod test-config-class-name ((g (eql ',*the-group*))
+						  (c (eql ',name)))
+		 ',test-config-class-name)
+	       (defmethod check-name ((obj ,suite-class-name))
+		 ',name)
+	       
+	       (defmethod check-name ((obj ,standalone-class-name))
+		 ',name)
        
-	       (eval `(defmethod core-run ((obj ,,standalone-class-name))
-			    (core-run-test obj)))
+	       (defmethod core-run ((obj ,standalone-class-name))
+		 (core-run-test obj))
 
-	       (eval `(defmethod core-run-test ((obj ,,suite-class-name))
-			,',core-run-body))
-	       (eval `(defmethod core-run-test ((obj ,,standalone-class-name))
-			,',core-run-body))
+	       (defmethod core-run-test ((obj ,suite-class-name))
+		 ,core-run-body)
+	       (defmethod core-run-test ((obj ,standalone-class-name))
+		 ,core-run-body)
 
 	       ,@(when setup-supp-p
-		   `((eval `(defmethod core-run-test
-				    :before ((obj ,,test-config-class-name))
-				  ,',setup))))
+		   `((defmethod core-run-test
+			 :before ((obj ,test-config-class-name))
+		       ,setup)))
 
 	       ,@(when cleanup-supp-p
-		   `((eval `(defmethod core-run-test
-				    :after ((obj ,,test-config-class-name))
-				  ,',cleanup))))
+		   `((defmethod core-run-test
+			 :after ((obj ,test-config-class-name))
+		       ,cleanup)))
 
 	       ;; Test results are stored under a canonical name.
-	       (eval `(defmethod canonical-storage-name ((inst
-							  ,,suite-class-name))
-			',,suite-class-name))
-	       (eval `(defmethod canonical-storage-name
-			  ((inst ,,standalone-class-name))
-			',,suite-class-name))
-	       (eval `(defmethod canonical-storage-name 
-			  ((inst (eql ',,suite-class-name)))
-			',,suite-class-name))
-	       (eval `(defmethod canonical-storage-name
-			  ((inst (eql ',,standalone-class-name)))
-			',,suite-class-name))
+	       (defmethod canonical-storage-name ((inst ,suite-class-name))
+		 ',suite-class-name)
+	       (defmethod canonical-storage-name ((inst ,standalone-class-name))
+		 ',suite-class-name)
+	       (defmethod canonical-storage-name
+		   ((inst (eql ',suite-class-name)))
+		 ',suite-class-name)
+	       (defmethod canonical-storage-name
+		   ((inst (eql ',standalone-class-name)))
+		 ',suite-class-name)
 	     
 	       ;; Clear any previous stored results, since we've just
 	       ;; (re-)defined this check.
@@ -393,20 +434,21 @@ when def-check-alias is macroexpanded."
 	     
 		 (format t " - In-suite class name: ~s~%"
 		   (suite-class-name ',*the-group* ',name))
-		 (format t "              expected: ~s~%" ,suite-class-name)
+		 (format t "              expected: ~s~%" ',suite-class-name)
 		 (format t "   Superclasses: ~@<~{~s~^ ~:_~}~:>~%"
 		   (loop for super
 		       in (class-direct-superclasses
 			   (find-class (suite-class-name ',*the-group* ',name)))
 		       collect (class-name super)))
 		 (when *nst-info-shows-expected*
-		   (format t "       expected: ~s~%" ,test-in-group-class-name))
+		   (format t "       expected: ~s~%"
+		     ',test-in-group-class-name))
 	     
 		 (format t " - Standalone class name: ~s~%"
 		   (standalone-class-name ',*the-group* ',name))
 		 (when *nst-info-shows-expected*
 		   (format t "                expected: ~s~%"
-		     ,standalone-class-name))
+		     ',standalone-class-name))
 		 (format t "   Superclasses: ~@<~{~s~^ ~:_~}~:>~%"
 		   (loop for super
 		       in (class-direct-superclasses
@@ -416,7 +458,7 @@ when def-check-alias is macroexpanded."
 		 (when *nst-info-shows-expected*
 		   (format t
 		       "       expected: ~@<~s ~:_~@<~{~s~^ ~:_~}~:>~:>~%" 
-		     (standalone-test-in-group-class-name ',*the-group*)
-		     ,fixtures-from-group))
+		     ',*standalone-test-in-group-class*
+		     ',*group-fixture-classes*))
 	     
 		 ))))))))

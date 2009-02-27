@@ -48,7 +48,51 @@
 	    setup setup-supp-p cleanup cleanup-supp-p
 	    each-setup each-setup-supp-p each-cleanup each-cleanup-supp-p)))
 
-;;; This page is intentionally left blank.
+(defclass group-metaclass (standard-class)
+     ((group-fixture-classes :initarg :group-fixture-classes
+			     :reader group-fixture-classes)
+      (test-fixture-classes :initarg :test-fixture-classes
+			    :reader test-fixture-classes)
+      (anon-fixture-forms :initarg :anon-fixture-forms
+			  :reader anon-fixture-forms)
+      (group-class-name :initarg :group-class-name :reader group-class-name)
+      (test-in-group-class-name :initarg :test-in-group-class-name
+				:reader test-in-group-class-name)
+      (standalone-test-in-group-class-name
+       :initarg :standalone-test-in-group-class-name
+       :reader standalone-test-in-group-class-name)))
+(defmethod validate-superclass ((sub group-metaclass) (sup standard-class)) t)
+
+(defmethod group-fixture-classes ((g symbol))
+  (group-fixture-classes (find-class g)))
+(defmethod test-fixture-classes ((g symbol))
+  (test-fixture-classes (find-class g)))
+(defmethod anon-fixture-forms ((g symbol))
+  (anon-fixture-forms (find-class g)))
+(defmethod group-class-name ((s symbol))
+  (group-class-name (find-class s)))
+(defmethod test-in-group-class-name ((s symbol))
+  (test-in-group-class-name (find-class s)))
+(defmethod standalone-test-in-group-class-name ((s symbol))
+  (standalone-test-in-group-class-name (find-class s)))
+(defmethod test-names ((s symbol))
+  (test-names (make-instance s)))
+(defmethod trace-group ((s symbol))
+  (trace-group (make-instance s)))
+
+(defvar +package-groups+ (make-hash-table :test 'eq))
+(defgeneric package-groups (package-or-symbol))
+(defmethod package-groups ((s symbol))
+  (package-groups (find-package s)))
+(defmethod package-groups ((p package))
+  (let ((group-hash (gethash p +package-groups+)))
+    (when group-hash
+      (loop for g being the hash-keys of group-hash collect g))))
+
+(defpackage :group-info-package)
+(defpackage :group-class-name-package)
+(defpackage :test-in-group-class-name-package)
+(defpackage :standalone-test-in-group-class-name-package)
 
 #+allegro (excl::define-simple-parser def-test-group second :nst-group)
 (defmacro def-test-group (group-name given-fixtures &body forms)
@@ -74,162 +118,184 @@ forms - zero or more test forms, given by def-check or def-test."
 				      each-setup each-setup-supp-p
 				      each-cleanup each-cleanup-supp-p)
 	(separate-group-subforms forms)
-      (let (;; Variable names
-	    (group-fixture-classes (gensym "group-fixture-classes"))
-	    (anon-fixture-forms (gensym "anon-fixture-forms"))
-	    (group-pkg (gensym "class-pkg"))
-	    (group-class-name (gensym "group-class-name"))
-	    (test-in-group-class-name (gensym "test-in-group-class-name"))
-	    (standalone-in-group-class-name (gensym "standalone-class-name"))
+      (let* ((base-rename (concatenate 'string
+			    (package-name (symbol-package group-name))
+			    "///" (symbol-name group-name)))
+
+	     ;; Old variable names
+	     (group-class-name (intern base-rename :group-class-name-package))
+	     (test-in-group-class-name
+	      (intern base-rename :test-in-group-class-name-package))
+	     (standalone-test-in-group-class-name
+	      (intern base-rename :standalone-test-in-group-class-name-package))
+
+	     ;; Get the package where the public group name symbol
+	     ;; lives.
+	     (group-orig-pkg (symbol-package group-name))
 	    
-	    ;; Get the package where the public group name symbol
-	    ;; lives.
-	    (group-orig-pkg (symbol-package group-name))
+	     ;; Whether we have a map into a new groups-package.
+	     (group-pkg-name (concatenate 'string
+			       "nst-group-pkg///" base-rename))
+	     (group-pkg (find-package (intern group-pkg-name)))
+;;;	     (new-group-pkg (null group-pkg))
+;;;	     (new-group-pkg-cand-name (gentemp (package-name group-orig-pkg)))
 	    
-	    ;; Separate access to the names of the tests.
-	    (test-names (loop for form in check-forms
-			      append (pull-test-name-list form)))
-	    
-	    ;; Expand the test forms in this environment which include
-	    ;; a binding to *the-group*.
-	    (expanded-check-forms (mapcar #'macroexpand check-forms)))
+	     ;; Separate access to the names of the tests.
+	     (test-names (loop for form in check-forms
+			     append (pull-test-name-list form)))
+	     
+	     )
 	
-	;; As with the other NST forms, all execution is at load time
-	;; (or less usually, when typed into the REPL manually).
-	`(eval-when (:load-toplevel :execute)
+	(unless group-pkg
+	  (setf group-pkg (make-package group-pkg-name)))
 
-	   ;; Fixture processing.
-	   (multiple-value-bind (,group-fixture-classes z ,anon-fixture-forms)
-	       (process-fixture-list ',given-fixtures)
-	     (declare (ignorable z))
-	     (loop for form in ,anon-fixture-forms do (eval form))
-	     (eval `(defmethod group-fixture-classes ((g (eql ',',*the-group*)))
-		      ',,group-fixture-classes))
+	(multiple-value-bind (group-fixture-classes test-fixture-classes
+						    anon-fixture-forms)
+	    (process-fixture-list given-fixtures)
+	  
+	  ;; Expand the test forms in this environment which include
+	  ;; a binding to *the-group*.
+	  (let ((expanded-check-forms
+		 (let ((*group-fixture-classes* group-fixture-classes)
+		       (*group-class-name* group-class-name)
+		       (*test-in-group-class* test-in-group-class-name)
+		       (*standalone-test-in-group-class*
+			standalone-test-in-group-class-name))
+		   (declare (special *group-fixture-classes*
+				     *group-class-name*
+				     *test-in-group-class*
+				     *standalone-test-in-group-class*))
+		   (mapcar #'macroexpand check-forms))))
 
-	     (let ((,group-pkg (groups-package ,group-orig-pkg))
-		   (,group-class-name (group-class-name ',group-name))
-		   (,test-in-group-class-name 
-		    (test-in-group-class-name ',group-name))
-		   (,standalone-in-group-class-name
-		    (standalone-test-in-group-class-name ',group-name)))
-	       (unless ,group-pkg
-		 (setf ,group-pkg
-		   (make-package (symbol-name
-				  (gentemp ,(concatenate 'string
-					      (package-name group-orig-pkg)
-					      ".testgroups.")))
-				 :use nil))
-		 (defmethod groups-package ((pkg (eql ,group-orig-pkg)))
-		   ,group-pkg))
-	       (intern (symbol-name ',group-name) ,group-pkg)
-	 
-	       (unless ,group-class-name
-		 (setf ,group-class-name
-		   (gentemp ,(concatenate 'string
-			       (symbol-name group-name) ".class.")
-			    :sift.nst.group-class-names))
-		 (defmethod group-class-name ((g (eql ',group-name)))
-		   ,group-class-name))
+	    ;; As with the other NST forms, all execution is at load
+	    ;; time (or less usually, when typed into the REPL
+	    ;; manually).
+	    `(eval-when (:compile-toplevel :load-toplevel :execute)
+	       (let ((*the-group* ',group-name))
+		 (declare (special *the-group*))
 
-	       (unless ,test-in-group-class-name
-		 (setf ,test-in-group-class-name
-		   (gentemp ,(concatenate 'string
-			       (symbol-name group-name) ".tests-with-group.")
-			    :sift.nst.test-within-group-class-names))
-		 (defmethod test-in-group-class-name ((g (eql ',group-name)))
-		   ,test-in-group-class-name))
-	 
-	       (unless ,standalone-in-group-class-name
-		 (setf ,standalone-in-group-class-name
-		   (gentemp ,(concatenate 'string
-			       (symbol-name group-name) ".standalone-tests.")
-			    :sift.nst.test-standalone-class-names))
-		 (defmethod standalone-test-in-group-class-name
-		     ((g (eql ',group-name)))
-		   ,standalone-in-group-class-name))
+		 (eval-when (:load-toplevel :execute)
+		   (let* ((package-hash (gethash ,group-orig-pkg +package-groups+)))
+		     (unless package-hash
+		       (setf package-hash (make-hash-table :test 'eq)
+			     (gethash ,group-orig-pkg
+				      +package-groups+) package-hash))
+		     (setf (gethash ',group-name package-hash) t)))
+	     
+		 (defclass ,group-name () ()
+			   (:metaclass group-metaclass)
+			   (:group-fixture-classes . ,group-fixture-classes)
+			   (:test-fixture-classes . ,test-fixture-classes)
+			   (:anon-fixture-forms . ,anon-fixture-forms)
+			   (:group-class-name . ,group-class-name)
+			   (:test-in-group-class-name . ,test-in-group-class-name)
+			   (:standalone-test-in-group-class-name
+			    . ,standalone-test-in-group-class-name))
 
-	       (eval `(defclass ,,group-class-name
-			   (group-base-class ,@,group-fixture-classes) ()))
+;;;	     (unless (groups-package
+;;;		      (find-package (symbol-package ',group-name)))
+;;;	       (let ((pkg (find-package ',new-group-pkg-cand-name)))
+;;;		 (unless pkg (make-package pkg))
+;;;		 (defmethod groups-package ((p (eql ,group-orig-pkg)))
+;;;		   (find-package ',new-group-pkg-cand-name))))
+	     
+		 ;; Record the group name in the package used for
+		 ;; recording them.
+		 (intern (symbol-name ',group-name) ,group-pkg) 
 
-	       ;; WARNING!  This hook crashes Allegro Lisp.
-	       #-allegro (set-pprint-dispatch ',group-class-name
-			   #'(lambda (stream object)
-			       (declare (ignorable object))
-			       (format stream "Group ~s internal NST class"
-				 ',group-name)))
-	       
-	       ;; Retrieve a group name from its instance
-	       (eval `(defmethod group-name ((g ,,group-class-name))
-			',',group-name))
+		 (eval-when (:compile-toplevel :load-toplevel :execute)
+		   (defclass ,group-class-name
+			(group-base-class ,@group-fixture-classes) ())
 
-	       (eval `(defclass ,,test-in-group-class-name () ()))
-	       (eval `(defclass ,,standalone-in-group-class-name
-			   ;; (,,group-class-name ,,test-in-group-class-name)
-			   () ()))
+		   (defclass ,test-in-group-class-name () ())
+		   (defclass ,standalone-test-in-group-class-name () ()))
 
-	       (eval `(defmethod core-run
-			  ((obj ,,standalone-in-group-class-name))
-			(core-run-test obj)))
+		 ;; Retrieve a group name from its instance
+		 (defmethod group-name ((g ,group-class-name))
+		   ',group-name)
+
+		 ;; Fixture processing.
+		 (loop for form in ',anon-fixture-forms do (eval form))
+		 (defmethod group-fixture-classes ((g ,group-name))
+		   ',group-fixture-classes)
+		 (defmethod test-fixture-classes ((g ,group-name))
+		   ',test-fixture-classes)
+
+		 (defmethod core-run
+		     ((obj ,standalone-test-in-group-class-name))
+		   (core-run-test obj))
 		 
-	       (when ,setup-supp-p
-		 (eval `(defmethod core-run :before ((obj ,,group-class-name))
-			  ,',setup)))
+		 (when ,setup-supp-p
+		   (defmethod core-run :before ((obj ,group-class-name))
+		     ,setup))
 	       
-	       (when ,cleanup-supp-p
-		 (eval `(defmethod core-run :after ((obj ,,group-class-name))
-			  ,',cleanup)))
+		 (when ,cleanup-supp-p
+		   (defmethod core-run :after ((obj ,group-class-name))
+		     ,cleanup))
 
-	       (when ,each-setup-supp-p
-		 (eval `(defmethod core-run-test
-			    :before ((obj ,,test-in-group-class-name))
-			  ,',each-setup)))
+		 (when ,each-setup-supp-p
+		   (defmethod core-run-test :before ((obj
+						      ,test-in-group-class-name))
+		     ,each-setup))
 	       
-	       (when ,each-cleanup-supp-p
-		 (eval `(defmethod core-run-test
-			    :after ((obj ,,test-in-group-class-name))
-			  ,',each-cleanup)))
+		 (when ,each-cleanup-supp-p
+		   (defmethod core-run-test :after ((obj ,test-in-group-class-name))
+		     ,each-cleanup))
 
-	       (eval `(defmethod test-names ((group ,,group-class-name))
-			',',test-names))
-	       (eval `(defmethod test-names ((group (eql ',',group-name)))
-			',',test-names))
+		 (defmethod test-names ((group ,group-class-name)) ',test-names)
+		 (defmethod test-names ((group ,group-name)) ',test-names)
 
-	       (defmethod trace-group ((g (eql ',group-name)))
-		 (format t "Group ~s:~%" ',group-name)
-		 (format t " - Fixtures: ~@<~{~s~^ ~:_~}~:>~%" ',given-fixtures)
-		 (format t " - Defines tests: ~@<~{~s~^ ~:_~}~:>~%"
-		   ',test-names)
+		 ;; WARNING!  This hook crashes Allegro Lisp.
+		 #-allegro (set-pprint-dispatch ',group-class-name
+			     #'(lambda (stream object)
+				 (declare (ignorable object))
+				 (format stream "Group ~s internal NST class"
+				   ',group-name)))
+
+		 (defmethod trace-group ((g ,group-name))
+		   (format t "Group ~s:~%" ',group-name)
+		   (format t " - Fixtures: ~@<~{~s~^ ~:_~}~:>~%"
+		     ',given-fixtures)
+		   (format t " - Defines tests: ~@<~{~s~^ ~:_~}~:>~%"
+		     ',test-names)
 		 
-		 (let* ((group-class-actual (group-class-name g))
-			(standalone-class-actual
-			 (standalone-test-in-group-class-name g))
-			(suite-class-actual (test-in-group-class-name g))
-			(class-object (find-class group-class-actual)))
-		   (format t
-		       " - ~@<Group cl~@<ass name: ~s~
+		   (let* ((group-class-actual (group-class-name g))
+			  (standalone-class-actual
+			   (standalone-test-in-group-class-name g))
+			  (suite-class-actual (test-in-group-class-name g))
+			  (class-object (find-class group-class-actual)))
+		     (format t
+			 " - ~@<Group cl~@<ass name: ~s~
                                       ~:[~*~;~:@_expected: ~s~]~:>~
                         ~:@_supe~@<rclasses: ~@<~{~s~^ ~:_~}~:>~
                                ~:[~2*~;~:@_expected: ~
                                          ~@<~s ~:_~{~s~^ ~:_~}~:>~]~:>~:>~%"
-		     group-class-actual
-		     *nst-info-shows-expected* ,group-class-name
-		     (loop for sup in (class-direct-superclasses class-object)
-			 collect (class-name sup))
-		     *nst-info-shows-expected* 
-		     'group-base-class ,group-fixture-classes)
-		   (format t
-		       " - ~@<Test in suite cl~@<ass name: ~s~
+		       group-class-actual
+		       *nst-info-shows-expected* ',group-class-name
+		       (loop for sup in (class-direct-superclasses class-object)
+			   collect (class-name sup))
+		       *nst-info-shows-expected* 
+		       'group-base-class ',group-fixture-classes)
+		     (format t
+			 " - ~@<Test in suite cl~@<ass name: ~s~
                                 ~:[~*~;~:@_expected: ~s~]~:>~:>~%"
-		     suite-class-actual
-		     *nst-info-shows-expected* ,test-in-group-class-name)
-		   (format t
-		       " - ~@<Standalone test cl~@<ass name: ~s~
+		       suite-class-actual
+		       *nst-info-shows-expected* ',test-in-group-class-name)
+		     (format t
+			 " - ~@<Standalone test cl~@<ass name: ~s~
                                    ~:[~*~;~:@_expected: ~s~]~:>~
                       ~:@_extends ~@<~s ~:_~s~:>~:>~%"
-		     standalone-class-actual
-		     *nst-info-shows-expected* ,standalone-in-group-class-name
-		     ,test-in-group-class-name ,group-class-name)
-		   )))
-	     ,@expanded-check-forms
-	     ',group-name))))))
+		       standalone-class-actual
+		       *nst-info-shows-expected* ',standalone-test-in-group-class-name
+		       ',test-in-group-class-name ',group-class-name)
+		     ))
+
+		 (eval-when (:load-toplevel :execute)
+		   ,@expanded-check-forms
+;;;		 ,@check-forms
+		   )
+
+		 ',group-name))))))))
+
+
 
