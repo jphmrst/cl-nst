@@ -270,7 +270,9 @@ when def-check-alias is macroexpanded."
 (defpackage :nst-test-in-group-class-names)
 
 (defmacro def-check (name-or-name-and-args criterion &rest forms)
-  (declare (special *the-group*))	; The def-group we're within.
+  (declare (special *the-group* *group-class-name* *group-fixture-classes*
+		    *test-in-group-class* *standalone-test-in-group-class*))
+					; The def-group we're within.
 
   ;; Decode the name-or-name-and-args, pulling out the individual
   ;; components, and indicating which are given in this test.
@@ -293,7 +295,7 @@ when def-check-alias is macroexpanded."
 	   (standalone-class-name (intern base-rename
 					  :nst-standalone-class-names))
 
-	   (fixtures-from-group (gensym "fixtures-from-group"))
+;;;	  (fixtures-from-group (gensym "fixtures-from-group"))
 ;;;	  (check-fixture-classes (gensym "check-fixture-classes"))
 ;;;	  (anon-fixture-forms (gensym "anon-fixture-forms"))
 	   (core-run-body
@@ -324,7 +326,8 @@ when def-check-alias is macroexpanded."
 ;;;		    (test-in-group-class-name ',*the-group*))
 ;;;		   (,standalone-class-name
 ;;;		    (standalone-class-name ',*the-group* ',name))
-		   (,fixtures-from-group (group-fixture-classes ',*the-group*)))
+;;;		   (,fixtures-from-group (group-fixture-classes ',*the-group*))
+		   )
 
 	       (defclass ,test-config-class-name () ()
 		 (:metaclass test-metaclass)
@@ -336,9 +339,12 @@ when def-check-alias is macroexpanded."
 		 ;; (:fixtures-from-group-by-class . )
 		 )
 	     
-	       (defclass ,suite-class-name (,test-in-group-class-name
-					    ,test-config-class-name
-					    ,@check-fixture-classes)
+	       (defclass ,suite-class-name
+		    (,*group-class-name*
+		     ;; ,test-in-group-class-name
+		     ,*test-in-group-class*
+		     ;;  ,test-config-class-name
+		     ,@check-fixture-classes)
 		    ()
 		 (:metaclass test-metaclass)
 		 (:suite-class-name-by-class . ,suite-class-name)
@@ -350,12 +356,13 @@ when def-check-alias is macroexpanded."
 		 )
 
 	       (defclass ,standalone-class-name
-		    (,(group-class-name *the-group*)
-		      ,@fixtures-from-group
+		    (,*group-class-name*
+		      ,@*group-fixture-classes*
 		      ,@check-fixture-classes
-		      ,(standalone-test-in-group-class-name *the-group*)
-		      ,test-in-group-class-name
-		      ,test-config-class-name)
+		      ,*standalone-test-in-group-class*
+		      ;; ,test-in-group-class-name
+		      ;; ,test-config-class-name
+		      )
 		    ()
 		 (:metaclass test-metaclass)
 		 (:suite-class-name-by-class . ,suite-class-name)
@@ -441,7 +448,7 @@ when def-check-alias is macroexpanded."
 		   (standalone-class-name ',*the-group* ',name))
 		 (when *nst-info-shows-expected*
 		   (format t "                expected: ~s~%"
-		     ,standalone-class-name))
+		     ',standalone-class-name))
 		 (format t "   Superclasses: ~@<~{~s~^ ~:_~}~:>~%"
 		   (loop for super
 		       in (class-direct-superclasses
@@ -451,7 +458,7 @@ when def-check-alias is macroexpanded."
 		 (when *nst-info-shows-expected*
 		   (format t
 		       "       expected: ~@<~s ~:_~@<~{~s~^ ~:_~}~:>~:>~%" 
-		     (standalone-test-in-group-class-name ',*the-group*)
-		     ,fixtures-from-group))
+		     ',*standalone-test-in-group-class*
+		     ',*group-fixture-classes*))
 	     
 		 ))))))))

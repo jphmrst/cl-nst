@@ -20,7 +20,6 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
-
 ;;;
 ;;; Generating status data within checks.
 ;;;
@@ -47,12 +46,49 @@ current criterion.")
    :failures (list (make-check-note :context *nst-context* :stack *nst-stack* 
 				    :format format :args args))
    :info info))
+
+(defstruct result-stats "Statistics common to the different result summaries."
+  (tests 0) (passing 0) (erring 0) (failing 0) (warning 0))
 
 ;;;
 ;;; Result records for high-level checks.
 ;;;
 
-(defstruct package-result
+(defstruct (multi-results (:include result-stats))
+  "Multiple results structure."
+  package-reports group-reports test-reports system)
+
+(set-pprint-dispatch 'multi-results
+  #'(lambda (s res)
+      (with-accessors ((packages multi-results-package-reports)
+		       (groups multi-results-group-reports)
+		       (tests multi-results-test-reports)
+		       (system multi-results-system)) res
+	
+	(when system
+	  (format s "~%Summary of results for system ~a:~%"
+	    (slot-value system 'asdf::name)))
+	(let ((reports
+	       (nconc (loop for report in packages
+			    collect (let ((*nst-report-driver* :package))
+				      (format s "~w~%" report)
+				      report))
+		      (loop for report in groups
+			    collect (let ((*nst-report-driver* :group))
+				      (format s "~w~%" report)
+				      report))
+		      (loop for report in tests
+			    collect (let ((*nst-report-driver* :test))
+				      (format s "~w~%" report)
+				      report)))))
+	  (multiple-value-bind (code total passed erred failed warned)
+	      (result-summary reports)
+	    (declare (ignorable code))
+	    (format s
+		"TOTAL: ~d of ~d passed (~d failed, ~d error~p, ~d warning~p)~%"
+	      passed total failed erred erred warned warned))))))
+
+(defstruct (package-result (:include result-stats))
   "Overall package result structure, mapping groups to results by name."
   package-name
   (group-results (make-hash-table :test 'eq)))
@@ -73,7 +109,7 @@ current criterion.")
 		    (let ((name (pprint-pop)))
 		      (format s " - ~@<~w~:>" (gethash name checks))))))))))
 
-(defstruct group-result
+(defstruct (group-result (:include result-stats))
   "Overall group result structure, mapping checks to results by name."
   group-name
   (check-results (make-hash-table :test 'eq)))
@@ -100,7 +136,7 @@ current criterion.")
 			   (pprint-newline :mandatory s)
 			   (format s " - ~w" cr))))))))))))
 
-(defstruct check-result
+(defstruct (check-result (:include result-stats))
   "Overall check result structure, containing notes of four distinct types.  A
 note is an instance of the check-note structure below.  The four note types are:
  warnings - generated warnings
@@ -111,6 +147,24 @@ Each of these fields is a list; warnings, failures and errors are check-note
 instances, and the info field is of any value."
   (check-name *nst-check-name*)
   (warnings nil) (failures nil) (errors nil) (info nil))
+
+(defmethod initialize-instance :after ((r check-result) &key &allow-other-keys)
+  (with-accessors ((test-count result-stats-tests)
+		   
+		   (passing-count result-stats-passing)
+		   (erring-count result-stats-erring)
+		   (failing-count result-stats-failing)
+		   (warning-count result-stats-warning)
+		   
+		   (warnings check-result-warnings)
+		   (failures check-result-failures)
+		   (errors check-result-errors)) r
+    (setf test-count 1)
+    (cond
+      (errors (setf erring-count 1))
+      (failures (setf failing-count 1))
+      (t (setf passing-count 1)))
+    (when warnings (setf warning-count 1))))
 
 (defparameter *nst-report-driver* nil
   "Control parameter for building report structures.  Should not be reset from
@@ -154,8 +208,8 @@ nil at the top level; set via dynamically-scoped bindings.")
 	   ;; The default case is (intended to be) for multi-point
 	   ;; queries about a specific test.
 	   ;;
-	   (t (format s "Check ~a ~:[failed~;passed~]: ~
-                         ~@<~@{~:[~2*~;~a~:@_~{ - ~w~^~:@_~}~]~}~:>"
+	   (t (format s "~@<Check ~a ~:[failed~;passed~]: ~
+                         ~@{~:[~2*~;~:@_~a~{~:@_ - ~w~}~]~}~:>"
 		check-name succeeded
 		errors "Errors:" errors  failures "Failures:" failures
 		warnings "Warnings:" warnings
@@ -167,7 +221,6 @@ nil at the top level; set via dynamically-scoped bindings.")
  criterion-args - arguments to the criterion
  given-stack - the stack of values assessed by the criterion"
   criterion criterion-args given-stack)
-
 
 (defstruct check-note
   "A single note issued in criteria checking.
@@ -188,8 +241,6 @@ nil at the top level; set via dynamically-scoped bindings.")
 		       (format check-note-format)
 		       (args check-note-args)) cn
 	(declare (ignorable context stack))
-	
-	(when format (format s "~?" format args))
 	(format s "~@<~:[~2*~;~?~:@_~]in context: ~w~:@_stack: ~w~:>"
 	  format format args context stack)
 	)))
@@ -284,15 +335,27 @@ six-value summary of the results:
   "Top-level function for reporting the results of a package."
   (let* ((result (make-package-result))
 	 (user-package (find-package package))
-	 (sym-pack (groups-package user-package)))
+	 (sym-pack (loop for k being the hash-keys of (gethash user-package
+							       +package-groups+)
+			 collect k)))
+    (case *nst-verbosity*
+      ((:vverbose)
+       (format t "Reporting for actual package ~s~%" user-package)
+       (format t "sym-pack ~s~%" sym-pack)))
     (when sym-pack
       (with-accessors ((name package-result-package-name)
 		       (checks package-result-group-results)) result
 	(setf name (package-name user-package))
-	(do-symbols (remote-group sym-pack)
-	  (let ((local-group (intern (symbol-name remote-group) user-package)))
-	    (setf (gethash local-group checks)
-	      (group-report local-group))))))
+	(loop for remote-group in sym-pack do
+	  (let* ((local-group (intern (symbol-name remote-group) user-package))
+		 (report (group-report local-group)))
+	    (setf (gethash local-group checks) report)
+	    (incf (result-stats-tests result)   (result-stats-tests report))
+	    (incf (result-stats-passing result) (result-stats-passing report))
+	    (incf (result-stats-erring result)  (result-stats-erring report))
+	    (incf (result-stats-failing result) (result-stats-failing report))
+	    (incf (result-stats-warning result)
+		  (result-stats-warning report))))))
     result))
 
 (defun group-report (group)
@@ -301,9 +364,15 @@ six-value summary of the results:
     (with-accessors ((name group-result-group-name)
 		     (checks group-result-check-results)) result
       (setf name group)
-      (loop for test in (test-names group) do
-	(setf (gethash test checks)
-	      (test-report group test))))
+      (loop for test in (test-names group)
+	    for report = (test-report group test)
+	    do
+	 (setf (gethash test checks) report)
+	 (incf (result-stats-tests result)   (result-stats-tests report))
+	 (incf (result-stats-passing result) (result-stats-passing report))
+	 (incf (result-stats-erring result)  (result-stats-erring report))
+	 (incf (result-stats-failing result) (result-stats-failing report))
+	 (incf (result-stats-warning result) (result-stats-warning report))))
     result))
 
 (defun test-report (group test)
@@ -311,33 +380,72 @@ six-value summary of the results:
   (gethash (canonical-storage-name (standalone-class-name group test))
 	   +results-record+))
 
+(defun multiple-report (packages groups tests &key system)
+  (let* ((package-reports (loop for p in packages collect (package-report p)))
+	 (group-reports (loop for g in groups collect (group-report g)))
+	 (test-reports (loop for (g . ts) in tests collect (test-report g ts)))
+	 (result (make-multi-results :package-reports package-reports
+				     :group-reports group-reports
+				     :test-reports test-reports
+				     :system system)))
+    (loop for report-set in (list package-reports group-reports test-reports) do
+      (loop for report in report-set do
+	(incf (result-stats-tests result)   (result-stats-tests report))
+	(incf (result-stats-passing result) (result-stats-passing report))
+	(incf (result-stats-erring result)  (result-stats-erring report))
+	(incf (result-stats-failing result) (result-stats-failing report))
+	(incf (result-stats-warning result) (result-stats-warning report))))
+    result))
 
 ;;;
 ;;; Printing functions
 ;;;
 
-(defun report-package (&optional (package *package*)
-				 (stream *nst-output-stream*)
-				 (*nst-local-verbosity* (get-verbosity-level)))
+(defun report-package (&optional
+		       (package *package*)
+		       (stream *nst-output-stream*)
+		       (*nst-local-verbosity* *nst-report-default-verbosity*))
   "Top-level function for reporting the results of a package."
   (let ((*nst-report-driver* :package))
     (format stream "~w" (package-report package))))
 
-(defun report-group (group &optional (stream *nst-output-stream*)
-			   (*nst-local-verbosity* (get-verbosity-level)))
+(defun report-group (group
+		     &optional
+		     (stream *nst-output-stream*)
+		     (*nst-local-verbosity* *nst-report-default-verbosity*))
   "Top-level function for reporting the results of a group."
   (let ((*nst-report-driver* :group))
     (format stream "~w" (group-report group))))
 
-(defun report-test (group test &optional (stream *nst-output-stream*)
-			       (*nst-local-verbosity* (get-verbosity-level)))
+(defun report-test (group
+		    test &optional
+		    (stream *nst-output-stream*)
+		    (*nst-local-verbosity* *nst-report-default-verbosity*))
   "Top-level function for reporting the results of a test."
   (let ((*nst-report-driver* :test))
     (format stream "~w" (test-report group test))))
 
 (defun report-multiple (packages groups tests &key
 				 (stream *nst-output-stream*)
-				 (verbosity (get-verbosity-level))
+				 (verbosity *nst-report-default-verbosity*)
+				 (system nil system-supp-p))
+  (let ((report (apply #'multiple-report
+		       packages groups tests
+		       (cond
+			 (system-supp-p `(:system ,system))
+			 (t nil))))
+	(*nst-local-verbosity* verbosity))
+    (declare (special *nst-local-verbosity*))
+    (format stream "~w" report)))
+
+#|
+;;; This function has been broken up into the report-multiple above,
+;;; and the multi-report struct and function.  Keeping around for just
+;;; alittle while for looting code snippets.
+
+(defun report-multiple (packages groups tests &key
+				 (stream *nst-output-stream*)
+				 (verbosity *nst-report-default-verbosity*)
 				 (system nil system-supp-p))
   (let ((*nst-local-verbosity* verbosity))
     (declare (special *nst-local-verbosity*))
@@ -366,3 +474,4 @@ six-value summary of the results:
 	(format stream
 	    "TOTAL: ~d of ~d passed (~d failed, ~d error~p, ~d warning~p)~%"
 	  passed total failed erred erred warned warned)))))
+|#

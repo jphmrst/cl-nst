@@ -41,7 +41,7 @@
     (with-slots (next-firsts prev-firsts) (car perm-stack)
       (append next-firsts prev-firsts))))
 
-(defmethod initialize-instance ((p permuter) &key src)
+(defmethod initialize-instance :after ((p permuter) &key src &allow-other-keys)
   (with-slots (next-permutation perm-stack has-next degenerate) p
     (setf  next-permutation nil  perm-stack nil  has-next t
 	   degenerate (null src)))

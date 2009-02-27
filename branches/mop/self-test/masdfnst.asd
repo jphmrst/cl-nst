@@ -1,3 +1,4 @@
+
 ;;; File msadfnst.asd
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
@@ -34,12 +35,12 @@
 
     ;; :nst-packages (:asdf-nst-test :asdf-nst-test2)
 
-    ;; :nst-packages (:asdf-nst-test)
-    ;; :nst-groups ((:asdf-nst-test2 . :g1a))
+    :nst-packages (:asdf-nst-test)
+    :nst-groups ((:asdf-nst-test2 . :g1a))
     
-    :nst-groups ((:asdf-nst-test2 . :g1))
-    :nst-tests ((:asdf-nst-test2 :g1a :fix0)
-		(:asdf-nst-test :core-checks :warn-1))
+    ;; :nst-groups ((:asdf-nst-test2 . :g1))
+    ;; :nst-tests ((:asdf-nst-test2 :g1a :fix0)
+    ;;		   (:asdf-nst-test :core-checks :warn-1))
     
     :components ((:module "asdf" :components
 			  ;; A simple test suite
