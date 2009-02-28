@@ -2,7 +2,8 @@
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
-;;; Copyright (c) 2006, 2007, 2008 Smart Information Flow Technologies.
+;;; Copyright (c) 2006-2009 Smart Information Flow Technologies.
+;;; Written by John Maraist.
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
 ;;; NST is free software: you can redistribute it and/or modify it
@@ -25,91 +26,59 @@
 ;;; ----------------------------------------------------------------------
 
 ;;;
-;;; Base classes.
+;;;  Base classes.
 ;;;
-
 (defclass group-base-class () ()
   (:documentation "Base class of group behavior."))
 
 (defclass standalone-test-base-class () ()
   (:documentation "Base class of standalone test execution behavior."))
-
+
 ;;;
-;;; Options for output in the interactive system.
+;;;  Flags and dynamic variable declarations.
 ;;;
-
-(defmacro def-flag (flag-name flag-value implying-flags
-			      &key (documentation nil doc-sup-p)
-			      runtime-macro function-name)
-  `(progn
-     (defparameter ,flag-name ,flag-value
-       ,(when doc-sup-p documentation))
-     ,(when function-name
-	`(defun ,function-name () (or ,flag-name ,@implying-flags)))
-     (eval-when (:compile-toplevel :load-toplevel :execute)
-       ,(when runtime-macro
-	  `(defmacro ,runtime-macro (&rest forms)
-	     (let ((name-echo ',flag-name)
-		   (flags-echo ',implying-flags))
-	       `(when (or ,name-echo ,@flags-echo) ,@forms)))))
-     t))
-
-(def-flag *debug-forms-manip* nil ()
-	  :runtime-macro forms-dbg
-	  :documentation "Set to t to generate debugging information \
-                          about certain macro expansions")
-(def-flag *debug-fixtures* nil ()
-	  :runtime-macro fixture-dbg
-	  :documentation
-	  "Set to t to generate debugging information about fixtures")
-(def-flag *debug-class-hierarchy* nil ()
-	  :runtime-macro class-dbg
-	  :documentation "Set to t to generate debugging information about the \
-                          class hierarchy of tests and groups")
-(def-flag *debug-macrotime* nil
-  (*debug-class-hierarchy* *debug-fixtures* *debug-forms-manip*)
-	  :runtime-macro macro-dbg
-	  :documentation
-	  "Set to t for extensive macro expansion debugging output")
-(def-flag *debug-compile* nil (*debug-forms-manip* *debug-fixtures*)
-	  :runtime-macro compile-dbg
-	  :documentation
-	  "Set to t for extensive debugging output for expanded macros")
-(def-flag *debug-bindings* nil (*debug-fixtures*)
-	  :runtime-macro bind-dbg
-	  :documentation "Set to t to generate debugging information \
-                          about fixture bindings in tests and groups")
-(def-flag *debug-output* nil (*debug-class-hierarchy* *debug-bindings*)
-	  :runtime-macro run-dbg
-	  :documentation "Set to t for extensive runtime debugging output")
-(def-flag *verbose-output* nil (*debug-output*)
-	  :function-name use-verbose-output
-	  :runtime-macro verbose-out
-	  :documentation "Set to t for verbose output during test execution. \
-                          This setting is implied by *debug-output*.")
-
-(def-flag *scheduled-summary-output* t ()
-	  :documentation "Set to t for summaries of runs of scheduled tests.")
-(def-flag *scheduled-single-output* nil ()
-	  :documentation
-	  "Set to t for summaries of single test, group or package runs.")
-(def-flag *defer-test-compile* t ()
-	  :documentation
-	  "Set to t to defer compilation of test forms until runtime.")
-
 (defvar *nst-verbosity* :quiet
-  ":quiet, :default, :verbose, :vverbose")
-(defvar *nst-local-verbosity* :default)
-(defvar *nst-report-default-verbosity* :verbose)
-(defvar *nst-output-stream* *standard-output*)
+  "User variable determining how verbose NST's output to the REPL should be.  Recognized values in rough order from most terse to most verbose are: nil, :quiet, :default, t, :verbose, :vverbose (:quiet by default).")
 
-(defvar *debug-on-error* nil)
+(defvar *nst-local-verbosity* :default
+  "Global dynamic variable used to set the level of verbosity during report printing.")
+
+(defvar *nst-report-default-verbosity* :verbose
+  "User variable determining the default value for *nst-local-verbosity*, which sets the level of verbosity during report printing (:verbose by default).")
+
+(defvar *nst-output-stream* *standard-output*
+  "User variable determining the output stream to which NST should print its output (*standard-output* by default).")
+
+(defvar *debug-on-error* nil
+  "User variable: if non-null, will break into the Lisp REPL debugger upon encountering an unexpected error.  If t, will record the error and continue with other tests.")
+
+(defparameter *nst-info-shows-expected* nil
+  "Debugging-oriented user flag: when tracing NST structures, print expected 
+values as hardcoded by the macros, rather than recalled via the generic
+functions whose methods the macros define.")
+
+(defparameter *nst-check-name* nil
+  "Dynamic variable used to set the name of a test in its result report.")
+
+;;;
+;;; Internal tables.
+;;;
+(defvar +package-groups+ (make-hash-table :test 'eq)
+  "Map from packages to the test grups declared in each package.")
 
 ;;;
 ;;; Generic functions whose methods are defined by the various macros.
 ;;;
+(defmacro add-class-name-static-method (fn)
+  `(defmethod ,fn ((g symbol)) (,fn (find-class g))))
 
-;; Properties of groups.
+(defmacro add-class-name-instantiator-method (fn)
+  `(defmethod ,fn ((g symbol)) (,fn (make-instance g))))
+
+;; Properties of groups.  Many of these function have methods on
+;; symbols (presumably class names) that either relay to class
+;; methods, or re-dispatch after instantiating an object of the named
+;; class.
 
 (defgeneric group-name (group-instance)
   (:documentation "Map from a group instance back to its symbolic name."))
@@ -117,16 +86,19 @@
 (defgeneric test-names (fixture-or-group)
   (:documentation "The names of tests in a group.  Will be given an eql-method
 by the macros which expand tests and groups."))
+(add-class-name-instantiator-method test-names)
 
 (defgeneric group-class-name (group-name)
   (:documentation
    "Map from groups to the private name with which NST associates the class of
 group-specific activities.")
   (:method (default) (declare (ignorable default)) nil))
+(add-class-name-static-method group-class-name)
 
 (defgeneric group-fixture-classes (group-name)
   (:documentation
    "Map from groups to the private names of the group's fixtures."))
+(add-class-name-static-method group-fixture-classes)
 
 (defgeneric test-in-group-class-name (group-name)
   (:documentation
@@ -134,22 +106,27 @@ group-specific activities.")
 which every test in the group is associated for testing the whole group of
 tests.")
   (:method (default) (declare (ignorable default)) nil))
+(add-class-name-static-method test-in-group-class-name)
 
 (defgeneric standalone-test-in-group-class-name (group-name)
   (:documentation
    "Map from groups to the private name with which NST associates a class with
 which every test in the group is associated for a standalone test.")
   (:method (default) (declare (ignorable default)) nil))
+(add-class-name-static-method standalone-test-in-group-class-name)
+
+(defgeneric test-fixture-classes (name))
+(add-class-name-static-method test-fixture-classes)
+
+(defgeneric package-groups (package-or-symbol))
+(defmethod package-groups ((s symbol))
+  (package-groups (find-package s)))
+(defmethod package-groups ((p package))
+  (let ((group-hash (gethash p +package-groups+)))
+    (when group-hash
+      (loop for g being the hash-keys of group-hash collect g))))
 
 ;; Information by Lisp package.
-
-;;;(defgeneric groups-package (public-package)
-;;;  (:documentation
-;;;   "Map from packages to the private package NST associates with each for
-;;;housing the names of the groups in each package.")
-;;;  (:method (default) (declare (ignorable default)) nil))
-
-;; Properties of checks.
 
 (defgeneric check-name (check-instance)
   (:documentation "Map from a check instance back to its symbolic name."))
@@ -175,30 +152,39 @@ of a group.")
 
 (defgeneric canonical-storage-name (test-name)
   (:documentation
-   "Map from various test names and instances to the private name against which NST
-associates test results."))
+   "Map from various test names and instances to the private name against which
+NST associates test results."))
 
 ;; Fixture properties and operations.
 
 (defgeneric bound-names (fixture-or-group)
   (:documentation "The names defined by each fixture.  Will be given
 an eql-method by the macros which expand tests and groups."))
+(add-class-name-static-method bound-names)
 
 (defgeneric group-fixture-class-name (fixture-name)
   (:documentation
    "Map from fixture names to the private name with which NST associates the
 corresponding internal name-binding NST class for adding fixtures to a group.")
   (:method (default) (declare (ignorable default)) nil))
+(add-class-name-static-method group-fixture-class-name)
 
 (defgeneric test-fixture-class-name (fixture-name)
   (:documentation
    "Map from fixture names to the private name with which NST associates the
 corresponding internal name-binding NST class for adding fixtures to a test.")
   (:method (default) (declare (ignorable default)) nil))
+(add-class-name-static-method test-fixture-class-name)
 
 (defgeneric open-fixture (fixture-name &optional package)
   (:documentation
-   "Inject the names defined by the named fixture into the current package."))
+   "Inject the names defined by the named fixture into the given package, by
+default the current package."))
+(defmethod open-fixture ((s symbol) &optional (in-package *package*))
+  (open-fixture (make-instance s) in-package))
+
+(defgeneric anon-fixture-forms (forms))
+(add-class-name-static-method anon-fixture-forms)
 
 ;; Diagnostic information display.
 
@@ -224,17 +210,19 @@ corresponding internal name-binding NST class for adding fixtures to a test.")
 (defgeneric trace-fixture (fx)
   (:documentation "Provide debugging information about a fixture.")
   (:method (fx) (format t "No known fixture ~s~%" fx)))
+(add-class-name-instantiator-method trace-fixture)
 
 (defgeneric trace-group (gr)
   (:documentation "Provide debugging information about a group.")
   (:method (gr) (format t "No known group ~s~%" gr)))
+(add-class-name-instantiator-method trace-group)
 
 (defgeneric trace-test (gr ts)
   (:documentation "Provide debugging information about a test.")
   (:method (gr ts) (format t "No known test ~s in group ~s~%" ts gr)))
 
 (defun trace-results ()
-  "Dump the results hash."
+  "Internal debugging function: dump the results hash."
   (loop for ts being the hash-keys of +results-record+ using (hash-value rs) do
     (format t "~s -> ~s~%" ts rs)))
 
@@ -270,10 +258,6 @@ corresponding internal name-binding NST class for adding fixtures to a test.")
 ;;; More generic functions whose methods are defined by the various
 ;;; macros.
 ;;;
-
-(defparameter *nst-info-shows-expected* nil)
-
-(defparameter *nst-check-name* nil)
 
 ;; Internal test execution functions.
 
@@ -335,37 +319,43 @@ encoded as :before and :after methods.")
   "Run all groups in a package."
   (let* ((user-package (find-package package-or-name))
 	 (group-names (package-groups user-package)))
+
+    ;; Print a message at the appropriate level of verbosity.
     (case *nst-verbosity*
       ((:default t :verbose :vverbose)
        (format t "~@<Running package ~s (groups ~{~s~^ ~:_~})~:>~%" 
 	 (package-name user-package) group-names)))
+    
     (cond
-     (group-names
-      (loop for group-name in group-names do
-	(run-group group-name)))
-     (t
-      (error 'no-nst-groups-in-package :package package-or-name)))))
+      (group-names
+       (loop for group-name in group-names do (run-group group-name)))
+      (t
+       (error 'no-nst-groups-in-package :package package-or-name)))))
 
 (defun run-group (group)
   "Run a group by its user-given name."
   (let ((group-class (group-class-name group)))
+
+    ;; Print a message at the appropriate level of verbosity.
     (case *nst-verbosity*
       ((:default t :verbose)
        (format t "Running group ~s~%" group))
       ((:vverbose)
        (format t "Running group ~s --> ~s~%" group group-class)))
-    (unless group-class
-      (error 'no-such-nst-group :group group))
+    
+    (unless group-class (error 'no-such-nst-group :group group))
     (core-run (make-instance group-class))))
 
 (defun run-test (group test)
   "Run a test standalone by its user-given name (and its group's name)."
   (let ((test-class (standalone-class-name group test)))
+
+    ;; Print a message at the appropriate level of verbosity.
     (case *nst-verbosity*
       ((:default t :verbose :vverbose)
        (format t "Running test ~s (group ~s)~%" test group)))
-    (unless test-class
-      (error 'no-such-nst-test :group group :test test))
+    
+    (unless test-class (error 'no-such-nst-test :group group :test test))
     (core-run (make-instance test-class))))
 
 
@@ -403,22 +393,26 @@ encoded as :before and :after methods.")
     (expt 10 (- xlog-up (- n 1)))))
 
 (defun eql-for-sigdigits (digits n1 n2)
-  (and (numberp n1)
-       (numberp n2)
+  "Test whether two numbers are eql to the given number of significant digits."
+  (and (numberp n1) (numberp n2)
        (let ((rounder (sig-place digits n1)))
 	 (eql (round n1 rounder) (round n2 rounder)))))
 
 ;; Operations on lambda lists, for processing test specs.
 
-(defun lambda-list-names (lambda-list)
+(defun lambda-list-names (lambda-list supp-p)
+  "Pick out the names from a lambda-list, omitting the ampersand-prefixed
+delimiters."
   (let ((generic-list (extract-lambda-list lambda-list))
 	(result))
     (labels ((descend (list)
 	        (unless (null list)
 		  (let ((item (car list)))
 		    (cond 
-		     ((listp item)
-		      (descend item))
+		      ((listp item)
+		       (cond
+			 (supp-p (descend item))
+			 (t (push (car item) result))))
 		     ((symbolp item)
 		      (unless (member item
 				      #+allegro '(&allow-other-keys &aux

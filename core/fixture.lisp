@@ -2,7 +2,8 @@
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
-;;; Copyright (c) 2006, 2007, 2008 Smart Information Flow Technologies.
+;;; Copyright (c) 2006-2009 Smart Information Flow Technologies.
+;;; Written by John Maraist.
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
 ;;; NST is free software: you can redistribute it and/or modify it
@@ -26,22 +27,7 @@
 			       :reader test-fixture-class-name)
       (group-fixture-class-name :initarg :group-fixture-class-name
 				:reader group-fixture-class-name)))
-
 (defmethod validate-superclass ((sub fixture-metaclass) (sup standard-class)) t)
-
-(defmethod bound-names ((s symbol))
-  (bound-names (find-class s)))
-(defmethod test-fixture-class-name ((s symbol))
-  (test-fixture-class-name (find-class s)))
-(defmethod group-fixture-class-name ((s symbol))
-  (group-fixture-class-name (find-class s)))
-(defmethod open-fixture ((s symbol) &optional (in-package *package*))
-  (open-fixture (make-instance s) in-package))
-(defmethod trace-fixture ((f symbol))
-  (trace-fixture (make-instance f)))
-
-(defpackage :nst-fixture-group-class-names)
-(defpackage :nst-fixture-test-class-names)
 
 #+allegro (excl::define-simple-parser def-fixtures second :nst-fixture-set)
 (defmacro def-fixtures (name
@@ -184,4 +170,3 @@ use of this fixture.
     (values (nreverse group-fixture-class-names)
 	    (nreverse test-fixture-class-names)
 	    (nreverse anonymous-fixture-forms))))
-

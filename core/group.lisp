@@ -2,7 +2,8 @@
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
-;;; Copyright (c) 2006, 2007, 2008 Smart Information Flow Technologies.
+;;; Copyright (c) 2006-2009 Smart Information Flow Technologies.
+;;; Written by John Maraist.
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
 ;;; NST is free software: you can redistribute it and/or modify it
@@ -20,11 +21,9 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
-
 ;;;
 ;;; Helper functions for the macros.
 ;;;
-
 (defun pull-test-name-list (form)
   (unless (listp form) (return-from pull-test-name-list nil))
   (case (car form)
@@ -60,39 +59,11 @@
 				:reader test-in-group-class-name)
       (standalone-test-in-group-class-name
        :initarg :standalone-test-in-group-class-name
-       :reader standalone-test-in-group-class-name)))
+       :reader standalone-test-in-group-class-name))
+  (:documentation "Metaclass from which we make the classes corresponding to
+test groups."))
+
 (defmethod validate-superclass ((sub group-metaclass) (sup standard-class)) t)
-
-(defmethod group-fixture-classes ((g symbol))
-  (group-fixture-classes (find-class g)))
-(defmethod test-fixture-classes ((g symbol))
-  (test-fixture-classes (find-class g)))
-(defmethod anon-fixture-forms ((g symbol))
-  (anon-fixture-forms (find-class g)))
-(defmethod group-class-name ((s symbol))
-  (group-class-name (find-class s)))
-(defmethod test-in-group-class-name ((s symbol))
-  (test-in-group-class-name (find-class s)))
-(defmethod standalone-test-in-group-class-name ((s symbol))
-  (standalone-test-in-group-class-name (find-class s)))
-(defmethod test-names ((s symbol))
-  (test-names (make-instance s)))
-(defmethod trace-group ((s symbol))
-  (trace-group (make-instance s)))
-
-(defvar +package-groups+ (make-hash-table :test 'eq))
-(defgeneric package-groups (package-or-symbol))
-(defmethod package-groups ((s symbol))
-  (package-groups (find-package s)))
-(defmethod package-groups ((p package))
-  (let ((group-hash (gethash p +package-groups+)))
-    (when group-hash
-      (loop for g being the hash-keys of group-hash collect g))))
-
-(defpackage :group-info-package)
-(defpackage :group-class-name-package)
-(defpackage :test-in-group-class-name-package)
-(defpackage :standalone-test-in-group-class-name-package)
 
 #+allegro (excl::define-simple-parser def-test-group second :nst-group)
 (defmacro def-test-group (group-name given-fixtures &body forms)
@@ -118,9 +89,13 @@ forms - zero or more test forms, given by def-check or def-test."
 				      each-setup each-setup-supp-p
 				      each-cleanup each-cleanup-supp-p)
 	(separate-group-subforms forms)
+      
       (let* ((base-rename (concatenate 'string
 			    (package-name (symbol-package group-name))
 			    "///" (symbol-name group-name)))
+					; The base name that we'll use
+					; for parallel names in our
+					; internal packages.
 
 	     ;; Old variable names
 	     (group-class-name (intern base-rename :group-class-name-package))
@@ -136,19 +111,11 @@ forms - zero or more test forms, given by def-check or def-test."
 	     ;; Whether we have a map into a new groups-package.
 	     (group-pkg-name (concatenate 'string
 			       "nst-group-pkg///" base-rename))
-	     (group-pkg (find-package (intern group-pkg-name)))
-;;;	     (new-group-pkg (null group-pkg))
-;;;	     (new-group-pkg-cand-name (gentemp (package-name group-orig-pkg)))
 	    
 	     ;; Separate access to the names of the tests.
 	     (test-names (loop for form in check-forms
-			     append (pull-test-name-list form)))
-	     
-	     )
+			     append (pull-test-name-list form))))
 	
-	(unless group-pkg
-	  (setf group-pkg (make-package group-pkg-name)))
-
 	(multiple-value-bind (group-fixture-classes test-fixture-classes
 						    anon-fixture-forms)
 	    (process-fixture-list given-fixtures)
@@ -174,8 +141,13 @@ forms - zero or more test forms, given by def-check or def-test."
 	       (let ((*the-group* ',group-name))
 		 (declare (special *the-group*))
 
+		 (eval-when (:compile-toplevel :load-toplevel :execute)
+		   (unless (find-package ,group-pkg-name)
+		     (make-package ,group-pkg-name)))
+		 
 		 (eval-when (:load-toplevel :execute)
-		   (let* ((package-hash (gethash ,group-orig-pkg +package-groups+)))
+		   (let* ((package-hash (gethash ,group-orig-pkg
+						 +package-groups+)))
 		     (unless package-hash
 		       (setf package-hash (make-hash-table :test 'eq)
 			     (gethash ,group-orig-pkg
@@ -188,20 +160,15 @@ forms - zero or more test forms, given by def-check or def-test."
 			   (:test-fixture-classes . ,test-fixture-classes)
 			   (:anon-fixture-forms . ,anon-fixture-forms)
 			   (:group-class-name . ,group-class-name)
-			   (:test-in-group-class-name . ,test-in-group-class-name)
+			   (:test-in-group-class-name
+			    . ,test-in-group-class-name)
 			   (:standalone-test-in-group-class-name
 			    . ,standalone-test-in-group-class-name))
-
-;;;	     (unless (groups-package
-;;;		      (find-package (symbol-package ',group-name)))
-;;;	       (let ((pkg (find-package ',new-group-pkg-cand-name)))
-;;;		 (unless pkg (make-package pkg))
-;;;		 (defmethod groups-package ((p (eql ,group-orig-pkg)))
-;;;		   (find-package ',new-group-pkg-cand-name))))
 	     
 		 ;; Record the group name in the package used for
 		 ;; recording them.
-		 (intern (symbol-name ',group-name) ,group-pkg) 
+		 (intern (symbol-name ',group-name)
+			 (find-package ,group-pkg-name)) 
 
 		 (eval-when (:compile-toplevel :load-toplevel :execute)
 		   (defclass ,group-class-name
@@ -234,12 +201,13 @@ forms - zero or more test forms, given by def-check or def-test."
 		     ,cleanup))
 
 		 (when ,each-setup-supp-p
-		   (defmethod core-run-test :before ((obj
-						      ,test-in-group-class-name))
+		   (defmethod core-run-test
+		       :before ((obj ,test-in-group-class-name))
 		     ,each-setup))
 	       
 		 (when ,each-cleanup-supp-p
-		   (defmethod core-run-test :after ((obj ,test-in-group-class-name))
+		   (defmethod core-run-test
+		       :after ((obj ,test-in-group-class-name))
 		     ,each-cleanup))
 
 		 (defmethod test-names ((group ,group-class-name)) ',test-names)
@@ -286,14 +254,12 @@ forms - zero or more test forms, given by def-check or def-test."
                                    ~:[~*~;~:@_expected: ~s~]~:>~
                       ~:@_extends ~@<~s ~:_~s~:>~:>~%"
 		       standalone-class-actual
-		       *nst-info-shows-expected* ',standalone-test-in-group-class-name
-		       ',test-in-group-class-name ',group-class-name)
-		     ))
+		       *nst-info-shows-expected*
+		       ',standalone-test-in-group-class-name
+		       ',test-in-group-class-name ',group-class-name)))
 
 		 (eval-when (:load-toplevel :execute)
-		   ,@expanded-check-forms
-;;;		 ,@check-forms
-		   )
+		   ,@expanded-check-forms)
 
 		 ',group-name))))))))
 
