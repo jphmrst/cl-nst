@@ -248,6 +248,9 @@ when def-check-alias is macroexpanded."
 	   ,@(when declaration-form-supp-p `(,declaration-form))
 	   (let ((,exp ,expansion))	   
 	     (build-check-form (car ,exp) (cdr ,exp) ,forms)))))))
+
+(defvar +storage-name-to-test-package+
+    (make-hash-table :test 'eq))
 
 (defclass test-metaclass (standard-class)
      ((suite-class-name-by-class :initarg :suite-class-name-by-class
@@ -263,6 +266,9 @@ when def-check-alias is macroexpanded."
        :reader test-in-group-class-name-by-class)))
 (defmethod validate-superclass ((sub test-metaclass) (sup standard-class)) t)
 
+(defmethod canonical-storage-name ((s symbol))
+  (canonical-storage-name (make-instance s)))
+
 (defpackage :nst-suite-class-names)
 (defpackage :nst-standalone-class-names)
 (defpackage :nst-test-config-class-names)
@@ -277,7 +283,7 @@ when def-check-alias is macroexpanded."
   ;; Decode the name-or-name-and-args, pulling out the individual
   ;; components, and indicating which are given in this test.
   (multiple-value-bind (name setup setup-supp-p cleanup cleanup-supp-p
-			fixtures fixtures-supp-p)
+			     fixtures fixtures-supp-p)
       (decode-defcheck-name-and-args name-or-name-and-args)
     (declare (ignorable fixtures-supp-p))
 
@@ -411,13 +417,11 @@ when def-check-alias is macroexpanded."
 		 ',suite-class-name)
 	       (defmethod canonical-storage-name ((inst ,standalone-class-name))
 		 ',suite-class-name)
-	       (defmethod canonical-storage-name
-		   ((inst (eql ',suite-class-name)))
-		 ',suite-class-name)
-	       (defmethod canonical-storage-name
-		   ((inst (eql ',standalone-class-name)))
-		 ',suite-class-name)
-	     
+	       (setf (gethash ',standalone-class-name
+			      +storage-name-to-test-package+)
+		     ',(intern (package-name (symbol-package name))
+			       (find-package :keyword)))
+	       
 	       ;; Clear any previous stored results, since we've just
 	       ;; (re-)defined this check.
 	       (when (boundp '+results-record+)

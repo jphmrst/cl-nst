@@ -24,7 +24,7 @@
 
 (def-value-check (:pass () (&rest chk))
   ;; `(declare (ignorable chk))
-  `(make-check-result))
+  `(check-result))
 
 (def-value-check (:fail (&rest args) (&rest chk))
   ;; `(declare (ignorable chk))
@@ -36,29 +36,29 @@
 
 (def-value-check (:true () (bool))
   `(if bool
-     (make-check-result)
+     (check-result)
      (emit-failure :format "Form not t: ~s" :args (list bool))))
 
 (def-value-check (:eq (eq-form) (check-form))
   `(if (eq ,eq-form check-form)
-     (make-check-result)
+     (check-result)
      (emit-failure :format "Not eq to ~s" :args '(,eq-form))))
 
 (def-check-alias (:symbol name) `(:eq ',name))
 
 (def-value-check (:eql (eql-form) (check-form))
   `(if (eql ,eql-form check-form)
-     (make-check-result)
+     (check-result)
      (emit-failure :format "Not eql to ~s" :args '(,eql-form))))
 
 (def-value-check (:equal (eql-form) (check-form))
   `(if (equal ,eql-form check-form)
-     (make-check-result)
+     (check-result)
      (emit-failure :format "Not equal to ~s" :args '(,eql-form))))
 
 (def-value-check (:equalp (eql-form) (check-form))
   `(if (equalp ,eql-form check-form)
-     (make-check-result)
+     (check-result)
      (emit-failure :format "Not equalp to ~s" :args '(,eql-form))))
 
 (def-check-alias (:forms-eq)    `(:predicate eq))
@@ -68,7 +68,7 @@
 
 (def-value-check (:predicate (pred) (&rest forms))
   `(if (apply #',pred forms)
-     (make-check-result)
+     (check-result)
      (emit-failure :format "Predicate ~s fails" :args '(,pred))))
 
 
@@ -82,7 +82,7 @@
     `(block ,x
        (handler-bind ((error #'(lambda (,x)
 				 (declare (ignorable ,x))
-				 (return-from ,x (make-check-result)))))
+				 (return-from ,x (check-result)))))
 	 ,expr-form)
        (emit-failure :format "~@<No expected error:~{~_ ~s~}~:>"
 		     :args '(,(cond
@@ -112,7 +112,7 @@
 		       start-time))))
 	   (declare (ignorable result))
 	   (if (> ,ms elapsed-ms)
-	     (make-check-result)
+	     (check-result)
 	     (emit-failure
 	      :format "Execution time ~dms exceeded allowed time ~dms"
 	      :args '(elapsed-ms ,ms))))))
@@ -128,7 +128,7 @@
 	((check-result-errors ,subcheck)
 	 ,subcheck)
 	((check-result-failures ,subcheck)
-	 (make-check-result :info (check-result-info ,subcheck)))
+	 (check-result :info (check-result-info ,subcheck)))
 	(t
 	 (emit-failure :format "Expected failure from ~s"
 		       :args '(,subcriterion)))))))
@@ -141,7 +141,7 @@
     (labels ((test-next (args) 
 	       (cond
 		((null args)
-		 `(make-check-result :warnings ,warnings
+		 `(check-result :warnings ,warnings
 				     :failures ,failures
 				     :errors ,errors :info ,info))
 		(t
@@ -163,7 +163,7 @@
 				 (check-result-info ,subcheck)))
 			(cond
 			  ((or ,failures ,errors)
-			   (make-check-result :warnings ,warnings
+			   (check-result :warnings ,warnings
 					      :failures ,failures
 					      :errors ,errors
 					      :info ,info))
@@ -190,7 +190,7 @@
 		       (setf ,info (append ,info ,rf ,ri)))
 		      (t
 		       (return-from ,block
-			 (make-check-result
+			 (check-result
 			  :info (nconc ,info
 				       (check-result-info ,result))))))))
 	 (emit-failure :format "No disjuncts succeeded:~{~_ ~s~}"
@@ -209,7 +209,7 @@
     `(block ,x
        (handler-bind ((error #'(lambda (,x)
 				 (declare (ignorable ,x))
-				 (return-from ,x (make-check-result)))))
+				 (return-from ,x (check-result)))))
 	 ,(continue-check criterion forms))
        (emit-failure :format "~@<No expected error for check ~s on:~
                                  ~{~_ ~s~}~:>"
@@ -259,7 +259,7 @@
 		       ,warnings
 		       (append ,warnings
 			       (check-result-warnings ,result))))))))
-	 (make-check-result :info ,info :warnings ,warnings)))))
+	 (check-result :info ,info :warnings ,warnings)))))
 
 
 
@@ -295,7 +295,7 @@
 			      (append
 			       ,warnings
 			       (check-result-warnings ,result))))))))
-	 (make-check-result :info ,info :warnings ,warnings)))))
+	 (check-result :info ,info :warnings ,warnings)))))
 
 (def-control-check (:permute (criterion) forms)
   (let ((permute-block (gensym)) (list (gensym "list-"))
@@ -311,7 +311,7 @@
 		 ((and (null (check-result-errors ,result))
 		       (null (check-result-failures ,result)))
 		  (return-from ,permute-block
-		    (make-check-result)))))))))))
+		    (check-result)))))))))))
 
 
 (def-control-check (:across (&rest criteria) forms)
@@ -346,7 +346,7 @@
 			      (append
 			       ,warnings
 			       (check-result-warnings ,result))))))))
-	 (make-check-result :info ,info :warnings ,warnings)))))
+	 (check-result :info ,info :warnings ,warnings)))))
 
 
 (def-control-check (:slots (&rest clauses) forms)
@@ -383,4 +383,4 @@
 			      (append
 			       ,warnings
 			       (check-result-warnings ,result))))))))
-	 (make-check-result :info ,info :warnings ,warnings))))))
+	 (check-result :info ,info :warnings ,warnings))))))
