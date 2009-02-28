@@ -2,7 +2,8 @@
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
-;;; Copyright (c) 2006, 2007, 2008 Smart Information Flow Technologies.
+;;; Copyright (c) 2006-2009 Smart Information Flow Technologies.
+;;; Written by John Maraist.
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
 ;;; NST is free software: you can redistribute it and/or modify it
@@ -28,6 +29,7 @@
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :mnst)))
+
     :components ((:module "core" :components
 			  (;; The NST package, plus internal packages
 			   ;; and documentation generation.
@@ -58,7 +60,7 @@
 		 
 			   ;; Receiving and bookkeeping the results of
 			   ;; tests.
-			   (:file "status"   :depends-on ("globals"))
+			   (:file "status" :depends-on ("globals" "check"))
 		 
 			   ;; Interaction with NST via the REPL.
 			   (:file "command"
@@ -66,12 +68,4 @@
 		 
 			   ;; Generating JUnit-friendly XML.
 			   (:file "junit"
-				  :depends-on ("status"))
-
-;;;		 (:file "classes")
-;;;		 (:file "runners")
-;;;		 (:file "testforms")
-;;;		 (:file "defcheck")
-;;;		 (:file "format")
-
-			   ))))
+				  :depends-on ("status"))))))

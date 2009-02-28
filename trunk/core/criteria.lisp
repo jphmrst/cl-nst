@@ -2,7 +2,8 @@
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
-;;; Copyright (c) 2006, 2007, 2008 Smart Information Flow Technologies.
+;;; Copyright (c) 2006-2009 Smart Information Flow Technologies.
+;;; Written by John Maraist.
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
 ;;; NST is free software: you can redistribute it and/or modify it
@@ -22,15 +23,13 @@
 
 ;;; Built-in basic testing criteria.
 
-(def-value-check (:pass () (&rest chk))
-  ;; `(declare (ignorable chk))
+(def-value-check (:pass () (&rest chk) :declare ((ignorable chk)))
   `(check-result))
 
-(def-value-check (:fail (&rest args) (&rest chk))
-  ;; `(declare (ignorable chk))
+(def-value-check (:fail (&rest args) (&rest chk) :declare ((ignorable chk)))
   `(emit-failure :format ,(car args) :args ,(cdr args)))
 
-(def-value-check (:warn (&rest args) (&rest chk))
+(def-value-check (:warn (&rest args) (&rest chk) :declare ((ignorable chk)))
   ;; `(declare (ignorable chk))
   `(emit-warning :format ,(car args) :args ,(cdr args)))
 

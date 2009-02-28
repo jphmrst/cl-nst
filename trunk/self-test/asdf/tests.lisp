@@ -3,6 +3,7 @@
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
 ;;; Copyright (c) 2006-2009 Smart Information Flow Technologies.
+;;; Written by John Maraist.
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
 ;;; NST is free software: you can redistribute it and/or modify it
@@ -53,8 +54,11 @@
   (def-check each1 (:each (:symbol a)) '(a a a a a))
   (def-check seq-1 (:seq (:symbol a) (:eql 2) (:eq 'b)) '(a 2 b))
   (def-check permute1 (:permute (:each (:eq 'a))) '(a a))
-  (def-check values-drop1 (:apply (lambda (x y) x) (:symbol a)) (values 'a 'b))
-  (def-check values-drop3 (:apply (lambda (x y z) y) (:symbol b))
+  (def-check values-drop1
+      (:apply (lambda (x y) (declare (ignorable y)) x) (:symbol a))
+    (values 'a 'b))
+  (def-check values-drop3
+      (:apply (lambda (x y z) (declare (ignorable x z)) y) (:symbol b))
     (values 'a 'b 'c))
   (def-check value-list1 (:value-list (:seq (:symbol a) (:eq 'b)))
     (values 'a 'b))

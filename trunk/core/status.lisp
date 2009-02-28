@@ -71,14 +71,17 @@ current criterion.")
 	(let ((reports
 	       (nconc (loop for report in packages
 			    collect (let ((*nst-report-driver* :package))
+				      (declare (special *nst-report-driver*))
 				      (format s "~w~%" report)
 				      report))
 		      (loop for report in groups
 			    collect (let ((*nst-report-driver* :group))
+				      (declare (special *nst-report-driver*))
 				      (format s "~w~%" report)
 				      report))
 		      (loop for report in tests
 			    collect (let ((*nst-report-driver* :test))
+				      (declare (special *nst-report-driver*))
 				      (format s "~w~%" report)
 				      report)))))
 	  (multiple-value-bind (code total passed erred failed warned)
@@ -321,8 +324,6 @@ six-value summary of the results:
 		(+ erred (if errors 1 0))
 		(+ failed (if failures 1 0))
 		(+ warned (if warnings 1 0))))))
-
-(defun mix-status (&rest stats))
 
 (defmacro count-nonnulls (&rest bools)
   (let ((b (gensym)))
