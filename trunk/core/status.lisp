@@ -35,14 +35,14 @@ current criterion.")
 (defun emit-warning (&key format args)
   "For use within user-defined check criteria: emit a warning."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
-  (make-check-result
+  (check-result
    :warnings (list (make-check-note :context *nst-context*
 				    :stack *nst-stack*
 				    :format format :args args))))
 (defun emit-failure (&key format args info)
   "For use within user-defined check criteria: explain a failure."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
-  (make-check-result
+  (check-result
    :failures (list (make-check-note :context *nst-context* :stack *nst-stack* 
 				    :format format :args args))
    :info info))
@@ -136,7 +136,7 @@ current criterion.")
 			   (pprint-newline :mandatory s)
 			   (format s " - ~w" cr))))))))))))
 
-(defstruct (check-result (:include result-stats))
+(defstruct (check-result (:include result-stats (tests 1)))
   "Overall check result structure, containing notes of four distinct types.  A
 note is an instance of the check-note structure below.  The four note types are:
  warnings - generated warnings
@@ -148,10 +148,8 @@ instances, and the info field is of any value."
   (check-name *nst-check-name*)
   (warnings nil) (failures nil) (errors nil) (info nil))
 
-(defmethod initialize-instance :after ((r check-result) &key &allow-other-keys)
-  (with-accessors ((test-count result-stats-tests)
-		   
-		   (passing-count result-stats-passing)
+(defun calibrate-check-result (r)
+  (with-accessors ((passing-count result-stats-passing)
 		   (erring-count result-stats-erring)
 		   (failing-count result-stats-failing)
 		   (warning-count result-stats-warning)
@@ -159,12 +157,15 @@ instances, and the info field is of any value."
 		   (warnings check-result-warnings)
 		   (failures check-result-failures)
 		   (errors check-result-errors)) r
-    (setf test-count 1)
     (cond
       (errors (setf erring-count 1))
       (failures (setf failing-count 1))
       (t (setf passing-count 1)))
-    (when warnings (setf warning-count 1))))
+    (when warnings (setf warning-count 1)))
+  r)
+
+(defun check-result (&rest args)
+  (calibrate-check-result (apply #'make-check-result args)))
 
 (defparameter *nst-report-driver* nil
   "Control parameter for building report structures.  Should not be reset from
@@ -368,11 +369,14 @@ six-value summary of the results:
 	    for report = (test-report group test)
 	    do
 	 (setf (gethash test checks) report)
-	 (incf (result-stats-tests result)   (result-stats-tests report))
-	 (incf (result-stats-passing result) (result-stats-passing report))
-	 (incf (result-stats-erring result)  (result-stats-erring report))
-	 (incf (result-stats-failing result) (result-stats-failing report))
-	 (incf (result-stats-warning result) (result-stats-warning report))))
+	 (cond
+	   (report
+	    (incf (result-stats-tests result)   (result-stats-tests report))
+	    (incf (result-stats-passing result) (result-stats-passing report))
+	    (incf (result-stats-erring result)  (result-stats-erring report))
+	    (incf (result-stats-failing result) (result-stats-failing report))
+	    (incf (result-stats-warning result) (result-stats-warning report)))
+	   (t (incf (result-stats-tests result))))))
     result))
 
 (defun test-report (group test)
@@ -388,6 +392,12 @@ six-value summary of the results:
 				     :group-reports group-reports
 				     :test-reports test-reports
 				     :system system)))
+    (finish-multiple-report result)))
+
+(defun finish-multiple-report (result)
+  (with-accessors ((package-reports multi-results-package-reports)
+		   (group-reports multi-results-group-reports)
+		   (test-reports multi-results-test-reports)) result
     (loop for report-set in (list package-reports group-reports test-reports) do
       (loop for report in report-set do
 	(incf (result-stats-tests result)   (result-stats-tests report))
@@ -396,6 +406,25 @@ six-value summary of the results:
 	(incf (result-stats-failing result) (result-stats-failing report))
 	(incf (result-stats-warning result) (result-stats-warning report))))
     result))
+
+(defun all-package-report ()
+  (let ((package-hash (make-hash-table :test 'eq)))
+    (loop for package-name being the hash-values
+	  of +storage-name-to-test-package+
+	  do
+       (setf (gethash package-name package-hash) t))
+    (multiple-report (loop for package-name being the hash-keys of package-hash
+			   collect (find-package package-name))
+		     nil nil)))
+
+(defun all-tests-report ()
+  (let ((test-reports (loop for test-report being the hash-values
+			    of +results-record+
+			    if test-report collect test-report)))
+    (finish-multiple-report (make-multi-results :package-reports nil
+						:group-reports nil
+						:test-reports test-reports
+						:system nil))))
 
 ;;;
 ;;; Printing functions
