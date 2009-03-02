@@ -88,7 +88,8 @@
 (defmacro def-nst-property (name variable &key (doc ""))
   `(progn
      (defmethod set-nst-property ((name (eql ,name)) value)
-       (setf ,variable value))
+       (setf ,variable value)
+       (format t "Set property ~a to ~s~%" ',variable value))
      (defmethod nst-repl-property-doc ((n (eql ,name)))
        ,doc)
      (unless (member ,name +nst-repl-properties+)

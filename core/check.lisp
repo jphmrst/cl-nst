@@ -104,6 +104,8 @@ subsequences of a current check definition.
 				 (full-format nil full-format-supp-p)
 				 (stack-transformer nil))
 			   &body expansion)
+  "Mechanism for defining a new check criterion."
+  
   (let* ((stream (gensym "stream")) (id (gensym "id"))
 	 (args (gensym "args")) (forms (gensym "forms"))
 	 (criterion-formals (lambda-list-names criterion-args t))
@@ -147,6 +149,8 @@ subsequences of a current check definition.
 				   (blurb-format nil blurb-format-supp-p)
 				   (full-format nil full-format-supp-p))
 			     &body check-forms)
+  "Mechanism for defining a new check criterion."
+  
   (let ((criterion-formals
 	 (lambda-list-names criterion-args #+sbcl nil #-sbcl t))
 	(stream (gensym "stream")) (id (gensym "id"))

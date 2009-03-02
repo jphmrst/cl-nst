@@ -29,9 +29,11 @@
   (:documentation "Print XML items corresponding to a test result.  The padding
 argument should be a string of just spaces."))
 
+#|
 (defmethod junit-xml-snippet ((item multi-results)
 			      &optional (s *standard-output*) (padding ""))
-  (with-accessors ((tests result-stats-tests)
+  (with-accessors ((elapsed-time result-stats-elapsed-time)
+		   (tests result-stats-tests)
 		   (errors result-stats-erring)
 		   (failures result-stats-failing)
 		   (system multi-results-system)
@@ -39,32 +41,37 @@ argument should be a string of just spaces."))
 		   (group-reports multi-results-group-reports)
 		   (test-reports multi-results-test-reports)) item
     (format s
-	"~a<testsuite errors=\"~d\" failures=\"~d\"~@[ name=~s~] tests=\"~d\">~%"
-      padding errors failures 
+	"~a<testsuite errors=\"~d\" failures=\"~d\"~@[ name=~s~] ~
+                      tests=\"~d\" time=~f>~%"
+      padding errors failures
       (when system
 	(cond
-	  ((slot-boundp system
-			'asdf::description) (slot-value system
-							'asdf::description))
-	 (t (slot-value system 'asdf::name))))
-      tests)
+	 ((slot-boundp system
+		       'asdf::description) (slot-value system
+		       'asdf::description))
+	 (t (symbol-to-junit-name (slot-value system 'asdf::name)))))
+      tests
+      (/ elapsed-time internal-time-units-per-second))
     (let ((new-padding (concatenate 'string "  " padding)))
       (loop for reports in (list package-reports group-reports test-reports) do
 	(loop for report in reports do
 	  (cond
-	    (report
-	     (junit-xml-snippet report s new-padding))))))
+	   (report
+	    (junit-xml-snippet report s new-padding))))))
     (format s "~a</testsuite>~%" padding)))
 
 (defmethod junit-xml-snippet ((item package-result)
 			      &optional (s *standard-output*) (padding ""))
-  (with-accessors ((tests result-stats-tests)
+  (with-accessors ((elapsed-time result-stats-elapsed-time)
+		   (tests result-stats-tests)
 		   (errors result-stats-erring)
 		   (failures result-stats-failing)
 		   (name package-result-package-name)) item
     (format s
-	"~a<testsuite errors=\"~d\" failures=\"~d\" name=~s tests=\"~d\">~%"
-      padding errors failures name tests)
+	"~a<testsuite errors=\"~d\" failures=\"~d\" name=~s ~
+                      tests=\"~d\" time=~f>~%"
+      padding errors failures (symbol-to-junit-name name)
+      tests (/ elapsed-time internal-time-units-per-second))
     (let ((new-padding (concatenate 'string "  " padding))
 	  (check-results (package-result-group-results item)))
       (loop for check-result being the hash-values of check-results do
@@ -75,13 +82,16 @@ argument should be a string of just spaces."))
 
 (defmethod junit-xml-snippet ((item group-result)
 			      &optional (s *standard-output*) (padding ""))
-  (with-accessors ((tests result-stats-tests)
+  (with-accessors ((elapsed-time result-stats-elapsed-time)
+		   (tests result-stats-tests)
 		   (errors result-stats-erring)
 		   (failures result-stats-failing)
 		   (name group-result-group-name)) item
     (format s
-	"~a<testsuite errors=\"~d\" failures=\"~d\" name=~s tests=\"~d\">~%"
-      padding errors failures name tests)
+	"~a<testsuite errors=\"~d\" failures=\"~d\" name=~s ~
+                      tests=\"~d\" time=~f>~%"
+      padding errors failures (symbol-to-junit-name name)
+      tests (/ elapsed-time internal-time-units-per-second))
     (let ((new-padding (concatenate 'string "  " padding))
 	  (test-results (group-result-check-results item)))
       (loop for test-result being the hash-values of test-results do
@@ -89,6 +99,7 @@ argument should be a string of just spaces."))
 	  (test-result
 	   (junit-xml-snippet test-result s new-padding)))))
     (format s "~a</testsuite>~%" padding)))
+|#
 
 (defmethod junit-xml-snippet ((item check-result)
 			      &optional (s *standard-output*) (padding ""))
@@ -96,21 +107,20 @@ argument should be a string of just spaces."))
 		   (warnings check-result-warnings)
 		   (failures check-result-failures)
 		   (errors check-result-errors)
-		   (info check-result-info)) item
+		   (info check-result-info)
+		   (elapsed-time check-result-elapsed-time)) item
+    (format s "~a<testcase classname=~s time=~f"
+      padding (symbol-to-junit-name check-name)
+      (/ elapsed-time internal-time-units-per-second))
     (cond
       (errors
-       (format s "~a<testcase classname=\"~a\" name=\"~s\">~%"
-	 padding check-name check-name)
-       (format s "~a  <error message=\"ERROR\"/>~%" padding)
+       (format s ">~%~a  <error message=\"ERROR\"/>~%" padding)
        (format s "~a</testcase>~%" padding))
       (failures
-       (format s "~a<testcase classname=\"~a\" name=\"~s\">~%"
-	 padding check-name check-name)
-       (format s "~a  <failure type=\"FAILURE\"/>~%" padding)
+       (format s ">~%~a  <failure type=\"FAILURE\"/>~%" padding)
        (format s "~a</testcase>~%" padding))
       (t
-       (format s "~a<testcase classname=\"~a\" name=\"~s\" />~%"
-	 padding check-name check-name)))))
+       (format s " />~%")))))
 
 (defun nst-xml-dump (stream)
   (nst-junit-dump stream))
@@ -119,6 +129,9 @@ argument should be a string of just spaces."))
   (let ((report (all-tests-report)))
     (format stream "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>~%")
     (junit-xml-snippet report stream)))
+
+(defun symbol-to-junit-name (symbol)
+  (format nil "lisp.~a.~a" (package-name (symbol-package symbol)) (symbol-name symbol)))
 
 #|
 (defun nst-xml-dump (stream)

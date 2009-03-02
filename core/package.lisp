@@ -35,25 +35,28 @@
 		  #:generic-function-methods #:method-specializers
 		  #:eql-specializer-object)
     (:export #:def-fixtures
-	     #:def-capture/restore-fixtures
-	     #:def-group
 	     #:def-test-group
-	     #:def-test
 	     #:def-check
+
 	     #:def-check-alias
 	     #:def-value-check
-	     #:def-value-check
 	     #:def-control-check
+
 	     #:continue-check
 	     #:emit-failure
 	     #:emit-warning
-
-;;;	     #:run-nst-commands
+	     #:emit-success
+	     #:check-result
 
 	     #:run-package #:run-group #:run-test
 	     #:report-multiple #:report-package #:report-group #:report-test
-	     
-	     #:*default-report-stream*))
+
+	     #:nst-junit-dump
+
+	     #:*nst-output-stream*
+	     #:*nst-report-default-verbosity*
+	     #:*nst-verbosity*
+	     #:*debug-on-error*))
 
 (defun nst::make-package-documentation ()
   "Write documentation for this package, using system package-doc."
