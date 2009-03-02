@@ -299,13 +299,19 @@ encoded as :before and :after methods.")
 
   (:method :around (test)
     "Capture the result of the test."
-    (let ((*nst-check-name* (check-name test)))
+    (let ((*nst-check-name* (check-name test))
+	  (start-time))
       (case *nst-verbosity*
 	((:default t :verbose :vverbose)
 	 (format t " - Executing test ~s~%" (check-name test))))
-      (let ((result (call-next-method)))
-	(setf (gethash (canonical-storage-name (type-of test)) +results-record+)
-	  result)
+      (setf start-time (get-internal-real-time))
+      (let ((result (call-next-method))
+	    (end-time (get-internal-real-time)))
+	(setf (result-stats-elapsed-time result)
+	      (- end-time start-time)	      
+	      (gethash (canonical-storage-name (type-of test))
+		       +results-record+)
+	      result)
 	(case *nst-verbosity*
 	  ((:default t :verbose :vverbose) (format t "   ~s~%" result)))
 	result))))

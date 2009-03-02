@@ -46,9 +46,13 @@ current criterion.")
    :failures (list (make-check-note :context *nst-context* :stack *nst-stack* 
 				    :format format :args args))
    :info info))
+(defun emit-success ()
+  "For use within user-defined check criteria: record a successful check."
+  (check-result))
 
 (defstruct result-stats "Statistics common to the different result summaries."
-  (tests 0) (passing 0) (erring 0) (failing 0) (warning 0))
+  (tests 0) (passing 0) (erring 0) (failing 0) (warning 0)
+  (elapsed-time 0))
 
 ;;;
 ;;; Result records for high-level checks.
@@ -337,8 +341,8 @@ six-value summary of the results:
   "Top-level function for reporting the results of a package."
   (let* ((result (make-package-result))
 	 (user-package (find-package package))
-	 (sym-pack (loop for k being the hash-keys of (gethash user-package
-							       +package-groups+)
+	 (sym-pack (loop for k being the hash-keys
+			 of (gethash user-package +package-groups+)
 			 collect k)))
     (case *nst-verbosity*
       ((:vverbose)
@@ -352,6 +356,8 @@ six-value summary of the results:
 	  (let* ((local-group (intern (symbol-name remote-group) user-package))
 		 (report (group-report local-group)))
 	    (setf (gethash local-group checks) report)
+	    (incf (result-stats-elapsed-time result)
+		  (result-stats-elapsed-time report))
 	    (incf (result-stats-tests result)   (result-stats-tests report))
 	    (incf (result-stats-passing result) (result-stats-passing report))
 	    (incf (result-stats-erring result)  (result-stats-erring report))
@@ -372,6 +378,8 @@ six-value summary of the results:
 	 (setf (gethash test checks) report)
 	 (cond
 	   (report
+	    (incf (result-stats-elapsed-time result)
+		  (result-stats-elapsed-time report))
 	    (incf (result-stats-tests result)   (result-stats-tests report))
 	    (incf (result-stats-passing result) (result-stats-passing report))
 	    (incf (result-stats-erring result)  (result-stats-erring report))
@@ -399,13 +407,16 @@ six-value summary of the results:
   (with-accessors ((package-reports multi-results-package-reports)
 		   (group-reports multi-results-group-reports)
 		   (test-reports multi-results-test-reports)) result
-    (loop for report-set in (list package-reports group-reports test-reports) do
-      (loop for report in report-set do
-	(incf (result-stats-tests result)   (result-stats-tests report))
-	(incf (result-stats-passing result) (result-stats-passing report))
-	(incf (result-stats-erring result)  (result-stats-erring report))
-	(incf (result-stats-failing result) (result-stats-failing report))
-	(incf (result-stats-warning result) (result-stats-warning report))))
+    (loop for report-set in (list package-reports group-reports test-reports)
+	  do
+       (loop for report in report-set do
+	 (incf (result-stats-elapsed-time result)
+	       (result-stats-elapsed-time report))
+	 (incf (result-stats-tests result)   (result-stats-tests report))
+	 (incf (result-stats-passing result) (result-stats-passing report))
+	 (incf (result-stats-erring result)  (result-stats-erring report))
+	 (incf (result-stats-failing result) (result-stats-failing report))
+	 (incf (result-stats-warning result) (result-stats-warning report))))
     result))
 
 (defun all-package-report ()
@@ -435,7 +446,7 @@ six-value summary of the results:
 		       (package *package*)
 		       (stream *nst-output-stream*)
 		       (*nst-local-verbosity* *nst-report-default-verbosity*))
-  "Top-level function for reporting the results of a package."
+  "Top-level function for reporting the results of the tests in a package."
   (let ((*nst-report-driver* :package))
     (format stream "~w" (package-report package))))
 
@@ -443,7 +454,7 @@ six-value summary of the results:
 		     &optional
 		     (stream *nst-output-stream*)
 		     (*nst-local-verbosity* *nst-report-default-verbosity*))
-  "Top-level function for reporting the results of a group."
+  "Top-level function for reporting the results of the tests in a group."
   (let ((*nst-report-driver* :group))
     (format stream "~w" (group-report group))))
 
@@ -459,6 +470,7 @@ six-value summary of the results:
 				 (stream *nst-output-stream*)
 				 (verbosity *nst-report-default-verbosity*)
 				 (system nil system-supp-p))
+  "Top-level function for reporting the results of several tests."
   (let ((report (apply #'multiple-report
 		       packages groups tests
 		       (cond

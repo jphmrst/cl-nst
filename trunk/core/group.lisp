@@ -72,10 +72,10 @@ initialization and cleanup.
 
 group-name - name of the test group being defined
 
-given-fixtures - list of the names of fixtures and anonymous fixtures to be used
-with the tests in this group.
+given-fixtures - list of the names of fixtures and anonymous fixtures to be
+used with the tests in this group.
 
-forms - zero or more test forms, given by def-check or def-test."
+forms - zero or more test forms, given by def-check."
 
   ;; Establish a binding of the group name to a special variable for
   ;; use in the expansion of the test-defining forms.
