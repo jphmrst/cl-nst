@@ -197,6 +197,13 @@ default the current package."))
 (defgeneric stack-transformer (id)
   (:documentation "Check form-specific stack transformation."))
 
+;; Common superclass of all results holders.  We use the accessors
+;; below, so keep this definition here rather than in the status file.
+
+(defstruct result-stats "Statistics common to the different result summaries."
+  (tests 0) (passing 0) (erring 0) (failing 0) (warning 0)
+  (elapsed-time 0))
+
 ;;;
 ;;; Recording of results.  We use a hash table here --- unlike the
 ;;; method-based recording of test symbols, we're not worried about
