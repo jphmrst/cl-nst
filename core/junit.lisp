@@ -29,7 +29,6 @@
   (:documentation "Print XML items corresponding to a test result.  The padding
 argument should be a string of just spaces."))
 
-#|
 (defmethod junit-xml-snippet ((item multi-results)
 			      &optional (s *standard-output*) (padding ""))
   (with-accessors ((elapsed-time result-stats-elapsed-time)
@@ -42,7 +41,7 @@ argument should be a string of just spaces."))
 		   (test-reports multi-results-test-reports)) item
     (format s
 	"~a<testsuite errors=\"~d\" failures=\"~d\"~@[ name=~s~] ~
-                      tests=\"~d\" time=~f>~%"
+                      tests=\"~d\" time=\"~f\">~%"
       padding errors failures
       (when system
 	(cond
@@ -60,6 +59,7 @@ argument should be a string of just spaces."))
 	    (junit-xml-snippet report s new-padding))))))
     (format s "~a</testsuite>~%" padding)))
 
+#|
 (defmethod junit-xml-snippet ((item package-result)
 			      &optional (s *standard-output*) (padding ""))
   (with-accessors ((elapsed-time result-stats-elapsed-time)
@@ -69,7 +69,7 @@ argument should be a string of just spaces."))
 		   (name package-result-package-name)) item
     (format s
 	"~a<testsuite errors=\"~d\" failures=\"~d\" name=~s ~
-                      tests=\"~d\" time=~f>~%"
+                      tests=\"~d\" time=\"~f\">~%"
       padding errors failures (symbol-to-junit-name name)
       tests (/ elapsed-time internal-time-units-per-second))
     (let ((new-padding (concatenate 'string "  " padding))
@@ -89,7 +89,7 @@ argument should be a string of just spaces."))
 		   (name group-result-group-name)) item
     (format s
 	"~a<testsuite errors=\"~d\" failures=\"~d\" name=~s ~
-                      tests=\"~d\" time=~f>~%"
+                      tests=\"~d\" time=\"~f\">~%"
       padding errors failures (symbol-to-junit-name name)
       tests (/ elapsed-time internal-time-units-per-second))
     (let ((new-padding (concatenate 'string "  " padding))
@@ -109,7 +109,7 @@ argument should be a string of just spaces."))
 		   (errors check-result-errors)
 		   (info check-result-info)
 		   (elapsed-time check-result-elapsed-time)) item
-    (format s "~a<testcase classname=~s time=~f"
+    (format s "~a<testcase classname=~s time=\"~f\""
       padding (symbol-to-junit-name check-name)
       (/ elapsed-time internal-time-units-per-second))
     (cond
