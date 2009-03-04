@@ -41,7 +41,7 @@ argument should be a string of just spaces."))
 		   (test-reports multi-results-test-reports)) item
     (format s
 	"~a<testsuite errors=\"~d\" failures=\"~d\"~@[ name=~s~] ~
-                      tests=\"~d\" time=\"~f\">~%"
+                      tests=\"~d\" time=\"~f\"~@[ hostname=~s~]>~%"
       padding errors failures
       (when system
 	(cond
@@ -50,7 +50,14 @@ argument should be a string of just spaces."))
 		       'asdf::description))
 	 (t (symbol-to-junit-name (slot-value system 'asdf::name)))))
       tests
-      (/ elapsed-time internal-time-units-per-second))
+      (/ elapsed-time internal-time-units-per-second)
+      
+      ;; The hostname.  This isn't Lisp-standard, so maybe we can't
+      ;; have it.
+      #+allegro (let ((outputs (excl.osi:command-output "hostname")))
+		  (if (and outputs (stringp (car outputs)))
+		      (car outputs)))
+      #-allegro nil)
     (let ((new-padding (concatenate 'string "  " padding)))
       (loop for reports in (list package-reports group-reports test-reports) do
 	(loop for report in reports do
@@ -58,48 +65,6 @@ argument should be a string of just spaces."))
 	   (report
 	    (junit-xml-snippet report s new-padding))))))
     (format s "~a</testsuite>~%" padding)))
-
-#|
-(defmethod junit-xml-snippet ((item package-result)
-			      &optional (s *standard-output*) (padding ""))
-  (with-accessors ((elapsed-time result-stats-elapsed-time)
-		   (tests result-stats-tests)
-		   (errors result-stats-erring)
-		   (failures result-stats-failing)
-		   (name package-result-package-name)) item
-    (format s
-	"~a<testsuite errors=\"~d\" failures=\"~d\" name=~s ~
-                      tests=\"~d\" time=\"~f\">~%"
-      padding errors failures (symbol-to-junit-name name)
-      tests (/ elapsed-time internal-time-units-per-second))
-    (let ((new-padding (concatenate 'string "  " padding))
-	  (check-results (package-result-group-results item)))
-      (loop for check-result being the hash-values of check-results do
-	(cond
-	  (check-result
-	   (junit-xml-snippet check-result s new-padding)))))
-    (format s "~a</testsuite>~%" padding)))
-
-(defmethod junit-xml-snippet ((item group-result)
-			      &optional (s *standard-output*) (padding ""))
-  (with-accessors ((elapsed-time result-stats-elapsed-time)
-		   (tests result-stats-tests)
-		   (errors result-stats-erring)
-		   (failures result-stats-failing)
-		   (name group-result-group-name)) item
-    (format s
-	"~a<testsuite errors=\"~d\" failures=\"~d\" name=~s ~
-                      tests=\"~d\" time=\"~f\">~%"
-      padding errors failures (symbol-to-junit-name name)
-      tests (/ elapsed-time internal-time-units-per-second))
-    (let ((new-padding (concatenate 'string "  " padding))
-	  (test-results (group-result-check-results item)))
-      (loop for test-result being the hash-values of test-results do
-	(cond
-	  (test-result
-	   (junit-xml-snippet test-result s new-padding)))))
-    (format s "~a</testsuite>~%" padding)))
-|#
 
 (defmethod junit-xml-snippet ((item check-result)
 			      &optional (s *standard-output*) (padding ""))
