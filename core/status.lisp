@@ -148,6 +148,7 @@ note is an instance of the check-note structure below.  The four note types are:
  info - supplimentary information
 Each of these fields is a list; warnings, failures and errors are check-note
 instances, and the info field is of any value."
+  (group-name *nst-group-name*)
   (check-name *nst-check-name*)
   (warnings nil) (failures nil) (errors nil) (info nil))
 
@@ -425,6 +426,16 @@ six-value summary of the results:
 			   collect (find-package package-name))
 		     nil nil)))
 
+(defun all-groups-report ()
+  (let ((group-hash (make-hash-table :test 'eq)))
+    (loop for test-report being the hash-values of +results-record+ do
+      (when test-report
+	(setf (gethash (check-result-group-name test-report) group-hash) t)))
+    (multiple-report nil 
+		     (loop for group-name being the hash-keys of group-hash
+			 collect group-name)
+		     nil)))
+
 (defun all-tests-report ()
   (let ((test-reports (loop for test-report being the hash-values
 			    of +results-record+
@@ -474,6 +485,23 @@ six-value summary of the results:
 			 (t nil))))
 	(*nst-local-verbosity* verbosity))
     (declare (special *nst-local-verbosity*))
+    (format stream "~w" report)))
+
+(defun nst-dump (&key (stream *nst-output-stream*)
+		      (verbosity *nst-report-default-verbosity*))
+  "Spit out the full NST state."
+  (let ((report (all-package-report))
+	(*print-pretty* t) (*print-readably* nil)
+	(*nst-local-verbosity* verbosity))
+    (declare (special *nst-local-verbosity*))
+    (format stream "NST globals:~%")
+    (format stream " - *nst-verbosity*: ~s~%" *nst-verbosity*)
+    (format stream " - *nst-local-verbosity*: ~s~%" *nst-local-verbosity*)
+    (format stream " - *nst-report-default-verbosity*: ~s~%" *nst-report-default-verbosity*)
+    (format stream " - *nst-output-stream*: ~s~%" *nst-output-stream*)
+    (format stream " - *debug-on-error*: ~s~%" *debug-on-error*)
+    (format stream " - *nst-info-shows-expected*: ~s~%" *nst-info-shows-expected*)
+    (format stream "Stored test results:~%")
     (format stream "~w" report)))
 
 #|

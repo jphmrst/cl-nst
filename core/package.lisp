@@ -56,7 +56,9 @@
 	     #:*nst-output-stream*
 	     #:*nst-report-default-verbosity*
 	     #:*nst-verbosity*
-	     #:*debug-on-error*))
+	     #:*debug-on-error*
+	     
+	     #:junit-results-by-group))
 
 (defun nst::make-package-documentation ()
   "Write documentation for this package, using system package-doc."

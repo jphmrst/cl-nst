@@ -36,20 +36,24 @@ argument should be a string of just spaces."))
 		   (errors result-stats-erring)
 		   (failures result-stats-failing)
 		   (system multi-results-system)
-		   (package-reports multi-results-package-reports)
-		   (group-reports multi-results-group-reports)
-		   (test-reports multi-results-test-reports)) item
+		   (group-reports multi-results-group-reports)) item
+    (let ((new-padding (concatenate 'string "  " padding)))
+      (loop for report in group-reports do
+	(cond (report (junit-xml-snippet report s new-padding)))))))
+
+(defmethod junit-xml-snippet ((item group-result)
+			      &optional (s *standard-output*) (padding ""))
+  (with-accessors ((elapsed-time result-stats-elapsed-time)
+		   (tests result-stats-tests)
+		   (errors result-stats-erring)
+		   (failures result-stats-failing)
+		   (system multi-results-system)
+		   (group-name group-result-group-name)
+		   (test-reports group-result-check-results)) item
     (format s
-	"~a<testsuite errors=\"~d\" failures=\"~d\"~@[ name=~s~] ~
+	"~a<testsuite errors=\"~d\" failures=\"~d\" name=~s ~
                       tests=\"~d\" time=\"~f\"~@[ hostname=~s~]>~%"
-      padding errors failures
-      (when system
-	(cond
-	 ((slot-boundp system
-		       'asdf::description) (slot-value system
-		       'asdf::description))
-	 (t (symbol-to-junit-name (slot-value system 'asdf::name)))))
-      tests
+      padding errors failures (symbol-to-junit-name group-name) tests
       (/ elapsed-time internal-time-units-per-second)
       
       ;; The hostname.  This isn't Lisp-standard, so maybe we can't
@@ -59,125 +63,134 @@ argument should be a string of just spaces."))
 		      (car outputs)))
       #-allegro nil)
     (let ((new-padding (concatenate 'string "  " padding)))
-      (loop for reports in (list package-reports group-reports test-reports) do
-	(loop for report in reports do
-	  (cond
-	   (report
-	    (junit-xml-snippet report s new-padding))))))
+      (loop for report being the hash-values of test-reports do
+	(cond (report (junit-xml-snippet report s new-padding)))))
+    (format s "~a  <system-out><![CDATA[" padding)
+    (nst-dump :stream s)
+    (format s "]]></system-out>~%")
+    (format s "~a  <system-err><![CDATA[]]></system-err>~%" padding)
     (format s "~a</testsuite>~%" padding)))
 
 (defmethod junit-xml-snippet ((item check-result)
 			      &optional (s *standard-output*) (padding ""))
-  (with-accessors ((check-name check-result-check-name)
+  (with-accessors ((group-name check-result-group-name)
+		   (check-name check-result-check-name)
 		   (warnings check-result-warnings)
 		   (failures check-result-failures)
 		   (errors check-result-errors)
 		   (info check-result-info)
 		   (elapsed-time check-result-elapsed-time)) item
-    (format s "~a<testcase classname=~s time=\"~f\""
-      padding (symbol-to-junit-name check-name)
-      (/ elapsed-time internal-time-units-per-second))
+    (format s "~a<testcase classname=~s name=\"~a\" time=\"~f\""
+      padding
+      (symbol-to-junit-name group-name) ; use the group for the classname
+      check-name (/ elapsed-time internal-time-units-per-second))
     (cond
-      (errors
-       (format s ">~%~a  <error message=\"ERROR\"/>~%" padding)
-       (format s "~a</testcase>~%" padding))
-      (failures
-       (format s ">~%~a  <failure type=\"FAILURE\"/>~%" padding)
-       (format s "~a</testcase>~%" padding))
-      (t
-       (format s " />~%")))))
+      (errors (format s
+		  ">~%~a  <error message=\"~a raised an error: ~a\" type=~s/>~%"
+		padding
+		(symbol-to-junit-name check-name)
+		(symbol-to-junit-name (type-of (car errors)))
+		(symbol-to-junit-name (type-of (car errors))))
+	      (format s "~a</testcase>~%" padding))
+      (failures (format s ">~%~a  <failure type=\"FAILURE\"/>~%" padding)
+		(format s "~a</testcase>~%" padding))
+      (t (format s " />~%")))))
 
 (defun nst-xml-dump (stream)
   (nst-junit-dump stream))
 
-(defun nst-junit-dump (stream)
-  (let ((report (all-tests-report)))
-    (format stream "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>~%")
-    (junit-xml-snippet report stream)))
-
 (defun symbol-to-junit-name (symbol)
-  (format nil "lisp.~a.~a" (package-name (symbol-package symbol)) (symbol-name symbol)))
+  (format nil "lisp.~a.~a"
+    (package-name (symbol-package symbol)) (symbol-name symbol)))
 
-#|
-(defun nst-xml-dump (stream)
-  (macrolet ((group-test-loop (hash group test content &rest forms)
-	       (let ((name-hash (gensym "name-hash-")))
-		 `(loop for ,group being the hash-keys
-			  of ,hash
-			  using (hash-value ,name-hash)
-			  do
-		       (loop for ,test being the hash-keys
-			     of ,name-hash
-			     using (hash-value ,content)
-			     do ,@forms))))
-	     (group-test-names-from-hashes (hash)
-	       (let ((group (gensym "group-"))
-		     (test (gensym "test-"))
-		     (name-hash (gensym "name-hash-")))
-		 `(loop for ,group being the hash-keys of ,hash
-			using (hash-value ,name-hash)
-			append
-			(loop for ,test being
-			      the hash-keys of ,name-hash
-			      collect (list ,group ,test))))))
-	    
-    ; dump failed, erred, and passed tests
-    (flet ((hash-keys (ht)
-	    (sort (loop for x being the hash-keys of ht collect x)
-		  #'string-lessp)))
-      (let ((myGroups 
-	     (remove-duplicates
-	      (apply #'append 
-		     *interesting-group-names* 
-		     (mapcar (lambda (p) (hash-keys (gethash (find-package p) +groups-by-package+)))
-			     *interesting-packages*))))
-	    (myFailed (group-test-names-from-hashes *failed-tests*))
-	    (myErred  (group-test-names-from-hashes *erred-tests*))
-	    (myPassed (group-test-names-from-hashes *passed-tests*)))
+(defun junit-header (stream)
+  (format stream "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>~%"))
 
-    ; dump the header
-	(format stream "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>~%")
+(defgeneric nst-junit-dump (stream)
+  (:documentation "Push the entire NST state to a JUnit XML file."))
 
+(defmethod nst-junit-dump ((stream stream))
+  (junit-header stream)
+  (junit-xml-snippet (all-groups-report) stream))
 
-	(loop for group in *interesting-group-names* do
-  ; (loop for group in myGroups do
-	      (format stream 
-		      "<testsuite errors=\"~d\" failures=\"~d\" name=~s tests=\"~d\">~%"
-		      (length myErred)
-		      (length myFailed)
-		      (symbol-to-junit-name group)
-		      (+ (length myErred) (length myFailed) (length myPassed)))
-	      
-	      
-	      (loop for test in myFailed do
-		    (format stream 
-			    "  <testcase classname=\"~a\" name=\"~s\">~%~
-                     <failure type=\"FAILURE\"/>~%~
-                  </testcase>~%"
-			    (symbol-to-junit-name (first test))
-			    (second test)))
-	      
-	      (loop for test in myErred do
-		    (format stream 
-			    "  <testcase classname=\"~a\" name=\"~s\">~%~
-                     <error message=\"ERROR\"/>~%~
-                  </testcase>~%"
-			    (symbol-to-junit-name (first test))
-			    (second test)))
-	      
-	      (loop for test in myPassed do
-		    (format stream 
-			    "  <testcase classname=\"~a\" name=\"~s\"/>~%"
-			    (symbol-to-junit-name (first test))
-			    (second test)))
+(defmethod nst-junit-dump ((filename string))
+  (with-open-file (stream filename :if-exists :supersede
+			  :if-does-not-exist :create)
+    (nst-junit-dump stream)))
 
-    ; dump footer
-	      (format stream "   <system-out><![CDATA[~%")
-	      (nst-dump stream)
-	      (format stream 
-		      "]]></system-out>~%~
-                <system-err><![CDATA[]]></system-err>~%~
-                </testsuite>~%")
-	      ))
-      )))
-|#
+(defgeneric junit-group-result ((group symbol) &rest args &key
+				dir file verbose
+				if-dir-does-not-exist if-file-exists))
+
+(defmethod junit-group-result ((group symbol) &rest args &key
+			       dir file verbose
+			       if-dir-does-not-exist if-file-exists)
+  (declare (ignorable dir file if-dir-does-not-exist if-file-exists))
+  (apply #'junit-group-result (group-report group) args))
+
+(defmethod junit-group-result ((group group-result) &rest args &key
+			       verbose
+			       (dir  nil dir-supp-p)
+			       (file nil file-supp-p)
+			       (stream nil stream-supp-p)
+			       (if-dir-does-not-exist
+				:create if-dir-does-not-exist-supp-p)
+			       (if-file-exists :new-version
+					       if-file-exists-supp-p))
+  (declare (ignorable args))
+
+  (when (and stream-supp-p (or dir-supp-p file-supp-p))
+    (warn "Using :stream, ignoring :directory/:filename."))
+  (when (and stream-supp-p (or if-dir-does-not-exist-supp-p
+			       if-file-exists-supp-p))
+    (warn "Options :if-dir-does-not-exist, :if-file-exists not used with :stream, ignoring"))
+    
+  (let ((the-stream
+	 (cond
+	  (stream-supp-p stream)
+	     
+	  ((or dir-supp-p file-supp-p)
+  
+	   ;; If there's no filename, build a default one.
+	   (when (not file-supp-p)
+	     (setf file (parse-namestring (concatenate 'string
+					    "TEST-"
+					    (symbol-to-junit-name
+					     (group-result-group-name group))
+					    ".xml"))))
+  
+	   ;; If there's no directory, use the current one.
+	   (when (not dir-supp-p)
+	     (setf dir (parse-filename "./")))
+  
+	   ;; If we just have a string for the filename, convert it to
+	   ;; a Lisp pathname.
+	   (when (and file-supp-p (stringp file))
+	     (setf file (parse-namestring file)))
+  
+	   ;; If we just have a string for the directory, convert it
+	   ;; to a Lisp pathname.
+	   (when (and dir-supp-p (stringp dir))
+	     (setf dir (parse-namestring dir)))
+
+	   (let ((file-path (merge-pathnames file dir)))
+
+	     (when (eq if-dir-does-not-exist :create)
+	       (ensure-directories-exist file-path))
+	     
+	     (when verbose (format t "  Writing to ~w~%" file-path))
+	     (open file-path :direction :output :element-type :default
+		   :if-exists if-file-exists :if-does-not-exist :create)))
+	  
+	  (t (setf stream-supp-p t)
+	     *standard-output*))))
+    
+    (junit-header the-stream)
+    (junit-xml-snippet group the-stream)
+    (unless stream-supp-p (close the-stream))))
+
+(defun junit-results-by-group (&rest args &key verbose &allow-other-keys)
+  (loop for report in (multi-results-group-reports (all-groups-report)) do
+    (when verbose
+      (format t "Making XML for group ~s~%" (group-result-group-name report)))
+    (apply #'junit-group-result report args)))

@@ -88,6 +88,7 @@ subsequences of a current check definition.
 			     (unless *debug-on-error*
 			       (return-from ,checker-block
 				 (make-check-result
+				  :erring 1
 				  :errors (list (make-error-check-note
 						 :context *nst-context*
 						 :stack *nst-stack*

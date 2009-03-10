@@ -59,12 +59,14 @@ functions whose methods the macros define.")
 
 (defparameter *nst-check-name* nil
   "Dynamic variable used to set the name of a test in its result report.")
+(defparameter *nst-group-name* nil
+  "Dynamic variable used to set the name of the group in a test result report.")
 
 ;;;
 ;;; Internal tables.
 ;;;
 (defvar +package-groups+ (make-hash-table :test 'eq)
-  "Map from packages to the test grups declared in each package.")
+  "Map from packages to the test groups declared in each package.")
 
 ;;;
 ;;; Generic functions whose methods are defined by the various macros.
@@ -306,7 +308,8 @@ encoded as :before and :after methods.")
 
   (:method :around (test)
     "Capture the result of the test."
-    (let ((*nst-check-name* (check-name test))
+    (let ((*nst-group-name* (group-name test))
+	  (*nst-check-name* (check-name test))
 	  (start-time))
       (case *nst-verbosity*
 	((:default t :verbose :vverbose)
