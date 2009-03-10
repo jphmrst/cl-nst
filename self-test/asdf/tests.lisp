@@ -44,6 +44,8 @@
   (def-check forms-eql-1 :forms-eql (+ 1 2) 3)
   (def-check forms-equal-1 :forms-equal (mapcar #'1+ '(1 10 100)) '(2 11 101))
   (def-check err-1 :err (error "Catch this error"))
+  (def-check err-2 (:err :type division-by-zero) (/ 5 0))
+  ;; (def-check err-3 (:err :type division-by-zero) (error "Miss this"))
   (def-check any-1 (:any (:eql 0) (:eql 1) (:eql 2)) 1)
   (def-check any-2 (:not (:any (:eql 0) (:eql 1) (:eql 2))) 3)
   (def-check any-3 (:any (:err) (:eql 1) (:eql 2)) 1)

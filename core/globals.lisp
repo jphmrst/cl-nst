@@ -428,7 +428,9 @@ delimiters."
 		      ((listp item)
 		       (cond
 			 (supp-p (descend item))
-			 (t (push (car item) result))))
+			 (t (push (car item) result)
+			    (when (caddr item)
+			      (push (caddr item) result)))))
 		     ((symbolp item)
 		      (unless (member item
 				      #+allegro '(&allow-other-keys &aux

@@ -76,12 +76,16 @@
      (format t "~%~a~%~{~s~%~}" ,blurb forms)
      (emit-failure :format "Arguments dumped" :args nil)))
 
-(def-control-check (:err () expr-form)
-  (let ((x (gensym "x")))
-    `(block ,x
-       (handler-bind ((error #'(lambda (,x)
+(def-control-check (:err (&key (type 'condition type-supp-p)) expr-form)
+  (let ((x (gensym "x")) (block (gensym "block")))
+    `(block ,block
+       (handler-bind ((,type #'(lambda (,x)
 				 (declare (ignorable ,x))
-				 (return-from ,x (check-result)))))
+				 (return-from ,block (check-result))))
+		      ,@(when (and type-supp-p (not (eq type 'condition)))
+			  `((condition
+			     #'(lambda (,x)
+				 (return-from ,block (emit-error ,x)))))))
 	 ,expr-form)
        (emit-failure :format "~@<No expected error:~{~_ ~s~}~:>"
 		     :args '(,(cond
