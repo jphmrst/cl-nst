@@ -76,8 +76,7 @@ use of this fixture.
 					  :nst-fixture-test-class-names))
 	 (bound-names (loop for binding in bindings collect (car binding))))
 
-    ;;`(eval-when (:compile-toplevel :load-toplevel)
-    `(progn
+    `(eval-when (:compile-toplevel :load-toplevel)
 
        (defclass ,name () ()
 	 (:metaclass fixture-metaclass)
