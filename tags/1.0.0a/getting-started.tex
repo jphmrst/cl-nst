@@ -1,0 +1,102 @@
+%% File getting-started.tex
+%%
+%% NST by John Maraist, based on RRT by Robert Goldman.
+%%
+%% NST is Copyright (c) 2006-2009 Smart Information Flow Technologies.
+%% RRT is Copyright (c) 2005 Robert Goldman, released under the LGPL,
+%% and the Lisp-specific preamble to that license.
+
+\documentclass{article}
+\usepackage{times}
+\usepackage{listings}
+\parskip 0.6em
+\parindent 0pt
+
+\begin{document}
+\thispagestyle{empty}
+\begin{center}
+{\LARGE Getting started with NST\footnote{John Maraist, Smart Information Flow Technologies, 211 N.\ First St.\ Suite 300, Minneapolis, MN 55401; \textsl{jmaraist} at \textsl{sift.info}.}}
+\end{center}
+
+\section*{NST by example}
+\emph{Fixtures} are data structures and values which may be referred
+to by name during testing.  NST provides the ability to use fixtures
+across multiple tests and test groups, and to inject fixtures into the
+runtime namespace for debugging.  Fixtures are defined using the
+\texttt{def-fixture} form.
+
+\emph{Groups} of tests can be associated with fixture sets, stateful
+initiatization, and stateful cleanup.  Test groups are defined using
+the \texttt{def-test-group} form.
+
+Individual tests in NST are called \emph{checks}.  Checks are declared
+within test declarations using the \texttt{def-check} form.
+
+Examples of NST fixtures, groups and checks
+are available in \textsl{self-test/core/simple-mnst.lisp}~.  The
+figure on the next page shows the changes involved in using NST in a
+system definition.
+
+\section*{Interactive debugging}
+NST defines a REPL alias \texttt{:nst} under Allegro CL.  The general
+form of commands is:
+\begin{verbatim}
+  :nst COMMAND ARGUMENTS
+\end{verbatim}
+Use \mbox{\texttt{:nst :help}} for a list of commands, and
+\mbox{\texttt{:nst COMMAND :help}} for details about individual
+commands.
+\clearpage
+\section*{ASDF}
+NST tests can be referenced from ASDF systems, allowing easy
+invocation to unit tests relevant to a system.  The system
+\textsl{self-test/masdfnst.asd} gives an example of its use.  The
+snippet below highlights the difference between non-NST and
+NST-oriented ASDF system declarations.
+\texttt{\small
+\begin{tabbing}
+\\;; Force loading NST's ASDF utilities before processing
+\\;; this file.
+\\{\bfseries (asdf:oos 'asdf:load-op :asdf-nst)}
+\\
+\\(de\=fpackage :masdfnst-asd
+\\   \>(:use :common-lisp :asdf {\bfseries :asdf-nst}))
+\\(in-package :masdfnst-asd)
+\\
+\\(def\=system :masdfnst
+\\    \>;; Use the NST-oriented ASDF system definition.
+\\    \>{\bfseries :class nst-testable}
+\\    
+\\    \>:in-order-to ((test-op (load-op :masdfnst)))
+\\
+\\    \>;; Any one of the six blocks below is reasonable.
+\\    \>;; Use exactly one of :nst-package, :nst-group, or
+\\    \>;; :nst-test; or any combination of the plural
+\\    \>;; versions.
+\\
+\\    \>{\bfseries ;; (1)}
+\\    \>{\bfseries ;; :nst-package :asdf-nst-test}
+\\
+\\    \>{\bfseries ;; (2)}
+\\    \>{\bfseries ;; :nst-group (:asdf-nst-test . core-checks)}
+\\
+\\    \>{\bfseries ;; (3)}
+\\    \>{\bfseries ;; :nst-test (:asdf-nst-test core-checks pass-1)}
+\\
+\\    \>{\bfseries ;; (4)}
+\\    \>{\bfseries ;; :nst-packages (:asdf-nst-test :asdf-nst-test2)}
+\\
+\\    \>{\bfseries ;; (5)}
+\\    \>{\bfseries ;; :nst-packages (:asdf-nst-test)}
+\\    \>{\bfseries ;; :nst-groups ((:asdf-nst-test2 . :g1a))}
+\\    
+\\    \>{\bfseries ;; (6)}
+\\    \>{\bfseries :nst-groups ((:asdf-nst-test2 . :g1))}
+\\    \>{\bfseries :nst-tests (}\={\bfseries (:asdf-nst-test2 :g1a :fix0)}
+\\		\> \>{\bfseries (:asdf-nst-test :core-checks :warn-1))}
+\\    
+\\    \>:components ( ... ))
+\end{tabbing}}
+
+
+\end{document}
