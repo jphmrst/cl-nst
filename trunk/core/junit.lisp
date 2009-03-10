@@ -161,7 +161,7 @@ argument should be a string of just spaces."))
   
 	   ;; If there's no directory, use the current one.
 	   (when (not dir-supp-p)
-	     (setf dir (parse-filename "./")))
+	     (setf dir (parse-namestring "./")))
   
 	   ;; If we just have a string for the filename, convert it to
 	   ;; a Lisp pathname.
