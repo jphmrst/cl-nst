@@ -87,15 +87,7 @@ subsequences of a current check definition.
 		 ((error #'(lambda (e)
 			     (unless *debug-on-error*
 			       (return-from ,checker-block
-				 (make-check-result
-				  :erring 1
-				  :errors (list (make-error-check-note
-						 :context *nst-context*
-						 :stack *nst-stack*
-						 :format "~a"
-						 :args (list (format nil
-								 "~w" e))
-						 :error e))))))))
+				 (emit-error e))))))
 	       ,body))))))))
 
 #+allegro (excl::define-simple-parser def-value-check caadr :nst-criterion)
@@ -109,8 +101,8 @@ subsequences of a current check definition.
   
   (let* ((stream (gensym "stream")) (id (gensym "id"))
 	 (args (gensym "args")) (forms (gensym "forms"))
-	 (criterion-formals (lambda-list-names criterion-args t))
-	 (check-formals (lambda-list-names check-args t)))
+	 (criterion-formals (lambda-list-names criterion-args nil))
+	 (check-formals (lambda-list-names check-args nil)))
     (unless blurb-format-supp-p
       (setf blurb-format
 	(list "~s ~@<~{~s~^ ~:_~}~:>" name
@@ -153,7 +145,7 @@ subsequences of a current check definition.
   "Mechanism for defining a new check criterion."
   
   (let ((criterion-formals
-	 (lambda-list-names criterion-args #+sbcl nil #-sbcl t))
+	 (lambda-list-names criterion-args nil))
 	(stream (gensym "stream")) (id (gensym "id"))
 	(args (gensym "args")))
     (unless (symbolp forms-formal)
@@ -444,3 +436,15 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
 		     "       expected: ~@<~s ~:_~@<~{~s~^ ~:_~}~:>~:>~%" 
 		   ',*standalone-test-in-group-class*
 		   ',*group-fixture-classes*)))))))))
+
+(defmacro debug-check (defcheck)
+  "Debugging aid for def-check forms.  Provides all-caps dummy values for
+dynamic variables normally provided by def-test-group."
+  `(let ((*the-group* '<<THE-GROUP>>)
+	 (*group-fixture-classes* '(<<GROUP-FIXTURE-CLASSES>>))
+	 (*group-class-name* '<<GROUP-CLASS-NAME>>)
+	 (*test-in-group-class* '<<TEST-IN-GROUP-CLASS>>)
+	 (*standalone-test-in-group-class* '<<STANDALONE-TEST-IN-GROUP-CLASS>>))
+     (declare (special *the-group* *group-class-name* *group-fixture-classes*
+		       *test-in-group-class* *standalone-test-in-group-class*))
+     (pprint (macroexpand ',defcheck))))
