@@ -50,21 +50,6 @@ current criterion.")
   "For use within user-defined check criteria: record a successful check."
   (check-result))
 
-(defun emit-error (e &rest format-args &aux format args)
-  (declare (special *nst-context* *nst-stack*))
-  (cond
-    (format-args (setf format (car format) args (cdr args)))
-    (t (setf format "~w" args (list e))))
-  (let* (#+allegro (zoom-lines (make-backtrace-lines)))
-    (make-check-result :erring 1
-		       :errors (list (make-error-check-note
-				      :context *nst-context*
-				      :stack *nst-stack*
-				      :format format
-				      :args args
-				      :error e
-				      #+allegro :zoom #+allegro zoom-lines)))))
-
 #+allegro
 (defmacro make-backtrace-lines ()
   `(let* ((raw (with-output-to-string (stream)
@@ -87,6 +72,21 @@ current criterion.")
        (setf lines (subseq lines 0 first)))
       
      lines))
+
+(defun emit-error (e &rest format-args &aux format args)
+  (declare (special *nst-context* *nst-stack*))
+  (cond
+    (format-args (setf format (car format) args (cdr args)))
+    (t (setf format "~w" args (list e))))
+  (let* (#+allegro (zoom-lines (make-backtrace-lines)))
+    (make-check-result :erring 1
+		       :errors (list (make-error-check-note
+				      :context *nst-context*
+				      :stack *nst-stack*
+				      :format format
+				      :args args
+				      :error e
+				      #+allegro :zoom #+allegro zoom-lines)))))
 
 ;;;
 ;;; Result records for high-level checks.
