@@ -55,28 +55,7 @@ current criterion.")
   (cond
     (format-args (setf format (car format) args (cdr args)))
     (t (setf format "~w" args (list e))))
-  (let* (#+allegro
-	 (zoom-lines
-	  (let ((zoom (with-output-to-string (stream)
-			(let ((*print-circle* nil))
-			  (declare (special *print-circle*))
-			  (top-level.debug:zoom stream :function nil
-						:verbose nil :moderate t
-						:specials nil
-						:length 5 :level nil)))))
-	    (loop for spot = (position #\Newline zoom)
-		while spot
-		collect (string-left-trim " " (subseq zoom 0 spot))
-		  do (setf zoom (subseq zoom (+ 1 spot)))))))
-    #+allegro
-    (progn 
-      (loop while (not (search "emit-error " (car zoom-lines))) do
-	(pop zoom-lines))
-      (pop zoom-lines)
-      (if (search ":internal" (car zoom-lines)) (pop zoom-lines))
-      (let ((first (position-if #'(lambda (x) (search "core-run-test" x))
-				zoom-lines)))
-	(setf zoom-lines (subseq zoom-lines 0 first))))
+  (let* (#+allegro (zoom-lines (make-backtrace-lines)))
     (make-check-result :erring 1
 		       :errors (list (make-error-check-note
 				      :context *nst-context*
@@ -85,6 +64,29 @@ current criterion.")
 				      :args args
 				      :error e
 				      #+allegro :zoom #+allegro zoom-lines)))))
+
+#+allegro
+(defmacro make-backtrace-lines ()
+  `(let* ((raw (with-output-to-string (stream)
+		 (let ((*print-circle* nil))
+		   (declare (special *print-circle*))
+		   (top-level.debug:zoom stream :function nil :verbose nil
+					 :moderate t :specials nil
+					 :length 5 :level nil))))
+	  (lines (loop for spot = (position #\Newline raw)
+		     while spot
+		     collect (string-left-trim " " (subseq raw 0 spot))
+		     do (setf raw (subseq raw (+ 1 spot))))))
+     
+     (loop while (not (search "emit-error " (car lines))) do (pop lines))
+     (pop lines)
+     (if (search ":internal" (car lines)) (pop lines))
+     (loop while (search "core-run-test" (car lines)) do (pop lines))
+     (let ((first (position-if #'(lambda (x) (search "core-run-test" x))
+			       lines)))
+       (setf lines (subseq lines 0 first)))
+      
+     lines))
 
 ;;;
 ;;; Result records for high-level checks.
@@ -297,11 +299,9 @@ nil at the top level; set via dynamically-scoped bindings.")
 	(format s "~@<~w~:[~2*~;~:@_~?~]~
                         ~:@_~:[nil context~;~:*in context: ~w~]~
                         ~:@_~:[nil values~;~:*values: ~w~]~
-                        ~@[~:@_at ~@<~{~a~^~:@_~}~:>~]~
-                        ~~:@_timestamp ~s~:>"
+                        ~@[~:@_at ~@<~{~a~^~:@_~}~:>~]~:>"
 	  error format format args context stack
-	  #-allegro nil #+allegro (error-check-note-zoom cn)
-	  timestamp))))
+	  #-allegro nil #+allegro (error-check-note-zoom cn)))))
 
 ;;; Functions on result and status reports.
 ;;;
