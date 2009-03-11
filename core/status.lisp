@@ -50,6 +50,34 @@ current criterion.")
   "For use within user-defined check criteria: record a successful check."
   (check-result))
 
+#+allegro
+(defmacro make-backtrace-lines ()
+  `(let ((raw (with-output-to-string (stream)
+		(let ((top-level:*zoom-print-circle* nil)
+		      (*print-right-margin* 1000000))
+		  (declare (special top-level:*zoom-print-circle*
+				    *print-right-margin*))
+		  (top-level.debug:zoom stream :function nil :verbose nil
+					:moderate t :specials nil
+					:length 5 :level nil)))))
+
+     (let ((lines (loop for spot = (position #\Newline raw)
+		      while spot
+		      collect (string-left-trim " ->" (subseq raw 0 spot))
+		      do (setf raw (subseq raw (+ 1 spot))))))
+       (pop lines)
+       (pop lines)
+
+;;;       (loop while (not (search "emit-error " (car lines))) do (pop lines))
+;;;       (pop lines)
+;;;       (if (search ":internal" (car lines)) (pop lines))
+;;;       (loop while (search "core-run-test" (car lines)) do (pop lines))
+;;;       (let ((first (position-if #'(lambda (x) (search "core-run-test" x))
+;;;				 lines)))
+;;;	 (setf lines (subseq lines 0 first)))
+      
+       lines)))
+
 (defun emit-error (e &rest format-args &aux format args)
   (declare (special *nst-context* *nst-stack*))
   (cond
@@ -64,29 +92,6 @@ current criterion.")
 				      :args args
 				      :error e
 				      #+allegro :zoom #+allegro zoom-lines)))))
-
-#+allegro
-(defmacro make-backtrace-lines ()
-  `(let* ((raw (with-output-to-string (stream)
-		 (let ((*print-circle* nil))
-		   (declare (special *print-circle*))
-		   (top-level.debug:zoom stream :function nil :verbose nil
-					 :moderate t :specials nil
-					 :length 5 :level nil))))
-	  (lines (loop for spot = (position #\Newline raw)
-		     while spot
-		     collect (string-left-trim " " (subseq raw 0 spot))
-		     do (setf raw (subseq raw (+ 1 spot))))))
-     
-     (loop while (not (search "emit-error " (car lines))) do (pop lines))
-     (pop lines)
-     (if (search ":internal" (car lines)) (pop lines))
-     (loop while (search "core-run-test" (car lines)) do (pop lines))
-     (let ((first (position-if #'(lambda (x) (search "core-run-test" x))
-			       lines)))
-       (setf lines (subseq lines 0 first)))
-      
-     lines))
 
 ;;;
 ;;; Result records for high-level checks.
