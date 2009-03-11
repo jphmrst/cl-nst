@@ -95,7 +95,7 @@ argument should be a string of just spaces."))
 	timestamp
       (declare (ignorable day daylight-p zone))
       (format s "~a<testcase classname=~s name=\"~a\" time=\"~f\" ~
-                           timestamp=\"~d-~2,'0d-~2,'0dT~2,'0d:~2,'0d:~2,'0d\""
+                      timestamp=\"~4,'0d-~2,'0d-~2,'0dT~2,'0d:~2,'0d:~2,'0d\""
 	padding
 	(symbol-to-junit-name group-name) ; use the group for the classname
 	check-name (/ elapsed-time internal-time-units-per-second)
@@ -103,11 +103,20 @@ argument should be a string of just spaces."))
       (cond
 	(errors
 	 (format s
-	     ">~%~a  <error message=\"~a raised an error: ~a\" type=~s/>~%"
-	   padding
-	   (symbol-to-junit-name check-name)
-	   (symbol-to-junit-name (type-of (car errors)))
-	   (symbol-to-junit-name (type-of (car errors))))
+	     ">~:{~%~a  ~@<<error message=\"~a raised an error: ~a\" type=~s>~
+                         ~:@_  Lisp backtrace (within NST context):~
+                         ~:@_    ~:[expression top-level~
+                                  ~;~@<~:*~{~a~^~:@_~}~:>~]~
+                         ~:@_</error>~:>~}~%"
+	   (loop for error-note in errors
+		 collect (with-accessors ((error error-check-note-error))
+			     error-note
+			   (list padding
+				 (symbol-to-junit-name check-name)
+				 (symbol-to-junit-name (type-of error))
+				 (symbol-to-junit-name (type-of error))
+				 #+allegro (error-check-note-zoom error-note)
+				 #-allegro nil))))
 	 (format s "~a</testcase>~%" padding))
        (failures (format s ">~%~a  <failure type=\"FAILURE\"/>~%" padding)
 		 (format s "~a</testcase>~%" padding))
