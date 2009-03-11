@@ -49,27 +49,37 @@ argument should be a string of just spaces."))
 		   (failures result-stats-failing)
 		   (system multi-results-system)
 		   (group-name group-result-group-name)
-		   (test-reports group-result-check-results)) item
-    (format s
-	"~a<testsuite errors=\"~d\" failures=\"~d\" name=~s ~
-                      tests=\"~d\" time=\"~f\"~@[ hostname=~s~]>~%"
-      padding errors failures (symbol-to-junit-name group-name) tests
-      (/ elapsed-time internal-time-units-per-second)
+		   (test-reports group-result-check-results)
+		   (timestamp result-stats-timestamp)) item
+    (destructuring-bind (second minute hour date month year day daylight-p zone)
+	timestamp
+      (declare (ignorable day daylight-p zone))
+      (format s
+	  "~a<testsuite~@< errors=\"~d\"~
+                     ~:_ failures=\"~d\"~
+                     ~:_ name=~s~
+                     ~:_ tests=\"~d\"~
+                     ~:_ time=\"~f\"~
+                     ~:_ timestamp=\"~d-~2,'0d-~2,'0dT~2,'0d:~2,'0d:~2,'0d\"~
+                  ~@[~:_ hostname=~s~]~:>>~%"
+	padding errors failures (symbol-to-junit-name group-name) tests
+	(/ elapsed-time internal-time-units-per-second)
+	year month date hour minute second
       
-      ;; The hostname.  This isn't Lisp-standard, so maybe we can't
-      ;; have it.
-      #+allegro (let ((outputs (excl.osi:command-output "hostname")))
-		  (if (and outputs (stringp (car outputs)))
+	;; The hostname.  This isn't Lisp-standard, so maybe we can't
+	;; have it.
+	#+allegro (let ((outputs (excl.osi:command-output "hostname")))
+		    (if (and outputs (stringp (car outputs)))
 		      (car outputs)))
-      #-allegro nil)
-    (let ((new-padding (concatenate 'string "  " padding)))
-      (loop for report being the hash-values of test-reports do
-	(cond (report (junit-xml-snippet report s new-padding)))))
-    (format s "~a  <system-out><![CDATA[" padding)
-    (nst-dump :stream s)
-    (format s "]]></system-out>~%")
-    (format s "~a  <system-err><![CDATA[]]></system-err>~%" padding)
-    (format s "~a</testsuite>~%" padding)))
+	#-allegro nil)
+      (let ((new-padding (concatenate 'string "  " padding)))
+	(loop for report being the hash-values of test-reports do
+	      (cond (report (junit-xml-snippet report s new-padding)))))
+      (format s "~a  <system-out><![CDATA[" padding)
+      (nst-dump :stream s)
+      (format s "]]></system-out>~%")
+      (format s "~a  <system-err><![CDATA[]]></system-err>~%" padding)
+      (format s "~a</testsuite>~%" padding))))
 
 (defmethod junit-xml-snippet ((item check-result)
 			      &optional (s *standard-output*) (padding ""))
@@ -79,22 +89,29 @@ argument should be a string of just spaces."))
 		   (failures check-result-failures)
 		   (errors check-result-errors)
 		   (info check-result-info)
-		   (elapsed-time check-result-elapsed-time)) item
-    (format s "~a<testcase classname=~s name=\"~a\" time=\"~f\""
-      padding
-      (symbol-to-junit-name group-name) ; use the group for the classname
-      check-name (/ elapsed-time internal-time-units-per-second))
-    (cond
-      (errors (format s
-		  ">~%~a  <error message=\"~a raised an error: ~a\" type=~s/>~%"
-		padding
-		(symbol-to-junit-name check-name)
-		(symbol-to-junit-name (type-of (car errors)))
-		(symbol-to-junit-name (type-of (car errors))))
-	      (format s "~a</testcase>~%" padding))
-      (failures (format s ">~%~a  <failure type=\"FAILURE\"/>~%" padding)
-		(format s "~a</testcase>~%" padding))
-      (t (format s " />~%")))))
+		   (elapsed-time check-result-elapsed-time)
+		   (timestamp result-stats-timestamp)) item
+    (destructuring-bind (second minute hour date month year day daylight-p zone)
+	timestamp
+      (declare (ignorable day daylight-p zone))
+      (format s "~a<testcase classname=~s name=\"~a\" time=\"~f\" ~
+                           timestamp=\"~d-~2,'0d-~2,'0dT~2,'0d:~2,'0d:~2,'0d\""
+	padding
+	(symbol-to-junit-name group-name) ; use the group for the classname
+	check-name (/ elapsed-time internal-time-units-per-second)
+	year month date hour minute second)
+      (cond
+	(errors
+	 (format s
+	     ">~%~a  <error message=\"~a raised an error: ~a\" type=~s/>~%"
+	   padding
+	   (symbol-to-junit-name check-name)
+	   (symbol-to-junit-name (type-of (car errors)))
+	   (symbol-to-junit-name (type-of (car errors))))
+	 (format s "~a</testcase>~%" padding))
+       (failures (format s ">~%~a  <failure type=\"FAILURE\"/>~%" padding)
+		 (format s "~a</testcase>~%" padding))
+       (t (format s " />~%"))))))
 
 (defun nst-xml-dump (stream)
   (nst-junit-dump stream))

@@ -86,8 +86,7 @@ subsequences of a current check definition.
 	     (handler-bind
 		 ((error #'(lambda (e)
 			     (unless *debug-on-error*
-			       (return-from ,checker-block
-				 (emit-error e))))))
+			       (return-from ,checker-block (emit-error e))))))
 	       ,body))))))))
 
 #+allegro (excl::define-simple-parser def-value-check caadr :nst-criterion)

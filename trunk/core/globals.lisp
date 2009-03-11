@@ -204,7 +204,8 @@ default the current package."))
 
 (defstruct result-stats "Statistics common to the different result summaries."
   (tests 0) (passing 0) (erring 0) (failing 0) (warning 0)
-  (elapsed-time 0))
+  (elapsed-time 0)
+  (timestamp (multiple-value-list (get-decoded-time))))
 
 ;;;
 ;;; Recording of results.  We use a hash table here --- unlike the

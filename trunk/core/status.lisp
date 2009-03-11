@@ -49,18 +49,42 @@ current criterion.")
 (defun emit-success ()
   "For use within user-defined check criteria: record a successful check."
   (check-result))
+
 (defun emit-error (e &rest format-args &aux format args)
   (declare (special *nst-context* *nst-stack*))
   (cond
     (format-args (setf format (car format) args (cdr args)))
     (t (setf format "~w" args (list e))))
-  (make-check-result :erring 1
-		     :errors (list (make-error-check-note
-						 :context *nst-context*
-						 :stack *nst-stack*
-						 :format format
-						 :args args
-						 :error e))))
+  (let* (#+allegro
+	 (zoom-lines
+	  (let ((zoom (with-output-to-string (stream)
+			(let ((*print-circle* nil))
+			  (declare (special *print-circle*))
+			  (top-level.debug:zoom stream :function nil
+						:verbose nil :moderate t
+						:specials nil
+						:length 5 :level nil)))))
+	    (loop for spot = (position #\Newline zoom)
+		while spot
+		collect (string-left-trim " " (subseq zoom 0 spot))
+		  do (setf zoom (subseq zoom (+ 1 spot)))))))
+    #+allegro
+    (progn 
+      (loop while (not (search "emit-error " (car zoom-lines))) do
+	(pop zoom-lines))
+      (pop zoom-lines)
+      (if (search ":internal" (car zoom-lines)) (pop zoom-lines))
+      (let ((first (position-if #'(lambda (x) (search "core-run-test" x))
+				zoom-lines)))
+	(setf zoom-lines (subseq zoom-lines 0 first))))
+    (make-check-result :erring 1
+		       :errors (list (make-error-check-note
+				      :context *nst-context*
+				      :stack *nst-stack*
+				      :format format
+				      :args args
+				      :error e
+				      #+allegro :zoom #+allegro zoom-lines)))))
 
 ;;;
 ;;; Result records for high-level checks.
@@ -249,7 +273,7 @@ nil at the top level; set via dynamically-scoped bindings.")
 
 (defstruct (error-check-note (:include check-note))
   "A note issued in regards to a thrown error."
-  error)
+  error #+allegro zoom)
 
 (set-pprint-dispatch 'check-note
   #'(lambda (s cn) 
@@ -272,8 +296,12 @@ nil at the top level; set via dynamically-scoped bindings.")
 	(declare (ignorable context stack))
 	(format s "~@<~w~:[~2*~;~:@_~?~]~
                         ~:@_~:[nil context~;~:*in context: ~w~]~
-                        ~:@_~:[nil values~;~:*values: ~w~]~:>"
-	  error format format args context stack))))
+                        ~:@_~:[nil values~;~:*values: ~w~]~
+                        ~@[~:@_at ~@<~{~a~^~:@_~}~:>~]~
+                        ~~:@_timestamp ~s~:>"
+	  error format format args context stack
+	  #-allegro nil #+allegro (error-check-note-zoom cn)
+	  timestamp))))
 
 ;;; Functions on result and status reports.
 ;;;
