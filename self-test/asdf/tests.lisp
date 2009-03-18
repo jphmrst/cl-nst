@@ -46,6 +46,7 @@
   (def-check err-1 :err (error "Catch this error"))
   (def-check err-2 (:err :type division-by-zero) (/ 5 0))
   ;; (def-check err-3 (:err :type division-by-zero) (error "Miss this"))
+  ;; (def-check err-4 (:eql 1) (div-five-by 0))
   (def-check any-1 (:any (:eql 0) (:eql 1) (:eql 2)) 1)
   (def-check any-2 (:not (:any (:eql 0) (:eql 1) (:eql 2))) 3)
   (def-check any-3 (:any (:err) (:eql 1) (:eql 2)) 1)
@@ -75,3 +76,5 @@
     'asdfgh (error "this should be caught"))
   (def-check proj-1 (:proj (0 2) :forms-eq) 'a 3 (car '(a b)))
   )
+
+(defun div-five-by (x) (/ 5 x))
