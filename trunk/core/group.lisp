@@ -139,7 +139,8 @@ forms - zero or more test forms, given by def-check."
             ;; manually).
             `(eval-when (:compile-toplevel :load-toplevel :execute)
                #+allegro
-               (excl:record-source-file ',group-name :nst-test-group)
+               (excl:record-source-file ',(if (listp group-name) (first group-name) group-name)
+                                        :type :nst-test-group)
                (let ((*the-group* ',group-name))
                  (declare (special *the-group*))
 
