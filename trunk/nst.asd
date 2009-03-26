@@ -28,7 +28,7 @@
     :version "1.0.2"
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
-    :in-order-to ((test-op (test-op :mnst)))
+    :in-order-to ((test-op (test-op :masdfnst)))
 
     :components ((:module "core" :components
 			  (;; The NST package, plus internal packages
