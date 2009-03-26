@@ -29,8 +29,6 @@
 
 (def-test-group g1 ()
   (def-check triv :pass))
-(eval-when (:compile-toplevel) (format t "Compiled.~%"))
-(eval-when (:load-toplevel) (format t "Loaded~%"))
 
 (def-test-group g1a ()
   (def-check triv :pass)
