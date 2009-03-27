@@ -77,7 +77,7 @@ use of this fixture.
          (bound-names (loop for binding in bindings collect (car binding))))
 
     `(eval-when (:compile-toplevel :load-toplevel :execute)
-       #+allegro (excl:record-source-file ',name :nst-fixture-set)
+       #+allegro (excl:record-source-file ',name :type :nst-fixture-set)
 
        (defclass ,name () ()
          (:metaclass fixture-metaclass)
