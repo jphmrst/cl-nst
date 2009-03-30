@@ -37,14 +37,14 @@ current criterion.")
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
   (check-result
    :warnings (list (make-check-note :context *nst-context*
-				    :stack *nst-stack*
-				    :format format :args args))))
+                                    :stack *nst-stack*
+                                    :format format :args args))))
 (defun emit-failure (&key format args info)
   "For use within user-defined check criteria: explain a failure."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
   (check-result
-   :failures (list (make-check-note :context *nst-context* :stack *nst-stack* 
-				    :format format :args args))
+   :failures (list (make-check-note :context *nst-context* :stack *nst-stack*
+                                    :format format :args args))
    :info info))
 (defun emit-success ()
   "For use within user-defined check criteria: record a successful check."
@@ -53,18 +53,18 @@ current criterion.")
 #+allegro
 (defmacro make-backtrace-lines ()
   `(let ((raw (with-output-to-string (stream)
-		(let ((top-level:*zoom-print-circle* nil)
-		      (*print-right-margin* 1000000))
-		  (declare (special top-level:*zoom-print-circle*
-				    *print-right-margin*))
-		  (top-level.debug:zoom stream :function nil :verbose nil
-					:moderate t :specials nil
-					:length 5 :level nil)))))
+                (let ((top-level:*zoom-print-circle* nil)
+                      (*print-right-margin* 1000000))
+                  (declare (special top-level:*zoom-print-circle*
+                                    *print-right-margin*))
+                  (top-level.debug:zoom stream :function nil :verbose nil
+                                        :moderate t :specials nil
+                                        :length 5 :level nil)))))
 
      (let ((lines (loop for spot = (position #\Newline raw)
-		      while spot
-		      collect (string-left-trim " ->" (subseq raw 0 spot))
-		      do (setf raw (subseq raw (+ 1 spot))))))
+                      while spot
+                      collect (string-left-trim " ->" (subseq raw 0 spot))
+                      do (setf raw (subseq raw (+ 1 spot))))))
        (pop lines)
        (pop lines)
 
@@ -73,9 +73,9 @@ current criterion.")
 ;;;       (if (search ":internal" (car lines)) (pop lines))
 ;;;       (loop while (search "core-run-test" (car lines)) do (pop lines))
 ;;;       (let ((first (position-if #'(lambda (x) (search "core-run-test" x))
-;;;				 lines)))
-;;;	 (setf lines (subseq lines 0 first)))
-      
+;;;                              lines)))
+;;;      (setf lines (subseq lines 0 first)))
+
        lines)))
 
 (defun emit-error (e &rest format-args &aux format args)
@@ -83,15 +83,15 @@ current criterion.")
   (cond
     (format-args (setf format (car format) args (cdr args)))
     (t (setf format "~w" args (list e))))
-  (let* (#+allegro (zoom-lines (make-backtrace-lines)))
+  (let* (#+nil (zoom-lines (make-backtrace-lines)))
     (make-check-result :erring 1
-		       :errors (list (make-error-check-note
-				      :context *nst-context*
-				      :stack *nst-stack*
-				      :format format
-				      :args args
-				      :error e
-				      #+allegro :zoom #+allegro zoom-lines)))))
+                       :errors (list (make-error-check-note
+                                      :context *nst-context*
+                                      :stack *nst-stack*
+                                      :format format
+                                      :args args
+                                      :error e
+                                      #+nil :zoom #+nil zoom-lines)))))
 
 ;;;
 ;;; Result records for high-level checks.
@@ -104,35 +104,35 @@ current criterion.")
 (set-pprint-dispatch 'multi-results
   #'(lambda (s res)
       (with-accessors ((packages multi-results-package-reports)
-		       (groups multi-results-group-reports)
-		       (tests multi-results-test-reports)
-		       (system multi-results-system)) res
-	
-	(when system
-	  (format s "~%Summary of results for system ~a:~%"
-	    (slot-value system 'asdf::name)))
-	(let ((reports
-	       (nconc (loop for report in packages
-			    collect (let ((*nst-report-driver* :package))
-				      (declare (special *nst-report-driver*))
-				      (format s "~w~%" report)
-				      report))
-		      (loop for report in groups
-			    collect (let ((*nst-report-driver* :group))
-				      (declare (special *nst-report-driver*))
-				      (format s "~w~%" report)
-				      report))
-		      (loop for report in tests
-			    collect (let ((*nst-report-driver* :test))
-				      (declare (special *nst-report-driver*))
-				      (format s "~w~%" report)
-				      report)))))
-	  (multiple-value-bind (code total passed erred failed warned)
-	      (result-summary reports)
-	    (declare (ignorable code))
-	    (format s
-		"TOTAL: ~d of ~d passed (~d failed, ~d error~p, ~d warning~p)~%"
-	      passed total failed erred erred warned warned))))))
+                       (groups multi-results-group-reports)
+                       (tests multi-results-test-reports)
+                       (system multi-results-system)) res
+
+        (when system
+          (format s "~%Summary of results for system ~a:~%"
+            (slot-value system 'asdf::name)))
+        (let ((reports
+               (nconc (loop for report in packages
+                            collect (let ((*nst-report-driver* :package))
+                                      (declare (special *nst-report-driver*))
+                                      (format s "~w~%" report)
+                                      report))
+                      (loop for report in groups
+                            collect (let ((*nst-report-driver* :group))
+                                      (declare (special *nst-report-driver*))
+                                      (format s "~w~%" report)
+                                      report))
+                      (loop for report in tests
+                            collect (let ((*nst-report-driver* :test))
+                                      (declare (special *nst-report-driver*))
+                                      (format s "~w~%" report)
+                                      report)))))
+          (multiple-value-bind (code total passed erred failed warned)
+              (result-summary reports)
+            (declare (ignorable code))
+            (format s
+                "TOTAL: ~d of ~d passed (~d failed, ~d error~p, ~d warning~p)~%"
+              passed total failed erred erred warned warned))))))
 
 (defstruct (package-result (:include result-stats))
   "Overall package result structure, mapping groups to results by name."
@@ -140,20 +140,20 @@ current criterion.")
   (group-results (make-hash-table :test 'eq)))
 
 (set-pprint-dispatch 'package-result
-  #'(lambda (s pr) 
+  #'(lambda (s pr)
       (with-accessors ((name package-result-package-name)
-		       (checks package-result-group-results)) pr
-	(multiple-value-bind (code total passed erred failed warned)
-	    (result-summary pr)
-	  (declare (ignorable code erred failed warned))
-	  (let ((groups
-		 (loop for group being the hash-keys of checks collect group)))
-	    (pprint-logical-block (s groups)
-	      (format s "Package ~a: ~d of ~d passed" name passed total)
-	      (loop while (not (pprint-exit-if-list-exhausted)) do
-		    (pprint-newline :mandatory s)
-		    (let ((name (pprint-pop)))
-		      (format s " - ~@<~w~:>" (gethash name checks))))))))))
+                       (checks package-result-group-results)) pr
+        (multiple-value-bind (code total passed erred failed warned)
+            (result-summary pr)
+          (declare (ignorable code erred failed warned))
+          (let ((groups
+                 (loop for group being the hash-keys of checks collect group)))
+            (pprint-logical-block (s groups)
+              (format s "Package ~a: ~d of ~d passed" name passed total)
+              (loop while (not (pprint-exit-if-list-exhausted)) do
+                    (pprint-newline :mandatory s)
+                    (let ((name (pprint-pop)))
+                      (format s " - ~@<~w~:>" (gethash name checks))))))))))
 
 (defstruct (group-result (:include result-stats))
   "Overall group result structure, mapping checks to results by name."
@@ -161,26 +161,26 @@ current criterion.")
   (check-results (make-hash-table :test 'eq)))
 
 (set-pprint-dispatch 'group-result
-  #'(lambda (s gr) 
+  #'(lambda (s gr)
       (with-accessors ((name group-result-group-name)
-		       (checks group-result-check-results)) gr
-	(multiple-value-bind (code total passed erred failed warned)
-	    (result-summary gr)
-	  (declare (ignorable erred failed warned))
-	  (let ((tests
-		 (loop for check being the hash-keys of checks collect check)))
-	    (pprint-logical-block (s tests)
-	      (format s "Group ~a: ~d of ~d passed" name passed total)
-	      (case code
-		(:clear nil)
-		(otherwise
-		 (loop while (not (pprint-exit-if-list-exhausted)) do
-		       (let* ((name (pprint-pop))
-			      (cr (gethash name checks)))
-			 (unless (or (eq :clear (result-summary cr))
-				     (eq :info (result-summary cr)))
-			   (pprint-newline :mandatory s)
-			   (format s " - ~w" cr))))))))))))
+                       (checks group-result-check-results)) gr
+        (multiple-value-bind (code total passed erred failed warned)
+            (result-summary gr)
+          (declare (ignorable erred failed warned))
+          (let ((tests
+                 (loop for check being the hash-keys of checks collect check)))
+            (pprint-logical-block (s tests)
+              (format s "Group ~a: ~d of ~d passed" name passed total)
+              (case code
+                (:clear nil)
+                (otherwise
+                 (loop while (not (pprint-exit-if-list-exhausted)) do
+                       (let* ((name (pprint-pop))
+                              (cr (gethash name checks)))
+                         (unless (or (eq :clear (result-summary cr))
+                                     (eq :info (result-summary cr)))
+                           (pprint-newline :mandatory s)
+                           (format s " - ~w" cr))))))))))))
 
 (defstruct (check-result (:include result-stats (tests 1)))
   "Overall check result structure, containing notes of four distinct types.  A
@@ -197,13 +197,13 @@ instances, and the info field is of any value."
 
 (defun calibrate-check-result (r)
   (with-accessors ((passing-count result-stats-passing)
-		   (erring-count result-stats-erring)
-		   (failing-count result-stats-failing)
-		   (warning-count result-stats-warning)
-		   
-		   (warnings check-result-warnings)
-		   (failures check-result-failures)
-		   (errors check-result-errors)) r
+                   (erring-count result-stats-erring)
+                   (failing-count result-stats-failing)
+                   (warning-count result-stats-warning)
+
+                   (warnings check-result-warnings)
+                   (failures check-result-failures)
+                   (errors check-result-errors)) r
     (cond
       (errors (setf erring-count 1))
       (failures (setf failing-count 1))
@@ -219,49 +219,49 @@ instances, and the info field is of any value."
 nil at the top level; set via dynamically-scoped bindings.")
 
 (set-pprint-dispatch 'check-result
-  #'(lambda (s cr) 
+  #'(lambda (s cr)
       (with-accessors ((check-name check-result-check-name)
-		       (warnings check-result-warnings)
-		       (failures check-result-failures)
-		       (errors check-result-errors)
-		       (info check-result-info)) cr
-	(let ((total-items (+ (length warnings) (length failures)
-			      (length errors)))
-	      (succeeded (eql 0 (+ (length failures) (length errors)))))
-	  (cond
-	   ;; The first three cases are for when we have only one
-	   ;; item to report.  We do this on one line if it fits, and
-	   ;; don't bother with bullet points.
-	   ;;
-	   ((and (eql 1 total-items) errors)
-	    (format s "~@<Check ~a raised an error:~{~:@_ . ~w~}~:>"
-	      check-name errors))
+                       (warnings check-result-warnings)
+                       (failures check-result-failures)
+                       (errors check-result-errors)
+                       (info check-result-info)) cr
+        (let ((total-items (+ (length warnings) (length failures)
+                              (length errors)))
+              (succeeded (eql 0 (+ (length failures) (length errors)))))
+          (cond
+           ;; The first three cases are for when we have only one
+           ;; item to report.  We do this on one line if it fits, and
+           ;; don't bother with bullet points.
+           ;;
+           ((and (eql 1 total-items) errors)
+            (format s "~@<Check ~a raised an error:~{~:@_ . ~w~}~:>"
+              check-name errors))
 
-	   ((and (eql 1 total-items) warnings)
-	    (format s "~@<Check ~a succeeded with warning~p:~{~:@_ - ~w~}~:>"
-	      check-name warnings warnings))
+           ((and (eql 1 total-items) warnings)
+            (format s "~@<Check ~a succeeded with warning~p:~{~:@_ - ~w~}~:>"
+              check-name warnings warnings))
 
-	   ((and (eql 1 total-items) failures)
-	    (format s "Check ~a failed" check-name))
+           ((and (eql 1 total-items) failures)
+            (format s "Check ~a failed" check-name))
 
-	   ;; If we're reporting results for a package or group,
-	   ;; suppress the info fields of the report.
-	   ;;
-	   ((member *nst-report-driver* '(:package :group))
-	    (format s "Check ~a: ~@<~@{~:[~2*~;~a~:@_~{ - ~w~^~:@_~}~]~}~:>"
-	      check-name
-	      errors "Errors:" errors  failures "Failures:" failures
-	      warnings "Warnings:" warnings))
+           ;; If we're reporting results for a package or group,
+           ;; suppress the info fields of the report.
+           ;;
+           ((member *nst-report-driver* '(:package :group))
+            (format s "Check ~a: ~@<~@{~:[~2*~;~a~:@_~{ - ~w~^~:@_~}~]~}~:>"
+              check-name
+              errors "Errors:" errors  failures "Failures:" failures
+              warnings "Warnings:" warnings))
 
-	   ;; The default case is (intended to be) for multi-point
-	   ;; queries about a specific test.
-	   ;;
-	   (t (format s "~@<Check ~a ~:[failed~;passed~]: ~
+           ;; The default case is (intended to be) for multi-point
+           ;; queries about a specific test.
+           ;;
+           (t (format s "~@<Check ~a ~:[failed~;passed~]: ~
                          ~@{~:[~2*~;~:@_~a~{~:@_ - ~w~}~]~}~:>"
-		check-name succeeded
-		errors "Errors:" errors  failures "Failures:" failures
-		warnings "Warnings:" warnings
-		info "Additional information:" info)))))))
+                check-name succeeded
+                errors "Errors:" errors  failures "Failures:" failures
+                warnings "Warnings:" warnings
+                info "Additional information:" info)))))))
 
 (defstruct (context-layer (:type vector) :named)
   "A record of test criterion
@@ -283,36 +283,36 @@ nil at the top level; set via dynamically-scoped bindings.")
   error #+allegro zoom)
 
 (set-pprint-dispatch 'check-note
-  #'(lambda (s cn) 
+  #'(lambda (s cn)
       (with-accessors ((context check-note-context)
-		       (stack check-note-stack)
-		       (format check-note-format)
-		       (args check-note-args)) cn
-	(declare (ignorable context stack))
-	(format s "~@<~:[~2*~;~?~:@_~]in context: ~w~:@_stack: ~w~:>"
-	  format format args context stack)
-	)))
+                       (stack check-note-stack)
+                       (format check-note-format)
+                       (args check-note-args)) cn
+        (declare (ignorable context stack))
+        (format s "~@<~:[~2*~;~?~:@_~]in context: ~w~:@_stack: ~w~:>"
+          format format args context stack)
+        )))
 
 (set-pprint-dispatch 'error-check-note
-  #'(lambda (s cn) 
+  #'(lambda (s cn)
       (with-accessors ((context check-note-context)
-		       (stack check-note-stack)
-		       (format check-note-format)
-		       (args check-note-args)
-		       (error error-check-note-args)) cn
-	(declare (ignorable context stack))
-	(format s "~@<~w~:[~2*~;~:@_~?~]~
+                       (stack check-note-stack)
+                       (format check-note-format)
+                       (args check-note-args)
+                       (error error-check-note-args)) cn
+        (declare (ignorable context stack))
+        (format s "~@<~w~:[~2*~;~:@_~?~]~
                         ~:@_~:[nil context~;~:*in context: ~w~]~
                         ~:@_~:[nil values~;~:*values: ~w~]~
                         ~@[~:@_at ~@<~{~a~^~:@_~}~:>~]~:>"
-	  error format format args context stack
-	  #-allegro nil #+allegro (error-check-note-zoom cn)))))
+          error format format args context stack
+          #-allegro nil #+allegro (error-check-note-zoom cn)))))
 
 ;;; Functions on result and status reports.
 ;;;
 
 (defgeneric result-summary (report &optional
-				   code total passed erred failed warned other)
+                                   code total passed erred failed warned other)
   (:documentation "Receives a reporting structure (or list of them); returns a
 six-value summary of the results:
  - A symbol, one of: :error :fail :warn :info :clear
@@ -321,55 +321,55 @@ six-value summary of the results:
  - The number raising an error.
  - The number failing.
  - The number giving a warning.")
-  
+
   (:method ((rs null) &optional (code :clear) (total 0) (passed 0)
-	                        (erred 0) (failed 0) (warned 0) (other nil))
+                                (erred 0) (failed 0) (warned 0) (other nil))
      (unless other (return-from result-summary
-		     (values code total passed erred failed warned)))
+                     (values code total passed erred failed warned)))
      (result-summary other code total passed erred failed warned))
-  
+
   (:method ((rs cons) &optional (code :clear) (total 0) (passed 0)
-				(erred 0) (failed 0) (warned 0) (other nil))
+                                (erred 0) (failed 0) (warned 0) (other nil))
      (result-summary (car rs) code total passed erred failed warned
-		     (append (cdr rs) other)))
-  
+                     (append (cdr rs) other)))
+
   (:method ((r package-result) &optional
-	    (code :clear) (total 0) (passed 0) (erred 0) (failed 0)
-	    (warned 0) (other nil))
+            (code :clear) (total 0) (passed 0) (erred 0) (failed 0)
+            (warned 0) (other nil))
      (result-summary (loop for c being the hash-values
-			   of (package-result-group-results r) collect c)
-		     code total passed erred failed warned other))
-  
+                           of (package-result-group-results r) collect c)
+                     code total passed erred failed warned other))
+
   (:method ((r group-result)
-	    &optional (code :clear) (total 0) (passed 0)
-	    (erred 0) (failed 0) (warned 0) (other nil))
+            &optional (code :clear) (total 0) (passed 0)
+            (erred 0) (failed 0) (warned 0) (other nil))
      (result-summary (loop for c being the hash-values
-			   of (group-result-check-results r) collect c)
-		     code total passed erred failed warned other))
-  
+                           of (group-result-check-results r) collect c)
+                     code total passed erred failed warned other))
+
   (:method ((r check-result)
-	    &optional (code :clear) (total 0) (passed 0)
-	    (erred 0) (failed 0) (warned 0) (other nil))
+            &optional (code :clear) (total 0) (passed 0)
+            (erred 0) (failed 0) (warned 0) (other nil))
       (with-accessors ((warnings check-result-warnings)
-		       (failures check-result-failures)
-		       (errors check-result-errors)
-		       (info check-result-info)) r
-	(result-summary other
-			(let ((code1 (cond (errors   :error) (failures :fail)
-					   (warnings :warn)  (info     :info)
-					   (t :clear))))
-			  (case code1
-			    (:error code1)
-			    (:fail (case code (:error code) (otherwise code1)))
-			    (:warn (case code
-				     ((:error :fail) code) (otherwise code1)))
-			    (:info (case code (:clear code1) (otherwise code)))
-			    (:clear code)))
-		(+ total 1)
-		(+ passed (if (or errors failures) 0 1))
-		(+ erred (if errors 1 0))
-		(+ failed (if failures 1 0))
-		(+ warned (if warnings 1 0))))))
+                       (failures check-result-failures)
+                       (errors check-result-errors)
+                       (info check-result-info)) r
+        (result-summary other
+                        (let ((code1 (cond (errors   :error) (failures :fail)
+                                           (warnings :warn)  (info     :info)
+                                           (t :clear))))
+                          (case code1
+                            (:error code1)
+                            (:fail (case code (:error code) (otherwise code1)))
+                            (:warn (case code
+                                     ((:error :fail) code) (otherwise code1)))
+                            (:info (case code (:clear code1) (otherwise code)))
+                            (:clear code)))
+                (+ total 1)
+                (+ passed (if (or errors failures) 0 1))
+                (+ erred (if errors 1 0))
+                (+ failed (if failures 1 0))
+                (+ warned (if warnings 1 0))))))
 
 (defmacro count-nonnulls (&rest bools)
   (let ((b (gensym)))
@@ -382,162 +382,162 @@ six-value summary of the results:
 (defun package-report (&optional (package *package*))
   "Top-level function for reporting the results of a package."
   (let* ((result (make-package-result))
-	 (user-package (find-package package))
-	 (sym-pack (loop for k being the hash-keys
-			 of (gethash user-package +package-groups+)
-			 collect k)))
+         (user-package (find-package package))
+         (sym-pack (loop for k being the hash-keys
+                         of (gethash user-package +package-groups+)
+                         collect k)))
     (case *nst-verbosity*
       ((:vverbose)
        (format t "Reporting for actual package ~s~%" user-package)
        (format t "sym-pack ~s~%" sym-pack)))
     (when sym-pack
       (with-accessors ((name package-result-package-name)
-		       (checks package-result-group-results)) result
-	(setf name (package-name user-package))
-	(loop for remote-group in sym-pack do
-	  (let* ((local-group (intern (symbol-name remote-group) user-package))
-		 (report (group-report local-group)))
-	    (setf (gethash local-group checks) report)
-	    (incf (result-stats-elapsed-time result)
-		  (result-stats-elapsed-time report))
-	    (incf (result-stats-tests result)   (result-stats-tests report))
-	    (incf (result-stats-passing result) (result-stats-passing report))
-	    (incf (result-stats-erring result)  (result-stats-erring report))
-	    (incf (result-stats-failing result) (result-stats-failing report))
-	    (incf (result-stats-warning result)
-		  (result-stats-warning report))))))
+                       (checks package-result-group-results)) result
+        (setf name (package-name user-package))
+        (loop for remote-group in sym-pack do
+          (let* ((local-group (intern (symbol-name remote-group) user-package))
+                 (report (group-report local-group)))
+            (setf (gethash local-group checks) report)
+            (incf (result-stats-elapsed-time result)
+                  (result-stats-elapsed-time report))
+            (incf (result-stats-tests result)   (result-stats-tests report))
+            (incf (result-stats-passing result) (result-stats-passing report))
+            (incf (result-stats-erring result)  (result-stats-erring report))
+            (incf (result-stats-failing result) (result-stats-failing report))
+            (incf (result-stats-warning result)
+                  (result-stats-warning report))))))
     result))
 
 (defun group-report (group)
   "Top-level function for reporting the results of a group."
   (let ((result (make-group-result)))
     (with-accessors ((name group-result-group-name)
-		     (checks group-result-check-results)) result
+                     (checks group-result-check-results)) result
       (setf name group)
       (loop for test in (test-names group)
-	    for report = (test-report group test)
-	    do
-	 (setf (gethash test checks) report)
-	 (cond
-	   (report
-	    (incf (result-stats-elapsed-time result)
-		  (result-stats-elapsed-time report))
-	    (incf (result-stats-tests result)   (result-stats-tests report))
-	    (incf (result-stats-passing result) (result-stats-passing report))
-	    (incf (result-stats-erring result)  (result-stats-erring report))
-	    (incf (result-stats-failing result) (result-stats-failing report))
-	    (incf (result-stats-warning result) (result-stats-warning report)))
-	   (t (incf (result-stats-tests result))))))
+            for report = (test-report group test)
+            do
+         (setf (gethash test checks) report)
+         (cond
+           (report
+            (incf (result-stats-elapsed-time result)
+                  (result-stats-elapsed-time report))
+            (incf (result-stats-tests result)   (result-stats-tests report))
+            (incf (result-stats-passing result) (result-stats-passing report))
+            (incf (result-stats-erring result)  (result-stats-erring report))
+            (incf (result-stats-failing result) (result-stats-failing report))
+            (incf (result-stats-warning result) (result-stats-warning report)))
+           (t (incf (result-stats-tests result))))))
     result))
 
 (defun test-report (group test)
   "Top-level function for reporting the results of a test."
   (gethash (canonical-storage-name (standalone-class-name group test))
-	   +results-record+))
+           +results-record+))
 
 (defun multiple-report (packages groups tests &key system)
   (let* ((package-reports (loop for p in packages collect (package-report p)))
-	 (group-reports (loop for g in groups collect (group-report g)))
-	 (test-reports (loop for (g . ts) in tests collect (test-report g ts)))
-	 (result (make-multi-results :package-reports package-reports
-				     :group-reports group-reports
-				     :test-reports test-reports
-				     :system system)))
+         (group-reports (loop for g in groups collect (group-report g)))
+         (test-reports (loop for (g . ts) in tests collect (test-report g ts)))
+         (result (make-multi-results :package-reports package-reports
+                                     :group-reports group-reports
+                                     :test-reports test-reports
+                                     :system system)))
     (finish-multiple-report result)))
 
 (defun finish-multiple-report (result)
   (with-accessors ((package-reports multi-results-package-reports)
-		   (group-reports multi-results-group-reports)
-		   (test-reports multi-results-test-reports)) result
+                   (group-reports multi-results-group-reports)
+                   (test-reports multi-results-test-reports)) result
     (loop for report-set in (list package-reports group-reports test-reports)
-	  do
+          do
        (loop for report in report-set do
-	 (incf (result-stats-elapsed-time result)
-	       (result-stats-elapsed-time report))
-	 (incf (result-stats-tests result)   (result-stats-tests report))
-	 (incf (result-stats-passing result) (result-stats-passing report))
-	 (incf (result-stats-erring result)  (result-stats-erring report))
-	 (incf (result-stats-failing result) (result-stats-failing report))
-	 (incf (result-stats-warning result) (result-stats-warning report))))
+         (incf (result-stats-elapsed-time result)
+               (result-stats-elapsed-time report))
+         (incf (result-stats-tests result)   (result-stats-tests report))
+         (incf (result-stats-passing result) (result-stats-passing report))
+         (incf (result-stats-erring result)  (result-stats-erring report))
+         (incf (result-stats-failing result) (result-stats-failing report))
+         (incf (result-stats-warning result) (result-stats-warning report))))
     result))
 
 (defun all-package-report ()
   (let ((package-hash (make-hash-table :test 'eq)))
     (loop for package-name being the hash-values
-	  of +storage-name-to-test-package+
-	  do
+          of +storage-name-to-test-package+
+          do
        (setf (gethash package-name package-hash) t))
     (multiple-report (loop for package-name being the hash-keys of package-hash
-			   collect (find-package package-name))
-		     nil nil)))
+                           collect (find-package package-name))
+                     nil nil)))
 
 (defun all-groups-report ()
   (let ((group-hash (make-hash-table :test 'eq)))
     (loop for test-report being the hash-values of +results-record+ do
       (when test-report
-	(setf (gethash (check-result-group-name test-report) group-hash) t)))
-    (multiple-report nil 
-		     (loop for group-name being the hash-keys of group-hash
-			 collect group-name)
-		     nil)))
+        (setf (gethash (check-result-group-name test-report) group-hash) t)))
+    (multiple-report nil
+                     (loop for group-name being the hash-keys of group-hash
+                         collect group-name)
+                     nil)))
 
 (defun all-tests-report ()
   (let ((test-reports (loop for test-report being the hash-values
-			    of +results-record+
-			    if test-report collect test-report)))
+                            of +results-record+
+                            if test-report collect test-report)))
     (finish-multiple-report (make-multi-results :package-reports nil
-						:group-reports nil
-						:test-reports test-reports
-						:system nil))))
+                                                :group-reports nil
+                                                :test-reports test-reports
+                                                :system nil))))
 
 ;;;
 ;;; Printing functions
 ;;;
 
 (defun report-package (&optional
-		       (package *package*)
-		       (stream *nst-output-stream*)
-		       (*nst-local-verbosity* *nst-report-default-verbosity*))
+                       (package *package*)
+                       (stream *nst-output-stream*)
+                       (*nst-local-verbosity* *nst-report-default-verbosity*))
   "Top-level function for reporting the results of the tests in a package."
   (let ((*nst-report-driver* :package))
     (format stream "~w" (package-report package))))
 
 (defun report-group (group
-		     &optional
-		     (stream *nst-output-stream*)
-		     (*nst-local-verbosity* *nst-report-default-verbosity*))
+                     &optional
+                     (stream *nst-output-stream*)
+                     (*nst-local-verbosity* *nst-report-default-verbosity*))
   "Top-level function for reporting the results of the tests in a group."
   (let ((*nst-report-driver* :group))
     (format stream "~w" (group-report group))))
 
 (defun report-test (group
-		    test &optional
-		    (stream *nst-output-stream*)
-		    (*nst-local-verbosity* *nst-report-default-verbosity*))
+                    test &optional
+                    (stream *nst-output-stream*)
+                    (*nst-local-verbosity* *nst-report-default-verbosity*))
   "Top-level function for reporting the results of a test."
   (let ((*nst-report-driver* :test))
     (format stream "~w" (test-report group test))))
 
 (defun report-multiple (packages groups tests &key
-				 (stream *nst-output-stream*)
-				 (verbosity *nst-report-default-verbosity*)
-				 (system nil system-supp-p))
+                                 (stream *nst-output-stream*)
+                                 (verbosity *nst-report-default-verbosity*)
+                                 (system nil system-supp-p))
   "Top-level function for reporting the results of several tests."
   (let ((report (apply #'multiple-report
-		       packages groups tests
-		       (cond
-			 (system-supp-p `(:system ,system))
-			 (t nil))))
-	(*nst-local-verbosity* verbosity))
+                       packages groups tests
+                       (cond
+                         (system-supp-p `(:system ,system))
+                         (t nil))))
+        (*nst-local-verbosity* verbosity))
     (declare (special *nst-local-verbosity*))
     (format stream "~w" report)))
 
 (defun nst-dump (&key (stream *nst-output-stream*)
-		      (verbosity *nst-report-default-verbosity*))
+                      (verbosity *nst-report-default-verbosity*))
   "Spit out the full NST state."
   (let ((report (all-package-report))
-	(*print-pretty* t) (*print-readably* nil)
-	(*nst-local-verbosity* verbosity))
+        (*print-pretty* t) (*print-readably* nil)
+        (*nst-local-verbosity* verbosity))
     (declare (special *nst-local-verbosity*))
     (format stream "NST globals:~%")
     (format stream " - *nst-verbosity*: ~s~%" *nst-verbosity*)
@@ -555,34 +555,34 @@ six-value summary of the results:
 ;;; alittle while for looting code snippets.
 
 (defun report-multiple (packages groups tests &key
-				 (stream *nst-output-stream*)
-				 (verbosity *nst-report-default-verbosity*)
-				 (system nil system-supp-p))
+                                 (stream *nst-output-stream*)
+                                 (verbosity *nst-report-default-verbosity*)
+                                 (system nil system-supp-p))
   (let ((*nst-local-verbosity* verbosity))
     (declare (special *nst-local-verbosity*))
     (when system-supp-p
       (format stream "~%Summary of results for system ~a:~%"
-	(slot-value system 'asdf::name)))
+        (slot-value system 'asdf::name)))
     (let ((reports
-	   (nconc (loop for p in packages
-		      for report = (package-report p)
-		      collect (let ((*nst-report-driver* :package))
-				(format stream "~w~%" report)
-				report))
-		  (loop for g in groups
-		      for report = (group-report g)
-		      collect (let ((*nst-report-driver* :group))
-				(format stream "~w~%" report)
-				report))
-		  (loop for (g . ts) in tests
-		      for report = (test-report g ts)
-		      collect (let ((*nst-report-driver* :test))
-				(format stream "~w~%" report)
-				report)))))
+           (nconc (loop for p in packages
+                      for report = (package-report p)
+                      collect (let ((*nst-report-driver* :package))
+                                (format stream "~w~%" report)
+                                report))
+                  (loop for g in groups
+                      for report = (group-report g)
+                      collect (let ((*nst-report-driver* :group))
+                                (format stream "~w~%" report)
+                                report))
+                  (loop for (g . ts) in tests
+                      for report = (test-report g ts)
+                      collect (let ((*nst-report-driver* :test))
+                                (format stream "~w~%" report)
+                                report)))))
       (multiple-value-bind (code total passed erred failed warned)
-	  (result-summary reports)
-	(declare (ignorable code))
-	(format stream
-	    "TOTAL: ~d of ~d passed (~d failed, ~d error~p, ~d warning~p)~%"
-	  passed total failed erred erred warned warned)))))
+          (result-summary reports)
+        (declare (ignorable code))
+        (format stream
+            "TOTAL: ~d of ~d passed (~d failed, ~d error~p, ~d warning~p)~%"
+          passed total failed erred erred warned warned)))))
 |#
