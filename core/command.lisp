@@ -112,7 +112,7 @@
 
 (def-nst-interactive-command (:debug :short-help "Make NST enter debugger on errors."
                                      :args (&optional (val t))
-                                    :long-help "Set the NST *debug-on-error* global variable, making NST enter the debugger when encountering an error.")
+                                     :long-help "Set the NST *debug-on-error* global variable, making NST enter the debugger when encountering an error.")
   (setf *debug-on-error* val))
 
 (def-nst-interactive-command

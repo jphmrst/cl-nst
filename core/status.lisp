@@ -256,10 +256,12 @@ nil at the top level; set via dynamically-scoped bindings.")
            ;; The default case is (intended to be) for multi-point
            ;; queries about a specific test.
            ;;
-           (t (format s "~@<Check ~a ~:[failed~;passed~]: ~
-                         ~@{~:[~2*~;~:@_~a~{~:@_ - ~w~}~]~}~:>"
+           (t (format s "~@<Check ~a ~:[failed~;passed~]~
+                         ~:[~;: ~@{~:[~2*~;~:@_~a~{~:@_ - ~w~}~]~}~]~:>"
                 check-name succeeded
-                errors "Errors:" errors  failures "Failures:" failures
+                (or errors failures warnings info)
+                errors "Errors:" errors
+                failures "Failures:" failures
                 warnings "Warnings:" warnings
                 info "Additional information:" info)))))))
 
