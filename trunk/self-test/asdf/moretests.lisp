@@ -24,8 +24,7 @@
 
 (in-package :asdf-nst-test2)
 
-(def-fixtures f1 ()
-  (c 3) (d 'asdfg))
+(def-fixtures f1 () (c 3) (d 'asdfg))
 
 (def-test-group g1 ()
   (def-check triv :pass))
