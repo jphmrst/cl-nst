@@ -69,6 +69,10 @@
   `(if (apply #',pred forms)
      (check-result)
      (emit-failure :format "Predicate ~s fails" :args '(,pred))))
+
+(def-check-alias (:drop-values criterion)
+  `(:apply (lambda (x &rest others) (declare (ignorable others)) x)
+           ,criterion))
 
 
 (def-value-check (:dump-forms (blurb) (&rest forms))
@@ -82,8 +86,8 @@
        (handler-bind ((,type #'(lambda (,x)
                                  (declare (ignorable ,x))
                                  (return-from ,block (check-result))))
-                      ,@(when (and type-supp-p (not (eq type 'condition)))
-                          `((condition
+                      ,@(when (and type-supp-p (not (eq type 'error)))
+                          `((error
                              #'(lambda (,x)
                                  (unless *debug-on-error*
                                    (return-from ,block (emit-error ,x))))))))
