@@ -271,20 +271,6 @@ when def-check-alias is macroexpanded."
 
 (defvar +storage-name-to-test-package+
     (make-hash-table :test 'eq))
-
-(defclass test-metaclass (standard-class)
-     ((suite-class-name-by-class :initarg :suite-class-name-by-class
-                                 :reader suite-class-name-by-class)
-      (standalone-class-name-by-class :initarg :standalone-class-name-by-class
-                             :reader standalone-class-name-by-class)
-      (test-config-class-name-by-class :initarg :test-config-class-name-by-class
-                              :reader test-config-class-name-by-class)
-      (fixtures-from-group-by-class :initarg :fixtures-from-group-by-class
-                           :reader fixtures-from-group-by-class)
-      (test-in-group-class-name-by-class
-       :initarg :test-in-group-class-name-by-class
-       :reader test-in-group-class-name-by-class)))
-(defmethod validate-superclass ((sub test-metaclass) (sup standard-class)) t)
 
 (defmethod canonical-storage-name ((s symbol))
   (canonical-storage-name (make-instance s)))
@@ -344,45 +330,88 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
                                                (format t "OK~%"))))
              (loop for form in ,anon-fixture-forms do (eval form))
 
-             (defclass ,test-config-class-name () ()
-               (:metaclass test-metaclass)
-               (:suite-class-name-by-class . ,suite-class-name)
-               (:test-config-class-name-by-class . ,test-config-class-name)
-               (:test-in-group-class-name-by-class
-                . ,test-in-group-class-name)
-               (:standalone-class-name-by-class . ,standalone-class-name))
+             (defclass ,test-config-class-name ()
+                  ((suite-class-name-by-class :reader suite-class-name-by-class
+                                              :allocation :class)
+                   (standalone-class-name-by-class
+                    :reader standalone-class-name-by-class
+                    :allocation :class)
+                   (test-config-class-name-by-class
+                    :reader test-config-class-name-by-class
+                    :allocation :class)
+                   (fixtures-from-group-by-class
+                    :reader fixtures-from-group-by-class
+                    :allocation :class)
+                   (test-in-group-class-name-by-class
+                    :allocation :class
+                    :reader test-in-group-class-name-by-class)))
 
              (defclass ,suite-class-name (,*group-class-name*
                                           ,*test-in-group-class*
                                           ,@check-fixture-classes)
-                  ()
-               (:metaclass test-metaclass)
-               (:suite-class-name-by-class . ,suite-class-name)
-               (:test-config-class-name-by-class . ,test-config-class-name)
-               (:test-in-group-class-name-by-class
-                . ,test-in-group-class-name)
-               (:standalone-class-name-by-class . ,standalone-class-name))
+                  ((suite-class-name-by-class :reader suite-class-name-by-class
+                                              :allocation :class)
+                   (standalone-class-name-by-class
+                    :reader standalone-class-name-by-class
+                    :allocation :class)
+                   (test-config-class-name-by-class
+                    :reader test-config-class-name-by-class
+                    :allocation :class)
+                   (fixtures-from-group-by-class
+                    :reader fixtures-from-group-by-class
+                    :allocation :class)
+                   (test-in-group-class-name-by-class
+                    :allocation :class
+                    :reader test-in-group-class-name-by-class)))
 
              (defclass ,standalone-class-name
                   (,*group-class-name* ,@*group-fixture-classes*
-                   ,@check-fixture-classes ,*standalone-test-in-group-class*)
-                  ()
-               (:metaclass test-metaclass)
-               (:suite-class-name-by-class . ,suite-class-name)
-               (:test-config-class-name-by-class . ,test-config-class-name)
-               (:test-in-group-class-name-by-class
-                . ,test-in-group-class-name)
-               (:standalone-class-name-by-class . ,standalone-class-name))
+                                       ,@check-fixture-classes
+                                       ,*standalone-test-in-group-class*)
+                  ((suite-class-name-by-class :reader suite-class-name-by-class
+                                              :allocation :class)
+                   (standalone-class-name-by-class
+                    :reader standalone-class-name-by-class
+                    :allocation :class)
+                   (test-config-class-name-by-class
+                    :reader test-config-class-name-by-class
+                    :allocation :class)
+                   (fixtures-from-group-by-class
+                    :reader fixtures-from-group-by-class
+                    :allocation :class)
+                   (test-in-group-class-name-by-class
+                    :allocation :class
+                    :reader test-in-group-class-name-by-class)))
 
-             (defmethod suite-class-name ((g (eql ',*the-group*))
-                                          (c (eql ',name)))
-               ',suite-class-name)
-             (defmethod standalone-class-name ((g (eql ',*the-group*))
-                                               (c (eql ',name)))
-               ',standalone-class-name)
-             (defmethod test-config-class-name ((g (eql ',*the-group*))
-                                                (c (eql ',name)))
-               ',test-config-class-name)
+             (loop for class-name in '(,test-config-class-name
+                                       ,suite-class-name
+                                       ,standalone-class-name)
+                   for the-class = (find-class class-name)
+                   do
+                (finalize-inheritance the-class)
+                (let ((proto (mop:class-prototype the-class)))
+                  (setf (slot-value proto 'suite-class-name-by-class)
+                        ',suite-class-name
+
+                        (slot-value proto 'test-config-class-name-by-class)
+                        ',test-config-class-name
+
+                        (slot-value proto 'test-in-group-class-name-by-class)
+                        ',test-in-group-class-name
+
+                        (slot-value proto 'standalone-class-name-by-class)
+                        ',standalone-class-name)))
+
+             (let ((gproto (mop:class-prototype (find-class ',*the-group*))))
+               (setf (gethash ',name (suite-test-classes gproto))
+                     ',suite-class-name
+
+                     (gethash ',name (standalone-test-classes gproto))
+                     ',standalone-class-name
+
+                     (gethash ',name (config-test-classes gproto))
+                     ',test-config-class-name))
+
              (defmethod check-name ((obj ,suite-class-name))
                ',name)
 

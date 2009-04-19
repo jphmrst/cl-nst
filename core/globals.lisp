@@ -53,7 +53,7 @@
   "User variable: if non-null, will break into the Lisp REPL debugger upon encountering an unexpected error.  If t, will record the error and continue with other tests.")
 
 (defparameter *nst-info-shows-expected* nil
-  "Debugging-oriented user flag: when tracing NST structures, print expected 
+  "Debugging-oriented user flag: when tracing NST structures, print expected
 values as hardcoded by the macros, rather than recalled via the generic
 functions whose methods the macros define.")
 
@@ -72,7 +72,9 @@ functions whose methods the macros define.")
 ;;; Generic functions whose methods are defined by the various macros.
 ;;;
 (defmacro add-class-name-static-method (fn)
-  `(defmethod ,fn ((g symbol)) (,fn (find-class g))))
+  `(progn
+     (defmethod ,fn ((g symbol)) (,fn (find-class g)))
+     (defmethod ,fn ((g standard-class)) (,fn (class-prototype g)))))
 
 (defmacro add-class-name-instantiator-method (fn)
   `(defmethod ,fn ((g symbol)) (,fn (make-instance g))))
@@ -133,24 +135,18 @@ which every test in the group is associated for a standalone test.")
 (defgeneric check-name (check-instance)
   (:documentation "Map from a check instance back to its symbolic name."))
 
-(defgeneric suite-class-name (group-name test-name)
-  (:documentation
-   "Map from tests to the private name with which NST associates the class of
-the instance of this test for runs within a group run.")
-  (:method (group class) (declare (ignorable group class)) nil))
+(defun suite-class-name (group-name test-name)
+  (gethash test-name
+           (suite-test-classes (mop:class-prototype (find-class group-name)))))
 
-(defgeneric standalone-class-name (group-name test-name)
-  (:documentation
-   "Map from tests to the private name with which NST associates the class of
-the instance of this test for standalone runs, not part of a run with a group.")
-  (:method (group class) (declare (ignorable group class)) nil))
+(defun standalone-class-name (group-name test-name)
+  (gethash test-name
+           (standalone-test-classes (mop:class-prototype
+                                     (find-class group-name)))))
 
-(defgeneric test-config-class-name (group-name test-name)
-  (:documentation
-   "Map from tests to the private name with which NST associates a class for
-each test for methods to apply whether the test is called standalone or as part
-of a group.")
-  (:method (group class) (declare (ignorable group class)) nil))
+(defun test-config-class-name (group-name test-name)
+  (gethash test-name
+           (config-test-classes (mop:class-prototype (find-class group-name)))))
 
 (defgeneric canonical-storage-name (test-name)
   (:documentation
@@ -245,7 +241,7 @@ default the current package."))
 (defmacro define-nst-error (name fields (stream exp) &body printer)
   `(progn
      (define-condition ,name (nst-error) ,fields
-		       (:report (lambda (,exp ,stream) ,@printer)))
+                       (:report (lambda (,exp ,stream) ,@printer)))
      (set-pprint-dispatch ',name (lambda (,stream ,exp) ,@printer))))
 
 (define-nst-error no-nst-groups-in-package
@@ -278,26 +274,26 @@ function; group setup and cleanup become :before and :after methods.")
   (:method ((group-inst group-base-class))
      (let ((group-name (group-name group-inst)))
        (case *nst-verbosity*
-	 ((:vverbose)
-	  (format t "    Starting run loop for ~s~%" group-inst)))
+         ((:vverbose)
+          (format t "    Starting run loop for ~s~%" group-inst)))
        (loop for test in (test-names group-inst) do
-	 (case *nst-verbosity*
-	   ((:vverbose)
-	    (format t "      Starting loop entry ~s~%" test)))
-	 (let ((in-suite-class-name (suite-class-name group-name test)))
-	   (case *nst-verbosity*
-	     ((:vverbose)
-	      (format t "    Suite class name ~s~%" in-suite-class-name)
-	      (format t "    Actual class ~s~%"
-		(find-class in-suite-class-name))))
-	   (let ((test-inst (make-instance in-suite-class-name)))
-	     (case *nst-verbosity*
-	       ((:vverbose)
-		(format t "    Instance ~s~%" test-inst)))
-	     (core-run-test test-inst)))
-	 ;; (format t "      Exiting loop entry ~s~%" test)
-	     )
-	 ;;(format t "    Exiting run loop for ~s~%" group-inst)
+         (case *nst-verbosity*
+           ((:vverbose)
+            (format t "      Starting loop entry ~s~%" test)))
+         (let ((in-suite-class-name (suite-class-name group-name test)))
+           (case *nst-verbosity*
+             ((:vverbose)
+              (format t "    Suite class name ~s~%" in-suite-class-name)
+              (format t "    Actual class ~s~%"
+                (find-class in-suite-class-name))))
+           (let ((test-inst (make-instance in-suite-class-name)))
+             (case *nst-verbosity*
+               ((:vverbose)
+                (format t "    Instance ~s~%" test-inst)))
+             (core-run-test test-inst)))
+         ;; (format t "      Exiting loop entry ~s~%" test)
+             )
+         ;;(format t "    Exiting run loop for ~s~%" group-inst)
        )
      nil))
 
@@ -310,22 +306,22 @@ encoded as :before and :after methods.")
   (:method :around (test)
     "Capture the result of the test."
     (let ((*nst-group-name* (group-name test))
-	  (*nst-check-name* (check-name test))
-	  (start-time))
+          (*nst-check-name* (check-name test))
+          (start-time))
       (case *nst-verbosity*
-	((:default t :verbose :vverbose)
-	 (format t " - Executing test ~s~%" (check-name test))))
+        ((:default t :verbose :vverbose)
+         (format t " - Executing test ~s~%" (check-name test))))
       (setf start-time (get-internal-real-time))
       (let ((result (call-next-method))
-	    (end-time (get-internal-real-time)))
-	(setf (result-stats-elapsed-time result)
-	      (- end-time start-time)	      
-	      (gethash (canonical-storage-name (type-of test))
-		       +results-record+)
-	      result)
-	(case *nst-verbosity*
-	  ((:default t :verbose :vverbose) (format t "   ~s~%" result)))
-	result))))
+            (end-time (get-internal-real-time)))
+        (setf (result-stats-elapsed-time result)
+              (- end-time start-time)
+              (gethash (canonical-storage-name (type-of test))
+                       +results-record+)
+              result)
+        (case *nst-verbosity*
+          ((:default t :verbose :vverbose) (format t "   ~s~%" result)))
+        result))))
 
 ;;;
 ;;; Programmatic starters for a test from Lisp.  Other starters such
@@ -335,14 +331,14 @@ encoded as :before and :after methods.")
 (defun run-package (&optional (package-or-name *package*))
   "Run all groups in a package."
   (let* ((user-package (find-package package-or-name))
-	 (group-names (package-groups user-package)))
+         (group-names (package-groups user-package)))
 
     ;; Print a message at the appropriate level of verbosity.
     (case *nst-verbosity*
       ((:default t :verbose :vverbose)
-       (format t "~@<Running package ~s (groups ~{~s~^ ~:_~})~:>~%" 
-	 (package-name user-package) group-names)))
-    
+       (format t "~@<Running package ~s (groups ~{~s~^ ~:_~})~:>~%"
+         (package-name user-package) group-names)))
+
     (cond
       (group-names
        (loop for group-name in group-names do (run-group group-name)))
@@ -359,7 +355,7 @@ encoded as :before and :after methods.")
        (format t "Running group ~s~%" group))
       ((:vverbose)
        (format t "Running group ~s --> ~s~%" group group-class)))
-    
+
     (unless group-class (error 'no-such-nst-group :group group))
     (core-run (make-instance group-class))))
 
@@ -371,7 +367,7 @@ encoded as :before and :after methods.")
     (case *nst-verbosity*
       ((:default t :verbose :vverbose)
        (format t "Running test ~s (group ~s)~%" test group)))
-    
+
     (unless test-class (error 'no-such-nst-test :group group :test test))
     (core-run (make-instance test-class))))
 
@@ -386,18 +382,18 @@ encoded as :before and :after methods.")
 (defun symbol-or-car (name-or-name-and-args)
   "Return the first element given a list, or return a symbol."
   (cond ((symbolp name-or-name-and-args) name-or-name-and-args)
-	((consp name-or-name-and-args) (car name-or-name-and-args))
-	(t (cerror "Return nil" "Unable to parse ~S to find the name in it."
-		   name-or-name-and-args)
-	   nil)))
+        ((consp name-or-name-and-args) (car name-or-name-and-args))
+        (t (cerror "Return nil" "Unable to parse ~S to find the name in it."
+                   name-or-name-and-args)
+           nil)))
 
 (defun cdr-or-nil (name-or-name-and-args)
   "Return the cdr given a list, or return nil if given a symbol."
   (cond ((symbolp name-or-name-and-args) nil)
-	((listp name-or-name-and-args) (cdr name-or-name-and-args))
-	(t (cerror "Return nil" "Unable to parse ~S to find the name in it."
-		   name-or-name-and-args)
-	   nil)))
+        ((listp name-or-name-and-args) (cdr name-or-name-and-args))
+        (t (cerror "Return nil" "Unable to parse ~S to find the name in it."
+                   name-or-name-and-args)
+           nil)))
 
 ;; Tests on numbers.
 
@@ -406,14 +402,14 @@ encoded as :before and :after methods.")
 (defun sig-place (n value)
   "Returns the n-th significant place of value"
   (let* ((xlog (if (zerop value) 0 (log10 (abs value))))
-	 (xlog-up (floor xlog)))
+         (xlog-up (floor xlog)))
     (expt 10 (- xlog-up (- n 1)))))
 
 (defun eql-for-sigdigits (digits n1 n2)
   "Test whether two numbers are eql to the given number of significant digits."
   (and (numberp n1) (numberp n2)
        (let ((rounder (sig-place digits n1)))
-	 (eql (round n1 rounder) (round n2 rounder)))))
+         (eql (round n1 rounder) (round n2 rounder)))))
 
 ;; Operations on lambda lists, for processing test specs.
 
@@ -421,24 +417,24 @@ encoded as :before and :after methods.")
   "Pick out the names from a lambda-list, omitting the ampersand-prefixed
 delimiters."
   (let ((generic-list (extract-lambda-list lambda-list))
-	(result))
+        (result))
     (labels ((descend (list)
-	        (unless (null list)
-		  (let ((item (car list)))
-		    (cond 
-		      ((listp item)
-		       (cond
-			 (supp-p (descend item))
-			 (t (push (car item) result)
-			    (when (caddr item)
-			      (push (caddr item) result)))))
-		     ((symbolp item)
-		      (unless (member item
-				      #+allegro '(&allow-other-keys &aux
-						  &body &environment &key
-						  &optional &rest &whole)
-				      #-allegro lambda-list-keywords)
-			(push item result))))
-		    (descend (cdr list))))))
+                (unless (null list)
+                  (let ((item (car list)))
+                    (cond
+                      ((listp item)
+                       (cond
+                         (supp-p (descend item))
+                         (t (push (car item) result)
+                            (when (caddr item)
+                              (push (caddr item) result)))))
+                     ((symbolp item)
+                      (unless (member item
+                                      #+allegro '(&allow-other-keys &aux
+                                                  &body &environment &key
+                                                  &optional &rest &whole)
+                                      #-allegro lambda-list-keywords)
+                        (push item result))))
+                    (descend (cdr list))))))
       (descend generic-list)
       (nreverse result))))
