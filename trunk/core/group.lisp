@@ -38,32 +38,14 @@
         (each-cleanup nil) (each-cleanup-supp-p nil))
     (loop for form in forms do
       (case (car form)
-        (:setup (setf setup (cadr form) setup-supp-p t))
-        (:cleanup (setf cleanup (cadr form) cleanup-supp-p t))
-        (:each-setup (setf each-setup (cadr form) each-setup-supp-p t))
-        (:each-cleanup (setf each-cleanup (cadr form) each-cleanup-supp-p t))
+        (:setup (setf setup (cdr form) setup-supp-p t))
+        (:cleanup (setf cleanup (cdr form) cleanup-supp-p t))
+        (:each-setup (setf each-setup (cdr form) each-setup-supp-p t))
+        (:each-cleanup (setf each-cleanup (cdr form) each-cleanup-supp-p t))
         (otherwise (push form checks))))
     (values (nreverse checks)
             setup setup-supp-p cleanup cleanup-supp-p
             each-setup each-setup-supp-p each-cleanup each-cleanup-supp-p)))
-
-(defclass group-metaclass (standard-class)
-     ((group-fixture-classes :initarg :group-fixture-classes
-                             :reader group-fixture-classes)
-      (test-fixture-classes :initarg :test-fixture-classes
-                            :reader test-fixture-classes)
-      (anon-fixture-forms :initarg :anon-fixture-forms
-                          :reader anon-fixture-forms)
-      (group-class-name :initarg :group-class-name :reader group-class-name)
-      (test-in-group-class-name :initarg :test-in-group-class-name
-                                :reader test-in-group-class-name)
-      (standalone-test-in-group-class-name
-       :initarg :standalone-test-in-group-class-name
-       :reader standalone-test-in-group-class-name))
-  (:documentation "Metaclass from which we make the classes corresponding to
-test groups."))
-
-(defmethod validate-superclass ((sub group-metaclass) (sup standard-class)) t)
 
 #+allegro (excl::define-simple-parser def-test-group second :nst-group)
 (defmacro def-test-group (group-name given-fixtures &body forms)
@@ -139,7 +121,9 @@ forms - zero or more test forms, given by def-check."
             ;; manually).
             `(eval-when (:compile-toplevel :load-toplevel :execute)
                #+allegro
-               (excl:record-source-file ',(if (listp group-name) (first group-name) group-name)
+               (excl:record-source-file ',(if (listp group-name)
+                                              (first group-name)
+                                              group-name)
                                         :type :nst-test-group)
                (let ((*the-group* ',group-name))
                  (declare (special *the-group*))
@@ -157,16 +141,46 @@ forms - zero or more test forms, given by def-check."
                                       +package-groups+) package-hash))
                      (setf (gethash ',group-name package-hash) t)))
 
-                 (defclass ,group-name () ()
-                           (:metaclass group-metaclass)
-                           (:group-fixture-classes . ,group-fixture-classes)
-                           (:test-fixture-classes . ,test-fixture-classes)
-                           (:anon-fixture-forms . ,anon-fixture-forms)
-                           (:group-class-name . ,group-class-name)
-                           (:test-in-group-class-name
-                            . ,test-in-group-class-name)
-                           (:standalone-test-in-group-class-name
-                            . ,standalone-test-in-group-class-name))
+                 (defclass ,group-name ()
+                   ((group-fixture-classes :allocation :class
+                                           :reader group-fixture-classes)
+                    (test-fixture-classes :allocation :class
+                                          :reader test-fixture-classes)
+                    (anon-fixture-forms :allocation :class
+                                        :reader anon-fixture-forms)
+                    (group-class-name :allocation :class
+                                      :reader group-class-name)
+                    (test-in-group-class-name :allocation :class
+                                              :reader test-in-group-class-name)
+                    (standalone-test-in-group-class-name
+                     :allocation :class
+                     :reader standalone-test-in-group-class-name)
+
+                    (suite-test-classes :allocation :class
+                                        :initform (make-hash-table :test 'eq)
+                                        :reader suite-test-classes)
+                    (standalone-test-classes :allocation :class
+                                             :initform (make-hash-table
+                                                        :test 'eq)
+                                             :reader standalone-test-classes)
+                    (config-test-classes :allocation :class
+                                         :initform (make-hash-table :test 'eq)
+                                         :reader config-test-classes)))
+
+                 (finalize-inheritance (find-class ',group-name))
+                 (let ((proto (mop:class-prototype (find-class ',group-name))))
+                   (setf (slot-value proto 'group-fixture-classes)
+                         ',group-fixture-classes
+                         (slot-value proto 'test-fixture-classes)
+                         ',test-fixture-classes
+                         (slot-value proto 'anon-fixture-forms)
+                         ',anon-fixture-forms
+                         (slot-value proto 'group-class-name)
+                         ',group-class-name
+                         (slot-value proto 'test-in-group-class-name)
+                         ',test-in-group-class-name
+                         (slot-value proto 'standalone-test-in-group-class-name)
+                         ',standalone-test-in-group-class-name))
 
                  ;; Record the group name in the package used for
                  ;; recording them.
@@ -185,11 +199,8 @@ forms - zero or more test forms, given by def-check."
                    ',group-name)
 
                  ;; Fixture processing.
-                 (loop for form in ',anon-fixture-forms do (eval form))
-                 (defmethod group-fixture-classes ((g ,group-name))
-                   ',group-fixture-classes)
-                 (defmethod test-fixture-classes ((g ,group-name))
-                   ',test-fixture-classes)
+                 ,@anon-fixture-forms
+                 ;; (loop for form in ',anon-fixture-forms do (eval form))
 
                  (defmethod core-run
                      ((obj ,standalone-test-in-group-class-name))
@@ -197,21 +208,21 @@ forms - zero or more test forms, given by def-check."
 
                  (when ,setup-supp-p
                    (defmethod core-run :before ((obj ,group-class-name))
-                     ,setup))
+                     ,@setup))
 
                  (when ,cleanup-supp-p
                    (defmethod core-run :after ((obj ,group-class-name))
-                     ,cleanup))
+                     ,@cleanup))
 
                  (when ,each-setup-supp-p
                    (defmethod core-run-test
                        :before ((obj ,test-in-group-class-name))
-                     ,each-setup))
+                     ,@each-setup))
 
                  (when ,each-cleanup-supp-p
                    (defmethod core-run-test
                        :after ((obj ,test-in-group-class-name))
-                     ,each-cleanup))
+                     ,@each-cleanup))
 
                  (defmethod test-names ((group ,group-class-name)) ',test-names)
                  (defmethod test-names ((group ,group-name)) ',test-names)

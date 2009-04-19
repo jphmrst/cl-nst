@@ -21,14 +21,6 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
-(defclass fixture-metaclass (standard-class)
-     ((bound-names :initarg :bound-names :reader bound-names)
-      (test-fixture-class-name :initarg :test-fixture-class-name
-                               :reader test-fixture-class-name)
-      (group-fixture-class-name :initarg :group-fixture-class-name
-                                :reader group-fixture-class-name)))
-(defmethod validate-superclass ((sub fixture-metaclass) (sup standard-class)) t)
-
 #+allegro (excl::define-simple-parser def-fixtures second :nst-fixture-set)
 (defmacro def-fixtures (name
                         (&key uses assumes outer inner documentation)
@@ -76,36 +68,55 @@ use of this fixture.
                                           :nst-fixture-test-class-names))
          (bound-names (loop for binding in bindings collect (car binding))))
 
-    `(eval-when (:compile-toplevel :load-toplevel :execute)
+    `(progn
        #+allegro (excl:record-source-file ',name :type :nst-fixture-set)
 
-       (defclass ,name () ()
-         (:metaclass fixture-metaclass)
-         (:bound-names ,@bound-names)
-         (:test-fixture-class-name . ,test-fixture-class-name)
-         (:group-fixture-class-name . ,group-fixture-class-name))
+       (eval-when (:compile-toplevel :load-toplevel :execute)
+         (defclass ,name ()
+           ((bound-names :reader bound-names :allocation :class)
+            (test-fixture-class-name :reader test-fixture-class-name
+                                     :allocation :class)
+            (group-fixture-class-name :reader group-fixture-class-name
+                                      :allocation :class))
+           ,@(when documentation `((:documentation ,documentation))))
 
-       ;; Create the group-inherited class, and apply the bindings
-       ;; to included methods.
-       (defclass ,group-fixture-class-name () ()
-         (:metaclass fixture-metaclass)
-         (:bound-names ,@bound-names)
-         (:test-fixture-class-name . ,test-fixture-class-name)
-         (:group-fixture-class-name . ,group-fixture-class-name)
-         ,@(when documentation `((:documentation ,documentation))))
+         ;; Create the group-inherited class, and apply the bindings
+         ;; to included methods.
+         (defclass ,group-fixture-class-name ()
+           ((bound-names :reader bound-names :allocation :class)
+            (test-fixture-class-name :reader test-fixture-class-name
+                                     :allocation :class)
+            (group-fixture-class-name :reader group-fixture-class-name
+                                      :allocation :class))
+           ,@(when documentation `((:documentation ,documentation))))
+
+         ;; Create the test-inherited class, and apply the bindings
+         ;; to included methods.
+         (defclass ,test-fixture-class-name ()
+           ((bound-names :reader bound-names :allocation :class)
+            (test-fixture-class-name :reader test-fixture-class-name
+                                     :allocation :class)
+            (group-fixture-class-name :reader group-fixture-class-name
+                                      :allocation :class))
+           ,@(when documentation `((:documentation ,documentation))))
+
+         (loop for class-name in '(,name
+                                   ,group-fixture-class-name
+                                   ,test-fixture-class-name)
+               do
+            (finalize-inheritance (find-class class-name))
+            (let ((proto (mop:class-prototype (find-class class-name))))
+              (setf (slot-value proto 'bound-names) ',bound-names
+                    (slot-value proto 'test-fixture-class-name)
+                    ',test-fixture-class-name
+                    (slot-value proto 'group-fixture-class-name)
+                    ',group-fixture-class-name))))
+
        (defmethod core-run :around ((group ,group-fixture-class-name))
          (let* ,bindings
            (declare (special ,@bound-names))
            (call-next-method)))
 
-       ;; Create the test-inherited class, and apply the bindings
-       ;; to included methods.
-       (defclass ,test-fixture-class-name () ()
-         (:metaclass fixture-metaclass)
-         (:bound-names ,@bound-names)
-         (:test-fixture-class-name . ,test-fixture-class-name)
-         (:group-fixture-class-name . ,group-fixture-class-name)
-         ,@(when documentation `((:documentation ,documentation))))
        (defmethod core-run-test :around ((test ,test-fixture-class-name))
          (let* ,bindings
            (declare (special ,@bound-names))
@@ -152,13 +163,16 @@ use of this fixture.
     (loop for f in fixture-list do
       (cond
        ;; A named fixture
-       ((symbolp f)
-        (let ((group-class-name (group-fixture-class-name f))
-              (test-class-name (test-fixture-class-name f)))
-          (unless (and group-class-name test-class-name)
-            (error "~f does not correspond to a defined fixture" f))
-          (push group-class-name group-fixture-class-names)
-          (push test-class-name  test-fixture-class-names)))
+        ((symbolp f)
+         (let ((fc (find-class f)))
+           (unless fc (error "No such fixture class ~s" f))
+           (let* ((proto (mop:class-prototype fc))
+                  (group-class-name (group-fixture-class-name proto))
+                  (test-class-name (test-fixture-class-name proto)))
+             (unless (and group-class-name test-class-name)
+               (error "~s does not correspond to a defined fixture" f))
+             (push group-class-name group-fixture-class-names)
+             (push test-class-name  test-fixture-class-names))))
        ;; Miscellaneous garbage 1
        ((not (listp f))
         (error "Expected a fixture name or anonymous fixture; found ~s" f))
