@@ -24,48 +24,48 @@
 (defpackage :sift.nst
     (:documentation "Unit and regression testing for Common Lisp")
     (:nicknames :nst)
-    (:use :common-lisp #+sbcl sb-mop #+allegro mop)
+    (:use :common-lisp :closer-mop)
     #+(or sbcl allegro)
     (:import-from #+sbcl sb-mop #-sbcl mop
-		  #:generic-function-methods #:method-specializers
-		  #:eql-specializer-object)
+                  #:generic-function-methods #:method-specializers
+                  #:eql-specializer-object)
     #+(or openmcl clozure)
     (:import-from ccl
-		  #:extract-lambda-list
-		  #:generic-function-methods #:method-specializers
-		  #:eql-specializer-object)
+                  #:extract-lambda-list
+                  #:generic-function-methods #:method-specializers
+                  #:eql-specializer-object)
     (:export #:def-fixtures
-	     #:def-test-group
-	     #:def-check
+             #:def-test-group
+             #:def-check
 
-	     #:def-check-alias
-	     #:def-value-check
-	     #:def-control-check
+             #:def-check-alias
+             #:def-value-check
+             #:def-control-check
 
-	     #:continue-check
-	     #:emit-failure
-	     #:emit-warning
-	     #:emit-success
-	     #:check-result
+             #:continue-check
+             #:emit-failure
+             #:emit-warning
+             #:emit-success
+             #:check-result
 
-	     #:run-package #:run-group #:run-test
-	     #:report-multiple #:report-package #:report-group #:report-test
+             #:run-package #:run-group #:run-test
+             #:report-multiple #:report-package #:report-group #:report-test
 
-	     #:nst-junit-dump
+             #:nst-junit-dump
 
-	     #:*nst-output-stream*
-	     #:*nst-report-default-verbosity*
-	     #:*nst-verbosity*
-	     #:*debug-on-error*
-	     
-	     #:junit-results-by-group))
+             #:*nst-output-stream*
+             #:*nst-report-default-verbosity*
+             #:*nst-verbosity*
+             #:*debug-on-error*
+
+             #:junit-results-by-group))
 
 (defun nst::make-package-documentation ()
   "Write documentation for this package, using system package-doc."
   (asdf:oos 'asdf:load-op 'package-doc)
   (funcall (symbol-function (intern (symbol-name 'package-doc)
-				    (find-package :package-doc)))
-	   (find-package :nst)))
+                                    (find-package :package-doc)))
+           (find-package :nst)))
 
 ;;; The packages below are internal --- user symbols map to NST
 ;;; internal symbols which live in thse packages.  By "hiding" these

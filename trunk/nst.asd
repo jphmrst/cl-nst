@@ -29,43 +29,44 @@
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :masdfnst)))
+    :depends-on (:closer-mop)
 
     :components ((:module "core" :components
-			  (;; The NST package, plus internal packages
-			   ;; and documentation generation.
-			   (:file "package")
-		 
-			   ;; Flags, generic function declarations,
-			   ;; and helper functions.
-			   (:file "globals"  :depends-on ("package"))
-		 
-			   ;; The def-group macro.
-			   (:file "group" :depends-on ("globals"))
-		 
-			   ;; The def-check macro, and the general
-			   ;; expansion and handling of check
-			   ;; criteria.
-			   (:file "check" :depends-on ("globals"))
-		 
-			   ;; The def-fixture macro, and processing
-			   ;; anonymous fixture declarations.
-			   (:file "fixture"  :depends-on ("globals"))
-		 
-			   ;; Helper functions for permuting lists.
-			   (:file "permuter" :depends-on ("package"))
-		 
-			   ;; Standard criteria declarations.
-			   (:file "criteria"
-				  :depends-on ("permuter" "check"))
-		 
-			   ;; Receiving and bookkeeping the results of
-			   ;; tests.
-			   (:file "status" :depends-on ("globals" "check"))
-		 
-			   ;; Interaction with NST via the REPL.
-			   (:file "command"
-				  :depends-on ("globals" "status"))
-		 
-			   ;; Generating JUnit-friendly XML.
-			   (:file "junit"
-				  :depends-on ("status"))))))
+                          (;; The NST package, plus internal packages
+                           ;; and documentation generation.
+                           (:file "package")
+
+                           ;; Flags, generic function declarations,
+                           ;; and helper functions.
+                           (:file "globals"  :depends-on ("package"))
+
+                           ;; The def-group macro.
+                           (:file "group" :depends-on ("globals"))
+
+                           ;; The def-check macro, and the general
+                           ;; expansion and handling of check
+                           ;; criteria.
+                           (:file "check" :depends-on ("globals"))
+
+                           ;; The def-fixture macro, and processing
+                           ;; anonymous fixture declarations.
+                           (:file "fixture"  :depends-on ("globals"))
+
+                           ;; Helper functions for permuting lists.
+                           (:file "permuter" :depends-on ("package"))
+
+                           ;; Standard criteria declarations.
+                           (:file "criteria"
+                                  :depends-on ("permuter" "check"))
+
+                           ;; Receiving and bookkeeping the results of
+                           ;; tests.
+                           (:file "status" :depends-on ("globals" "check"))
+
+                           ;; Interaction with NST via the REPL.
+                           (:file "command"
+                                  :depends-on ("globals" "status"))
+
+                           ;; Generating JUnit-friendly XML.
+                           (:file "junit"
+                                  :depends-on ("status"))))))

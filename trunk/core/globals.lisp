@@ -137,16 +137,16 @@ which every test in the group is associated for a standalone test.")
 
 (defun suite-class-name (group-name test-name)
   (gethash test-name
-           (suite-test-classes (mop:class-prototype (find-class group-name)))))
+           (suite-test-classes (class-prototype (find-class group-name)))))
 
 (defun standalone-class-name (group-name test-name)
   (gethash test-name
-           (standalone-test-classes (mop:class-prototype
+           (standalone-test-classes (class-prototype
                                      (find-class group-name)))))
 
 (defun test-config-class-name (group-name test-name)
   (gethash test-name
-           (config-test-classes (mop:class-prototype (find-class group-name)))))
+           (config-test-classes (class-prototype (find-class group-name)))))
 
 (defgeneric canonical-storage-name (test-name)
   (:documentation
