@@ -389,7 +389,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
                    for the-class = (find-class class-name)
                    do
                 (finalize-inheritance the-class)
-                (let ((proto (mop:class-prototype the-class)))
+                (let ((proto (class-prototype the-class)))
                   (setf (slot-value proto 'suite-class-name-by-class)
                         ',suite-class-name
 
@@ -402,7 +402,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
                         (slot-value proto 'standalone-class-name-by-class)
                         ',standalone-class-name)))
 
-             (let ((gproto (mop:class-prototype (find-class ',*the-group*))))
+             (let ((gproto (class-prototype (find-class ',*the-group*))))
                (setf (gethash ',name (suite-test-classes gproto))
                      ',suite-class-name
 

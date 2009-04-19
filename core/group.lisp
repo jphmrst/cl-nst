@@ -168,7 +168,7 @@ forms - zero or more test forms, given by def-check."
                                          :reader config-test-classes)))
 
                  (finalize-inheritance (find-class ',group-name))
-                 (let ((proto (mop:class-prototype (find-class ',group-name))))
+                 (let ((proto (class-prototype (find-class ',group-name))))
                    (setf (slot-value proto 'group-fixture-classes)
                          ',group-fixture-classes
                          (slot-value proto 'test-fixture-classes)

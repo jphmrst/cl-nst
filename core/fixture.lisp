@@ -105,7 +105,7 @@ use of this fixture.
                                    ,test-fixture-class-name)
                do
             (finalize-inheritance (find-class class-name))
-            (let ((proto (mop:class-prototype (find-class class-name))))
+            (let ((proto (class-prototype (find-class class-name))))
               (setf (slot-value proto 'bound-names) ',bound-names
                     (slot-value proto 'test-fixture-class-name)
                     ',test-fixture-class-name
@@ -166,7 +166,7 @@ use of this fixture.
         ((symbolp f)
          (let ((fc (find-class f)))
            (unless fc (error "No such fixture class ~s" f))
-           (let* ((proto (mop:class-prototype fc))
+           (let* ((proto (class-prototype fc))
                   (group-class-name (group-fixture-class-name proto))
                   (test-class-name (test-fixture-class-name proto)))
              (unless (and group-class-name test-class-name)
