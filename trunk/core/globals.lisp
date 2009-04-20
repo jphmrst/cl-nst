@@ -135,6 +135,10 @@ which every test in the group is associated for a standalone test.")
 (defgeneric check-name (check-instance)
   (:documentation "Map from a check instance back to its symbolic name."))
 
+(defgeneric suite-test-classes (group-prototype))
+(defgeneric standalone-test-classes (group-prototype))
+(defgeneric config-test-classes (group-prototype))
+
 (defun suite-class-name (group-name test-name)
   (gethash test-name
            (suite-test-classes (class-prototype (find-class group-name)))))
@@ -146,7 +150,8 @@ which every test in the group is associated for a standalone test.")
 
 (defun test-config-class-name (group-name test-name)
   (gethash test-name
-           (config-test-classes (class-prototype (find-class group-name)))))
+           (config-test-classes (class-prototype
+                                      (find-class group-name)))))
 
 (defgeneric canonical-storage-name (test-name)
   (:documentation
