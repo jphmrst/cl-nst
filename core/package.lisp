@@ -24,7 +24,7 @@
 (defpackage :sift.nst
     (:documentation "Unit and regression testing for Common Lisp")
     (:nicknames :nst)
-    (:use :common-lisp :closer-mop)
+    (:use :closer-common-lisp)
     #+(or sbcl allegro)
     (:import-from #+sbcl sb-mop #-sbcl mop
                   #:generic-function-methods #:method-specializers
