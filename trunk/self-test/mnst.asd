@@ -19,26 +19,38 @@
 ;;; License along with NST.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
 
+(asdf:oos 'asdf:load-op :asdf-nst)
 (defpackage :mnst-asd (:use :common-lisp :asdf))
 (in-package :mnst-asd)
 
 (defsystem :mnst
+    :class nst-testable
     :description "M as in meta: NST- (or otherwise) testing NST."
     :serial t
+    :nst-systems (:masdfnst)
+    :nst-groups ((:mnst-simple . g1)
+                 (:mnst-simple . g1a)
+                 (:mnst-simple . g1a1)
+                 (:mnst-simple . g2a)
+                 (:mnst-simple . g3a)
+                 (:mnst-simple . g4)
+                 (:mnst-simple . h1)
+                 (:mnst-simple . core-checks))
     :depends-on (:nst)
+    :in-order-to ((test-op (load-op :mnst)))
     :components ((:module "core" :components
-			  (;; Manually-run tests, for inspecting the
-			   ;; order of fixture, setup, cleanup and
-			   ;; test execution.
-			   (:file "byhand-mnst")
-		 
-			   ;; A simple test suite
-			   (:file "simple-mnst")
+                          (;; Manually-run tests, for inspecting the
+                           ;; order of fixture, setup, cleanup and
+                           ;; test execution.
+                           (:file "byhand")
 
-;;;			  ;; Checks with anonymous fixtures
-;;;			  (:file "anon-fixtures-mnst")
+                           ;; A simple test suite
+                           (:file "builtin-checks")
 
-			   ))))
+;;;                       ;; Checks with anonymous fixtures
+;;;                       (:file "anon-fixtures-mnst")
+
+                           ))))
 
 (defclass nst-file (cl-source-file) ())
 (defmethod perform ((o compile-op) (c nst-file)) nil)
@@ -48,12 +60,12 @@
 (defmethod output-files ((o compile-op) (c nst-file)) nil)
 
 ;;;(defmethod perform ((op test-op)
-;;;		    (system (eql (find-system :mnst))))
+;;;                 (system (eql (find-system :mnst))))
 ;;;  (eval (list (intern (symbol-name '#:run-nst-commands)
-;;;		      (find-package :mnst))
-;;;	      :run-package
-;;;	      (quote (intern (symbol-name :mnst)
-;;;			     (find-package 'cl-user))))))
+;;;                   (find-package :mnst))
+;;;           :run-package
+;;;           (quote (intern (symbol-name :mnst)
+;;;                          (find-package 'cl-user))))))
 
 (defmethod operation-done-p ((o test-op) (sys (eql (find-system :mnst))))
   "We need to make sure that operation-done-p doesn't return its

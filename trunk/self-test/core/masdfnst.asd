@@ -26,7 +26,7 @@
 
 (defsystem :masdfnst
     :class nst-testable
-    
+
     :in-order-to ((test-op (load-op :masdfnst)))
 
     ;; :nst-package :asdf-nst-test
@@ -36,12 +36,14 @@
     ;; :nst-packages (:asdf-nst-test :asdf-nst-test2)
 
     :nst-packages (:asdf-nst-test)
-    :nst-groups ((:asdf-nst-test2 . :g1a))
-    
+    :nst-groups ((:asdf-nst-test2 . :more1)
+                 (:asdf-nst-test2 . :more2)
+                 (:asdf-nst-test2 . :more3))
+
     ;; :nst-groups ((:asdf-nst-test2 . :g1))
     ;; :nst-tests ((:asdf-nst-test2 :g1a :fix0)
-    ;;		   (:asdf-nst-test :core-checks :warn-1))
-    
+    ;;             (:asdf-nst-test :core-checks :warn-1))
+
     :components ((:module "asdf" :components
-			  ;; A simple test suite
-			  ((:file "tests") (:file "moretests")))))
+                          ;; A simple test suite
+                          ((:file "tests") (:file "moretests")))))

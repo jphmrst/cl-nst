@@ -1,9 +1,8 @@
-;;; File tests.lisp
+;;; File simple-mnst.lisp
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
-;;; Copyright (c) 2006-2009 Smart Information Flow Technologies.
-;;; Written by John Maraist.
+;;; Copyright (c) 2006, 2007, 2008 Smart Information Flow Technologies.
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
 ;;; NST is free software: you can redistribute it and/or modify it
@@ -19,18 +18,60 @@
 ;;; You should have received a copy of the GNU Lesser General Public
 ;;; License along with NST.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
-(defpackage :asdf-nst-test
-    (:documentation "Package for an ASDF-configured NST test suite")
+(defpackage :mnst-simple
+    (:documentation "Package for a simple NST test suite")
     (:use :common-lisp :nst))
 
-(in-package :asdf-nst-test)
+(in-package :mnst-simple)
+
+(def-fixtures f1 ()
+  (c 3) (d 'asdfg))
+
+(def-fixtures f1a ()
+  (e 'asdfg))
+
+(defclass classcheck ()
+     ((s1 :initarg :s1 :reader get-s1)
+      (s2 :initarg :s2) (s3 :initarg :s3)))
+
+(def-test-group g1 ()
+  (def-check triv :pass))
+
+(def-test-group g1a ()
+  (def-check (fix0 :fixtures (f1)) :true (boundp 'c)))
+
+(def-test-group g1a1 ()
+  (def-check (fix0 :fixtures (f1)) :true (boundp 'c)))
+
+(def-fixtures f2 (:uses (f1))
+  (d 4) (e 'asdfg) (f c))
+
+(def-fixtures capture-x-y-fixtures (:assumes (x y))
+  (z (+ x y)) (w 10))
+
+(def-test-group g2a (f1)
+  (def-check using-c :true (boundp 'c)))
+
+(def-test-group g3a (f1)
+  (def-check fix0 :true (boundp 'c))
+  (def-check fix1 :true (not (boundp '*this-name-should-not-be-bound*))))
+
+(def-test-group g4 (f1)
+  (def-check fix0 :true (boundp 'c))
+  (def-check fix1 :true (not (boundp '*this-name-should-not-be-bound*))))
+
+(def-test-group h1 (f1 f1a)
+  (def-check two-fixtures :true (eq d e))
+  )
+
+(def-test-group err (f1 f1a) (def-check error1 (:eql 3) (error "blah")))
+
 
 (defparameter zzz 0)
 
 (def-test-group core-checks ()
   (def-check pass-1 :pass 'a)
-  
-  (def-check fail-1 (:not :fail) 'a)  
+  (def-check fail-1 (:not :fail) 'a)
   (def-check warn-1 (:warn) 3 (+ 1 3))
   (def-check all-1 (:all (:pass) (:warn)) 3 (+ 1 3))
   (def-check (eq-1) (:eq 'ert) 'ert)
@@ -57,24 +98,31 @@
   (def-check each1 (:each (:symbol a)) '(a a a a a))
   (def-check seq-1 (:seq (:symbol a) (:eql 2) (:eq 'b)) '(a 2 b))
   (def-check permute1 (:permute (:each (:eq 'a))) '(a a))
-  (def-check values-drop1
-      (:apply (lambda (x y) (declare (ignorable y)) x) (:symbol a))
-    (values 'a 'b))
-  (def-check values-drop3
-      (:apply (lambda (x y z) (declare (ignorable x z)) y) (:symbol b))
+  (def-check permute2
+      (:permute (:seq (:symbol b)
+                      (:predicate symbolp) (:predicate numberp)))
+    '(1 a b))
+  (def-check permute2a (:permute (:seq (:eq 'a) (:eq 'b))) '(a b))
+  (def-check permute2b (:permute (:seq (:eq 'b) (:eq 'a))) '(a b))
+  (def-check no-values1 (:drop-values (:symbol a)) (values 'a 'b 'c))
+  (def-check values-drop1 (:apply (lambda (x y) x) (:symbol a)) (values 'a 'b))
+  (def-check values-drop3 (:apply (lambda (x y z) y) (:symbol b))
     (values 'a 'b 'c))
   (def-check value-list1 (:value-list (:seq (:symbol a) (:eq 'b)))
     (values 'a 'b))
   (def-check values1 (:values (:symbol a) (:eq 'b)) (values 'a 'b))
-  (def-check permute2
-      (:permute (:seq (:symbol b)
-		      (:predicate symbolp) (:predicate numberp)))
-    '(1 a b))
   (def-check across-1 (:across (:symbol a) (:eql 2) (:eq 'b))
     (vector 'a 2 'b))
+  (def-check slot1
+      (:slots (s1 (:eql 10))
+              (s2 (:symbol zz))
+              (s3 (:seq (:symbol q) (:symbol w)
+                        (:symbol e) (:symbol r))))
+    (make-instance 'classcheck :s1 10 :s2 'zz :s3 '(q w e r)))
   (def-check check-err1 (:check-err :forms-eq)
     'asdfgh (error "this should be caught"))
   (def-check proj-1 (:proj (0 2) :forms-eq) 'a 3 (car '(a b)))
+  (def-check (two-fixtures :fixtures (f1 f1a)) :forms-eq d e)
   )
 
 (defun div-five-by (x) (/ 5 x))
