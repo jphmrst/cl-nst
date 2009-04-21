@@ -28,7 +28,7 @@
     :version "1.0.3"
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
-    :in-order-to ((test-op (test-op :masdfnst)))
+    :in-order-to ((test-op (test-op :mnst)))
     :depends-on ((:version :closer-mop "0.55"))
 
     :components ((:module "core" :components

@@ -24,14 +24,14 @@
 
 (in-package :asdf-nst-test2)
 
-(def-fixtures f1 () (c 3) (d 'asdfg))
+(def-fixtures fix-for-more () (c 3) (d 'asdfg))
 
-(def-test-group g1 ()
+(def-test-group more1 ()
   (def-check triv :pass))
 
-(def-test-group g1a ()
+(def-test-group more2 ()
   (def-check triv :pass)
-  (def-check (fix0 :fixtures (f1)) :true (boundp 'c)))
+  (def-check (fix0 :fixtures (fix-for-more)) :true (boundp 'c)))
 
-(def-test-group g1a1 ()
-  (def-check (fix0 :fixtures (f1)) :true (boundp 'c)))
+(def-test-group more3 ()
+  (def-check (fix0 :fixtures (fix-for-more)) :true (boundp 'c)))
