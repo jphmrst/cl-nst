@@ -113,11 +113,17 @@ use of this fixture.
                     ',group-fixture-class-name))))
 
        (defmethod core-run :around ((group ,group-fixture-class-name))
+         (declare (special ,@(loop for used-fixture in uses
+                                 append (bound-names used-fixture))
+                           ,@assumes))
          (let* ,bindings
            (declare (special ,@bound-names))
            (call-next-method)))
 
        (defmethod core-run-test :around ((test ,test-fixture-class-name))
+         (declare (special ,@(loop for used-fixture in uses
+                                 append (bound-names used-fixture))
+                           ,@assumes))
          (let* ,bindings
            (declare (special ,@bound-names))
            (call-next-method)))
