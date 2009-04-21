@@ -45,10 +45,16 @@
   (:each-setup   (format t "          Setup for each test of group gr2b~%"))
   (:each-cleanup (format t "          Cleanup for each test of group gr2b~%"))
   (def-check (ts1 :fixtures (fix2)
-		  :setup (format t "            Setup for ts1~%")
-		  :cleanup (format t "            Cleanup for ts1~%"))
+                  :setup (format t "            Setup for ts1~%")
+                  :cleanup (format t "            Cleanup for ts1~%"))
       :echo ())
   (def-check ts2 :echo ()))
+
+
+
+(def-test-group failures ()
+  (def-check seq-1 (:seq (:symbol a) (:eql 3) (:eq 'b)) '(a 2 b))
+  )
 
 (eval-when (:load-toplevel :execute)
   (defparameter gr1-class (nst::group-class-name 'gr1))

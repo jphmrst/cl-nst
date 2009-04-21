@@ -62,6 +62,15 @@ functions whose methods the macros define.")
 (defparameter *nst-group-name* nil
   "Dynamic variable used to set the name of the group in a test result report.")
 
+(defparameter *nst-context-evaluable* nil
+  "Dynamic-scoped variable tracking whether the values under test should be asusmed evaluated.  Used in preparing context expressions.")
+(defparameter *nst-context* nil
+  "Dynamic-scoped variable recording the values under test - a list of
+context-layer instances.")
+(defparameter *nst-stack* nil
+  "Dynamic-scoped variable - the stack of values under test by the
+current criterion.")
+
 ;;;
 ;;; Internal tables.
 ;;;

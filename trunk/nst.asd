@@ -55,13 +55,13 @@
                            ;; Helper functions for permuting lists.
                            (:file "permuter" :depends-on ("package"))
 
-                           ;; Standard criteria declarations.
-                           (:file "criteria"
-                                  :depends-on ("permuter" "check"))
-
                            ;; Receiving and bookkeeping the results of
                            ;; tests.
                            (:file "status" :depends-on ("globals" "check"))
+
+                           ;; Standard criteria declarations.
+                           (:file "criteria"
+                                  :depends-on ("permuter" "check" "status"))
 
                            ;; Interaction with NST via the REPL.
                            (:file "command"

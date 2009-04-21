@@ -24,20 +24,11 @@
 ;;; Generating status data within checks.
 ;;;
 
-(defparameter *nst-context* nil
-  "Dynamic-scoped variable recording the criteria under test - a list of
-context-layer instances.")
-(defparameter *nst-stack* nil
-  "Dynamic-scoped variable - the stack of values under test by the
-current criterion.")
-#+allegro(declaim (dynamic-extent *nst-context* *nst-stack*))
-
 (defun emit-warning (&key format args)
   "For use within user-defined check criteria: emit a warning."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
   (check-result
-   :warnings (list (make-check-note :context *nst-context*
-                                    :stack *nst-stack*
+   :warnings (list (make-check-note :context *nst-context* :stack *nst-stack*
                                     :format format :args args))))
 (defun emit-failure (&key format args info)
   "For use within user-defined check criteria: explain a failure."
@@ -195,6 +186,15 @@ instances, and the info field is of any value."
   (check-name *nst-check-name*)
   (warnings nil) (failures nil) (errors nil) (info nil))
 
+(defun interesting-result-p (result)
+  (when (typep result 'check-result)
+    (with-accessors ((warnings check-result-warnings)
+                     (failures check-result-failures)
+                     (errors check-result-errors)
+                     ;; (info check-result-info)
+                     ) result
+      (or warnings failures errors))))
+
 (defun calibrate-check-result (r)
   (with-accessors ((passing-count result-stats-passing)
                    (erring-count result-stats-erring)
@@ -265,12 +265,21 @@ nil at the top level; set via dynamically-scoped bindings.")
                 warnings "Warnings:" warnings
                 info "Additional information:" info)))))))
 
-(defstruct (context-layer (:type vector) :named)
+(defstruct context-layer
   "A record of test criterion
  criterion - the criterion symbol itself
  criterion-args - arguments to the criterion
  given-stack - the stack of values assessed by the criterion"
   criterion criterion-args given-stack)
+
+(set-pprint-dispatch 'context-layer
+  #'(lambda (s cl)
+      (with-accessors ((criterion context-layer-criterion)
+                       (criterion-args context-layer-criterion-args)
+                       (given-stack context-layer-given-stack)) cl
+        (format s "~@<checking (~s~@<~{~:_ ~s~}~:>) ~_on (~{~a~^ ~})~:>"
+          criterion criterion-args given-stack))))
+
 
 (defstruct check-note
   "A single note issued in criteria checking.
@@ -280,10 +289,6 @@ nil at the top level; set via dynamically-scoped bindings.")
                 cl:format"
   context stack format args)
 
-(defstruct (error-check-note (:include check-note))
-  "A note issued in regards to a thrown error."
-  error #+allegro zoom)
-
 (set-pprint-dispatch 'check-note
   #'(lambda (s cn)
       (with-accessors ((context check-note-context)
@@ -291,9 +296,16 @@ nil at the top level; set via dynamically-scoped bindings.")
                        (format check-note-format)
                        (args check-note-args)) cn
         (declare (ignorable context stack))
-        (format s "~@<~:[~2*~;~?~:@_~]in context: ~w~:@_stack: ~w~:>"
+        (format s "~@<~:[~2*~;~?~:@_~]~
+                      in context: ~@<~{~a~^~:@_~}~:>~
+                      ~:@_stack: ~w~:>"
           format format args context stack)
         )))
+
+
+(defstruct (error-check-note (:include check-note))
+  "A note issued in regards to a thrown error."
+  error #+allegro zoom)
 
 (set-pprint-dispatch 'error-check-note
   #'(lambda (s cn)
@@ -304,9 +316,9 @@ nil at the top level; set via dynamically-scoped bindings.")
                        (error error-check-note-args)) cn
         (declare (ignorable context stack))
         (format s "~@<~w~:[~2*~;~:@_~?~]~
-                        ~:@_~:[nil context~;~:*in context: ~w~]~
+                        ~:@_~:[nil context~;~:*in context: ~@<~{~a~^~:@_~}~:>~]~
                         ~:@_~:[nil values~;~:*values: ~w~]~
-                        ~@[~:@_at ~@<~{~a~^~:@_~}~:>~]~:>"
+                        ~@[~:@_at ~@<~{~a~^ ~:@_while ~}~:>~]~:>"
           error format format args context stack
           #-allegro nil #+allegro (error-check-note-zoom cn)))))
 
@@ -492,6 +504,17 @@ six-value summary of the results:
                                                 :test-reports test-reports
                                                 :system nil))))
 
+(defun report-interesting ()
+  (let ((test-reports (loop for test-report being the hash-values
+                            of +results-record+
+                            if (interesting-result-p test-report)
+
+                              collect test-report)))
+    (finish-multiple-report (make-multi-results :package-reports nil
+                                                :group-reports nil
+                                                :test-reports test-reports
+                                                :system nil))))
+
 ;;;
 ;;; Printing functions
 ;;;
@@ -533,6 +556,16 @@ six-value summary of the results:
         (*nst-local-verbosity* verbosity))
     (declare (special *nst-local-verbosity*))
     (format stream "~w" report)))
+
+(defun report-details (group-or-package gp-supp-p test test-supp-p)
+  (let ((report (cond
+                  ((not gp-supp-p) (report-interesting))
+                  (test-supp-p (test-report group-or-package test))
+                  ((find-package group-or-package)
+                   (package-report group-or-package))
+                  (t (group-report group-or-package)))))
+    (pprint report)
+    nil))
 
 (defun nst-dump (&key (stream *nst-output-stream*)
                       (verbosity *nst-report-default-verbosity*))
