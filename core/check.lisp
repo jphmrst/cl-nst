@@ -56,6 +56,18 @@ first element is that symbol and whose remaining elements are options."
 to suppress error-handling in continue-check, and thus become able to handle
 all further errors themselves.")
 
+(defmacro within-context ((name args values) &body forms)
+  `(let ((*nst-context* (cons (make-context-layer
+                               :criterion ',name
+                               :criterion-args ',args
+                               :given-stack ,(cond
+                                              (*nst-context-evaluable*
+                                               values)
+                                              (t `',values)))
+                              *nst-context*)))
+     (declare (special *nst-context*))
+     ,@forms))
+
 (defun continue-check (criterion forms)
   "This function is available from within the check-defining forms to process
 subsequences of a current check definition.
@@ -63,7 +75,7 @@ subsequences of a current check definition.
  - forms is an expression which at runtime will evaluate to the stack of values
    to be tested."
 
-  (declare (special *nst-context*))
+  (declare (special *nst-context-evaluable*))
   (let (criterion-name criterion-args)
     (cond ((symbolp criterion)
            (setf criterion-name criterion criterion-args nil))
@@ -72,17 +84,22 @@ subsequences of a current check definition.
                  criterion-args (cdr criterion)))
           (t
            (error "Malformed criterion in def-check: ~s" criterion)))
-    (let ((*nst-context* (cons (cons criterion-name criterion-args)
-                               *nst-context*))
-          (*nst-stack* forms)
+    (let ((body (build-check-form criterion-name criterion-args forms))
           (checker-block (gensym "block.")))
-      (declare (special *nst-context* *nst-stack*))
-      (let ((body (build-check-form criterion-name criterion-args forms)))
-        (cond
-         (*error-checking*
-          body)
-         (t
-          `(block ,checker-block
+      (cond
+       (*error-checking*
+        body)
+       (t
+        `(let ((*nst-context* (cons (make-context-layer
+                                     :criterion ',criterion-name
+                                     :criterion-args ',criterion-args
+                                     :given-stack ,(cond
+                                                    (*nst-context-evaluable*
+                                                     forms)
+                                                    (t `',forms)))
+                                    *nst-context*)))
+           (declare (special *nst-context*))
+           (block ,checker-block
              (handler-bind
                  ((error #'(lambda (e)
                              (unless *debug-on-error*

@@ -144,6 +144,13 @@
   (report-multiple nil nil (list (cons group test))))
 
 (def-nst-interactive-command
+    (:detail :short-help "Detail test results"
+             :args (&optional (group-or-package nil gp-supp-p)
+                              (test nil test-supp-p))
+             :repeatable t)
+  (report-details group-or-package gp-supp-p test test-supp-p))
+
+(def-nst-interactive-command
     (:set :short-help "Set an NST property."
           :long-help-special
           ((with-output-to-string (*standard-output*)

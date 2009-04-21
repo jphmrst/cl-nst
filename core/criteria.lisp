@@ -112,13 +112,12 @@
       (when min-supp-p (setf ms (* 60000 min)))
       (setf core-form
         `(let* ((start-time (get-internal-real-time))
-                (result ,core-form)
+                (*nst-stack* ,core-form)
                 (elapsed-ms
                  (* ,(/ 1000
                         internal-time-units-per-second)
                     (- (get-internal-real-time)
                        start-time))))
-           (declare (ignorable result))
            (if (> ,ms elapsed-ms)
              (check-result)
              (emit-failure
@@ -145,7 +144,9 @@
 (def-control-check (:all (&rest args) expr-list-form)
   (let ((var (gensym "var")) (warnings (gensym "warnings"))
         (failures (gensym "failures")) (errors (gensym "errors"))
-        (info (gensym "info")))
+        (info (gensym "info"))
+        (*nst-context-evaluable* t))
+    (declare (special *nst-context-evaluable*))
     (labels ((test-next (args)
                (cond
                 ((null args)
@@ -183,7 +184,8 @@
   (let ((new-stack (gensym "expr-list-form"))
         (block (gensym "block")) (info (gensym "info"))
         (result (gensym "result"))
-        (rf (gensym "rf")) (re (gensym "re")) (ri (gensym "ri")))
+        (rf (gensym "rf")) (re (gensym "re")) (ri (gensym "ri"))
+        (*nst-context-evaluable* t))
     `(let ((,new-stack ,expr-list-form) (,info nil))
        (block ,block
          ,@(loop for criterion in criteria collect
@@ -235,7 +237,8 @@
        ,(continue-check criterion forms))))
 
 (def-control-check (:proj (indices criterion) forms)
-  (let ((var (gensym)))
+  (let ((var (gensym))
+        (*nst-context-evaluable* t))
     `(let ((,var ,forms))
        ,(continue-check criterion
                         `(list ,@(loop for idx in indices collect
@@ -247,7 +250,8 @@
 (def-control-check (:each (criterion) forms)
   (let ((block (gensym)) (list (gensym "list")) (var (gensym "var"))
         (result (gensym "result"))
-        (warnings (gensym "w")) (info (gensym "info")))
+        (warnings (gensym "w")) (info (gensym "info"))
+        (*nst-context-evaluable* t))
     `(block ,block
        (let ((,info nil) (,warnings nil))
          (destructuring-bind (,list) ,forms
@@ -274,7 +278,9 @@
 (def-control-check (:seq (&rest criteria) forms)
   (let ((block (gensym)) (list (gensym "list"))
         (result (gensym "result")) (warnings (gensym "w"))
-        (info (gensym "info")))
+        (info (gensym "info"))
+        (*nst-context-evaluable* t))
+    (declare (special *nst-context-evaluable*))
     `(block ,block
        (let ((,info nil) (,warnings nil))
          (destructuring-bind (,list) ,forms
