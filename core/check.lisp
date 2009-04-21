@@ -422,8 +422,16 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
                (core-run-test obj))
 
              (defmethod core-run-test ((obj ,suite-class-name))
+               (declare (special ,@(loop for fx in check-fixture-classes
+                                         append (bound-names fx))
+                                 ,@(loop for fx in *group-fixture-classes*
+                                         append (bound-names fx))))
                ,core-run-body)
              (defmethod core-run-test ((obj ,standalone-class-name))
+               (declare (special ,@(loop for fx in check-fixture-classes
+                                         append (bound-names fx))
+                                 ,@(loop for fx in *group-fixture-classes*
+                                         append (bound-names fx))))
                ,core-run-body)
 
              ,@(when setup-supp-p
