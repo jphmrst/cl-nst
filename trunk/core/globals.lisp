@@ -71,6 +71,13 @@ context-layer instances.")
   "Dynamic-scoped variable - the stack of values under test by the
 current criterion.")
 
+(defparameter *nst-report-driver* nil
+  "Control parameter for building report structures.  Should not be reset from
+nil at the top level; set via dynamically-scoped bindings.")
+
+(defparameter *show-details* nil
+  "Control parameter for printing report details.")
+
 ;;;
 ;;; Internal tables.
 ;;;

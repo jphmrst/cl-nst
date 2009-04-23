@@ -40,6 +40,8 @@
 (defun emit-success ()
   "For use within user-defined check criteria: record a successful check."
   (check-result))
+
+
 
 #+allegro
 (defmacro make-backtrace-lines ()
@@ -145,6 +147,7 @@
                     (pprint-newline :mandatory s)
                     (let ((name (pprint-pop)))
                       (format s " - ~@<~w~:>" (gethash name checks))))))))))
+
 
 (defstruct (group-result (:include result-stats))
   "Overall group result structure, mapping checks to results by name."
@@ -173,6 +176,8 @@
                            (pprint-newline :mandatory s)
                            (format s " - ~w" cr))))))))))))
 
+
+
 (defstruct (check-result (:include result-stats (tests 1)))
   "Overall check result structure, containing notes of four distinct types.  A
 note is an instance of the check-note structure below.  The four note types are:
@@ -213,10 +218,8 @@ instances, and the info field is of any value."
 
 (defun check-result (&rest args)
   (calibrate-check-result (apply #'make-check-result args)))
+
 
-(defparameter *nst-report-driver* nil
-  "Control parameter for building report structures.  Should not be reset from
-nil at the top level; set via dynamically-scoped bindings.")
 
 (set-pprint-dispatch 'check-result
   #'(lambda (s cr)
@@ -238,7 +241,8 @@ nil at the top level; set via dynamically-scoped bindings.")
               check-name errors))
 
            ((and (eql 1 total-items) warnings)
-            (format s "~@<Check ~a succeeded with warning~p:~{~:@_ - ~w~}~:>"
+            (format s "~@<Check ~a succeeded with warning~p:~
+                       ~{~:@_ - ~w~}~:>"
               check-name warnings warnings))
 
            ((and (eql 1 total-items) failures)
@@ -265,6 +269,9 @@ nil at the top level; set via dynamically-scoped bindings.")
                 warnings "Warnings:" warnings
                 info "Additional information:" info)))))))
 
+
+
+
 (defstruct context-layer
   "A record of test criterion
  criterion - the criterion symbol itself
@@ -448,7 +455,7 @@ six-value summary of the results:
   "Top-level function for reporting the results of a test."
   (gethash (canonical-storage-name (standalone-class-name group test))
            +results-record+))
-
+
 (defun multiple-report (packages groups tests &key system)
   (let* ((package-reports (loop for p in packages collect (package-report p)))
          (group-reports (loop for g in groups collect (group-report g)))
@@ -514,7 +521,7 @@ six-value summary of the results:
                                                 :group-reports nil
                                                 :test-reports test-reports
                                                 :system nil))))
-
+
 ;;;
 ;;; Printing functions
 ;;;
@@ -563,10 +570,11 @@ six-value summary of the results:
                   (test-supp-p (test-report group-or-package test))
                   ((find-package group-or-package)
                    (package-report group-or-package))
-                  (t (group-report group-or-package)))))
+                  (t (group-report group-or-package))))
+        (*show-details* t))
     (pprint report)
     nil))
-
+
 (defun nst-dump (&key (stream *nst-output-stream*)
                       (verbosity *nst-report-default-verbosity*))
   "Spit out the full NST state."
@@ -577,47 +585,11 @@ six-value summary of the results:
     (format stream "NST globals:~%")
     (format stream " - *nst-verbosity*: ~s~%" *nst-verbosity*)
     (format stream " - *nst-local-verbosity*: ~s~%" *nst-local-verbosity*)
-    (format stream " - *nst-report-default-verbosity*: ~s~%" *nst-report-default-verbosity*)
+    (format stream " - *nst-report-default-verbosity*: ~s~%"
+      *nst-report-default-verbosity*)
     (format stream " - *nst-output-stream*: ~s~%" *nst-output-stream*)
     (format stream " - *debug-on-error*: ~s~%" *debug-on-error*)
-    (format stream " - *nst-info-shows-expected*: ~s~%" *nst-info-shows-expected*)
+    (format stream " - *nst-info-shows-expected*: ~s~%"
+      *nst-info-shows-expected*)
     (format stream "Stored test results:~%")
     (format stream "~w" report)))
-
-#|
-;;; This function has been broken up into the report-multiple above,
-;;; and the multi-report struct and function.  Keeping around for just
-;;; alittle while for looting code snippets.
-
-(defun report-multiple (packages groups tests &key
-                                 (stream *nst-output-stream*)
-                                 (verbosity *nst-report-default-verbosity*)
-                                 (system nil system-supp-p))
-  (let ((*nst-local-verbosity* verbosity))
-    (declare (special *nst-local-verbosity*))
-    (when system-supp-p
-      (format stream "~%Summary of results for system ~a:~%"
-        (slot-value system 'asdf::name)))
-    (let ((reports
-           (nconc (loop for p in packages
-                      for report = (package-report p)
-                      collect (let ((*nst-report-driver* :package))
-                                (format stream "~w~%" report)
-                                report))
-                  (loop for g in groups
-                      for report = (group-report g)
-                      collect (let ((*nst-report-driver* :group))
-                                (format stream "~w~%" report)
-                                report))
-                  (loop for (g . ts) in tests
-                      for report = (test-report g ts)
-                      collect (let ((*nst-report-driver* :test))
-                                (format stream "~w~%" report)
-                                report)))))
-      (multiple-value-bind (code total passed erred failed warned)
-          (result-summary reports)
-        (declare (ignorable code))
-        (format stream
-            "TOTAL: ~d of ~d passed (~d failed, ~d error~p, ~d warning~p)~%"
-          passed total failed erred erred warned warned)))))
-|#
