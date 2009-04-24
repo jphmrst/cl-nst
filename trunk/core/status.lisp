@@ -61,13 +61,13 @@
        (pop lines)
        (pop lines)
 
-;;;       (loop while (not (search "emit-error " (car lines))) do (pop lines))
-;;;       (pop lines)
-;;;       (if (search ":internal" (car lines)) (pop lines))
-;;;       (loop while (search "core-run-test" (car lines)) do (pop lines))
-;;;       (let ((first (position-if #'(lambda (x) (search "core-run-test" x))
-;;;                              lines)))
-;;;      (setf lines (subseq lines 0 first)))
+       (loop while (not (search "emit-error " (car lines))) do (pop lines))
+       (pop lines)
+       (if (search ":internal" (car lines)) (pop lines))
+       (loop while (search "core-run-test" (car lines)) do (pop lines))
+       (let ((first (position-if #'(lambda (x) (search "core-run-test" x))
+                                 lines)))
+         (setf lines (subseq lines 0 first)))
 
        lines)))
 
