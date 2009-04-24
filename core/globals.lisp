@@ -37,14 +37,11 @@
 ;;;
 ;;;  Flags and dynamic variable declarations.
 ;;;
-(defvar *nst-verbosity* :quiet
-  "User variable determining how verbose NST's output to the REPL should be.  Recognized values in rough order from most terse to most verbose are: nil, :quiet, :default, t, :verbose, :vverbose (:quiet by default).")
-
-(defvar *nst-local-verbosity* :default
-  "Global dynamic variable used to set the level of verbosity during report printing.")
+(defvar *nst-verbosity* 1
+  "User variable determining how verbose NST's output to the REPL should be.  Internally, this variable takes an integer value: 0 and below are silent, 1 is the default, 2 and 3 are more verbose.  The command-line interpreter assigns keywords to these values, from most terse to most verbose: :silent, nil, :quiet, :default, t, :verbose, :vverbose (:quiet and :default are the same, and are the initial setting).")
 
 (defvar *nst-report-default-verbosity* :verbose
-  "User variable determining the default value for *nst-local-verbosity*, which sets the level of verbosity during report printing (:verbose by default).")
+  "User variable determining the default value for *nst-verbosity* during report printing (:verbose by default).")
 
 (defvar *nst-output-stream* *standard-output*
   "User variable determining the output stream to which NST should print its output (*standard-output* by default).")
@@ -72,8 +69,7 @@ context-layer instances.")
 current criterion.")
 
 (defparameter *nst-report-driver* nil
-  "Control parameter for building report structures.  Should not be reset from
-nil at the top level; set via dynamically-scoped bindings.")
+  "Dynamic-scoped variable - one of :multiple, :package, :group or :test to determine the top-level form of a report.  Used as a control parameter for printing reports.")
 
 (defparameter *show-details* nil
   "Control parameter for printing report details.")
@@ -294,23 +290,19 @@ default the current package."))
 function; group setup and cleanup become :before and :after methods.")
   (:method ((group-inst group-base-class))
      (let ((group-name (group-name group-inst)))
-       (case *nst-verbosity*
-         ((:vverbose)
-          (format t "    Starting run loop for ~s~%" group-inst)))
+       (when (> *nst-verbosity* 2)
+         (format t "    Starting run loop for ~s~%" group-inst))
        (loop for test in (test-names group-inst) do
-         (case *nst-verbosity*
-           ((:vverbose)
-            (format t "      Starting loop entry ~s~%" test)))
+         (when (> *nst-verbosity* 2)
+           (format t "      Starting loop entry ~s~%" test))
          (let ((in-suite-class-name (suite-class-name group-name test)))
-           (case *nst-verbosity*
-             ((:vverbose)
-              (format t "    Suite class name ~s~%" in-suite-class-name)
-              (format t "    Actual class ~s~%"
-                (find-class in-suite-class-name))))
+           (when (> *nst-verbosity* 2)
+             (format t "    Suite class name ~s~%" in-suite-class-name)
+             (format t "    Actual class ~s~%"
+               (find-class in-suite-class-name)))
            (let ((test-inst (make-instance in-suite-class-name)))
-             (case *nst-verbosity*
-               ((:vverbose)
-                (format t "    Instance ~s~%" test-inst)))
+             (when (> *nst-verbosity* 2)
+               (format t "    Instance ~s~%" test-inst))
              (core-run-test test-inst)))
          ;; (format t "      Exiting loop entry ~s~%" test)
              )
@@ -329,9 +321,8 @@ encoded as :before and :after methods.")
     (let ((*nst-group-name* (group-name test))
           (*nst-check-name* (check-name test))
           (start-time))
-      (case *nst-verbosity*
-        ((:default t :verbose :vverbose)
-         (format t " - Executing test ~s~%" (check-name test))))
+      (when (> *nst-verbosity* 0)
+        (format t " - Executing test ~s~%" (check-name test)))
       (setf start-time (get-internal-real-time))
       (let ((result (call-next-method))
             (end-time (get-internal-real-time)))
@@ -340,8 +331,8 @@ encoded as :before and :after methods.")
               (gethash (canonical-storage-name (type-of test))
                        +results-record+)
               result)
-        (case *nst-verbosity*
-          ((:default t :verbose :vverbose) (format t "   ~s~%" result)))
+        (when (> *nst-verbosity* 0)
+          (format t "   ~s~%" result))
         result))))
 
 ;;;
@@ -355,10 +346,9 @@ encoded as :before and :after methods.")
          (group-names (package-groups user-package)))
 
     ;; Print a message at the appropriate level of verbosity.
-    (case *nst-verbosity*
-      ((:default t :verbose :vverbose)
-       (format t "~@<Running package ~s (groups ~{~s~^ ~:_~})~:>~%"
-         (package-name user-package) group-names)))
+    (when (> *nst-verbosity* 0)
+      (format t "~@<Running package ~s (groups ~{~s~^ ~:_~})~:>~%"
+        (package-name user-package) group-names))
 
     (cond
       (group-names
@@ -371,11 +361,11 @@ encoded as :before and :after methods.")
   (let ((group-class (group-class-name group)))
 
     ;; Print a message at the appropriate level of verbosity.
-    (case *nst-verbosity*
-      ((:default t :verbose)
-       (format t "Running group ~s~%" group))
-      ((:vverbose)
-       (format t "Running group ~s --> ~s~%" group group-class)))
+    (cond
+      ((> *nst-verbosity* 2)
+       (format t "Running group ~s --> ~s~%" group group-class))
+      ((> *nst-verbosity* 0)
+       (format t "Running group ~s~%" group)))
 
     (unless group-class (error 'no-such-nst-group :group group))
     (core-run (make-instance group-class))))
@@ -385,13 +375,30 @@ encoded as :before and :after methods.")
   (let ((test-class (standalone-class-name group test)))
 
     ;; Print a message at the appropriate level of verbosity.
-    (case *nst-verbosity*
-      ((:default t :verbose :vverbose)
-       (format t "Running test ~s (group ~s)~%" test group)))
+    (when (> *nst-verbosity* 0)
+      (format t "Running test ~s (group ~s)~%" test group))
 
     (unless test-class (error 'no-such-nst-test :group group :test test))
     (core-run (make-instance test-class))))
+
+;;;
+;;;
+;;;
 
+(defgeneric set-nst-property (name value)
+  (:method (name value)
+     (declare (ignorable value))
+     (format t "No such property ~s~%" name))
+  (:method ((name (eql :debug-on-error)) value)
+     (setf *debug-on-error* value)))
+(defgeneric nst-repl-property-doc (n)
+  (:documentation "Return the documentation string of an NST property."))
+(defgeneric nst-repl-property-display (n)
+  (:documentation
+   "Return the display value of an NST property's internal value."))
+(defgeneric nst-repl-property-encode (prop val)
+  (:documentation
+   "Encode an NST property's display value as an internal value."))
 
 ;;;
 ;;; Helper functions

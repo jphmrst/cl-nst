@@ -78,27 +78,39 @@
        (unless (member ,name +nst-repl-commands+)
          (setf +nst-repl-commands+ (nconc +nst-repl-commands+ (list ,name)))))))
 
-(defgeneric set-nst-property (name value)
-  (:method (name value)
-     (declare (ignorable value))
-     (format t "No such property ~s~%" name))
-  (:method ((name (eql :debug-on-error)) value)
-     (setf *debug-on-error* value)))
-
-(defmacro def-nst-property (name variable &key (doc ""))
+(defmacro def-nst-property (name variable &key (doc "")
+                                 (filter '(lambda (x) x))
+                                 (unfilter '(lambda (x) x)))
   `(progn
      (defmethod set-nst-property ((name (eql ,name)) value)
-       (setf ,variable value)
+       (setf ,variable (nst-repl-property-encode ,name value))
        (format t "Set property ~a to ~s~%" ',variable value))
      (defmethod nst-repl-property-doc ((n (eql ,name)))
        ,doc)
+     (defmethod nst-repl-property-encode ((n (eql ,name)) value)
+       (funcall #',filter value))
+     (defmethod nst-repl-property-display ((n (eql ,name)))
+       (funcall #',unfilter ,variable))
      (unless (member ,name +nst-repl-properties+)
        (push ,name +nst-repl-properties+))))
 
 (def-nst-property :debug-on-error *debug-on-error*
   :doc "When non-nil, break into the debugger when NST encounters an error.")
 (def-nst-property :verbose *nst-verbosity*
-  :doc "Valid settings: nil, :quiet, :default, :verbose, t, :vverbose")
+  :doc "Valid settings: :silent (aka nil), :quiet (aka :default), :verbose, (aka t), :vverbose"
+  :filter (lambda (x)
+            (case x
+              ((:silent nil)     0)
+              ((:default :quiet) 1)
+              ((t :verbose)      2)
+              ((:vverbose)       3)
+              (t (error "Invalid value ~s" x))))
+  :unfilter (lambda (x)
+              (cond
+                ((< x 1)   :silent)
+                ((eql x 1) :quiet)
+                ((eql x 2) :verbose)
+                ((> x 2)   :vverbose))))
 
 (def-nst-interactive-command (:help :short-help "Print a list of commands."
                                     :long-help "Print this help message.")
