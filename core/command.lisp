@@ -95,7 +95,8 @@
        (push ,name +nst-repl-properties+))))
 
 (def-nst-property :debug-on-error *debug-on-error*
-  :doc "When non-nil, break into the debugger when NST encounters an error.")
+  :doc "When non-nil, break into the debugger when NST encounters an error."
+  :filter (lambda (x) (if x t nil)))
 (def-nst-property :verbose *nst-verbosity*
   :doc "Valid settings: :silent (aka nil), :quiet (aka :default), :verbose, (aka t), :vverbose"
   :filter (lambda (x)
@@ -104,13 +105,15 @@
               ((:default :quiet) 1)
               ((t :verbose)      2)
               ((:vverbose)       3)
+              ((:trace)          4)
               (t (error "Invalid value ~s" x))))
   :unfilter (lambda (x)
               (cond
                 ((< x 1)   :silent)
                 ((eql x 1) :quiet)
                 ((eql x 2) :verbose)
-                ((> x 2)   :vverbose))))
+                ((eql x 3) :vverbose)
+                ((> x 3)   :trace))))
 
 (def-nst-interactive-command (:help :short-help "Print a list of commands."
                                     :long-help "Print this help message.")
