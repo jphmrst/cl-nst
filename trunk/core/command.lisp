@@ -160,6 +160,12 @@
 
 (def-nst-interactive-command
     (:detail :short-help "Detail test results"
+             :long-help "Detail test results.  Usage:
+  :nst :detail PACKAGE
+  :nst :detail GROUP
+  :nst :detail GROUP TEST
+  :nst :detail
+The last usage shows all interesting results."
              :args (&optional (group-or-package nil gp-supp-p)
                               (test nil test-supp-p))
              :repeatable t)
