@@ -68,6 +68,9 @@ current criterion.")
 (defparameter *nst-report-driver* nil
   "Dynamic-scoped variable - one of :multiple, :package, :group or :test to determine the top-level form of a report.  Used as a control parameter for printing reports.")
 
+(defvar *nst-output-stream* *standard-output*
+  "User variable determining the output stream to which NST should print its output (*standard-output* by default).")
+
 ;;;
 ;;; Internal tables.
 ;;;
