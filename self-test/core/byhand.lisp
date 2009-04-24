@@ -64,3 +64,11 @@
   (defparameter gr2a-inst (nst::make-instance gr2a-class))
   (defparameter gr2b-class (nst::group-class-name 'gr2b))
   (defparameter gr2b-inst (nst::make-instance gr2b-class)))
+
+(defvar zzz 0)
+(defvar yyy 10)
+(def-test-group changers ()
+  (def-check zzz-10 (:eql 10) zzz)
+  (def-check yyy-10 (:eql 10) yyy)
+  )
+
