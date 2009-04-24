@@ -169,7 +169,8 @@
             (result-summary gr)
           (declare (ignorable erred failed warned))
           (let ((tests
-                 (loop for check being the hash-keys of checks collect check)))
+                 (loop for check being the hash-keys of checks collect check))
+                (*nst-group-shown* t))
             (pprint-logical-block (s tests)
               (format s "Group ~a: ~d of ~d passed" name passed total)
               (case code
@@ -232,6 +233,7 @@ instances, and the info field is of any value."
   #'(lambda (s cr)
       (declare (special *nst-verbosity* *nst-report-driver*))
       (with-accessors ((check-name check-result-check-name)
+                       (group-name check-result-group-name)
                        (warnings check-result-warnings)
                        (failures check-result-failures)
                        (errors check-result-errors)
@@ -253,24 +255,27 @@ instances, and the info field is of any value."
            ;; don't bother with bullet points.
            ;;
            ((and (eql 1 total-items) errors)
-            (format s "~@<Check ~a raised an error~
+            (format s "~@<Check ~a ~:[(group ~a) ~;~*~]raised an error~
                             ~:[~*~;:~{~:@_ . ~w~}~]~:>"
-              check-name drill-down errors))
+              check-name *nst-group-shown* group-name
+              drill-down errors))
 
            ((and (eql 1 total-items) warnings)
-            (format s "~@<Check ~a succeeded with warning~p~
+            (format s "~@<Check ~a ~:[(group ~a) ~;~*~]passed with warning~p~
                             ~:[~*~;:~{~:@_ - ~w~}~]~:>"
-              check-name warnings drill-down warnings))
+              check-name *nst-group-shown* group-name
+              warnings drill-down warnings))
 
            ((and (eql 1 total-items) failures)
-            (format s "Check ~a failed" check-name))
+            (format s "Check ~a ~:[(group ~a) ~;~*~]failed"
+              check-name *nst-group-shown* group-name))
 
            ;; When a query asks about a specific test.
            ;;
            ((eq *nst-report-driver* :test)
-            (format s "~@<Check ~a ~:[failed~;passed~]~
+            (format s "~@<Check ~a ~:[(group ~a) ~;~*~]~:[failed~;passed~]~
                          ~:[~;: ~@{~:[~2*~;~:@_~a~{~:@_ - ~w~}~]~}~]~:>"
-              check-name succeeded
+              check-name *nst-group-shown* group-name succeeded
               (or errors failures warnings info)
               errors "Errors:" errors
               failures "Failures:" failures
@@ -280,9 +285,10 @@ instances, and the info field is of any value."
            ;; If we're reporting results for a package or group,
            ;; suppress the info fields of the report.
            ;;
-           (t (format s "Check ~a ~:[failed~*~;passed~:[~; with warnings~]~]~
+           (t (format s "Check ~a ~:[(group ~a) ~;~*~]~
+                                 ~:[failed~*~;passed~:[~; with warnings~]~]~
                            : ~@<~@{~:[~2*~;~a~:@_~{ - ~w~^~:@_~}~]~}~:>"
-                check-name succeeded warnings
+                check-name *nst-group-shown* group-name succeeded warnings
                 errors "Errors:" errors  failures "Failures:" failures
                 warnings "Warnings:" warnings)))))))
 

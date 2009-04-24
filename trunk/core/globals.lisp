@@ -71,6 +71,8 @@ current criterion.")
 (defvar *nst-output-stream* *standard-output*
   "User variable determining the output stream to which NST should print its output (*standard-output* by default).")
 
+(defparameter *nst-group-shown* nil
+  "Dynamic-scoped variable tracking whether the name of a group has been printed, so that tests need not repeat it.")
 ;;;
 ;;; Internal tables.
 ;;;
