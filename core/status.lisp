@@ -76,15 +76,16 @@
   (cond
     (format-args (setf format (car format) args (cdr args)))
     (t (setf format "~w" args (list e))))
-  (let* (#+nil (zoom-lines (make-backtrace-lines)))
+  (let ((other-args nil))
+    #+allegro (setf other-args (list* :zoom (make-backtrace-lines) other-args))
     (make-check-result :erring 1
-                       :errors (list (make-error-check-note
-                                      :context *nst-context*
-                                      :stack *nst-stack*
-                                      :format format
-                                      :args args
-                                      :error e
-                                      #+nil :zoom #+nil zoom-lines)))))
+                       :errors (list (apply #'make-error-check-note
+                                            :context *nst-context*
+                                            :stack *nst-stack*
+                                            :format format
+                                            :args args
+                                            :error e
+                                            other-args)))))
 
 ;;;
 ;;; Result records for high-level checks.
@@ -238,9 +239,14 @@ instances, and the info field is of any value."
         (let ((total-items (+ (length warnings) (length failures)
                               (length errors)))
               (succeeded (eql 0 (+ (length failures) (length errors))))
-              (drill-down (or (> *nst-verbosity* 2)
+              (drill-down (or (eq *nst-report-driver* :details)
+                              (> *nst-verbosity* 2)
                               (and (eq *nst-report-driver* :test)
                                    (> *nst-verbosity* 1)))))
+;;;          (format t
+;;;               "drill-down ~s~%*nst-verbosity* ~s~%*nst-report-driver* ~s~%"
+;;;             drill-down *nst-verbosity* *nst-report-driver*)
+
           (cond
            ;; The first three cases are for when we have only one
            ;; item to report.  We do this on one line if it fits, and
@@ -333,12 +339,16 @@ instances, and the info field is of any value."
                        (args check-note-args)
                        (error error-check-note-args)) cn
         (declare (ignorable context stack))
-        (format s "~@<~w~:[~2*~;~:@_~?~]~
+        (let (#+allegro (show-zoom (or (eq *nst-report-driver* :test)
+                                       (eq *nst-report-driver* :details)
+                                       (> *nst-verbosity* 2))))
+          (format s "~@<~w~:[~2*~;~:@_~?~]~
                         ~:@_~:[nil context~;~:*in context: ~@<~{~a~^~:@_~}~:>~]~
                         ~:@_~:[nil values~;~:*values: ~w~]~
-                        ~@[~:@_at ~@<~{~a~^ ~:@_while ~}~:>~]~:>"
-          error format format args context stack
-          #-allegro nil #+allegro (error-check-note-zoom cn)))))
+                        ~:[~*~;~@[~:@_at ~@<~{~a~^ ~:@_while ~}~:>~]~]~:>"
+            error format format args context stack
+            #-allegro nil #-allegro nil
+            #+allegro show-zoom #+allegro (error-check-note-zoom cn))))))
 
 ;;; Functions on result and status reports.
 ;;;
@@ -596,6 +606,22 @@ six-value summary of the results:
 
 
 
+
+(defun report-summary (group-or-package gp-supp-p test test-supp-p)
+  (cond
+   ((not gp-supp-p)
+    (let ((*print-pretty* t)
+          (*print-readably* nil)
+          (*nst-verbosity* 1)
+          (*nst-report-driver* :multiple))
+      (pprint (report-interesting) *nst-output-stream*)))
+
+   (test-supp-p (report-test group-or-package test))
+
+   ((find-package group-or-package) (report-package group-or-package))
+
+   (t (report-group group-or-package)))
+  nil)
 
 (defun report-details (group-or-package gp-supp-p test test-supp-p)
   (let ((report (cond
