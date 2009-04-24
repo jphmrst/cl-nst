@@ -71,9 +71,6 @@ current criterion.")
 (defparameter *nst-report-driver* nil
   "Dynamic-scoped variable - one of :multiple, :package, :group or :test to determine the top-level form of a report.  Used as a control parameter for printing reports.")
 
-(defparameter *show-details* nil
-  "Control parameter for printing report details.")
-
 ;;;
 ;;; Internal tables.
 ;;;

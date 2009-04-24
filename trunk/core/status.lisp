@@ -532,9 +532,12 @@ six-value summary of the results:
                                          :verbose
                                          *nst-report-default-verbosity*)))
   "Top-level function for reporting the results of the tests in a package."
-  (let ((*nst-report-driver* :package))
+  (let ((*nst-report-driver* :package)
+        (*print-pretty* t)
+        (*print-readably* nil))
     (declare (special *nst-report-driver*))
-    (format stream "~w" (package-report package))))
+    (format stream "~w" (package-report package))
+    nil))
 
 (defun report-group (group
                      &optional
@@ -543,9 +546,12 @@ six-value summary of the results:
                                        :verbose
                                        *nst-report-default-verbosity*)))
   "Top-level function for reporting the results of the tests in a group."
-  (let ((*nst-report-driver* :group))
+  (let ((*nst-report-driver* :group)
+        (*print-pretty* t)
+        (*print-readably* nil))
     (declare (special *nst-report-driver*))
-    (format stream "~w" (group-report group))))
+    (format stream "~w" (group-report group))
+    nil))
 
 (defun report-test (group
                     test &optional
@@ -553,9 +559,12 @@ six-value summary of the results:
                     (*nst-verbosity* (nst-repl-property-encode
                                       :verbose *nst-report-default-verbosity*)))
   "Top-level function for reporting the results of a test."
-  (let ((*nst-report-driver* :test))
+  (let ((*nst-report-driver* :test)
+        (*print-pretty* t)
+        (*print-readably* nil))
     (declare (special *nst-report-driver*))
-    (format stream "~w" (test-report group test))))
+    (format stream "~w" (test-report group test))
+    nil))
 
 (defun report-multiple (packages groups tests &key
                                  (stream *nst-output-stream*)
@@ -566,13 +575,16 @@ six-value summary of the results:
   "Top-level function for reporting the results of several tests."
   (let ((*nst-report-driver* :multiple)
         (*nst-verbosity* verbosity)
+        (*print-pretty* t)
+        (*print-readably* nil)
         (report (apply #'multiple-report
                        packages groups tests
                        (cond
                          (system-supp-p `(:system ,system))
                          (t nil)))))
     (declare (special *nst-verbosity* *nst-report-driver*))
-    (format stream "~w" report)))
+    (format stream "~w" report)
+    nil))
 
 (defun report-details (group-or-package gp-supp-p test test-supp-p)
   (let ((report (cond
@@ -581,8 +593,9 @@ six-value summary of the results:
                   ((find-package group-or-package)
                    (package-report group-or-package))
                   (t (group-report group-or-package))))
-        (*show-details* t))
-    (pprint report)
+        (*print-pretty* t)
+        (*print-readably* nil))
+    (pprint report *nst-output-stream*)
     nil))
 
 (defun nst-dump (&key (stream *nst-output-stream*)
