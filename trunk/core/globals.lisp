@@ -290,18 +290,18 @@ default the current package."))
 function; group setup and cleanup become :before and :after methods.")
   (:method ((group-inst group-base-class))
      (let ((group-name (group-name group-inst)))
-       (when (> *nst-verbosity* 2)
+       (when (> *nst-verbosity* 3)
          (format t "    Starting run loop for ~s~%" group-inst))
        (loop for test in (test-names group-inst) do
-         (when (> *nst-verbosity* 2)
+         (when (> *nst-verbosity* 3)
            (format t "      Starting loop entry ~s~%" test))
          (let ((in-suite-class-name (suite-class-name group-name test)))
-           (when (> *nst-verbosity* 2)
+           (when (> *nst-verbosity* 3)
              (format t "    Suite class name ~s~%" in-suite-class-name)
              (format t "    Actual class ~s~%"
                (find-class in-suite-class-name)))
            (let ((test-inst (make-instance in-suite-class-name)))
-             (when (> *nst-verbosity* 2)
+             (when (> *nst-verbosity* 3)
                (format t "    Instance ~s~%" test-inst))
              (core-run-test test-inst)))
          ;; (format t "      Exiting loop entry ~s~%" test)
@@ -362,7 +362,7 @@ encoded as :before and :after methods.")
 
     ;; Print a message at the appropriate level of verbosity.
     (cond
-      ((> *nst-verbosity* 2)
+      ((> *nst-verbosity* 3)
        (format t "Running group ~s --> ~s~%" group group-class))
       ((> *nst-verbosity* 0)
        (format t "Running group ~s~%" group)))
@@ -382,7 +382,7 @@ encoded as :before and :after methods.")
     (core-run (make-instance test-class))))
 
 ;;;
-;;;
+;;; Management of global properties.
 ;;;
 
 (defgeneric set-nst-property (name value)

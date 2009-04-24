@@ -407,7 +407,7 @@ six-value summary of the results:
          (sym-pack (loop for k being the hash-keys
                          of (gethash user-package +package-groups+)
                          collect k)))
-    (when (> *nst-verbosity* 2)
+    (when (> *nst-verbosity* 3)
       (format t "Reporting for actual package ~s~%" user-package)
       (format t "sym-pack ~s~%" sym-pack))
     (when sym-pack
