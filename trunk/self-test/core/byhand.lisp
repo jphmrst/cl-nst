@@ -53,8 +53,9 @@
 
 
 (def-test-group failures ()
-  (def-check seq-1 (:seq (:symbol a) (:eql 3) (:eq 'b)) '(a 2 b))
-  (def-check seq-2 (:seq (:symbol a) (:eql 3) (:eq 'b)) (error "boom"))
+  (def-check f-1 (:seq (:symbol a) (:eql 3) (:eq 'b)) '(a 2 b))
+  (def-check f-2 (:seq (:symbol a) (:eql 3) (:eq 'b)) (error "boom"))
+  (def-check nofail (:seq (:symbol a) (:eql 3) (:eq 'b)) '(a 3 b))
   )
 
 (eval-when (:load-toplevel :execute)

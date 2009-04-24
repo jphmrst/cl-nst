@@ -122,7 +122,7 @@
                -----------------------------------------------------~%")
   (loop for cmd in +nst-repl-commands+ do
     (format t "~%~s~%~a~%" cmd (nst-short-help cmd)))
-  (format t "~%Without an explicit command, :nst repeats the last interesting ~
+  (format t "~%Use~%  :nst :COMMAND :help~%for more information about a particular command.~%~%Without an explicit command, :nst repeats the last interesting ~
               command~%(currently, ~s~{ ~s~})" :nst *last-repl-call*))
 
 (def-nst-interactive-command (:debug :short-help "Make NST enter debugger on errors."
@@ -159,16 +159,29 @@
   (report-multiple nil nil (list (cons group test))))
 
 (def-nst-interactive-command
-    (:detail :short-help "Detail test results"
-             :long-help "Detail test results.  Usage:
+    (:report :short-help "Show a summary of test results."
+             :long-help "Show a summary of test results.  Usage:
+  :nst :report PACKAGE
+  :nst :report GROUP
+  :nst :report GROUP TEST
+  :nst :report
+The last form summarizes all interesting results."
+             :args (&optional (group-or-package nil gp-supp-p)
+                              (test nil test-supp-p))
+             :repeatable nil)
+  (report-summary group-or-package gp-supp-p test test-supp-p))
+
+(def-nst-interactive-command
+    (:detail :short-help "Show detailed test results."
+             :long-help "Show detailed test results.  Usage:
   :nst :detail PACKAGE
   :nst :detail GROUP
   :nst :detail GROUP TEST
   :nst :detail
-The last usage shows all interesting results."
+The last form shows all interesting results."
              :args (&optional (group-or-package nil gp-supp-p)
                               (test nil test-supp-p))
-             :repeatable t)
+             :repeatable nil)
   (report-details group-or-package gp-supp-p test test-supp-p))
 
 (def-nst-interactive-command
