@@ -50,14 +50,14 @@
 
              #:run-package #:run-group #:run-test
              #:report-multiple #:report-package #:report-group #:report-test
+             #:nst-cmd
 
              #:nst-junit-dump
+             #:junit-results-by-group
 
              #:*nst-output-stream*
              #:*default-report-verbosity*
-             #:*debug-on-error*
-
-             #:junit-results-by-group))
+             #:*debug-on-error*))
 
 (defun nst::make-package-documentation ()
   "Write documentation for this package, using system package-doc."
