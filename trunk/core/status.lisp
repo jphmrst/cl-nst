@@ -223,6 +223,7 @@ instances, and the info field is of any value."
 
 (set-pprint-dispatch 'check-result
   #'(lambda (s cr)
+      (declare (special *nst-verbosity* *nst-report-driver*))
       (with-accessors ((check-name check-result-check-name)
                        (warnings check-result-warnings)
                        (failures check-result-failures)
@@ -230,44 +231,48 @@ instances, and the info field is of any value."
                        (info check-result-info)) cr
         (let ((total-items (+ (length warnings) (length failures)
                               (length errors)))
-              (succeeded (eql 0 (+ (length failures) (length errors)))))
+              (succeeded (eql 0 (+ (length failures) (length errors))))
+              (drill-down (or (> *nst-verbosity* 2)
+                              (and (eq *nst-report-driver* :test)
+                                   (> *nst-verbosity* 1)))))
           (cond
            ;; The first three cases are for when we have only one
            ;; item to report.  We do this on one line if it fits, and
            ;; don't bother with bullet points.
            ;;
            ((and (eql 1 total-items) errors)
-            (format s "~@<Check ~a raised an error:~{~:@_ . ~w~}~:>"
-              check-name errors))
+            (format s "~@<Check ~a raised an error~
+                            ~:[~*~;:~{~:@_ . ~w~}~]~:>"
+              check-name drill-down errors))
 
            ((and (eql 1 total-items) warnings)
-            (format s "~@<Check ~a succeeded with warning~p:~
-                       ~{~:@_ - ~w~}~:>"
-              check-name warnings warnings))
+            (format s "~@<Check ~a succeeded with warning~p~
+                            ~:[~*~;:~{~:@_ - ~w~}~]~:>"
+              check-name warnings drill-down warnings))
 
            ((and (eql 1 total-items) failures)
             (format s "Check ~a failed" check-name))
 
+           ;; When a query asks about a specific test.
+           ;;
+           ((eq *nst-report-driver* :test)
+            (format s "~@<Check ~a ~:[failed~;passed~]~
+                         ~:[~;: ~@{~:[~2*~;~:@_~a~{~:@_ - ~w~}~]~}~]~:>"
+              check-name succeeded
+              (or errors failures warnings info)
+              errors "Errors:" errors
+              failures "Failures:" failures
+              warnings "Warnings:" warnings
+              info "Additional information:" info))
+
            ;; If we're reporting results for a package or group,
            ;; suppress the info fields of the report.
            ;;
-           ((member *nst-report-driver* '(:package :group))
-            (format s "Check ~a: ~@<~@{~:[~2*~;~a~:@_~{ - ~w~^~:@_~}~]~}~:>"
-              check-name
-              errors "Errors:" errors  failures "Failures:" failures
-              warnings "Warnings:" warnings))
-
-           ;; The default case is (intended to be) for multi-point
-           ;; queries about a specific test.
-           ;;
-           (t (format s "~@<Check ~a ~:[failed~;passed~]~
-                         ~:[~;: ~@{~:[~2*~;~:@_~a~{~:@_ - ~w~}~]~}~]~:>"
-                check-name succeeded
-                (or errors failures warnings info)
-                errors "Errors:" errors
-                failures "Failures:" failures
-                warnings "Warnings:" warnings
-                info "Additional information:" info)))))))
+           (t (format s "Check ~a ~:[failed~*~;passed~:[~; with warnings~]~]~
+                           : ~@<~@{~:[~2*~;~a~:@_~{ - ~w~^~:@_~}~]~}~:>"
+                check-name succeeded warnings
+                errors "Errors:" errors  failures "Failures:" failures
+                warnings "Warnings:" warnings)))))))
 
 
 
@@ -528,9 +533,8 @@ six-value summary of the results:
 (defun report-package (&optional
                        (package *package*)
                        (stream *nst-output-stream*)
-                       (*nst-verbosity* (nst-repl-property-encode
-                                         :verbose
-                                         *nst-report-default-verbosity*)))
+                       (*nst-verbosity* (max *default-report-verbosity*
+                                             *nst-verbosity*)))
   "Top-level function for reporting the results of the tests in a package."
   (let ((*nst-report-driver* :package)
         (*print-pretty* t)
@@ -542,9 +546,8 @@ six-value summary of the results:
 (defun report-group (group
                      &optional
                      (stream *nst-output-stream*)
-                     (*nst-verbosity* (nst-repl-property-encode
-                                       :verbose
-                                       *nst-report-default-verbosity*)))
+                     (*nst-verbosity* (max *default-report-verbosity*
+                                           *nst-verbosity*)))
   "Top-level function for reporting the results of the tests in a group."
   (let ((*nst-report-driver* :group)
         (*print-pretty* t)
@@ -556,8 +559,8 @@ six-value summary of the results:
 (defun report-test (group
                     test &optional
                     (stream *nst-output-stream*)
-                    (*nst-verbosity* (nst-repl-property-encode
-                                      :verbose *nst-report-default-verbosity*)))
+                    (*nst-verbosity* (max *default-report-verbosity*
+                                          *nst-verbosity*)))
   "Top-level function for reporting the results of a test."
   (let ((*nst-report-driver* :test)
         (*print-pretty* t)
@@ -568,13 +571,11 @@ six-value summary of the results:
 
 (defun report-multiple (packages groups tests &key
                                  (stream *nst-output-stream*)
-                                 (verbosity (nst-repl-property-encode
-                                             :verbose
-                                             *nst-report-default-verbosity*))
+                                 (verbosity *default-report-verbosity*)
                                  (system nil system-supp-p))
   "Top-level function for reporting the results of several tests."
   (let ((*nst-report-driver* :multiple)
-        (*nst-verbosity* verbosity)
+        (*nst-verbosity* (max verbosity *nst-verbosity*))
         (*print-pretty* t)
         (*print-readably* nil)
         (report (apply #'multiple-report
@@ -585,6 +586,10 @@ six-value summary of the results:
     (declare (special *nst-verbosity* *nst-report-driver*))
     (format stream "~w" report)
     nil))
+
+
+
+
 
 (defun report-details (group-or-package gp-supp-p test test-supp-p)
   (let ((report (cond
@@ -594,13 +599,15 @@ six-value summary of the results:
                    (package-report group-or-package))
                   (t (group-report group-or-package))))
         (*print-pretty* t)
-        (*print-readably* nil))
+        (*print-readably* nil)
+        (*nst-verbosity* 2))
     (pprint report *nst-output-stream*)
     nil))
-
+
+
+
 (defun nst-dump (&key (stream *nst-output-stream*)
-                      (verbosity (nst-repl-property-encode
-                                  :verbose *nst-report-default-verbosity*)))
+                      (verbosity *default-report-verbosity*))
   "Spit out the full NST state."
   (let ((report (all-package-report))
         (*print-pretty* t) (*print-readably* nil)
@@ -609,8 +616,8 @@ six-value summary of the results:
     (format stream "NST globals:~%")
     (format stream " - *nst-verbosity*: ~s (~s)~%"
       (nst-repl-property-display :verbose) *nst-verbosity*)
-    (format stream " - *nst-report-default-verbosity*: ~s~%"
-      *nst-report-default-verbosity*)
+    (format stream " - *default-report-verbosity*: ~s~%"
+      *default-report-verbosity*)
     (format stream " - *nst-output-stream*: ~s~%" *nst-output-stream*)
     (format stream " - *debug-on-error*: ~s~%" *debug-on-error*)
     (format stream " - *nst-info-shows-expected*: ~s~%"

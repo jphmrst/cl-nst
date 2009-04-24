@@ -54,7 +54,7 @@
              #:nst-junit-dump
 
              #:*nst-output-stream*
-             #:*nst-report-default-verbosity*
+             #:*default-report-verbosity*
              #:*debug-on-error*
 
              #:junit-results-by-group))
