@@ -407,10 +407,9 @@ six-value summary of the results:
          (sym-pack (loop for k being the hash-keys
                          of (gethash user-package +package-groups+)
                          collect k)))
-    (case *nst-verbosity*
-      ((:vverbose)
-       (format t "Reporting for actual package ~s~%" user-package)
-       (format t "sym-pack ~s~%" sym-pack)))
+    (when (> *nst-verbosity* 2)
+      (format t "Reporting for actual package ~s~%" user-package)
+      (format t "sym-pack ~s~%" sym-pack))
     (when sym-pack
       (with-accessors ((name package-result-package-name)
                        (checks package-result-group-results)) result
@@ -529,39 +528,50 @@ six-value summary of the results:
 (defun report-package (&optional
                        (package *package*)
                        (stream *nst-output-stream*)
-                       (*nst-local-verbosity* *nst-report-default-verbosity*))
+                       (*nst-verbosity* (nst-repl-property-encode
+                                         :verbose
+                                         *nst-report-default-verbosity*)))
   "Top-level function for reporting the results of the tests in a package."
   (let ((*nst-report-driver* :package))
+    (declare (special *nst-report-driver*))
     (format stream "~w" (package-report package))))
 
 (defun report-group (group
                      &optional
                      (stream *nst-output-stream*)
-                     (*nst-local-verbosity* *nst-report-default-verbosity*))
+                     (*nst-verbosity* (nst-repl-property-encode
+                                       :verbose
+                                       *nst-report-default-verbosity*)))
   "Top-level function for reporting the results of the tests in a group."
   (let ((*nst-report-driver* :group))
+    (declare (special *nst-report-driver*))
     (format stream "~w" (group-report group))))
 
 (defun report-test (group
                     test &optional
                     (stream *nst-output-stream*)
-                    (*nst-local-verbosity* *nst-report-default-verbosity*))
+                    (*nst-verbosity* (nst-repl-property-encode
+                                      :verbose *nst-report-default-verbosity*)))
   "Top-level function for reporting the results of a test."
   (let ((*nst-report-driver* :test))
+    (declare (special *nst-report-driver*))
     (format stream "~w" (test-report group test))))
 
 (defun report-multiple (packages groups tests &key
                                  (stream *nst-output-stream*)
-                                 (verbosity *nst-report-default-verbosity*)
+                                 (verbosity (nst-repl-property-encode
+                                             :verbose
+                                             *nst-report-default-verbosity*))
                                  (system nil system-supp-p))
   "Top-level function for reporting the results of several tests."
-  (let ((report (apply #'multiple-report
+  (let ((*nst-report-driver* :multiple)
+        (*nst-verbosity* verbosity)
+        (report (apply #'multiple-report
                        packages groups tests
                        (cond
                          (system-supp-p `(:system ,system))
-                         (t nil))))
-        (*nst-local-verbosity* verbosity))
-    (declare (special *nst-local-verbosity*))
+                         (t nil)))))
+    (declare (special *nst-verbosity* *nst-report-driver*))
     (format stream "~w" report)))
 
 (defun report-details (group-or-package gp-supp-p test test-supp-p)
@@ -576,15 +586,16 @@ six-value summary of the results:
     nil))
 
 (defun nst-dump (&key (stream *nst-output-stream*)
-                      (verbosity *nst-report-default-verbosity*))
+                      (verbosity (nst-repl-property-encode
+                                  :verbose *nst-report-default-verbosity*)))
   "Spit out the full NST state."
   (let ((report (all-package-report))
         (*print-pretty* t) (*print-readably* nil)
-        (*nst-local-verbosity* verbosity))
-    (declare (special *nst-local-verbosity*))
+        (*nst-verbosity* verbosity))
+    (declare (special *nst-verbosity*))
     (format stream "NST globals:~%")
-    (format stream " - *nst-verbosity*: ~s~%" *nst-verbosity*)
-    (format stream " - *nst-local-verbosity*: ~s~%" *nst-local-verbosity*)
+    (format stream " - *nst-verbosity*: ~s (~s)~%"
+      (nst-repl-property-display :verbose) *nst-verbosity*)
     (format stream " - *nst-report-default-verbosity*: ~s~%"
       *nst-report-default-verbosity*)
     (format stream " - *nst-output-stream*: ~s~%" *nst-output-stream*)
