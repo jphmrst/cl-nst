@@ -218,6 +218,9 @@ The last form shows all interesting results."
           (format t "~a" (nst-long-help command-name)))
 
          (t (apply #'run-command-actual command-name command-args)))))))
+
+(defmacro nst-cmd (&rest args)
+  `(apply #'run-nst-command ',args))
 
 ;;; Platform-specific command-line interpreter interfaces.
 
