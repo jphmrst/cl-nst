@@ -106,17 +106,23 @@
             (slot-value system 'asdf::name)))
         (let ((reports
                (nconc (loop for report in packages
-                            collect (let ((*nst-report-driver* :package))
+                            collect (let ((*nst-report-driver* (case *nst-report-driver*
+                                                                 (:details :details)
+                                                                 (t :package))))
                                       (declare (special *nst-report-driver*))
                                       (format s "~w~%" report)
                                       report))
                       (loop for report in groups
-                            collect (let ((*nst-report-driver* :group))
+                            collect (let ((*nst-report-driver* (case *nst-report-driver*
+                                                                 (:details :details)
+                                                                 (t :group))))
                                       (declare (special *nst-report-driver*))
                                       (format s "~w~%" report)
                                       report))
                       (loop for report in tests
-                            collect (let ((*nst-report-driver* :test))
+                            collect (let ((*nst-report-driver* (case *nst-report-driver*
+                                                                 (:details :details)
+                                                                 (t :test))))
                                       (declare (special *nst-report-driver*))
                                       (format s "~w~%" report)
                                       report)))))
@@ -600,7 +606,8 @@ six-value summary of the results:
                   (t (group-report group-or-package))))
         (*print-pretty* t)
         (*print-readably* nil)
-        (*nst-verbosity* 2))
+        (*nst-verbosity* 2)
+        (*nst-report-driver* :details))
     (pprint report *nst-output-stream*)
     nil))
 
