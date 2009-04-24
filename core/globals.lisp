@@ -40,11 +40,8 @@
 (defvar *nst-verbosity* 1
   "User variable determining how verbose NST's output to the REPL should be.  Internally, this variable takes an integer value: 0 and below are silent, 1 is the default, 2 and 3 are more verbose.  The command-line interpreter assigns keywords to these values, from most terse to most verbose: :silent, nil, :quiet, :default, t, :verbose, :vverbose (:quiet and :default are the same, and are the initial setting).")
 
-(defvar *nst-report-default-verbosity* :verbose
-  "User variable determining the default value for *nst-verbosity* during report printing (:verbose by default).")
-
-(defvar *nst-output-stream* *standard-output*
-  "User variable determining the output stream to which NST should print its output (*standard-output* by default).")
+(defvar *default-report-verbosity* 2
+  "User variable determining the default value for *nst-verbosity* when printing reports (2 by default).")
 
 (defvar *debug-on-error* nil
   "User variable: if non-null, will break into the Lisp REPL debugger upon encountering an unexpected error.  If t, will record the error and continue with other tests.")
@@ -318,7 +315,7 @@ encoded as :before and :after methods.")
     (let ((*nst-group-name* (group-name test))
           (*nst-check-name* (check-name test))
           (start-time))
-      (when (> *nst-verbosity* 0)
+      (when (> *nst-verbosity* 1)
         (format t " - Executing test ~s~%" (check-name test)))
       (setf start-time (get-internal-real-time))
       (let ((result (call-next-method))
@@ -328,7 +325,7 @@ encoded as :before and :after methods.")
               (gethash (canonical-storage-name (type-of test))
                        +results-record+)
               result)
-        (when (> *nst-verbosity* 0)
+        (when (> *nst-verbosity* 1)
           (format t "   ~s~%" result))
         result))))
 
