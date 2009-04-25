@@ -1,0 +1,69 @@
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual"
+%%% End: 
+\section{Known bugs and enhancement ideas}\index{bugs}\index{enhancements}
+\fbox{TOTALLY OUT OF DATE}
+\begin{enumerate}
+\item We do a poor job of printing the conditions that come back from
+  erring tests.  Moreover, the
+  \texttt{def-check}\index{def-check@\texttt{def-check}} macro should
+  be able to provide better feedback about the context of an error
+  when failing (the kind of failing that doesn't throw an error), not
+  just at the time, but also when
+  \texttt{:blurb}ing\index{blurb@\texttt{:blurb}} tests
+  after-the-fact.
+\item There are still, sometimes, warnings from the use of fixture
+  names in other fixtures.
+\item We are not yet catching errors arising from
+  \texttt{:cleanup}\index{cleanup@\texttt{:cleanup}} blocks.
+\item Clobbering of test/group names should be caught by the macros,
+  not by the lower-level expansions arising from those methods.
+\item In the runtime system, the implementations of
+  \texttt{:blurb}\index{blurb@\texttt{:blurb}},
+  \texttt{:open-used}\index{open-used@\texttt{:open-used}} and
+  \texttt{:reopen}\index{reopen@\texttt{:reopen}} are questionable.
+\item Possibly,
+  \texttt{run-nst-commands}\index{run-nst-commands@\texttt{run-nst-commands}}
+  should be turned into a macro.
+\item The def-check form \texttt{:perf} might be extended to provide
+  (implementation-dependent) checks on memory limits as well as time
+  limits.
+\item Some sort of timeout mechanism (again, possibly
+  implementation-dependent) could be helpful for measuring correctness
+  via termination in more complicated algorithms.
+\end{enumerate}
+
+\subsection{Removed features}
+\label{temp-removed}
+Some features of the NST 0.9 have not yet been reimplemented in NST
+1.0.  Tell John if one is urgent for you.
+
+\subsection{Alternate fixture definitions}
+\fbox{UPDATE}
+
+The
+\texttt{def-capture/restore-fixtures}\index{def-capture/restore-fixtures@\texttt{def-capture/restore-fixtures}}
+declaration binds \texttt{nil} to a collection of variables in the
+extent of associated test groups.  This form is useful when hiding
+some developers' state from tests intended to simulate a
+non-development environment.
+\begin{center}
+\textbf{def-capture/restore-fixtures}
+ \textit{name} \textit{variables}
+\texttt{\&key} \textit{documentation}
+\end{center}
+
+\subsection{Anonymous fixture sets}
+\fbox{UPDATE}
+
+It is not necessary to name fixture sets; they may be given
+anonymously in any situation where a fixture set name is allowed.  The
+syntax of anonymous fixture sets
+is:\index{fixtures@\texttt{:fixtures}}\index{fixtures!anonymous}
+\begin{center}
+\texttt{(:fixtures }\textit{(name form)}$^+$\texttt{ )}
+\end{center}
+The examples of Section~\ref{tests} show the use of anonymous fixture
+sets.

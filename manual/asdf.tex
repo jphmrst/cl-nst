@@ -1,0 +1,20 @@
+\section{Integration with ASDF}
+\fbox{TOTALLY OUT OF DATE see getting-started}
+
+Try something like the following, where \texttt{PACKAGE} is where
+your code lives, and \texttt{test-PACKAGE} is where your tests on that
+code live.\index{ASDF}
+\begin{verbatim}
+(defmethod perform ((op test-op)
+                    (system (eql (find-system :test-PACKAGE))))
+  (eval (list (intern (symbol-name '#:run-nst-commands)
+                      (find-package :sift.nst))
+              :run-package
+              (quote (intern (symbol-name 'PACKAGE)
+                             (find-package 'cl-user))))))
+\end{verbatim}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual"
+%%% End: 

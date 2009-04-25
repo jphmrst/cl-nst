@@ -1,0 +1,273 @@
+\section{Tests}
+\fbox{Reword} The
+\texttt{def-check}\index{check}\index{def-check@\texttt{def-check}}
+form allows a higher-level description of tests.  The basic syntax of
+the form is
+\begin{tabbing}\hspace*{1cm}
+\fbox{UPDATE}
+%  (\textbf{de}\=\textbf{f-}\=\textbf{check} (\textit{name}
+%  	\texttt{\&key} \= \textit{setup}
+%  	     \textit{cleanup} \textit{fixtures})
+%  \\ \>\> \textit{criterion}
+%  \\ \>\texttt{\&rest} \textit{forms})
+\end{tabbing}
+The \textit{setup}, \textit{cleanup} and \textit{fixtures} forms are
+passed as-is to the underlying \texttt{def-test}, and work the same
+way.  The \textit{criterion} is a list or symbol specifying the
+properties which should hold for the \textit{forms}.  When there are
+no \textit{setup}, \textit{cleanup} or \textit{fixtures} arguments,
+the \textit{name} may be given without parentheses.  Likewise, any
+criterion consisting of a single symbol, e.g.\ \texttt{(:pass)}, may
+be abbreviated as just the symbol without the parentheses, e.g.\
+\texttt{:pass}.
+
+\fbox{UPDATE BELOW} Where this list and the list in getting-started
+differ, the latter is almost certainly correct.  But this order is
+better, re-ored getting-started.
+\subsection{Basic checks}
+\subsubsection{The \texttt{:pass} check} 
+This check always passes.\index{pass@\texttt{:pass}}
+\\ Syntax: \texttt{(:pass)}
+\\ Example: \texttt{(def-check passing-test () (:pass) 3 4 "sd")}
+
+\subsubsection{The \texttt{:fail} check} 
+This check always fails.\index{fail@\texttt{:fail}}
+\\ Syntax: \texttt{(:fail)}
+\\ Example: \texttt{(def-check failing-test () (:fail) 312)}
+
+\subsubsection{The \texttt{:warn} check} 
+This check is considered not to fail, but associates a warning message
+with the test.\index{warn@\texttt{:warn}}
+\\ Syntax: \texttt{(:warn \emph{format} \&rest \emph{args})}
+\\ Example:
+\begin{tabbing}
+\texttt{(de}\=\texttt{f-}\=\texttt{check warn-me ()}
+\\ \>\>\texttt{(:warn "\~{}d is not a perfect square" 5)}
+\\ \>\texttt{"asdf")}
+\end{tabbing}
+
+\subsubsection{The \texttt{:eq} check} 
+This test verifies that the form to be tested evaluates to a value
+\texttt{eq}-identified with the value of some designated
+form.\index{eq@\texttt{:eq}}
+\\ Syntax: (\texttt{:eq} \textit{correct-form})
+\\ Example: \texttt{(def-check eq1 () (:eq 'b) (cadr '(a b c)))}
+
+\subsubsection{The \texttt{:symbol} check} 
+This test verifies that a form evaluates to some named
+symbol.\index{symbol@\texttt{:symbol}}
+\\ Syntax: \texttt{(:symbol \emph{symbol-name})}
+\\ Passing example: \texttt{(def-check sym1  () (:symbol a) (car '(a b c)))}
+\\ Failing example: \texttt{(def-check sym1x () (:symbol a) (cadr '(a b c)))}
+
+\subsubsection{The \texttt{:eql}, \texttt{:equal} and \texttt{:equalp} check} 
+These checks are similar to the \texttt{:eq} check, but using
+respectively the \texttt{eql}, \texttt{equal} and \texttt{equalp}
+predicates.\index{eql@\texttt{:eql}}\index{equal@\texttt{:equal}}\index{equalp@\texttt{:equalp}}
+\\ Syntax: (\texttt{:eql} \textit{correct-form})
+\\ Example: \texttt{(def-check eql1 (:eql 2) (cadr '(1 2 3)))}
+
+\subsubsection{The \texttt{:forms-eq} check} 
+This test verifies that two forms evaluate to \texttt{eq}-identified
+values.\index{forms-eq@\texttt{:forms-eq}}
+\\ Syntax: (\texttt{:forms-eq})
+{\ttfamily\begin{tabbing}
+\textrm{Example:}\ (de\=f-check eqforms1 :forms-eq
+\\ \>  (cadr '(a b c)) (caddr '(a c b)))
+\end{tabbing}}
+
+\subsubsection{The \texttt{:forms-eql} check} 
+This test verifies that two forms evaluate to \texttt{eql}-identified
+values.\index{forms-eql@\texttt{:forms-eql}}
+\\ Syntax: \texttt{:forms-eql}
+{\ttfamily\begin{tabbing}
+\textrm{Example:}\ (de\=f-check eqlforms1 :forms-eq
+\\ \>  (cadr '(a 3 c)) (caddr '(a c 3)))
+\end{tabbing}}
+
+\subsubsection{The \texttt{:predicate} check} 
+This test applies some predicate function to a form, and verifies that
+the result is non-null.\index{predicate@\texttt{:predicate}}
+\\ Syntax: \texttt{(:predicate \emph{function})}
+\\ Examples:
+\\ $~~\bullet$ \texttt{(def-check pred1 (:predicate numberp) 3)}
+\\ $~~\bullet$ \texttt{(def-check pred2 (:predicate eql) (+ 1 2) 3)}
+\\
+Note that the predicate is applied to \emph{all} of the forms
+following the criterion.
+
+\subsubsection{The \texttt{:err} check} 
+This test verifies that a form throws an error.  Note that this
+criterion should only be used as the top-level criterion in a
+\texttt{def-check}; use within one of the compound forms below may
+have unexpected results.\index{err@\texttt{:err}}
+\\ Syntax: (\texttt{:err})
+\\ Example: \texttt{(def-check err1 (:err) (error "this should be caught"))}
+
+\subsubsection{The \texttt{:perf} check}
+This test sets minimum performance requirements for evaluation of a
+form  Note that this form should only be
+used as the top-level criterion in a \texttt{def-check};
+use within one of the compound forms below may have
+unexpected results.\index{err@\texttt{:perf}}
+\\ Syntax: (\texttt{:perf} [ \texttt{:min} $|$ \texttt{:sec} $|$ \texttt{:ms} ] \textit{num})
+\\Examples: \texttt{(def-check perf1 (:perf :min 2) (ack 3 5))}
+
+% \subsection{Use of fixtures}
+% 
+% Fixtures can be used on a per-test basis with \texttt{def-check} just
+% as with \texttt{def-test}.  The syntax is the same, for example,
+% \begin{verbatim}
+% \end{verbatim}
+
+\subsection{Compound forms}
+
+\subsubsection{The \texttt{:not} check} 
+This check verifies that some other check fails (but does not throw an
+error).\index{not@\texttt{:not}}
+\\ Syntax: \texttt{(:not \emph{criterion})}
+\\ Example: \texttt{(def-check not1 (:not (:symbol b)) 'a)}
+
+\subsubsection{The \texttt{:all} check} 
+This criterion brings several other criteria under one check, and
+verifies that they all pass.\index{all@\texttt{:all}}
+\\ Syntax: \texttt{(:all \&rest \emph{criteria})}
+\\ Example:
+\begin{tabbing}
+\texttt{(de}\=\texttt{f-}\=\texttt{check not1 ()}
+\\ \>\>\texttt{(:all }\=\texttt{(:predicate even-p)}
+\\ \>\>\>\texttt{(:predicate prime-p))}
+\\ \>\texttt{2)}
+\end{tabbing}
+
+\subsubsection{The \texttt{:any} check} 
+This criterion brings several other criteria under one check, and
+verifies that at least one passes.\index{all@\texttt{:all}}
+\\ Syntax: \texttt{(:any \&rest \emph{criteria})}
+\\ Example:
+\begin{tabbing}
+\texttt{(de}\=\texttt{f-}\=\texttt{check not1 ()}
+\\ \>\>\texttt{(:anl }\=\texttt{(:predicate even-p)}
+\\ \>\>\>\texttt{(:predicate prime-p))}
+\\ \>\texttt{5)}
+\end{tabbing}
+
+\subsubsection{The \texttt{:apply} check}
+This check applies some transforming function to a form, and applies
+another check to the result.\index{apply@\texttt{:apply}}
+\\ Syntax: \texttt{(:apply \textit{function} \textit{subcriterion})}
+\\ Example: \texttt{(def-check applycheck (:apply cadr (:eql 10)) '(0 10 20))}
+
+\subsubsection{The \texttt{:check-err} check}
+This test verifies that evaluating a check throws an
+error.\index{err@\texttt{:check-err}} The difference between
+\texttt{:check-err} and \texttt{:err} is that the latter deals only
+with evaluation of a form, whereas \texttt{:check-err} is more about
+the unit testing process.  This form is mostly useful for temporarily
+disregarding certain checks until some later fix, when they
+\emph{won't} throw an error.
+%
+\\ Syntax: \texttt{(:check-err \textit{criterion})}
+\\ Example: \texttt{(def-check check-err1 (:check-err :forms-eq) 'asdfgh (error "this should be caught"))}
+
+\subsubsection{The \texttt{:progn} check}
+This check evaluate a list of Lisp forms before evaluating the
+remaining check criteria.
+\\ Syntax: (\texttt{:progn} \textit{form} \ldots\ \textit{form} \textit{criterion})
+\\ Example: Assuming that \texttt{zz} is defined as some variable,
+\\ \hspace*{2em}\texttt{(def-check form1 (:progn (setf zz 3) (:eql 3)) zz)}
+
+\subsubsection{The \texttt{:proj} check}
+This check projects certain values from the current stack of forms
+(numbering from 0) for another criterion.  This check is useful for
+composing new checks as aliases.
+\\ Syntax: \texttt{(:proj (\textit{num} \ldots\  \textit{num}) \textit{criterion})}
+\\ Example: \texttt{(def-check proj-1 (:proj (0 2) :forms-eq) 'a 3 (car '(a b)))}
+
+\subsubsection{The \texttt{:with} check}
+\fbox{UNIMPLEMENTED --- is this still needed?}
+\par
+This check assumes that the next item is a list, whose contents are
+expanded into the methods-and-forms.\index{with@\texttt{:with}} This
+check is especially useful with the \texttt{def-check-cri\-ter\-ion}
+command below.
+\\ Syntax: \texttt{(:with \emph{criterion})}
+\\ Example: The following two \texttt{def-check}s are equivalent.
+\begin{verbatim}
+  (def-check seq1
+      (:seq (:predicate symbolp) (:eql 1) (:symbol d))
+      '(a 1 d))
+  (def-check with-seq1
+      (:with (:seq (:predicate symbolp) (:eql 1) (:symbol d)))
+      '(a 1 d))
+\end{verbatim}
+
+\subsection{Checks on lists}
+
+\subsubsection{The \texttt{:each} check}
+This check verifies that every member of the list to which a form
+evaluates satisfies some other check.\index{each@\texttt{:each}}
+\\ Syntax: \texttt{(:each \emph{criterion})}
+\\ Example: \texttt{(def-check each1 (:each (:symbol a)) '(a a a a a))}
+
+\subsubsection{The \texttt{:seq} check}
+This check verifies, for each element $n$ of the $n$-element list to
+which the form evaluates, that that element satisfies the respective
+check.\index{seq@\texttt{:seq}}
+\\ Syntax: \texttt{(:seq \emph{criteria} \ldots\ \emph{criteria})}
+{\ttfamily\begin{tabbing}
+\textrm{Example:}\ (de\=f-\=check seqcheck
+\\ \>\>  (:seq (:predicate symbolp) (:eql 1) (:symbol d))
+\\ \>  '(a 1 d))
+\end{tabbing}}
+
+\subsubsection{The \texttt{:permute} check}
+The permute check verifies that some permutation of the list to which
+the form evaluates satisfies some other check.
+\index{permute@\texttt{:permute}}
+\\ Syntax: \texttt{(:permute \textit{criterion}}
+{\ttfamily\begin{tabbing}
+\textrm{Examples:}\ \=(def-check permute1 (:permute (:each (:eq 'a))) '(a a))
+\\ \> (de\=f-\=check permute2
+\\ \> \> \> (:permute (:seq \=(:symbol b)
+\\ \> \> \>             \>(:predicate symbolp)
+\\ \> \> \>             \>(:predicate numberp)))
+\\ \> \>'(1 a b))
+\end{tabbing}}
+
+\subsection{Checks on vectors}
+
+\subsubsection{The \texttt{:across} check}
+Like the \texttt{seq} check, but for vectors rather than
+lists.\index{across@\texttt{:across}}
+\\ Syntax: \texttt{(:across \emph{criteria} \ldots\ \emph{criteria})}
+{\ttfamily\begin{tabbing}
+\textrm{Example:}\ (de\=f-\=check across1
+\\ \>\>  (:across (:predicate symbolp) (:eql 1))
+\\ \>  (vector 'a 1))
+\end{tabbing}}
+
+\subsection{Checks on class instances}
+
+\subsubsection{The \texttt{:slots} check} 
+This check specifies checks for some or all of the slots of a class
+member.\index{slots@\texttt{:slots}}
+\\ Syntax: \texttt{(:slots  (\textit{slot} \textit{criterion})  \ldots\ (\textit{slot} \textit{criterion}))}
+{\ttfamily\begin{tabbing}
+\textrm{Example:}\ \= (defc\=lass classcheck ()
+\\ \> \> (\=(s1 :initarg :s1 :reader get-s1)
+\\ \> \> \> (s2 :initarg :s2)
+\\ \> \> \> (s3 :initarg :s3)))
+\\ \> (def-check \=slot1
+\\ \> \>  (:slots \=(s1 (:eql 10))
+\\ \> \>  \>(s2 (:symbol zz))
+\\ \> \>  \>(s3 (:seq \=(:symbol q) (:symbol w)
+\\ \> \>  \> \> (:symbol e) (:symbol r))))
+\\ \> \>  (m\=ake-instance 'classcheck
+\\ \> \> \>  :s1 10 :s2 'zz :s3 '(q w e r)))
+\end{tabbing}}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual"
+%%% End: 
