@@ -1,0 +1,34 @@
+
+%% \criteriaDoc
+%%    1 - criteria name without punctuation
+%%    2 - criteria name with punctuation
+%%    3 - syntax
+%%    4 - explanation
+%%    5 - applicable to
+%%    6 - example type --- \noEx, \singleEx, \multiEx, \tabbingEx
+%%    7 - example(s)
+
+%% \kwdCriteriaDoc
+%%    1 - criteria name
+%%    2 - syntax
+%%    3 - explanation
+%%    4 - applicable to
+%%    5 - example type --- \noEx, \singleEx, \multiEx, \tabbingEx
+%%    6 - example(s)
+
+\def\kwdCriteriaDoc#1#2#3#4#5#6{\criteriaDoc{#1}{:#1}{#2}{#3}{#4}{#5}{#6}}
+
+\begin{criteriaGroup}{Basic checks}
+
+\kwdCriteriaDoc{pass}{:pass}
+{A trivial test, which always passes.}
+{Any.}
+{\singleEx}{(def-check passing-test :pass 3 4 "sd")}
+
+\kwdCriteriaDoc{fail}{(:fail FORMAT ARG ...\ ARG)}
+{A trivial test, which always fails.  The format string and arguments
+should be suitable for the Lisp \texttt{format} function.}
+{Any.}
+{\singleEx}{(def-check fails (:fail "Expected a \~{}a" "string") 312)}
+
+\end{criteriaGroup}

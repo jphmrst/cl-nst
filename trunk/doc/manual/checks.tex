@@ -1,4 +1,4 @@
-\section{Tests}
+\section{Checks}
 \fbox{Reword} The
 \texttt{def-check}\index{check}\index{def-check@\texttt{def-check}}
 form allows a higher-level description of tests.  The basic syntax of
@@ -24,16 +24,21 @@ be abbreviated as just the symbol without the parentheses, e.g.\
 \fbox{UPDATE BELOW} Where this list and the list in getting-started
 differ, the latter is almost certainly correct.  But this order is
 better, re-ored getting-started.
-\subsection{Basic checks}
-\subsubsection{The \texttt{:pass} check} 
-This check always passes.\index{pass@\texttt{:pass}}
-\\ Syntax: \texttt{(:pass)}
-\\ Example: \texttt{(def-check passing-test () (:pass) 3 4 "sd")}
 
-\subsubsection{The \texttt{:fail} check} 
-This check always fails.\index{fail@\texttt{:fail}}
-\\ Syntax: \texttt{(:fail)}
-\\ Example: \texttt{(def-check failing-test () (:fail) 312)}
+\def\criteriaGroup#1{\subsection{#1}}
+\def\endcriteriaGroup{}
+\def\criteriaDoc#1#2#3#4#5#6#7{%
+\subsubsection{The \texttt{#2} check} 
+#4\index{#1@\texttt{#2}}
+\\ Syntax: \texttt{#3}
+#6{#7}}
+\def\noEx#1{}
+\def\singleEx#1{\\Example: \texttt{#1}}
+\def\multiEx#1{}
+\def\tabbingEx#1{}
+\input{../common/criteria}
+
+\subsection{Basic checks}
 
 \subsubsection{The \texttt{:warn} check} 
 This check is considered not to fail, but associates a warning message
