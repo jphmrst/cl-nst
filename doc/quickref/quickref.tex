@@ -1,10 +1,15 @@
-%% File getting-started.tex
+%% File quickref.tex
 %%
 %% NST by John Maraist, based on RRT by Robert Goldman.
 %%
 %% NST is Copyright (c) 2006-2009 Smart Information Flow Technologies.
 %% RRT is Copyright (c) 2005 Robert Goldman, released under the LGPL,
 %% and the Lisp-specific preamble to that license.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
 
 \documentclass{article}
 \usepackage{times}
@@ -131,12 +136,12 @@ Criteria forms have the following structure:
 \end{verbatim}
 but a no-argument criterion use \texttt{(NAME)} can be abbreviated as
 \texttt{NAME}.  NST's built-in criteria include:
-\begin{criteria}
-  \criterion{:pass}{:pass}{}{A trivial test, which always passes.}
+\def\criteriaGroup#1{\par\textbf{#1.}\begin{criteria}}
+\def\endcriteriaGroup{\end{criteria}}
+\def\criteriaDoc#1#2#3#4#5#6#7{\criterion{#2}{#3}{#5}{#4}}
+\input{../common/criteria}
 
-  \criterion{:fail}{(:fail FORMAT ARG ...\ ARG)}{Any.}{A trivial test,
-    which always fails.  The format string and arguments should be
-    suitable for the Lisp \texttt{format} function.}
+\begin{criteria}
 
   \criterion{:warn}{(:warn FORMAT ARG ...\ ARG)}{Any.}{Issue a warning.
     The format string and arguments should be suitable for the Lisp

@@ -34,7 +34,6 @@ all: asdf/package.ps \
 	a2ps -2r -o $@ $<
 
 clean:
-	rm -f *.fasl *.ps *.dvi *.aux *.log *.toc *.out *.pdf \
-	      manual/*.ps manual/*.dvi manual/*.aux manual/*.log \
-              manual/*.toc manual/*.idx manual/*.out manual/*.pdf \
-	      manual/*.ilg manual/*.ind
+	rm -f *.fasl \
+      doc/*/*.ps  doc/*/*.dvi doc/*/*.aux doc/*/*.log doc/*/*.toc \
+      doc/*/*.idx doc/*/*.out doc/*/*.pdf doc/*/*.ilg doc/*/*.ind
