@@ -1,0 +1,50 @@
+%% File manual.tex
+%%
+%% NST by John Maraist, based on RRT by Robert Goldman.
+%%
+%% NST is Copyright (c) 2006-2009 Smart Information Flow Technologies.
+%% RRT is Copyright (c) 2005 Robert Goldman, released under the LGPL,
+%% and the Lisp-specific preamble to that license.
+
+\documentclass[draft]{article}
+\usepackage{makeidx}
+\usepackage[pdftex]{hyperref}
+\title{NST 1.1 users' manual}
+\author{John Maraist\thanks{Smart Information Flow Technologies, 211 N.\ First St.\ Suite 300, Minneapolis, MN 55401; \textsl{jmaraist} at \textsl{sift.info}.}}
+\setcounter{tocdepth}{2}
+\makeindex
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+\tableofcontents
+\parskip 0.6em
+\parindent 0pt
+
+\section*{Overview}
+This document is the manual and users' guide to the NST test
+framework.  NST is a unit test system which provides support for test
+fixture data, stateful setup and cleanup of tests, grouping of tests,
+and (we think!) a useful runtime interface.  Suggestions and comments
+are welcome; a list of known bugs and infelicities concludes this
+document.  The file \texttt{nst-nst.lisp} in this distribution holds
+the NST tests for NST, and contains many examples (some of which we
+have adapted to this document).
+
+\input{fixtures}
+\input{groups}
+\input{checks}
+\input{criteria}
+\input{runtime}
+\input{asdf}
+\input{issues}
+%
+\appendix
+
+\printindex
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

@@ -1,0 +1,73 @@
+\section{Defining check criteria}
+\fbox{THIS WHOLE SECTION NEEDS UPDATING} Do this last, or maybe John
+can; it's all macrology.
+\subsection{Aliases over checks}
+{\ttfamily\begin{tabbing}
+\textrm{Syntax: 
+}(de\=f-check-alias (name \&rest args)
+\\ \> [ documentation ]
+\\ \> expansion)
+\end{tabbing}}
+Defines how a criterion should be rewritten as another criteria.
+
+Examples:
+\\ \texttt{(def-check-alias (:forms-eq) `(:predicate eq))}
+\\ \texttt{(def-check-alias (:symbol name) `(:eq ',name))}
+\par\fbox{Fill in details}
+
+\subsection{Reporting forms}
+\texttt{make-check-report}, \texttt{emit-failure}, \texttt{emit-warning}.
+\par\fbox{Fill in details}
+
+\subsection{Basic checks on values}
+The \texttt{check-forms} return a quoted Lisp expression calculating a
+checking report for the given forms.  
+{\ttfamily\begin{tabbing}
+\textrm{Syntax: 
+}(de\=f-value-check (na\=me \=subcriteria-lambda-list
+\\ \> \> \> test-forms-lambda-list
+\\ \> \> \&key \= blurb-format
+\\ \> \>        \> full-format
+\\ \> \>        \> stack-transformer)
+\\ \> expansion)
+\end{tabbing}}
+Comma-prefix names from the \texttt{subcriteria-lambda-list}, but do not
+comma-prefix names from the \texttt{test-forms-lambda-list}.
+Declarations are OK, but quote them.  Examples:
+\begin{verbatim}
+(def-value-check (:pass () (&rest chk))
+  `(declare (ignorable chk))
+  `(make-check-result))
+
+(def-value-check (:eq (eq-form) (check-form))
+  `(if (eq ,eq-form check-form)
+     (make-check-result)
+     (emit-failure :format "Not eq to ~s" :args '(,eq-form))))
+\end{verbatim}
+\par\fbox{Fill in details}
+
+\subsection{General checks}
+{\ttfamily\begin{tabbing}
+\textrm{Syntax: 
+}(de\=f-control-check (na\=me \=subcriteria-lambda-list
+\\ \>\> \> test-forms-formal-parameter
+\\ \>\> \&key \=stack-transformer
+\\ \>\> \> blurb-format
+\\ \>\> \> full-format)
+\\ \> check-forms)
+\end{tabbing}}
+Comma-prefix all the names.  \texttt{test-forms-formal-parameter} must
+be just a symbol.  Calls out to \texttt{continue-check} are useful;
+its second argument must be a Lisp expression which will evaluate to a
+list of values.
+\begin{verbatim}
+(def-control-check (:apply (transform criterion) forms)
+  (continue-check criterion
+		  `(multiple-value-list (apply #',transform ,forms))))
+\end{verbatim}
+\par\fbox{Fill in details}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual"
+%%% End: 

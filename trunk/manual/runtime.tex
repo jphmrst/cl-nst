@@ -1,0 +1,196 @@
+\section{The runtime system}
+\fbox{The system is now much smaller; update to match the REPL but move any neat idea to Section~\ref{temp-removed}.}
+
+The runtime system provides several operations for scheduling and
+running tests, and debugging failing and erring tests.  The operations
+are accessible from the
+\texttt{run-nst-commands}\index{run-nst-commands@\texttt{run-nst-commands}}
+function.  Under Allegro, the top-level alias
+\texttt{:nst}\index{nst@\texttt{:nst}} provides a shorthand to this
+function; for the sake of brevity we use this shorthand below.
+
+\subsection{Output control}
+\subsubsection{The \texttt{:help} operation}
+\index{help@\texttt{:help}}%
+Shows a brief summary of the runtime system operations.
+\\ Syntax: \texttt{:nst :help}
+
+\subsubsection{The \texttt{:verbose} operation}
+\index{verbose@\texttt{:verbose}}%
+Sets whether the runtime system should show verbose output.
+\\ Syntax: \texttt{:nst :verbose FORM}
+
+\subsubsection{The \texttt{:debug} operation}
+\index{debug@\texttt{:debug}}%
+Sets whether NST debugging messages should be generated.
+\\ Syntax: \texttt{:nst :debug BOOL}
+
+\subsubsection{The \texttt{:summarize-scheduled} operation}
+\index{summarize-scheduled@\texttt{:summarize-scheduled}}%
+If \texttt{BOOL} evaluates to non-null, then the runtime system will
+print a summary after running scheduled tests with \texttt{:run},
+\texttt{:continue}, etc.
+\\ Syntax: \texttt{:nst :summarize-scheduled BOOL}
+
+\subsubsection{The \texttt{:summarize-single} operation}
+\index{summarize-single@\texttt{:summarize-single}}%
+If \texttt{BOOL} evaluates to non-null, then the runtime system will
+print a summary after one-time test runs initiated by
+\texttt{:run-test}, \texttt{:run-group}, etc.
+\\ Syntax: \texttt{:nst :summarize-single BOOL}
+
+\subsubsection{The \texttt{:dump} operation}
+\index{dump@\texttt{:dump}}%
+Prints the state of the test system.
+\\ Syntax: \texttt{:nst :dump}
+
+\subsection{Marking tests of interest for execution}
+\label{nominating-tests}
+NST allows tests to be marked for execution by the \texttt{:run}
+command.  Tests can be marked by package or group, or as an individual
+test.
+
+\subsubsection{The \texttt{:p} operation}
+\index{p@\texttt{:p}}%
+Indicates that all tests in a particular package should be run.
+\\ Syntax: \texttt{:nst :p PACKAGE}
+
+\subsubsection{The \texttt{:g} operation}
+\index{g@\texttt{:g}}%
+Indicates that all tests in a particular group should be run.
+\\ Syntax: \texttt{:nst :g GROUP}
+
+\subsubsection{The \texttt{:t} operation}
+\index{t@\texttt{:t}}%
+Indicates that the named test should be run.
+\\ Syntax: \texttt{:nst :t TEST}
+
+\subsection{Test suite execution}
+These commands control execution of tests selected by the commands of
+the previous section.
+
+\subsubsection{The \texttt{:run} operation}
+\index{run@\texttt{:run}}%
+Runs all marked tests.
+\\ Syntax: \texttt{:nst :run}
+
+\subsubsection{The \texttt{:continue} operation}
+\index{continue@\texttt{:continue}}%
+Resumes running tests after an interruption arising from one of the
+three switch setting above.
+\\ Syntax: \texttt{:nst :continue}
+
+\subsubsection{The \texttt{:retry} operation}
+\index{retry@\texttt{:retry}}%
+Retries failed or error-raising tests from the last run.
+\\ Syntax: \texttt{:nst :retry}
+
+\subsubsection{The \texttt{:blurb} operation}
+\index{blurb@\texttt{:blurb}}%
+Describes the outcome of the last run of a test.
+\\ Syntax: \texttt{:nst :blurb GROUPNAME TESTNAME}
+
+\subsection{Controlling test suite execution behavior}
+The following commands control options governing how the runtime
+system should behave when a test fails or raises an error.
+
+\subsubsection{The \texttt{:break-on-wrong} operation}
+\index{break-on-wrong@\texttt{:break-on-wrong}}%
+If \texttt{BOOL} evaluates to non-null, then a failing test will cause
+test execution to pause.
+\\ Syntax: \texttt{:nst :break-on-wrong BOOL}
+
+\subsubsection{The \texttt{:break-on-error} operation}
+\index{break-on-error@\texttt{:break-on-error}}%
+If \texttt{BOOL} evaluates to non-null, then any error in a test run
+will cause test execution to pause.
+\\ Syntax: \texttt{:nst :break-on-error BOOL}
+
+\subsubsection{The \texttt{:debug-on-error} operation}
+\index{debug-on-error@\texttt{:debug-on-error}}%
+If \texttt{BOOL} evaluates to non-null, then an error in a test run
+will pause test execution and enter debug mode.
+\\ Syntax: \texttt{:nst :debug-on-error BOOL}
+
+\subsection{Test definition}
+\subsubsection{The \texttt{:defer-test-compile} operation}
+\index{defer-test-compile@\texttt{:defer-test-compile}}%
+Sets whether tests defined subsequently should, by default, defer
+compilation of their forms until actually running the test.  This
+feature is useful when debugging code involving macros, but changing
+this feature in the runtime system can lead to confusion.  It is
+surely almost always the right thing to set this flag locally via
+def-test-group and def-test.  In fact, this operation may be removed
+in a future version of the runtime system.
+\\ Syntax: \texttt{:nst :defer-test-compile BOOL}
+
+\subsection{One-off execution}
+The following commands allow one-time execution of tests without
+altering the settings made by the commands of
+Section~\ref{nominating-tests}.
+
+\subsubsection{The \texttt{:run-package} operation}
+\index{run-package@\texttt{:run-package}}%
+Runs all of the tests in a package.
+\\ Syntax: \texttt{:nst :run-package PACKAGE}
+
+\subsubsection{The \texttt{:run-group} operation}
+\index{run-group@\texttt{:run-group}}%
+Runs all of the tests in a single group.
+\\ Syntax: \texttt{:nst :run-group GROUP}
+
+\subsubsection{The \texttt{:run-test} operation}
+\index{run-test@\texttt{:run-test}}%
+Runs a single test.
+\\ Syntax: \texttt{:nst :run-test GROUP TEST}
+
+\subsection{Opening fixtures}
+The use of fixtures would make debugging tedious without access to
+these named values.  Fortunately, it is straightforward to inject
+these names into the runtime system.
+
+\subsubsection{The \texttt{:open} operation}
+\index{open@\texttt{:open}}%
+Fixtures\index{fixtures!debugging} can be \emph{opened} into the
+interactive namespace for debugging with the
+\texttt{:nst~:open}\index{open@\texttt{:open}} command:
+\\ Syntax: \texttt{:nst :open FIXTURE-NAME}
+\\ Example:
+\begin{verbatim}
+  CL-USER(75): (nst:def-fixtures small-fixture
+                  :bindings ((fix-var1 3) (fix-var2 'asdfg)))
+  NIL
+  CL-USER(76): (boundp 'fix-var1)
+  NIL
+  CL-USER(77): :nst :open small-fixture
+  Opened fixture SMALL-FIXTURE.
+  CL-USER(78): fix-var1
+  3
+  CL-USER(79): 
+\end{verbatim}
+
+\subsubsection{The \texttt{:open{\textasteriskcentered}} operation}
+\index{open{\textasteriskcentered}@\texttt{:open{\textasteriskcentered}}}%
+Multiple fixtures\index{fixtures!debugging} can be \emph{opened} into the
+interactive namespace with a single command using the
+\texttt{:nst~:open} command:
+\\ Syntax: \texttt{:nst :open\* } {\textit{FIXTURE-NAME}{\textasteriskcentered}}
+
+
+\subsubsection{The \texttt{:open-used} operation}
+\index{open-used@\texttt{:open-used}}%
+If \texttt{BOOL} evaluates to non-null, then opening a fixture will
+always also open the fixtures it uses.  Default is t.
+\\ Syntax: \texttt{:nst :open-used BOOL}
+
+\subsubsection{The \texttt{:reopen} operation}
+\index{reopen@\texttt{:reopen}}%
+If \texttt{BOOL} evaluates to non-null, then fixtures will be
+re-opened \emph{e.g.}\ when required multiple times by opening
+different fixtures that use them.
+\\ Syntax: \texttt{:nst :reopen BOOL}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual"
+%%% End: 

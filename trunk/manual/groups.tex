@@ -1,0 +1,50 @@
+
+\section{Test groups}
+Groups of tests\index{group}\index{test group|see{group}} can be
+associated with fixture sets, stateful initiatization, and stateful
+cleanup.  The syntax of a test group declaration
+is:\index{def-test-group@\texttt{def-test-group}}
+\begin{center}
+\fbox{UPDATE}
+%  \textbf{def-test-group} \textit{name}
+%   \textit{fixture-sets} \texttt{\&rest} \textit{forms}
+\end{center}
+where
+\begin{itemize}
+\item\textit{name} is the name of this test group.
+\item\textit{fixture-sets} is a list of fixture sets --- given by
+  name, or as anonymous fixtures --- to be applied to the tests in
+  this group.
+\item\textit{forms} are one of the following:
+\begin{itemize}
+\item A test definition, described below.
+\item Test group documentation, \texttt{(:documentation
+    \textit{string})}~\index{documentation@\texttt{:documentation}}.
+\item A setup form, \texttt{(:setup
+    \textit{setup})}~\index{setup@\texttt{:setup}}.  The setup form is
+  run after inclusion of names from fixture sets, but before any tests
+  from the group.  Individual tests should make no assumptions as to
+  whether the setup is unique to that test, or whether it is shared
+  among several tests of that group.
+\item A cleanup form, \texttt{(:cleanup
+    \textit{cleanup})}~\index{cleanup@\texttt{:cleanup}}.  The
+  cleanup form is normally run after the setup completes; however the
+  cleanup form will not be run if the setup form raises an error.
+  When the user asks the runtime system to enter the debugger on an
+  error, the cleanup form will not run unless the user explicitly
+  enabled a resumption of the test routine from the debugger.  The
+  cleanup form will be run in other circumstances, including at a
+  user-requested break in testing at either failure or error.
+\item A compile deferral supression, \texttt{(:defer-compile
+    nil)}~\index{defer-compile@\texttt{:defer-compile}}.  Normally the
+  form of a test is evaluated at run time, so that \emph{e.g.}\ macros
+  will be expanded according to the most current declaration.  This
+  flag will cause test forms to be compiled when the test is first
+  loaded.
+\end{itemize}
+\end{itemize}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual"
+%%% End: 
