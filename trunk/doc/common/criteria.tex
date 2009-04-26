@@ -9,7 +9,7 @@
 %%    7 - example(s)
 
 %% \kwdCriteriaDoc
-%%    1 - criteria name
+%%    1 - criteria name without colon
 %%    2 - syntax
 %%    3 - explanation
 %%    4 - applicable to
@@ -19,6 +19,85 @@
 \def\kwdCriteriaDoc#1#2#3#4#5#6{\criteriaDoc{#1}{:#1}{#2}{#3}{#4}{#5}{#6}}
 
 \begin{criteriaGroup}{Basic checks}
+
+\kwdCriteriaDoc{true}{:true}
+{The test passes if the form evaluates to non-nil.}
+{A single form.}
+{\noEx}{}
+
+\kwdCriteriaDoc{eq}{(:eq FORM)}
+{Require a form to evaluate to a form which is \texttt{eq} to the
+criterion argument.}
+{A single form.}
+{\singleEx}{(def-check eq1 () (:eq 'b) (cadr '(a b c)))}
+
+\kwdCriteriaDoc{symbol}{(:symbol NAME)}
+{Require a form to evaluate to a symbol which is \texttt{eq} to the
+symbol name given as the criterion argument.}
+{A single form.}
+{\multiEx}
+{\passExample{(def-check sym1  () (:symbol a) (car '(a b c)))}
+ \failExample{(def-check sym1x () (:symbol a) (cadr '(a b c)))}}
+
+\kwdCriteriaDoc{eql}{(:eql FORM)}
+{Require a form to evaluate to an expression which is \texttt{eql} to
+the criterion argument.}
+{A single form.}
+{\singleEx}{(def-check eql1 (:eql 2) (cadr '(1 2 3)))}
+
+\kwdCriteriaDoc{equal}{(:equal FORM)}
+{Require a form to evaluate to an expression which is \texttt{equal}
+to the criterion argument.}
+{A single form.}
+{\noEx}{}
+
+\kwdCriteriaDoc{equalp}{(:equalp FORM)}
+{Require a form to evaluate to an expression which is \texttt{equalp}
+to the criterion argument.}
+{A single form.}
+{\noEx}{}
+
+\kwdCriteriaDoc{forms-eq}{:forms-eq}
+{Passes for forms which evaluate to expressions which are
+\texttt{eq}.}
+{Exactly two forms.}
+{\singleEx}{(def-check eqforms1 :forms-eq (cadr '(a b c)) (caddr '(a c b)))}
+
+\kwdCriteriaDoc{forms-eql}{:forms-eql}
+{Passes for forms which evaluate to expressions which are
+\texttt{eql}.}
+{Exactly two forms.}
+{\singleEx}{(def-check eqlforms1 :forms-eq (cadr '(a 3 c)) (caddr '(a c 3)))}
+
+\kwdCriteriaDoc{forms-equal}{:forms-equal}
+{Passes for forms which evaluate to expressions which are
+\texttt{equal}.}
+{Exactly two forms.}
+{\noEx}{}
+
+\kwdCriteriaDoc{predicate}{(:predicate FUNCTION-FORM)}
+{Applies some predicate function to a form, and verifies that the
+result is non-nil.  Note that the predicate is applied to \emph{all}
+of the forms following the criterion.}
+{Forms matching the input lambda list of the \texttt{FUNCTION-FORM}.}
+{\multiEx}
+{\passExample{(def-check pred1 (:predicate numberp) 3)}
+ \passExample{(def-check pred2 (:predicate eql) (+ 1 2) 3)}}
+
+\kwdCriteriaDoc{err}{(:err :type CLASS)}
+{This test passes when the the forms raise an exception of the given
+\texttt{CLASS}, by default \texttt{error}.}
+{Any.}
+{\singleEx}{(def-check err1 (:err) (error "this should be caught"))}
+
+\kwdCriteriaDoc{perf}{(:perf [ :ns | :sec | :min ] TIME)}
+{Passes when the forms evaluate within the given time limit.}
+{Any.}
+{\singleEx}{(def-check perf1 (:perf :min 2) (ack 3 5))}
+
+\end{criteriaGroup}
+
+\begin{criteriaGroup}{Atomic checks}
 
 \kwdCriteriaDoc{pass}{:pass}
 {A trivial test, which always passes.}
@@ -30,5 +109,39 @@
 should be suitable for the Lisp \texttt{format} function.}
 {Any.}
 {\singleEx}{(def-check fails (:fail "Expected a \~{}a" "string") 312)}
+
+\kwdCriteriaDoc{warn}{(:warn FORMAT ARG ...\ ARG)}
+{Issue a warning.  The format string and arguments should be suitable for
+ the Lisp \texttt{format} function.}
+{Any.}
+{\singleEx}{(:warn "\~{}d is not a perfect square" 5)}
+
+\end{criteriaGroup}
+
+\begin{criteriaGroup}{Compound checks}
+
+\kwdCriteriaDoc{not}{(:not CRITERION)}
+{Passes when testing according to \texttt{CRITERION} either fails (but
+does not throw an error).}
+{As required by the subordinate criterion.}
+{\singleEx}{(def-check not1 (:not (:symbol b)) 'a)}
+
+\kwdCriteriaDoc{all}{(:all CRITERION CRITERION ...\ CRITERION)}
+{This criterion brings several other criteria under one check, and
+verifies that they all pass.}
+{As required by the subordinate criteria.}
+{\tabbingEx}{\texttt{(de}\=\texttt{f-}\=\texttt{check not1 ()}
+\\ \>\>\texttt{(:all }\=\texttt{(:predicate even-p)}
+\\ \>\>\>\texttt{(:predicate prime-p))}
+\\ \>\texttt{2)}}
+
+\kwdCriteriaDoc{any}{(:any CRITERION CRITERION ...\ CRITERION)}
+{Passes when any of the subordinate criteria pass.}
+{As required by the subordinate criteria.}
+{\tabbingEx}{
+\texttt{(de}\=\texttt{f-}\=\texttt{check not1 ()}
+\\ \>\>\texttt{(:anl }\=\texttt{(:predicate even-p)}
+\\ \>\>\>\texttt{(:predicate prime-p))}
+\\ \>\texttt{5)}}
 
 \end{criteriaGroup}
