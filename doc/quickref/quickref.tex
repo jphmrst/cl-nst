@@ -143,73 +143,15 @@ but a no-argument criterion use \texttt{(NAME)} can be abbreviated as
 
 \begin{criteria}
 
-  \criterion{:warn}{(:warn FORMAT ARG ...\ ARG)}{Any.}{Issue a warning.
-    The format string and arguments should be suitable for the Lisp
-    \texttt{format} function.}
-
-  \criterion{:true}{:true}{A single form.}{The test passes if the
-    form evaluates to non-nil.}
-
-  \criterion{:eq}{(:eq FORM)}{A single form.}{Require a form to
-    evaluate to a form which is \texttt{eq} to the criterion argument.}
-
-  \criterion{:symbol}{(:symbol NAME)}{A single form.}{Require a form
-    to evaluate to a symbol which is \texttt{eq} to the symbol name
-    given as the criterion argument.}
-
-  \criterion{:eql}{(:eql FORM)}{A single form.}{Require a form to
-    evaluate to an expression which is \texttt{eql} to the criterion
-    argument.}
-
-  \criterion{:equal}{(:equal FORM)}{A single form.}{Require a form to
-    evaluate to an expression which is \texttt{equal} to the criterion
-    argument.}
-
-  \criterion{:equalp}{(:equalp FORM)}{A single form.}{Require a form
-    to evaluate to an expression which is \texttt{equalp} to the
-    criterion argument.}
-
-  \criterion{:forms-eq}{:forms-eq}{Exactly two forms.}{Passes for
-    forms which evaluate to expressions which are \texttt{eq}.}
-
-  \criterion{:forms-eql}{:forms-eql}{Exactly two forms.}{Passes for
-    forms which evaluate to expressions which are \texttt{eql}.}
-
-  \criterion{:forms-equal}{:forms-equal}{Exactly two forms.}{Passes
-    for forms which evaluate to expressions which are \texttt{equal}.}
-
   \criterion{:value-list}
   {(:value-list CRITERION)}
   {Arbitrarily many values.}
   {Converts multiple values into a single list value.}
 
-  \criterion{:predicate}{(:predicate FUNCTION-FORM)}
-  {Forms matching the input lambda list of the \texttt{FUNCTION-FORM}.}
-  {Passes exactly when the given function returns non-nil.}
-
   \criterion{:dump-forms}{(:dump-forms FORMAT)} {Arbitrarily many
     values, compatible with the given string for the Lisp
     \texttt{format} function.}{For debugging NST criteria: fails after
     writes the current forms to standard output.}
-
-  \criterion{:err}{(:err :type CLASS)}{Any.}{This test passes when the
-    the forms raise an exception of the given \texttt{CLASS}, by
-    default \texttt{error}.}
-
-  \criterion{:perf}{(:perf [ :ns | :sec | :min ] TIME}{Any.}{Passes
-    when the forms evaluate within the given time limit.}
-
-  \criterion{:not}{(:not CRITERION)}{As required by the subordinate
-    criterion.}{Passes when testing according to \texttt{CRITERION}
-    either fails or errs.}
-
-  \criterion{:all}{(:all CRITERION CRITERION ...\ CRITERION)}{As
-    required by the subordinate criteria.}{Passes when all of the
-    subordinate criteria pass.}
-
-  \criterion{:any}{(:any CRITERION CRITERION ...\ CRITERION)}{As
-    required by the subordinate criteria.}{Passes when any of the
-    subordinate criteria pass.}
 
   \criterion{:apply}{(:apply FUNCTION CRITERION)}{Forms matching the
     input lambda list of the \texttt{FUNCTION}.}{Evaluates its input
