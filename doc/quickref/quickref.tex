@@ -31,7 +31,7 @@
 \thispagestyle{empty}
 \begin{center}
   \LARGE Getting started with NST\footnote{This document was last
-    updated for NST version 1.0.2.  Written by John Maraist, Smart
+    updated for NST version 1.1.0.  Written by John Maraist, Smart
     Information Flow Technologies, 211 N.\ First St.\ Suite 300,
     Minneapolis, MN 55401; \textsl{jmaraist} at \textsl{sift.info}.}
 \end{center}
@@ -58,18 +58,7 @@ system definition.
 \section*{Forms}
 The \texttt{def-fixtures} form associates a sequence of names and
 forms.
-\begin{verbatim}
-  (def-fixtures FIXTURE-NAME
-          ([ :uses USES ]
-           [ :assumes ASSUMES ]
-           [ :outer OUTER ]
-           [ :inner INNER ]
-           [ :documentation DOCUMENTATION ])
-    (NAME FORM)
-    (NAME FORM)
-    ...
-    (NAME FORM))
-\end{verbatim}
+\input{../common/fixture-syntax}
 with keyword arguments:
 \begin{itemize}
 
@@ -93,17 +82,7 @@ with keyword arguments:
 \end{itemize}
 
 The \texttt{def-test-group} form 
-\begin{verbatim}
-  (def-test-group NAME (FIXTURE FIXTURE ... FIXTURE)
-    [ (:setup FORM FORM ... FORM) ]
-    [ (:cleanup FORM FORM ... FORM) ]
-    [ (:each-setup FORM FORM ... FORM) ]
-    [ (:each-cleanup FORM FORM ... FORM) ]
-    FORM
-    FORM
-    ...
-    FORM)
-\end{verbatim}
+\input{../common/group-syntax}
 defines a group of the given name, providing one instantiation of the
 bindings of the given fixtures to each check.  Forms given with the
 \texttt{setup} (respectively \texttt{cleanup}) option are run once,
@@ -112,17 +91,7 @@ before (after) any of the individual tests.  Forms given with the
 run before (after) each individual tests.
 
 The \texttt{def-check} form defines a single named test:
-\begin{verbatim}
-  (def-check NAME
-      criterion
-    FORM FORM ... FORM)
-  (def-check (NAME [ :setup FORM ]
-                   [ :cleanup FORM ]
-                   [ :fixtures (FIXTURE FIXTURE
-                                 ... FIXTURE) ] )
-      criterion
-    FORM FORM ... FORM)
-\end{verbatim}
+\input{../common/check-syntax}
 The \texttt{:setup}, \texttt{:cleanup} and \texttt{:fixture} options
 are as above, but apply to only this check (and note that for multiple
 forms for the first two must be wrapped in a \texttt{progn}).  NST's
@@ -138,75 +107,10 @@ but a no-argument criterion use \texttt{(NAME)} can be abbreviated as
 \texttt{NAME}.  NST's built-in criteria include:
 \def\criteriaGroup#1{\par\textbf{#1.}\begin{criteria}}
 \def\endcriteriaGroup{\end{criteria}}
-\def\criteriaDoc#1#2#3#4#5#6#7{\criterion{#2}{#3}{#5}{#4}}
+\def\criteriaDoc#1#2#3#4#5#6#7#8{\criterion{#2}{#3}{#5}{#4}}
+\def\noExpl{}
+\def\hasExpl#1{}
 \input{../common/criteria}
-
-\begin{criteria}
-
-  \criterion{:value-list}
-  {(:value-list CRITERION)}
-  {Arbitrarily many values.}
-  {Converts multiple values into a single list value.}
-
-  \criterion{:dump-forms}{(:dump-forms FORMAT)} {Arbitrarily many
-    values, compatible with the given string for the Lisp
-    \texttt{format} function.}{For debugging NST criteria: fails after
-    writes the current forms to standard output.}
-
-  \criterion{:apply}{(:apply FUNCTION CRITERION)}{Forms matching the
-    input lambda list of the \texttt{FUNCTION}.}{Evaluates its input
-    forms, and applies the \texttt{FUNCTION} to them.  Evaluates the
-    subordinate \texttt{CRITERION} with the \texttt{FUNCTION}'s
-    multiple result values as input forms.}
-
-  \criterion{:check-err}{(:check-err CRITERION)}{As required by the
-    subordinate criterion.}{Like \texttt{:err}, but proceeds according
-    to the subordinate criterion rather than simply evaluating the
-    input forms.}
-
-  \criterion{:progn}{(:progn FORM FORM ...\ FORM CRITERION)}{As
-    required by the subordinate criterion.}{Evaluates the
-    \texttt{FORM}s in order, and then proceeds with evaluation of
-    check forms according to the subordinate criterion.}
-
-  \criterion{:proj}{(:proj (INDEX INDEX ...\ INDEX) CRITERION)}{At
-    least as many as to be accessible to the largest
-    index.}{Rearranges the input forms by selecting a new list
-    according to the index numbers into the old list.  Checking of the
-    reorganized forms continues according ot the subordinate
-    criterion.}
-
-  \criterion{:values}{(:values CRITERION CRITERION ...\
-    CRITERION)}{Exactly as many forms as subordinate criteria.}{Checks
-    each of the input forms according to the respective subordinate
-    criterion.}
-
-  \criterion{:each}{(:each CRITERION)}{A single form which evaluates
-    to a list.}{Checks each argument of the list according to the
-    subordinate \texttt{CRITERION}, and passes when all of these
-    checks pass.}
-
-  \criterion{:seq}{(:values CRITERION CRITERION ...\ CRITERION)}{A
-    single form which evaluates to a list with the same number of
-    elements as there are subordinate criteria to the
-    \texttt{:seq}.}{Evaluates its input form, checks each of its
-    elements according to the respective subordinate criterion, and
-    passes when all of them pass.}
-
-  \criterion{:permute}{(:permute CRITERION)}{A single form evaluating
-    to a list.}{Passes when some permutation of the evaluated list
-    will satisfy the subordinate criterion.}
-
-  \criterion{:across}{(:across CRITERION CRITERION ...\ CRITERION)}{A
-    single form evaluating to a vector.}{Like \texttt{:seq}, but for a
-    vector instead of a list.}
-
-  \criterion{:slots}{\small(:slots (NAME CRT) (NAME CRT) ...\ (NAME
-    CRT))}{A single form evaluating to a class or struct
-    object.}{Evaluates its input form, and passes when the value at
-    each given slot satisfies the corresponding subordinate
-    constraint.}
-\end{criteria}
 
 \section*{Interactive debugging}
 NST defines a REPL alias \texttt{:nst} under Allegro CL.  The general

@@ -25,45 +25,10 @@ Sets whether the runtime system should show verbose output.
 Sets whether NST debugging messages should be generated.
 \\ Syntax: \texttt{:nst :debug BOOL}
 
-\subsubsection{The \texttt{:summarize-scheduled} operation}
-\index{summarize-scheduled@\texttt{:summarize-scheduled}}%
-If \texttt{BOOL} evaluates to non-null, then the runtime system will
-print a summary after running scheduled tests with \texttt{:run},
-\texttt{:continue}, etc.
-\\ Syntax: \texttt{:nst :summarize-scheduled BOOL}
-
-\subsubsection{The \texttt{:summarize-single} operation}
-\index{summarize-single@\texttt{:summarize-single}}%
-If \texttt{BOOL} evaluates to non-null, then the runtime system will
-print a summary after one-time test runs initiated by
-\texttt{:run-test}, \texttt{:run-group}, etc.
-\\ Syntax: \texttt{:nst :summarize-single BOOL}
-
 \subsubsection{The \texttt{:dump} operation}
 \index{dump@\texttt{:dump}}%
 Prints the state of the test system.
 \\ Syntax: \texttt{:nst :dump}
-
-\subsection{Marking tests of interest for execution}
-\label{nominating-tests}
-NST allows tests to be marked for execution by the \texttt{:run}
-command.  Tests can be marked by package or group, or as an individual
-test.
-
-\subsubsection{The \texttt{:p} operation}
-\index{p@\texttt{:p}}%
-Indicates that all tests in a particular package should be run.
-\\ Syntax: \texttt{:nst :p PACKAGE}
-
-\subsubsection{The \texttt{:g} operation}
-\index{g@\texttt{:g}}%
-Indicates that all tests in a particular group should be run.
-\\ Syntax: \texttt{:nst :g GROUP}
-
-\subsubsection{The \texttt{:t} operation}
-\index{t@\texttt{:t}}%
-Indicates that the named test should be run.
-\\ Syntax: \texttt{:nst :t TEST}
 
 \subsection{Test suite execution}
 These commands control execution of tests selected by the commands of
@@ -112,18 +77,6 @@ If \texttt{BOOL} evaluates to non-null, then an error in a test run
 will pause test execution and enter debug mode.
 \\ Syntax: \texttt{:nst :debug-on-error BOOL}
 
-\subsection{Test definition}
-\subsubsection{The \texttt{:defer-test-compile} operation}
-\index{defer-test-compile@\texttt{:defer-test-compile}}%
-Sets whether tests defined subsequently should, by default, defer
-compilation of their forms until actually running the test.  This
-feature is useful when debugging code involving macros, but changing
-this feature in the runtime system can lead to confusion.  It is
-surely almost always the right thing to set this flag locally via
-def-test-group and def-test.  In fact, this operation may be removed
-in a future version of the runtime system.
-\\ Syntax: \texttt{:nst :defer-test-compile BOOL}
-
 \subsection{One-off execution}
 The following commands allow one-time execution of tests without
 altering the settings made by the commands of
@@ -154,7 +107,7 @@ these names into the runtime system.
 Fixtures\index{fixtures!debugging} can be \emph{opened} into the
 interactive namespace for debugging with the
 \texttt{:nst~:open}\index{open@\texttt{:open}} command:
-\\ Syntax: \texttt{:nst :open FIXTURE-NAME}
+\\ Syntax: \texttt{:nst :open FIXTURE-NAME FIXTURE-NAME ... FIXTURE-NAME}
 \\ Example:
 \begin{verbatim}
   CL-USER(75): (nst:def-fixtures small-fixture
@@ -168,27 +121,6 @@ interactive namespace for debugging with the
   3
   CL-USER(79): 
 \end{verbatim}
-
-\subsubsection{The \texttt{:open{\textasteriskcentered}} operation}
-\index{open{\textasteriskcentered}@\texttt{:open{\textasteriskcentered}}}%
-Multiple fixtures\index{fixtures!debugging} can be \emph{opened} into the
-interactive namespace with a single command using the
-\texttt{:nst~:open} command:
-\\ Syntax: \texttt{:nst :open\* } {\textit{FIXTURE-NAME}{\textasteriskcentered}}
-
-
-\subsubsection{The \texttt{:open-used} operation}
-\index{open-used@\texttt{:open-used}}%
-If \texttt{BOOL} evaluates to non-null, then opening a fixture will
-always also open the fixtures it uses.  Default is t.
-\\ Syntax: \texttt{:nst :open-used BOOL}
-
-\subsubsection{The \texttt{:reopen} operation}
-\index{reopen@\texttt{:reopen}}%
-If \texttt{BOOL} evaluates to non-null, then fixtures will be
-re-opened \emph{e.g.}\ when required multiple times by opening
-different fixtures that use them.
-\\ Syntax: \texttt{:nst :reopen BOOL}
 
 %%% Local Variables: 
 %%% mode: latex
