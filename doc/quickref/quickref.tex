@@ -105,7 +105,8 @@ Criteria forms have the following structure:
 \end{verbatim}
 but a no-argument criterion use \texttt{(NAME)} can be abbreviated as
 \texttt{NAME}.  NST's built-in criteria include:
-\def\criteriaGroup#1{\par\textbf{#1.}\begin{criteria}}
+\def\criteriaGroup#1#2{\par\textbf{#1.}\begin{criteria}}
+\def\secText#1{}
 \def\endcriteriaGroup{\end{criteria}}
 \def\criteriaDoc#1#2#3#4#5#6#7#8{\criterion{#2}{#3}{#5}{#4}}
 \def\noExpl{}
