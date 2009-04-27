@@ -181,40 +181,27 @@ value from the original check.}}
 
 \end{criteriaGroup}
 
-\begin{criteriaGroup}{Programmatic and debugging checks}{}
-
-\kwdCriteriaDoc{pass}{:pass}
-{A trivial test, which always passes.}
-{Any.}
-{\noExpl}
-{\singleEx}{(def-check passing-test :pass 3 4 "sd")}
-
-\kwdCriteriaDoc{fail}{(:fail FORMAT ARG ...\ ARG)}
-{A trivial test, which always fails.  The format string and arguments
-should be suitable for the Lisp \texttt{format} function.}
-{Any.}
-{\noExpl}
-{\singleEx}{(def-check fails (:fail "Expected a \~{}a" "string") 312)}
-
-\kwdCriteriaDoc{warn}{(:warn FORMAT ARG ...\ ARG)}
-{Issue a warning.  The format string and arguments should be suitable for
- the Lisp \texttt{format} function.}
-{Any.}
-{\noExpl}
-{\singleEx}{(:warn "\~{}d is not a perfect square" 5)}
-
-\kwdCriteriaDoc{dump-forms}{(:dump-forms FORMAT)}
-{For debugging NST criteria: fails after writes the current forms to
-standard output.}
-{Arbitrarily many values, compatible with the given string for the
-Lisp \texttt{format} function.}
-{\noExpl}{\noEx}{}
-
-\end{criteriaGroup}
-
 \begin{criteriaGroup}{Checks on multiple values}{
 NST's approach to multiple values is stricter than Common Lisp's view
-in the language itself.   }
+in the language itself.  In Lisp programs, additional returned values
+are eminently ignorable; in fact some extra programming overhead is
+required to access them.  However, in designing NST we draw a
+distinction between \emph{using} a function on the one hand, and
+\emph{designing} and \emph{testing} it on the other.  For example,
+when using the \texttt{floor} function one often needs only the
+quotient, and it is correspondingly easy to ignore the additional
+argument giving the remainder.  However, for the implementor of
+\texttt{floor} it is important that both results be predictable and
+verified.\vspace{\parskip}\\\hspace*{\parindent}NST encourages the
+thoughtful, consistent design and correct implementation of functions
+returning multiple values by enforcing that tested forms generating
+multiple variables should be paired with criteria for multiple values.
+\emph{Any mismatch between the quantity of values returned by an
+  evaluation and the quantity of values expected by a criterion is
+  interpreted as a test failure}.  Dually to the usage mode of Common
+Lisp, NST requires the additional overhead of the
+\texttt{:drop-values} criterion to simply ignore additional returned
+values.}
 
 \kwdCriteriaDoc{value-list}{(:value-list CRITERION)}
 {Converts multiple values into a single list value.}
@@ -225,6 +212,12 @@ in the language itself.   }
 {Checks each of the input forms according to the respective
 subordinate criterion.}
 {Exactly as many forms as subordinate criteria.}
+{\noExpl}{\noEx}{}
+
+\kwdCriteriaDoc{drop-values}{(:drop-values CRITERION)}
+{Checks the primary value according to the subordinate criterion,
+ignoring any additional returned values.}
+{Any.}
 {\noExpl}{\noEx}{}
 
 \end{criteriaGroup}
@@ -307,3 +300,39 @@ work on many platforms, since the CL specification defines
 }
 
 \end{criteriaGroup}
+
+\begin{criteriaGroup}{Programmatic and debugging checks}{}
+
+\kwdCriteriaDoc{pass}{:pass}
+{A trivial test, which always passes.}
+{Any.}
+{\noExpl}
+{\singleEx}{(def-check passing-test :pass 3 4 "sd")}
+
+\kwdCriteriaDoc{fail}{(:fail FORMAT ARG ...\ ARG)}
+{A trivial test, which always fails.  The format string and arguments
+should be suitable for the Lisp \texttt{format} function.}
+{Any.}
+{\noExpl}
+{\singleEx}{(def-check fails (:fail "Expected a \~{}a" "string") 312)}
+
+\kwdCriteriaDoc{warn}{(:warn FORMAT ARG ...\ ARG)}
+{Issue a warning.  The format string and arguments should be suitable for
+ the Lisp \texttt{format} function.}
+{Any.}
+{\noExpl}
+{\singleEx}{(:warn "\~{}d is not a perfect square" 5)}
+
+\kwdCriteriaDoc{dump-forms}{(:dump-forms FORMAT)}
+{For debugging NST criteria: fails after writes the current forms to
+standard output.}
+{Arbitrarily many values, compatible with the given string for the
+Lisp \texttt{format} function.}
+{\noExpl}{\noEx}{}
+
+\end{criteriaGroup}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "../manual/manual"
+%%% End: 
