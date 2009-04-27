@@ -3,7 +3,8 @@
 %%% mode: latex
 %%% TeX-master: "manual"
 %%% End: 
-\section{Known bugs and enhancement ideas}\index{bugs}\index{enhancements}
+
+\section{Issues, bugs and enhancements}\index{bugs}\index{enhancements}
 \fbox{TOTALLY OUT OF DATE}
 \begin{enumerate}
 \item We do a poor job of printing the conditions that come back from
@@ -35,12 +36,12 @@
   via termination in more complicated algorithms.
 \end{enumerate}
 
-\subsection*{Removed features}
+\subsection{Removed features}
 \label{temp-removed}
 Some features of the NST 0.9 have not yet been reimplemented in NST
 1.0.  Tell John if one is urgent for you.
 
-\subsubsection*{Alternate fixture definitions}
+\subsubsection{Alternate fixture definitions}
 \fbox{UPDATE}
 
 The
@@ -55,7 +56,7 @@ non-development environment.
 \texttt{\&key} \textit{documentation}
 \end{center}
 
-\subsubsection*{Anonymous fixture sets}
+\subsubsection{Anonymous fixture sets}
 \fbox{UPDATE}
 
 It is not necessary to name fixture sets; they may be given
@@ -68,7 +69,7 @@ is:\index{fixtures@\texttt{:fixtures}}\index{fixtures!anonymous}
 The examples of Section~\ref{tests} show the use of anonymous fixture
 sets.
 
-\subsubsection*{The \texttt{:with} check}
+\subsubsection{The \texttt{:with} check}
 This check assumes that the next item is a list, whose contents are
 expanded into the methods-and-forms.\index{with@\texttt{:with}} This
 check is especially useful with the \texttt{def-check-cri\-ter\-ion}
@@ -84,45 +85,45 @@ command below.
       '(a 1 d))
 \end{verbatim}
 
-\subsubsection*{In the runtime system}
+\subsubsection{In the runtime system}
 
-\subsubsection*{The \texttt{:summarize-scheduled} operation}
+\subsubsection{The \texttt{:summarize-scheduled} operation}
 \index{summarize-scheduled@\texttt{:summarize-scheduled}}%
 If \texttt{BOOL} evaluates to non-null, then the runtime system will
 print a summary after running scheduled tests with \texttt{:run},
 \texttt{:continue}, etc.
 \\ Syntax: \texttt{:nst :summarize-scheduled BOOL}
 
-\subsubsection*{The \texttt{:summarize-single} operation}
+\subsubsection{The \texttt{:summarize-single} operation}
 \index{summarize-single@\texttt{:summarize-single}}%
 If \texttt{BOOL} evaluates to non-null, then the runtime system will
 print a summary after one-time test runs initiated by
 \texttt{:run-test}, \texttt{:run-group}, etc.
 \\ Syntax: \texttt{:nst :summarize-single BOOL}
 
-\subsection*{Marking tests of interest for execution}
+\subsection{Marking tests of interest for execution}
 \label{nominating-tests}
 NST allows tests to be marked for execution by the \texttt{:run}
 command.  Tests can be marked by package or group, or as an individual
 test.
 
-\subsubsection*{The \texttt{:p} operation}
+\subsubsection{The \texttt{:p} operation}
 \index{p@\texttt{:p}}%
 Indicates that all tests in a particular package should be run.
 \\ Syntax: \texttt{:nst :p PACKAGE}
 
-\subsubsection*{The \texttt{:g} operation}
+\subsubsection{The \texttt{:g} operation}
 \index{g@\texttt{:g}}%
 Indicates that all tests in a particular group should be run.
 \\ Syntax: \texttt{:nst :g GROUP}
 
-\subsubsection*{The \texttt{:t} operation}
+\subsubsection{The \texttt{:t} operation}
 \index{t@\texttt{:t}}%
 Indicates that the named test should be run.
 \\ Syntax: \texttt{:nst :t TEST}
 
-\subsection*{Test definition}
-\subsubsection*{The \texttt{:defer-test-compile} operation}
+\subsection{Test definition}
+\subsubsection{The \texttt{:defer-test-compile} operation}
 \index{defer-test-compile@\texttt{:defer-test-compile}}%
 Sets whether tests defined subsequently should, by default, defer
 compilation of their forms until actually running the test.  This
@@ -133,20 +134,20 @@ def-test-group and def-test.  In fact, this operation may be removed
 in a future version of the runtime system.
 \\ Syntax: \texttt{:nst :defer-test-compile BOOL}
 
-\subsubsection*{The \texttt{:open{\textasteriskcentered}} operation}
+\subsubsection{The \texttt{:open{\textasteriskcentered}} operation}
 \index{open{\textasteriskcentered}@\texttt{:open{\textasteriskcentered}}}%
 Multiple fixtures\index{fixtures!debugging} can be \emph{opened} into the
 interactive namespace with a single command using the
 \texttt{:nst~:open} command:
 \\ Syntax: \texttt{:nst :open\* } {\textit{FIXTURE-NAME}{\textasteriskcentered}}
 
-\subsubsection*{The \texttt{:open-used} operation}
+\subsubsection{The \texttt{:open-used} operation}
 \index{open-used@\texttt{:open-used}}%
 If \texttt{BOOL} evaluates to non-null, then opening a fixture will
 always also open the fixtures it uses.  Default is t.
 \\ Syntax: \texttt{:nst :open-used BOOL}
 
-\subsubsection*{The \texttt{:reopen} operation}
+\subsubsection{The \texttt{:reopen} operation}
 \index{reopen@\texttt{:reopen}}%
 If \texttt{BOOL} evaluates to non-null, then fixtures will be
 re-opened \emph{e.g.}\ when required multiple times by opening
