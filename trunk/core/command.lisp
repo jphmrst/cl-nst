@@ -185,6 +185,12 @@ The last form shows all interesting results."
   (report-details group-or-package gp-supp-p test test-supp-p))
 
 (def-nst-interactive-command
+    (:clear :short-help "Clear test results."
+            :args ())
+  (clrhash +results-record+)
+  (format *standard-output* "Results cleared."))
+
+(def-nst-interactive-command
     (:set :short-help "Set an NST property."
           :long-help-special
           ((with-output-to-string (*standard-output*)
