@@ -43,6 +43,36 @@
   (:documentation "Return the short help message for an NST REPL command."))
 (defgeneric nst-long-help (command)
   (:documentation "Return the long help message for an NST REPL command."))
+(defgeneric nst-arg-names (command)
+  (:documentation "Return a string giving help for the argument names for an NST REPL command."))
+
+(defgeneric prep-arg-names-help (arg-list)
+  (:method (arg-list &aux (in-macrolist t) in-keylist)
+    (labels ((prep-arg-name (arg)
+               (cond
+                ((eq arg '&optional)
+                 (setf in-macrolist nil in-keylist t)
+                 arg)
+                ((eq arg '&key)
+                 (setf in-macrolist nil in-keylist t)
+                 arg)
+                ((eq arg '&rest)
+                 (setf in-macrolist nil in-keylist nil)
+                 arg)
+                ((symbolp arg)
+                 (string-upcase (symbol-name arg)))
+                ((stringp arg)
+                 (string-upcase arg))
+                ((listp arg)
+                 (cond
+                  (in-keylist (prep-arg-name (car arg)))
+                  (in-macrolist (format nil "(~a)" (prep-arg-names-help arg)))
+                  (t (format nil "~a" arg))))
+                (t (format nil "~a" arg)))))
+      (with-output-to-string (out)
+        (format out "~{~a~^ ~}"
+          (loop for arg in arg-list
+              collect (prep-arg-name arg)))))))
 
 (defvar +nst-repl-commands+ nil)
 (defvar +nst-repl-properties+ nil)
@@ -68,6 +98,8 @@
        ,(when repeatable
           `(defmethod consider-repl-call-save ((cmd (eql ,name)) args)
              (setf *last-repl-call* (cons cmd args))))
+       (defmethod nst-arg-names ((cmd (eql ,name)))
+         ,(prep-arg-names-help args))
        (defmethod nst-short-help ((cmd (eql ,name)))
          ,short-help)
        (defmethod nst-long-help ((cmd (eql ,name)))
@@ -121,7 +153,7 @@
                NST unit testing system --- interactive REPL commands~%~
                -----------------------------------------------------~%")
   (loop for cmd in +nst-repl-commands+ do
-    (format t "~%~s~%~a~%" cmd (nst-short-help cmd)))
+    (format t "~%~s ~a~%~a~%" cmd (nst-arg-names cmd) (nst-short-help cmd)))
   (format t "~%Use~%  :nst :COMMAND :help~%for more information about a particular command.~%~%Without an explicit command, :nst repeats the last interesting ~
               command~%(currently, ~s~{ ~s~})" :nst *last-repl-call*))
 
@@ -221,7 +253,9 @@ The last form shows all interesting results."
      (destructuring-bind (command-name &rest command-args) args
        (cond
          ((eq :help (car command-args))
-          (format t "~a" (nst-long-help command-name)))
+          (format t "NST command ~s~:*~%Format:~%  :nst ~s ~a~%~%~a"
+            command-name (nst-arg-names command-name)
+            (nst-long-help command-name)))
 
          (t (apply #'run-command-actual command-name command-args)))))))
 
