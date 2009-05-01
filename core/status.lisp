@@ -93,14 +93,16 @@
 
 (defstruct (multi-results (:include result-stats))
   "Multiple results structure."
-  package-reports group-reports test-reports system)
+  package-reports group-reports test-reports system
+  (stats-source nil))
 
 (set-pprint-dispatch 'multi-results
   #'(lambda (s res)
       (with-accessors ((packages multi-results-package-reports)
                        (groups multi-results-group-reports)
                        (tests multi-results-test-reports)
-                       (system multi-results-system)) res
+                       (system multi-results-system)
+                       (stats-source multi-results-stats-source)) res
 
         (when system
           (format s "~%Summary of results for system ~a:~%"
@@ -128,7 +130,9 @@
                                       (format s "~w~%" report)
                                       report)))))
           (multiple-value-bind (code total passed erred failed warned)
-              (result-summary reports)
+              (result-summary (cond
+                                (stats-source stats-source)
+                                (t reports)))
             (declare (ignorable code))
             (format s
                 "TOTAL: ~d of ~d passed (~d failed, ~d error~p, ~d warning~p)~%"
@@ -381,6 +385,22 @@ six-value summary of the results:
      (result-summary (car rs) code total passed erred failed warned
                      (append (cdr rs) other)))
 
+  (:method ((r multi-results) &optional
+            (code :clear) (total 0) (passed 0) (erred 0) (failed 0)
+            (warned 0) (other nil))
+      (with-accessors ((packages multi-results-package-reports)
+                       (groups multi-results-group-reports)
+                       (tests multi-results-test-reports)
+                       (stats-source multi-results-stats-source)) r
+        (cond
+          (stats-source
+           (result-summary stats-source
+                           code total passed erred failed warned other))
+          (t
+           (result-summary packages
+                           code total passed erred failed warned
+                           (list* groups tests other))))))
+
   (:method ((r package-result) &optional
             (code :clear) (total 0) (passed 0) (erred 0) (failed 0)
             (warned 0) (other nil))
@@ -398,26 +418,26 @@ six-value summary of the results:
   (:method ((r check-result)
             &optional (code :clear) (total 0) (passed 0)
             (erred 0) (failed 0) (warned 0) (other nil))
-      (with-accessors ((warnings check-result-warnings)
-                       (failures check-result-failures)
-                       (errors check-result-errors)
-                       (info check-result-info)) r
-        (result-summary other
-                        (let ((code1 (cond (errors   :error) (failures :fail)
-                                           (warnings :warn)  (info     :info)
-                                           (t :clear))))
-                          (case code1
-                            (:error code1)
-                            (:fail (case code (:error code) (otherwise code1)))
-                            (:warn (case code
-                                     ((:error :fail) code) (otherwise code1)))
-                            (:info (case code (:clear code1) (otherwise code)))
-                            (:clear code)))
-                (+ total 1)
-                (+ passed (if (or errors failures) 0 1))
-                (+ erred (if errors 1 0))
-                (+ failed (if failures 1 0))
-                (+ warned (if warnings 1 0))))))
+     (with-accessors ((warnings check-result-warnings)
+                      (failures check-result-failures)
+                      (errors check-result-errors)
+                      (info check-result-info)) r
+       (result-summary other
+                       (let ((code1 (cond (errors   :error) (failures :fail)
+                                          (warnings :warn)  (info     :info)
+                                          (t :clear))))
+                         (case code1
+                           (:error code1)
+                           (:fail (case code (:error code) (otherwise code1)))
+                           (:warn (case code
+                                    ((:error :fail) code) (otherwise code1)))
+                           (:info (case code (:clear code1) (otherwise code)))
+                           (:clear code)))
+                       (+ total 1)
+                       (+ passed (if (or errors failures) 0 1))
+                       (+ erred (if errors 1 0))
+                       (+ failed (if failures 1 0))
+                       (+ warned (if warnings 1 0))))))
 
 (defmacro count-nonnulls (&rest bools)
   (let ((b (gensym)))
@@ -492,6 +512,16 @@ six-value summary of the results:
                                      :system system)))
     (finish-multiple-report result)))
 
+(defun use-stats-from (stats-source stats-dest)
+  (setf (result-stats-elapsed-time stats-dest)
+        (result-stats-elapsed-time stats-source)
+        (result-stats-tests stats-dest)   (result-stats-tests stats-source)
+        (result-stats-passing stats-dest) (result-stats-passing stats-source)
+        (result-stats-erring stats-dest)  (result-stats-erring stats-source)
+        (result-stats-failing stats-dest) (result-stats-failing stats-source)
+        (result-stats-warning stats-dest) (result-stats-warning stats-source))
+  stats-dest)
+
 (defun finish-multiple-report (result)
   (with-accessors ((package-reports multi-results-package-reports)
                    (group-reports multi-results-group-reports)
@@ -541,12 +571,13 @@ six-value summary of the results:
   (let ((test-reports (loop for test-report being the hash-values
                             of +results-record+
                             if (interesting-result-p test-report)
-
                               collect test-report)))
-    (finish-multiple-report (make-multi-results :package-reports nil
-                                                :group-reports nil
-                                                :test-reports test-reports
-                                                :system nil))))
+
+    (make-multi-results :package-reports nil
+                        :group-reports nil
+                        :test-reports test-reports
+                        :system nil
+                        :stats-source (all-package-report))))
 
 ;;;
 ;;; Printing functions
