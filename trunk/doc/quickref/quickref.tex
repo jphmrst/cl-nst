@@ -47,13 +47,12 @@ runtime namespace for debugging.  Fixtures are defined using the
 initiatization, and stateful cleanup.  Test groups are defined using
 the \texttt{def-test-group} form.
 
-Individual tests in NST are called \emph{checks}.  Checks are declared
-within test declarations using the \texttt{def-check} form.
+Individual tests are declared within test groups using the
+\texttt{def-test} form.
 
-Examples of NST fixtures, groups and checks
-are available in \textsl{self-test/core/simple-mnst.lisp}~.  The
-figure on the next page shows the changes involved in using NST in a
-system definition.
+Examples of NST fixtures, groups and tests are available in
+\textsl{self-test/core/simple-mnst.lisp}~.  The figure on the next
+page shows the changes involved in using NST in a system definition.
 
 \section*{Forms}
 The \texttt{def-fixtures} form associates a sequence of names and
@@ -84,16 +83,16 @@ with keyword arguments:
 The \texttt{def-test-group} form 
 \input{../common/group-syntax}
 defines a group of the given name, providing one instantiation of the
-bindings of the given fixtures to each check.  Forms given with the
+bindings of the given fixtures to each test.  Forms given with the
 \texttt{setup} (respectively \texttt{cleanup}) option are run once,
 before (after) any of the individual tests.  Forms given with the
 \texttt{each-setup} (respectively \texttt{each-cleanup}) option are
 run before (after) each individual tests.
 
-The \texttt{def-check} form defines a single named test:
+The \texttt{def-test} form defines a single named test:
 \input{../common/check-syntax}
 The \texttt{:setup}, \texttt{:cleanup} and \texttt{:fixture} options
-are as above, but apply to only this check (and note that for multiple
+are as above, but apply to only this test (and note that for multiple
 forms for the first two must be wrapped in a \texttt{progn}).  NST's
 built-in criteria are listed below; see the manual for a discussion of
 the forms which define new criteria.

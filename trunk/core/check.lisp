@@ -106,8 +106,8 @@ subsequences of a current check definition.
                                (return-from ,checker-block (emit-error e))))))
                ,body))))))))
 
-#+allegro (excl::define-simple-parser def-value-check caadr :nst-criterion)
-(defmacro def-value-check ((name criterion-args check-args &key
+#+allegro (excl::define-simple-parser def-values-criterion caadr :nst-criterion)
+(defmacro def-values-criterion ((name criterion-args check-args &key
                                  (declare nil declare-supp-p)
                                  (blurb-format nil blurb-format-supp-p)
                                  (full-format nil full-format-supp-p)
@@ -175,13 +175,17 @@ Example:
            (list 'destructuring-bind ',check-args ,forms
                  ,@(when declare-supp-p `('(declare ,@declare)))
                  ,@expansion))))))
+
+#+allegro (excl::define-simple-parser def-values-check caadr :nst-criterion)
+(defmacro def-value-check (&rest args)
+  `(def-values-criterion ,@args))
 
-#+allegro (excl::define-simple-parser def-control-check caadr :nst-criterion)
-(defmacro def-control-check ((name criterion-args forms-formal
-                              &key (stack-transformer t)
-                                   (blurb-format nil blurb-format-supp-p)
-                                   (full-format nil full-format-supp-p))
-                             &body check-forms)
+#+allegro (excl::define-simple-parser def-form-criterion caadr :nst-criterion)
+(defmacro def-form-criterion ((name criterion-args forms-formal
+                                    &key (stack-transformer t)
+                                    (blurb-format nil blurb-format-supp-p)
+                                    (full-format nil full-format-supp-p))
+                              &body check-forms)
   "Mechanism for defining a new check criterion."
 
   (let ((criterion-formals
@@ -220,9 +224,14 @@ Example:
                                     ,args ,forms-formal)
          (destructuring-bind ,criterion-args ,args
            ,@check-forms)))))
+
+#+allegro (excl::define-simple-parser def-control-check caadr :nst-criterion)
+(defmacro def-control-check (&rest args)
+  `(def-form-criterion ,@args))
+
 
-#+allegro (excl::define-simple-parser def-check-alias caadr :nst-criterion)
-(defmacro def-check-alias ((name &rest args)
+#+allegro (excl::define-simple-parser def-criterion-alias caadr :nst-criterion)
+(defmacro def-criterion-alias ((name &rest args)
                            &body forms
                            &aux
                            (documentation nil)
@@ -286,13 +295,17 @@ when def-check-alias is macroexpanded."
            (let ((,exp ,expansion))
              (build-check-form (car ,exp) (cdr ,exp) ,forms)))))))
 
+#+allegro (excl::define-simple-parser def-check-alias caadr :nst-criterion)
+(defmacro def-check-alias (&rest args)
+  `(def-criterion-alias ,@args))
+
 (defvar +storage-name-to-test-package+
     (make-hash-table :test 'eq))
 
 (defmethod canonical-storage-name ((s symbol))
   (canonical-storage-name (make-instance s)))
 
-(defmacro def-check (name-or-name-and-args criterion &rest forms)
+(defmacro def-test (name-or-name-and-args criterion &rest forms)
   "Define a single unit test.
 
 \(def-check NAME-OR-NAME-AND-OPTIONS
@@ -513,6 +526,9 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
                      "       expected: ~@<~s ~:_~@<~{~s~^ ~:_~}~:>~:>~%"
                    ',*standalone-test-in-group-class*
                    ',*group-fixture-classes*)))))))))
+
+(defmacro def-check (&rest args)
+  `(def-test ,@args))
 
 (defmacro debug-check (defcheck)
   "Debugging aid for def-check forms.  Provides all-caps dummy values for

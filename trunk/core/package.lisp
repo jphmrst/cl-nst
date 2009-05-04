@@ -36,11 +36,16 @@
                   #:eql-specializer-object)
     (:export #:def-fixtures
              #:def-test-group
-             #:def-check
+             #:def-test #:def-check     ; def-check will be deprecated
+                                        ; and then dropped
 
-             #:def-check-alias
-             #:def-value-check
-             #:def-control-check
+             #:def-criterion-alias  #:def-check-alias
+             #:def-values-criterion #:def-value-check
+             #:def-from-criterion   #:def-control-check
+                                        ; def-check-alias,
+                                        ; def-value-check and
+                                        ; def-control-check will be
+                                        ; deprecated and then dropped
 
              #:continue-check
              #:emit-failure
