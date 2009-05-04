@@ -1,6 +1,6 @@
-\section{Checks}
+\section{Tests}
 \fbox{Reword} The
-\texttt{def-check}\index{check}\index{def-check@\texttt{def-check}}
+\texttt{def-test}\index{test}\index{def-test@\texttt{def-test}}
 form allows a higher-level description of tests.  The basic syntactic
 forms are:
 \input{../common/check-syntax}
@@ -14,15 +14,11 @@ criterion consisting of a single symbol, e.g.\ \texttt{(:pass)}, may
 be abbreviated as just the symbol without the parentheses, e.g.\
 \texttt{:pass}.
 
-\fbox{UPDATE BELOW} Where this list and the list in getting-started
-differ, the latter is almost certainly correct.  But this order is
-better, re-ored getting-started.
-
 \def\criteriaGroup#1#2{\subsection{#1} #2}
 \def\secText#1{#1}
 \def\endcriteriaGroup{}
 \def\criteriaDoc#1#2#3#4#5#6#7#8{%
-\subsubsection{The \texttt{#2} check} 
+\subsubsection{The \texttt{#2} criterion} 
 #4\index{#1@\texttt{#2}}
 \\ Syntax: \texttt{#3}
 #7{#8}#6}
