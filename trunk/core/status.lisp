@@ -246,6 +246,7 @@ instances, and the info field is of any value."
                               (length errors)))
               (succeeded (eql 0 (+ (length failures) (length errors))))
               (drill-down (or (eq *nst-report-driver* :details)
+                              (eq *nst-report-driver* :details)
                               (> *nst-verbosity* 2)
                               (and (eq *nst-report-driver* :test)
                                    (> *nst-verbosity* 1)))))
@@ -271,8 +272,10 @@ instances, and the info field is of any value."
               warnings drill-down warnings))
 
            ((and (eql 1 total-items) failures)
-            (format s "Check ~a ~:[(group ~a) ~;~*~]failed"
-              check-name *nst-group-shown* group-name))
+            (format s "~@<Check ~a ~:[(group ~a) ~;~*~]failed~
+                            ~:[~*~;:~{~:@_ - ~w~}~]~:>"
+              check-name *nst-group-shown* group-name
+              drill-down failures))
 
            ;; When a query asks about a specific test.
            ;;
@@ -311,7 +314,7 @@ instances, and the info field is of any value."
       (with-accessors ((criterion context-layer-criterion)
                        (criterion-args context-layer-criterion-args)
                        (given-stack context-layer-given-stack)) cl
-        (format s "~@<checking (~s~@<~{~:_ ~s~}~:>) ~_on (~{~a~^ ~})~:>"
+        (format s "checki~@<ng (~s~@<~{~:_ ~s~}~:>) ~_on (~{~a~^ ~})~:>"
           criterion criterion-args given-stack))))
 
 
@@ -332,7 +335,7 @@ instances, and the info field is of any value."
         (declare (ignorable context stack))
         (format s "~@<~:[~2*~;~?~:@_~]~
                       in context: ~@<~{~a~^~:@_~}~:>~
-                      ~:@_stack: ~w~:>"
+                      ~@[~:@_stack: ~w~]~:>"
           format format args context stack)
         )))
 
