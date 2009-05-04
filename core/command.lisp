@@ -48,6 +48,13 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defgeneric prep-arg-names-help (arg-list)
+    (:documentation "This function formats the lambda list of an
+NST REPL command for display in the online-help system.  The macro
+def-nst-interactive-command that expands a REPL command definition
+into the underlying Lisp defmethods uses this function to generate
+the bodies of the help-related methods, so this function must be
+available from compile-time forward.")
+
     (:method (arg-list &aux (in-macrolist t) in-keylist)
       (labels ((prep-arg-name (arg)
                  (cond
