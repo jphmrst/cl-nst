@@ -1,27 +1,50 @@
-\section{Defining check criteria}
+\section{Defining test criteria}
 \fbox{THIS WHOLE SECTION NEEDS UPDATING} Do this last, or maybe John
 can; it's all macrology.
+
+NST provides a number of mechanism to define new criteria, offering
+different levels of expressiveness, complexity and ease of use.
+Choosing an appropriate mechanism requires some understanding of what
+NST does at different points of test compilation and execution.
+
 \subsection{Aliases over criteria}
+The simplest mechanism for defining a new criterion involves simply
+defining one criterion to rewrite as another using
+\texttt{def-criterion-alias}:
+%
 {\ttfamily\begin{tabbing}
 \textrm{Syntax: 
 }(de\=f-criterion-alias (name \&rest args)
 \\ \> [ documentation ]
 \\ \> expansion)
 \end{tabbing}}
-Defines how a criterion should be rewritten as another criterion.
-
-Examples:
+The body of the expansion should be a Lisp form which, when evaluated,
+returns an S-expression quoting the new criterion which the rewrite
+should produce.  The \texttt{args} are passed as far Lisp macros: they
+are not evaluated and are most typically comma-inserted into a
+backquoted result.  For example:
 \\ \texttt{(def-check-alias (:forms-eq) `(:predicate eq))}
 \\ \texttt{(def-check-alias (:symbol name) `(:eq ',name))}
-\par\fbox{Fill in details}
 
 \subsection{Reporting forms}
-\texttt{make-check-report}, \texttt{emit-failure}, \texttt{emit-warning}.
+The other two criteria-defining mechanisms define the expansion of a
+criterion into Lisp.  For both of these mechanisms, the generated Lisp
+is expected to return a \emph{test report}.  NST provides three
+functions for building these outputs:
+\begin{itemize}
+\item\texttt{check-report}
 \par\fbox{Fill in details}
+\item\texttt{emit-failure}
+\par\fbox{Fill in details}
+\item\texttt{emit-warning}
+\par\fbox{Fill in details}
+\end{itemize}
+
 
 \subsection{Basic checks on values}
-The \texttt{check-forms} return a quoted Lisp expression calculating a
-checking report for the given forms.  
+Both \texttt{def-values-criterion} and \texttt{def-form-criterion}
+should specify a quoted Lisp expression calculating a test report.
+%
 {\ttfamily\begin{tabbing}
 \textrm{Syntax: 
 }(de\=f-values-criterion (na\=me \=subcriteria-lambda-list
