@@ -1,117 +1,84 @@
 \section{The runtime system}
-\fbox{The system is now much smaller; update to match the REPL but move any neat idea to Section~\ref{temp-removed}.}
-
 The runtime system provides several operations for scheduling and
 running tests, and debugging failing and erring tests.  The operations
-are accessible from the
-\texttt{run-nst-commands}\index{run-nst-commands@\texttt{run-nst-commands}}
-function.  Under Allegro, the top-level alias
-\texttt{:nst}\index{nst@\texttt{:nst}} provides a shorthand to this
-function; for the sake of brevity we use this shorthand below.
+are accessible from
+the~\texttt{nst-cmd}\index{nst-cmd@\texttt{nst-cmd}} macro.  Under
+Allegro, the top-level alias \texttt{:nst}\index{nst@\texttt{:nst}}
+provides a shorthand to this function; for the sake of brevity we use
+this shorthand below.
 
-\subsection{Output control}
-\subsubsection{The \texttt{:help} operation}
-\index{help@\texttt{:help}}%
-Shows a brief summary of the runtime system operations.
-\\ Syntax: \texttt{:nst :help}
+The \texttt{:help} command gives a complete inventory of runtime
+system commands:\index{help@\texttt{:help}}
+\begin{verbatim}
+ :nst :help
+ (nst-cmd :help)
+\end{verbatim}
 
-\subsubsection{The \texttt{:verbose} operation}
-\index{verbose@\texttt{:verbose}}%
-Sets whether the runtime system should show verbose output.
-\\ Syntax: \texttt{:nst :verbose FORM}
+There are three commands for running tests:
+\begin{itemize}
+\item\texttt{:nst :run-package {\itshape package-name}}\index{run-package@\texttt{:run-package}}
+\par Run all tests defined in groups under the given package.
+\item\texttt{:nst :run-group {\itshape group-name}}\index{run-group@\texttt{:run-group}}
+\par Run all tests in the given group.
+\item\texttt{:nst :run-test {\itshape group-name} {\itshape test-name}}\index{run-test@\texttt{:run-test}}
+\par Run the named test.
+\end{itemize}
 
-\subsubsection{The \texttt{:debug} operation}
-\index{debug@\texttt{:debug}}%
-Sets whether NST debugging messages should be generated.
-\\ Syntax: \texttt{:nst :debug BOOL}
+There are two commands for (re)printing the results of tests:
+\begin{itemize}
+\item\texttt{:nst :report}\index{report@\texttt{:report}}
+\\ \texttt{:nst :report {\itshape package-name}}
+\\ \texttt{:nst :report {\itshape group-name}}
+\\ \texttt{:nst :report {\itshape group-name} {\itshape test-name}}
+\item\texttt{:nst :detail}\index{detail@\texttt{:detail}}
+\\ \texttt{:nst :detail {\itshape package-name}}
+\\ \texttt{:nst :detail {\itshape group-name}}
+\\ \texttt{:nst :detail {\itshape group-name} {\itshape test-name}}
+\end{itemize}
+The \texttt{:report} command summarizes successes, failures and
+errors; the \texttt{:detail} command gives more detailed information
+about individual tests.
 
-\subsubsection{The \texttt{:dump} operation}
-\index{dump@\texttt{:dump}}%
-Prints the state of the test system.
-\\ Syntax: \texttt{:nst :dump}
+The \texttt{:clear} command erases NST's internal record of test
+results.
 
-\subsection{Test suite execution}
-These commands control execution of tests selected by the commands of
-the previous section.
+The \texttt{:set} and \texttt{:unset} commands adjust NST's
+configuration.
+\begin{itemize}
+\item\texttt{:nst :set {\itshape property} {\itshape value}}\index{set@\texttt{:set}}
+\item\texttt{:nst :unset {\itshape property} {\itshape value}}\index{unset@\texttt{:unset}}
+\end{itemize}
+There are currently two properties which can be manipulated by \texttt{:set}\,:
+\begin{itemize}
+\item\texttt{:verbose}\index{verbose@\texttt{:verbose}}~~ Controls the
+  level of output at various points of NST.  Valid settings are:
+  \begin{tightlist}
+  \item\texttt{:silent} (aka \texttt{nil})
+  \item\texttt{:quiet} (aka \texttt{:default})
+  \item\texttt{:verbose} (aka \texttt{t})
+  \item\texttt{:vverbose}
+  \end{tightlist}
 
-\subsubsection{The \texttt{:run} operation}
-\index{run@\texttt{:run}}%
-Runs all marked tests.
-\\ Syntax: \texttt{:nst :run}
+  The \texttt{:report} and \texttt{:detail} commands operate by
+  setting minimum levels of verbosity.
 
-\subsubsection{The \texttt{:continue} operation}
-\index{continue@\texttt{:continue}}%
-Resumes running tests after an interruption arising from one of the
-three switch setting above.
-\\ Syntax: \texttt{:nst :continue}
+\item\texttt{:debug-on-error}\index{debug-on-error@\texttt{:debug-on-error}}~~
+  When this property has a non-nil value, NST will exit into the
+  debugger when it catches an error.
 
-\subsubsection{The \texttt{:retry} operation}
-\index{retry@\texttt{:retry}}%
-Retries failed or error-raising tests from the last run.
-\\ Syntax: \texttt{:nst :retry}
+  The \texttt{:debug} command is a short-cut for setting this
+  property.\index{debug@\texttt{:debug}}
+\end{itemize}
 
-\subsubsection{The \texttt{:blurb} operation}
-\index{blurb@\texttt{:blurb}}%
-Describes the outcome of the last run of a test.
-\\ Syntax: \texttt{:nst :blurb GROUPNAME TESTNAME}
-
-\subsection{Controlling test suite execution behavior}
-The following commands control options governing how the runtime
-system should behave when a test fails or raises an error.
-
-\subsubsection{The \texttt{:break-on-wrong} operation}
-\index{break-on-wrong@\texttt{:break-on-wrong}}%
-If \texttt{BOOL} evaluates to non-null, then a failing test will cause
-test execution to pause.
-\\ Syntax: \texttt{:nst :break-on-wrong BOOL}
-
-\subsubsection{The \texttt{:break-on-error} operation}
-\index{break-on-error@\texttt{:break-on-error}}%
-If \texttt{BOOL} evaluates to non-null, then any error in a test run
-will cause test execution to pause.
-\\ Syntax: \texttt{:nst :break-on-error BOOL}
-
-\subsubsection{The \texttt{:debug-on-error} operation}
-\index{debug-on-error@\texttt{:debug-on-error}}%
-If \texttt{BOOL} evaluates to non-null, then an error in a test run
-will pause test execution and enter debug mode.
-\\ Syntax: \texttt{:nst :debug-on-error BOOL}
-
-\subsection{One-off execution}
-The following commands allow one-time execution of tests without
-altering the settings made by the commands of
-Section~\ref{nominating-tests}.
-
-\subsubsection{The \texttt{:run-package} operation}
-\index{run-package@\texttt{:run-package}}%
-Runs all of the tests in a package.
-\\ Syntax: \texttt{:nst :run-package PACKAGE}
-
-\subsubsection{The \texttt{:run-group} operation}
-\index{run-group@\texttt{:run-group}}%
-Runs all of the tests in a single group.
-\\ Syntax: \texttt{:nst :run-group GROUP}
-
-\subsubsection{The \texttt{:run-test} operation}
-\index{run-test@\texttt{:run-test}}%
-Runs a single test.
-\\ Syntax: \texttt{:nst :run-test GROUP TEST}
-
-\subsection{Opening fixtures}
-The use of fixtures would make debugging tedious without access to
-these named values.  Fortunately, it is straightforward to inject
-these names into the runtime system.
-
-\subsubsection{The \texttt{:open} operation}
-\index{open@\texttt{:open}}%
 Fixtures\index{fixtures!debugging} can be \emph{opened} into the
 interactive namespace for debugging with the
-\texttt{:nst~:open}\index{open@\texttt{:open}} command:
+\texttt{:nst~:open}\index{open@\texttt{:open}} command:\index{open@\texttt{:open}}%
 \\ Syntax: \texttt{:nst :open FIXTURE-NAME FIXTURE-NAME ... FIXTURE-NAME}
 \\ Example:
 \begin{verbatim}
-  CL-USER(75): (nst:def-fixtures small-fixture
-                  :bindings ((fix-var1 3) (fix-var2 'asdfg)))
+  CL-USER(75): (nst:def-fixtures small-fixture ()
+                  (fix-var1 3)
+                  (fix-var2 'asdfg))
   NIL
   CL-USER(76): (boundp 'fix-var1)
   NIL
@@ -121,6 +88,9 @@ interactive namespace for debugging with the
   3
   CL-USER(79): 
 \end{verbatim}
+
+Calling \texttt{:nst} or \texttt{(nst-cmd}) without a command argument
+repeats the last test-executing command.
 
 %%% Local Variables: 
 %%% mode: latex

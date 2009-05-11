@@ -9,13 +9,14 @@
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: t
+%%% TeX-PDF-mode: t
 %%% End: 
 
 \documentclass[draft]{article}
 \usepackage{makeidx}
+\usepackage{tightlist}
 \usepackage[pdftex]{hyperref}
 \title{NST 1.1 users' manual}
-\author{John Maraist\thanks{Smart Information Flow Technologies, 211 N.\ First St.\ Suite 300, Minneapolis, MN 55401; \textsl{jmaraist} at \textsl{sift.info}.}}
 \setcounter{tocdepth}{2}
 \makeindex
 
@@ -35,6 +36,14 @@ are welcome; a list of known bugs and infelicities concludes this
 document.  The file \texttt{nst-nst.lisp} in this distribution holds
 the NST tests for NST, and contains many examples (some of which we
 have adapted to this document).
+
+\subsection*{Contributors}
+NST and this manual were written primarily by John
+Maraist\footnote{Smart Information Flow Technologies, 211 North First
+  Street, Suite 300, Minneapolis, MN 55401; \textsl{jmaraist} at
+  \textsl{sift.info}.}.  Robert P.\ Goldman provided guidance,
+comments and suggestions through the development.  Other contributors:
+Mike Pelican, Steve Harp and Michael Atighetchi.
 
 \input{fixtures}
 \input{groups}
