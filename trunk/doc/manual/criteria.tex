@@ -1,11 +1,17 @@
 \section{Defining test criteria}
-\fbox{THIS WHOLE SECTION NEEDS UPDATING} Do this last, or maybe John
-can; it's all macrology.
-
-NST provides a number of mechanism to define new criteria, offering
-different levels of expressiveness, complexity and ease of use.
-Choosing an appropriate mechanism requires some understanding of what
-NST does at different points of test compilation and execution.
+NST provides three mechanisms for defining new criteria.
+\begin{itemize}
+\item Defining a criterion by specifying how it should be rewritten to
+  another criterion.  This mechanism is the simplest, and is the most
+  limited in the manipulations it can define.
+\item Defining a criterion by specifying how it assesses the values
+  provided to it.
+\item Defining a criterion by specifying how it manipulates the
+  (possibly unevaluated) forms of a \texttt{def-check}.
+\end{itemize}
+The first mechanism is essentially a variation of \texttt{defmacro}.
+Under both of the latter two mechanisms, the criteria definition is
+made as Lisp code calculating a \emph{test report}.
 
 \subsection{Aliases over criteria}
 The simplest mechanism for defining a new criterion involves simply
@@ -28,9 +34,9 @@ backquoted result.  For example:
 
 \subsection{Reporting forms}
 The other two criteria-defining mechanisms define the expansion of a
-criterion into Lisp.  For both of these mechanisms, the generated Lisp
-is expected to return a \emph{test report}.  NST provides three
-functions for building these outputs:
+criterion into Lisp.  For both of these mechanisms, this Lisp code is
+expected to return a test report.  NST provides three functions for
+building test reports:
 \begin{itemize}
 \item\texttt{check-report}
 \par\fbox{Fill in details}
@@ -40,23 +46,45 @@ functions for building these outputs:
 \par\fbox{Fill in details}
 \end{itemize}
 
-
-\subsection{Basic checks on values}
-Both \texttt{def-values-criterion} and \texttt{def-form-criterion}
-should specify a quoted Lisp expression calculating a test report.
-%
+\subsection{Defining criteria for values}
+The Lisp body of a \texttt{def-form-criterion} should evaluate to a
+quoted Lisp expression calculating a test report.  These criteria
+definitions are like functions with two sets of formal parameters:
+\begin{itemize}
+\item One set correspond to the actual parameters of the criterion
+  itself.  The values of these parameters are available to the
+  criterion expansion to guide the construction of the resulting Lisp
+  expression.
+\item The other set corresponds to the evaluation of the form under
+  examination by the \texttt{def-test}.  These values are available
+  only at run-time, and may appear unquoted within the result
+  expression, but are not bound during the evaluation which produces
+  the result expression.
+\end{itemize}
+% 
 {\ttfamily\begin{tabbing}
 \textrm{Syntax: 
 }(de\=f-values-criterion (na\=me \=subcriteria-lambda-list
-\\ \> \> \> test-forms-lambda-list
+\\ \> \> \> test-values-lambda-list
 \\ \> \> \&key \= blurb-format
 \\ \> \>        \> full-format
 \\ \> \>        \> stack-transformer)
 \\ \> expansion)
 \end{tabbing}}
-Comma-prefix names from the \texttt{subcriteria-lambda-list}, but do not
-comma-prefix names from the \texttt{test-forms-lambda-list}.
-Declarations are OK, but quote them.  Examples:
+%
+Every time the new criterion is used in a test, the \texttt{expansion}
+will be evaluated in a context which provides values to the
+\texttt{subcriteria-lambda-list}.  The resulting expression will be
+used as part of the body of a method to a NST-internal generic
+function which corresponds to the \texttt{def-test} itself.  This
+method, in code enclosing the resulting expression, will provide
+values to the \texttt{test-values-lambda-list}.
+
+The \texttt{test-values-lambda-list} will most often contain only a
+single symbol.  Declarations regarding the names in the
+\texttt{test-values-lambda-list} are OK, but should be quoted.
+
+Examples:
 \begin{verbatim}
 (def-value-check (:pass () (&rest chk))
   `(declare (ignorable chk))
@@ -67,9 +95,11 @@ Declarations are OK, but quote them.  Examples:
      (make-check-result)
      (emit-failure :format "Not eq to ~s" :args '(,eq-form))))
 \end{verbatim}
-\par\fbox{Fill in details}
 
-\subsection{General checks}
+\subsection{Defining criteria for a values-returning form}
+As for \texttt{def-values-criterion}, the body of a
+\texttt{def-form-criterion} should specify a quoted Lisp expression
+calculating a test report.
 {\ttfamily\begin{tabbing}
 \textrm{Syntax: 
 }(de\=f-form-criterion (na\=me \=subcriteria-lambda-list
