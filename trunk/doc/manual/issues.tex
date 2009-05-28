@@ -12,7 +12,7 @@
   \texttt{:cleanup}\index{cleanup@\texttt{:cleanup}} blocks.
 \item Clobbering of test/group names should be caught by the macros,
   not by the lower-level expansions arising from those methods.
-\item The def-check form \texttt{:perf} might be extended to provide
+\item The def-test form \texttt{:perf} might be extended to provide
   (implementation-dependent) checks on memory limits as well as time
   limits.
 \item Some sort of timeout mechanism (again, possibly
@@ -50,15 +50,15 @@ is:\index{fixtures@\texttt{:fixtures}}\index{fixtures!anonymous}
 \subsubsection{The \texttt{:with} check}
 This check assumes that the next item is a list, whose contents are
 expanded into the methods-and-forms.\index{with@\texttt{:with}} This
-check is especially useful with the \texttt{def-check-cri\-ter\-ion}
+check is especially useful with the \texttt{def-test-cri\-ter\-ion}
 command below.
 \\ Syntax: \texttt{(:with \emph{criterion})}
-\\ Example: The following two \texttt{def-check}s are equivalent.
+\\ Example: The following two \texttt{def-test}s are equivalent.
 \begin{verbatim}
-  (def-check seq1
+  (def-test seq1
       (:seq (:predicate symbolp) (:eql 1) (:symbol d))
       '(a 1 d))
-  (def-check with-seq1
+  (def-test with-seq1
       (:with (:seq (:predicate symbolp) (:eql 1) (:symbol d)))
       '(a 1 d))
 \end{verbatim}

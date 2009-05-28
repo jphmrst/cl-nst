@@ -23,8 +23,8 @@ returns an S-expression quoting the new criterion which the rewrite
 should produce.  The \texttt{args} are passed as far Lisp macros: they
 are not evaluated and are most typically comma-inserted into a
 backquoted result.  For example:
-\\ \texttt{(def-check-alias (:forms-eq) `(:predicate eq))}
-\\ \texttt{(def-check-alias (:symbol name) `(:eq ',name))}
+\\ \texttt{(def-test-alias (:forms-eq) `(:predicate eq))}
+\\ \texttt{(def-test-alias (:symbol name) `(:eq ',name))}
 
 \subsection{Reporting forms}
 The other two criteria-defining mechanisms define the expansion of a
