@@ -33,7 +33,7 @@
 criterion argument.}
 {A single form.}
 {\noExpl}
-{\singleEx}{(def-check eq1 () (:eq 'b) (cadr '(a b c)))}
+{\singleEx}{(def-test eq1 () (:eq 'b) (cadr '(a b c)))}
 
 \kwdCriteriaDoc{symbol}{(:symbol NAME)}
 {Require a form to evaluate to a symbol which is \texttt{eq} to the
@@ -41,15 +41,15 @@ symbol name given as the criterion argument.}
 {A single form.}
 {\noExpl}
 {\multiEx}
-{\passExample{(def-check sym1  () (:symbol a) (car '(a b c)))}
- \failExample{(def-check sym1x () (:symbol a) (cadr '(a b c)))}}
+{\passExample{(def-test sym1  () (:symbol a) (car '(a b c)))}
+ \failExample{(def-test sym1x () (:symbol a) (cadr '(a b c)))}}
 
 \kwdCriteriaDoc{eql}{(:eql FORM)}
 {Require a form to evaluate to an expression which is \texttt{eql} to
 the criterion argument.}
 {A single form.}
 {\noExpl}
-{\singleEx}{(def-check eql1 (:eql 2) (cadr '(1 2 3)))}
+{\singleEx}{(def-test eql1 (:eql 2) (cadr '(1 2 3)))}
 
 \kwdCriteriaDoc{equal}{(:equal FORM)}
 {Require a form to evaluate to an expression which is \texttt{equal}
@@ -70,14 +70,14 @@ to the criterion argument.}
 \texttt{eq}.}
 {Exactly two forms.}
 {\noExpl}
-{\singleEx}{(def-check eqforms1 :forms-eq (cadr '(a b c)) (caddr '(a c b)))}
+{\singleEx}{(def-test eqforms1 :forms-eq (cadr '(a b c)) (caddr '(a c b)))}
 
 \kwdCriteriaDoc{forms-eql}{:forms-eql}
 {Passes for forms which evaluate to expressions which are
 \texttt{eql}.}
 {Exactly two forms.}
 {\noExpl}
-{\singleEx}{(def-check eqlforms1 :forms-eq (cadr '(a 3 c)) (caddr '(a c 3)))}
+{\singleEx}{(def-test eqlforms1 :forms-eq (cadr '(a 3 c)) (caddr '(a c 3)))}
 
 \kwdCriteriaDoc{forms-equal}{:forms-equal}
 {Passes for forms which evaluate to expressions which are
@@ -93,21 +93,21 @@ of the forms following the criterion.}
 {Forms matching the input lambda list of the \texttt{FUNCTION-FORM}.}
 {\noExpl}
 {\multiEx}
-{\passExample{(def-check pred1 (:predicate numberp) 3)}
- \passExample{(def-check pred2 (:predicate eql) (+ 1 2) 3)}}
+{\passExample{(def-test pred1 (:predicate numberp) 3)}
+ \passExample{(def-test pred2 (:predicate eql) (+ 1 2) 3)}}
 
 \kwdCriteriaDoc{err}{(:err :type CLASS)}
 {This test passes when the the forms raise an exception of the given
 \texttt{CLASS}, by default \texttt{error}.}
 {Any.}
 {\noExpl}
-{\singleEx}{(def-check err1 (:err) (error "this should be caught"))}
+{\singleEx}{(def-test err1 (:err) (error "this should be caught"))}
 
 \kwdCriteriaDoc{perf}{(:perf [ :ns | :sec | :min ] TIME)}
 {Passes when the forms evaluate within the given time limit.}
 {Any.}
 {\noExpl}
-{\singleEx}{(def-check perf1 (:perf :min 2) (ack 3 5))}
+{\singleEx}{(def-test perf1 (:perf :min 2) (ack 3 5))}
 
 \end{criteriaGroup}
 
@@ -118,7 +118,7 @@ of the forms following the criterion.}
 does not throw an error).}
 {As required by the subordinate criterion.}
 {\noExpl}
-{\singleEx}{(def-check not1 (:not (:symbol b)) 'a)}
+{\singleEx}{(def-test not1 (:not (:symbol b)) 'a)}
 
 \kwdCriteriaDoc{all}{(:all CRITERION CRITERION ...\ CRITERION)}
 {This criterion brings several other criteria under one check, and
@@ -146,7 +146,7 @@ Evaluates the subordinate \texttt{CRITERION} with the
 \texttt{FUNCTION}'s multiple result values as input forms.}
 {Forms matching the input lambda list of the \texttt{FUNCTION}.}
 {\noExpl}
-{\singleEx}{(def-check applycheck (:apply cadr (:eql 10)) '(0 10 20))}
+{\singleEx}{(def-test applycheck (:apply cadr (:eql 10)) '(0 10 20))}
 
 \kwdCriteriaDoc{check-err}{(:check-err CRITERION)}
 {Like \texttt{:err}, but proceeds according to the subordinate
@@ -158,7 +158,7 @@ is that the latter deals only with evaluation of a form, whereas
 is mostly useful for temporarily disregarding certain checks until
 some later fix, when they \emph{won't} throw an error.}}
 {\singleEx}
-{(def-check check-err1 (:check-err :forms-eq) 'asdfgh (error "this should be caught"))}
+{(def-test check-err1 (:check-err :forms-eq) 'asdfgh (error "this should be caught"))}
 
 \kwdCriteriaDoc{progn}{(:progn FORM FORM ...\ FORM CRITERION)}
 {Evaluates the \texttt{FORM}s in order, and then proceeds with
@@ -166,7 +166,7 @@ evaluation of check forms according to the subordinate criterion.}
 {As required by the subordinate criterion.}
 {\noExpl}
 {\singleEx}
-{(def-check form1 (:progn (setf zz 3) (:eql 3)) zz)}
+{(def-test form1 (:progn (setf zz 3) (:eql 3)) zz)}
 
 \kwdCriteriaDoc{proj}{(:proj (INDEX INDEX ...\ INDEX) CRITERION)}
 {Rearranges the input forms by selecting a new list according to the
@@ -177,7 +177,7 @@ index.}
 {\hasExpl{Note that containing criteria may have reordered forms and
 value from the original check.}}
 {\singleEx}
-{(def-check proj-1 (:proj (0 2) :forms-eq) 'a 3 (car '(a b)))}
+{(def-test proj-1 (:proj (0 2) :forms-eq) 'a 3 (car '(a b)))}
 
 \end{criteriaGroup}
 
@@ -230,7 +230,7 @@ ignoring any additional returned values.}
 {A single form which evaluates to a list.}
 {\noExpl}
 {\singleEx}
-{(def-check each1 (:each (:symbol a)) '(a a a a a))}
+{(def-test each1 (:each (:symbol a)) '(a a a a a))}
 
 \kwdCriteriaDoc{seq}{(:values CRITERION CRITERION ...\ CRITERION)}
 {Evaluates its input form, checks each of its elements according to
@@ -253,7 +253,7 @@ otherwise.}}
 subordinate criterion.}
 {A single form evaluating to a list.}
 {\noExpl}{\tabbingEx}{
-\textrm{Examples:}\ \=(def-check permute1 (:permute (:each (:eq 'a))) '(a a))
+\textrm{Examples:}\ \=(def-test permute1 (:permute (:each (:eq 'a))) '(a a))
 \\ \> (de\=f-\=check permute2
 \\ \> \> \> (:permute (:seq \=(:symbol b)
 \\ \> \> \>             \>(:predicate symbolp)
@@ -290,7 +290,7 @@ work on many platforms, since the CL specification defines
 \\ \> (\=(s1 :initarg :s1 :reader get-s1)
 \\ \> \> (s2 :initarg :s2)
 \\ \> \> (s3 :initarg :s3)))
-\\ (def-check \=slot1
+\\ (def-test \=slot1
 \\ \>  (:slots \=(s1 (:eql 10))
 \\ \>  \>(s2 (:symbol zz))
 \\ \>  \>(s3 (:seq \=(:symbol q) (:symbol w)
@@ -307,14 +307,14 @@ work on many platforms, since the CL specification defines
 {A trivial test, which always passes.}
 {Any.}
 {\noExpl}
-{\singleEx}{(def-check passing-test :pass 3 4 "sd")}
+{\singleEx}{(def-test passing-test :pass 3 4 "sd")}
 
 \kwdCriteriaDoc{fail}{(:fail FORMAT ARG ...\ ARG)}
 {A trivial test, which always fails.  The format string and arguments
 should be suitable for the Lisp \texttt{format} function.}
 {Any.}
 {\noExpl}
-{\singleEx}{(def-check fails (:fail "Expected a \~{}a" "string") 312)}
+{\singleEx}{(def-test fails (:fail "Expected a \~{}a" "string") 312)}
 
 \kwdCriteriaDoc{warn}{(:warn FORMAT ARG ...\ ARG)}
 {Issue a warning.  The format string and arguments should be suitable for
