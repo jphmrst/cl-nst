@@ -20,7 +20,7 @@
 
 \def\kwdCriteriaDoc#1#2#3#4#5#6#7{\criteriaDoc{#1}{:#1}{#2}{#3}{#4}{#5}{#6}{#7}}
 
-\begin{criteriaGroup}{Basic checks}{}
+\begin{criteriaGroup}{Basic criteria}{}
 
 \kwdCriteriaDoc{true}{:true}
 {The test passes if the form evaluates to non-nil.}
@@ -111,7 +111,7 @@ of the forms following the criterion.}
 
 \end{criteriaGroup}
 
-\begin{criteriaGroup}{Compound checks}{}
+\begin{criteriaGroup}{Compound criteria}{}
 
 \kwdCriteriaDoc{not}{(:not CRITERION)}
 {Passes when testing according to \texttt{CRITERION} either fails (but
@@ -181,7 +181,7 @@ value from the original check.}}
 
 \end{criteriaGroup}
 
-\begin{criteriaGroup}{Checks on multiple values}{
+\begin{criteriaGroup}{Criteria for multiple values}{
 NST's approach to multiple values is stricter than Common Lisp's view
 in the language itself.  In Lisp programs, additional returned values
 are eminently ignorable; in fact some extra programming overhead is
@@ -222,7 +222,7 @@ ignoring any additional returned values.}
 
 \end{criteriaGroup}
 
-\begin{criteriaGroup}{Checks on lists}{}
+\begin{criteriaGroup}{Criteria for lists}{}
 
 \kwdCriteriaDoc{each}{(:each CRITERION)}
 {Checks each argument of the list according to the subordinate
@@ -263,7 +263,7 @@ subordinate criterion.}
 
 \end{criteriaGroup}
 
-\begin{criteriaGroup}{Checks on vectors}{}
+\begin{criteriaGroup}{Criteria for vectors}{}
 
 \kwdCriteriaDoc{across}{(:across CRITERION CRITERION ...\ CRITERION)}
 {Like \texttt{:seq}, but for a vector instead of a list.}
@@ -275,7 +275,7 @@ subordinate criterion.}
 
 \end{criteriaGroup}
 
-\begin{criteriaGroup}{Checks on classes}{}
+\begin{criteriaGroup}{Criteria for classes}{}
 
 \kwdCriteriaDoc{slots}{\small(:slots (NAME CRT) (NAME CRT) ...\ (NAME
     CRT))}
@@ -301,7 +301,7 @@ work on many platforms, since the CL specification defines
 
 \end{criteriaGroup}
 
-\begin{criteriaGroup}{Programmatic and debugging checks}{}
+\begin{criteriaGroup}{Programmatic and debugging criteria}{}
 
 \kwdCriteriaDoc{pass}{:pass}
 {A trivial test, which always passes.}
