@@ -23,64 +23,64 @@
 
 ;;; Built-in basic testing criteria.
 
-(def-value-check (:pass () (&rest chk) :declare ((ignorable chk)))
+(def-values-criterion (:pass () (&rest chk) :declare ((ignorable chk)))
   `(check-result))
 
-(def-value-check (:fail (&rest args) (&rest chk) :declare ((ignorable chk)))
+(def-values-criterion (:fail (&rest args) (&rest chk) :declare ((ignorable chk)))
   `(emit-failure :format ,(car args) :args ,(cdr args)))
 
-(def-value-check (:warn (&rest args) (&rest chk) :declare ((ignorable chk)))
+(def-values-criterion (:warn (&rest args) (&rest chk) :declare ((ignorable chk)))
   ;; `(declare (ignorable chk))
   `(emit-warning :format ,(car args) :args ,(cdr args)))
 
-(def-value-check (:true () (bool))
+(def-values-criterion (:true () (bool))
   `(if bool
      (check-result)
      (emit-failure :format "Form not t: ~s" :args (list bool))))
 
-(def-value-check (:eq (eq-form) (check-form))
+(def-values-criterion (:eq (eq-form) (check-form))
   `(if (eq ,eq-form check-form)
      (check-result)
      (emit-failure :format "Not eq to ~s" :args '(,eq-form))))
 
-(def-check-alias (:symbol name) `(:eq ',name))
+(def-criterion-alias (:symbol name) `(:eq ',name))
 
-(def-value-check (:eql (eql-form) (check-form))
+(def-values-criterion (:eql (eql-form) (check-form))
   `(if (eql ,eql-form check-form)
      (check-result)
      (emit-failure :format "Not eql to ~s" :args '(,eql-form))))
 
-(def-value-check (:equal (eql-form) (check-form))
+(def-values-criterion (:equal (eql-form) (check-form))
   `(if (equal ,eql-form check-form)
      (check-result)
      (emit-failure :format "Not equal to ~s" :args '(,eql-form))))
 
-(def-value-check (:equalp (eql-form) (check-form))
+(def-values-criterion (:equalp (eql-form) (check-form))
   `(if (equalp ,eql-form check-form)
      (check-result)
      (emit-failure :format "Not equalp to ~s" :args '(,eql-form))))
 
-(def-check-alias (:forms-eq)    `(:predicate eq))
-(def-check-alias (:forms-eql)   `(:predicate eql))
-(def-check-alias (:forms-equal) `(:predicate equal))
-(def-check-alias (:value-list further) `(:apply list ,further))
+(def-criterion-alias (:forms-eq)    `(:predicate eq))
+(def-criterion-alias (:forms-eql)   `(:predicate eql))
+(def-criterion-alias (:forms-equal) `(:predicate equal))
+(def-criterion-alias (:value-list further) `(:apply list ,further))
 
-(def-value-check (:predicate (pred) (&rest forms))
+(def-values-criterion (:predicate (pred) (&rest forms))
   `(if (apply #',pred forms)
      (check-result)
      (emit-failure :format "Predicate ~s fails" :args '(,pred))))
 
-(def-check-alias (:drop-values criterion)
+(def-criterion-alias (:drop-values criterion)
   `(:apply (lambda (x &rest others) (declare (ignorable others)) x)
            ,criterion))
 
 
-(def-value-check (:dump-forms (blurb) (&rest forms))
+(def-values-criterion (:dump-forms (blurb) (&rest forms))
   `(progn
      (format t "~%~a~%~{~s~%~}" ,blurb forms)
      (emit-failure :format "Arguments dumped" :args nil)))
 
-(def-control-check (:err (&key (type 'condition type-supp-p)) expr-form)
+(def-form-criterion (:err (&key (type 'condition type-supp-p)) expr-form)
   (let ((x (gensym "x")) (block (gensym "block")))
     `(block ,block
        (handler-bind ((,type #'(lambda (,x)
@@ -99,7 +99,7 @@
                                 (cdr expr-form))
                                (t (list expr-form))))))))
 
-(def-control-check (:perf (&key (ms nil ms-supp-p)
+(def-form-criterion (:perf (&key (ms nil ms-supp-p)
                                 (sec nil sec-supp-p)
                                 (min nil min-supp-p)) expr-form)
   (let ((core-form expr-form))
@@ -128,9 +128,9 @@
         ":perf check requires performance criteria specification")))
     core-form))
 
-(def-control-check (:not (subcriterion) expr-form-list)
+(def-form-criterion (:not (subcriterion) expr-list-form)
   (let ((subcheck (gensym)))
-    `(let ((,subcheck ,(continue-check subcriterion expr-form-list)))
+    `(let ((,subcheck ,(continue-check subcriterion expr-list-form)))
        (cond
         ((check-result-errors ,subcheck)
          ,subcheck)
@@ -141,7 +141,7 @@
                        :args '(,subcriterion)))))))
 
 
-(def-control-check (:all (&rest args) expr-list-form)
+(def-form-criterion (:all (&rest args) expr-list-form)
   (let ((var (gensym "var")) (warnings (gensym "warnings"))
         (failures (gensym "failures")) (errors (gensym "errors"))
         (info (gensym "info"))
@@ -180,7 +180,7 @@
       `(let ((,var ,expr-list-form) ,warnings ,failures ,errors ,info)
         ,(test-next args)))))
 
-(def-control-check (:any (&rest criteria) expr-list-form)
+(def-form-criterion (:any (&rest criteria) expr-list-form)
   (let ((new-stack (gensym "expr-list-form"))
         (block (gensym "block")) (info (gensym "info"))
         (result (gensym "result"))
@@ -207,12 +207,12 @@
                        :args '(,criteria)
                        :info ,info)))))
 
-(def-control-check (:apply (transform criterion) forms)
+(def-form-criterion (:apply (transform criterion) forms)
   (continue-check criterion
                   `(multiple-value-call #'list (apply #',transform ,forms))))
 
 
-(def-control-check (:check-err (criterion) forms)
+(def-form-criterion (:check-err (criterion) forms)
   (let ((x (gensym "x"))
         (*error-checking* t))
     (declare (special *error-checking*))
@@ -229,14 +229,14 @@
                                      (cdr forms))
                                     (t (list forms))))))))
 
-(def-control-check (:progn (&rest forms-and-criterion) forms)
+(def-form-criterion (:progn (&rest forms-and-criterion) forms)
   (let ((progn-forms (butlast forms-and-criterion))
         (criterion (car (last forms-and-criterion))))
     `(progn
        ,@progn-forms
        ,(continue-check criterion forms))))
 
-(def-control-check (:proj (indices criterion) forms)
+(def-form-criterion (:proj (indices criterion) forms)
   (let ((var (gensym))
         (*nst-context-evaluable* t))
     `(let ((,var ,forms))
@@ -244,10 +244,10 @@
                         `(list ,@(loop for idx in indices collect
                                        `(nth ,idx ,var)))))))
 
-(def-control-check (:values (&rest args) forms)
+(def-form-criterion (:values (&rest args) forms)
   (continue-check `(:apply list (:seq ,@args)) forms))
 
-(def-control-check (:each (criterion) forms)
+(def-form-criterion (:each (criterion) forms)
   (let ((block (gensym)) (list (gensym "list")) (var (gensym "var"))
         (result (gensym "result"))
         (warnings (gensym "w")) (info (gensym "info"))
@@ -275,7 +275,7 @@
 
 
 
-(def-control-check (:seq (&rest criteria) forms)
+(def-form-criterion (:seq (&rest criteria) forms)
   (let ((block (gensym)) (list (gensym "list"))
         (result (gensym "result")) (warnings (gensym "w"))
         (info (gensym "info"))
@@ -311,7 +311,7 @@
                                (check-result-warnings ,result))))))))
          (check-result :info ,info :warnings ,warnings)))))
 
-(def-control-check (:permute (criterion) forms)
+(def-form-criterion (:permute (criterion) forms)
   (let ((permute-block (gensym)) (list (gensym "list-"))
         (perms (gensym "perms-")) (x (gensym "x-"))
         (result (gensym "result")))
@@ -328,7 +328,7 @@
                     (check-result)))))))))))
 
 
-(def-control-check (:across (&rest criteria) forms)
+(def-form-criterion (:across (&rest criteria) forms)
   (let ((block (gensym)) (list (gensym "list"))
         (result (gensym "result")) (warnings (gensym "w"))
         (info (gensym "info")))
@@ -363,7 +363,7 @@
          (check-result :info ,info :warnings ,warnings)))))
 
 
-(def-control-check (:slots (&rest clauses) forms)
+(def-form-criterion (:slots (&rest clauses) forms)
   (let ((block (gensym "oblock-")) (obj (gensym "o-"))
         (slot-criterion (make-hash-table :test 'eq))
         (result (gensym "result"))

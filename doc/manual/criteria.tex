@@ -38,16 +38,19 @@ criterion into Lisp.  For both of these mechanisms, this Lisp code is
 expected to return a test report.  NST provides three functions for
 building test reports:
 \begin{itemize}
-\item\texttt{check-report}
-\par\fbox{Fill in details}
-\item\texttt{emit-failure}
-\par\fbox{Fill in details}
-\item\texttt{emit-warning}
-\par\fbox{Fill in details}
+\item\texttt{(check-result)}\par This function indicates a successful
+  test result.
+\item\texttt{(emit-failure [ :format format-string [ :args args ] ] )}
+  \par This function returns a report of test failure.  The
+  \texttt{format-string} and \texttt{args} are as to the Common Lisp
+  function \texttt{format}.
+\item\texttt{(emit-warning [ :format format-string [ :args args ] ] )}
+  \par Line \texttt{emit-failure}, but provides supplimentary
+  information as a warning.
 \end{itemize}
 
 \subsection{Defining criteria for values}
-The Lisp body of a \texttt{def-form-criterion} should evaluate to a
+The Lisp body of a \texttt{def-values-criterion} should evaluate to a
 quoted Lisp expression calculating a test report.  These criteria
 definitions are like functions with two sets of formal parameters:
 \begin{itemize}
@@ -86,20 +89,40 @@ single symbol.  Declarations regarding the names in the
 
 Examples:
 \begin{verbatim}
-(def-value-check (:pass () (&rest chk))
+(def-values-criterion (:pass () (&rest chk))
   `(declare (ignorable chk))
   `(make-check-result))
 
-(def-value-check (:eq (eq-form) (check-form))
+(def-values-criterion (:eq (eq-form) (check-form))
   `(if (eq ,eq-form check-form)
      (make-check-result)
      (emit-failure :format "Not eq to ~s" :args '(,eq-form))))
 \end{verbatim}
 
+\subsection{Processing subcriteria}
+Since the arguments to the criterion in \texttt{def-form-criterion}
+are passed unevaluated as for macro arguments, they can contain
+\emph{subcriteria} which can be incorporated into the main criterion's
+assessment.  NST provides the \texttt{continue-check} function for
+converting subcriteria into quoted Lisp:
+\begin{verbatim}
+  (continue-check criterion-form values-forms)
+\end{verbatim}
+The \texttt{values-forms} argument should be a quoted Lisp expression
+which, when evaluated, returns a list of values to be assessed by the
+subcriterion.
+
+In fact, \texttt{def-form-criterion} and \texttt{def-values-criterion}
+expand to method definitions which are used in \texttt{continue-check}.
+
 \subsection{Defining criteria for a values-returning form}
 As for \texttt{def-values-criterion}, the body of a
 \texttt{def-form-criterion} should specify a quoted Lisp expression
-calculating a test report.
+calculating a test report.  The difference between these forms is that
+while \texttt{def-values-criterion} receives the evaluated values from
+the forms to be tested, \texttt{def-form-criterion} expects a form
+which, when evaluated, will return the list of these values.
+%
 {\ttfamily\begin{tabbing}
 \textrm{Syntax: 
 }(de\=f-form-criterion (na\=me \=subcriteria-lambda-list
@@ -109,16 +132,32 @@ calculating a test report.
 \\ \>\> \> full-format)
 \\ \> check-forms)
 \end{tabbing}}
-Comma-prefix all the names.  \texttt{test-forms-formal-parameter} must
-be just a symbol.  Calls out to \texttt{continue-check} are useful;
-its second argument must be a Lisp expression which will evaluate to a
-list of values.
+%
+Here, \texttt{test-forms-formal-parameter} abstracts over the name of
+the formal parameter which will later be bound to the
+test-values-form, and must be just a symbol, not a lambda-list.  It
+can be referenced to add this name to the quoted Lisp expression that
+\texttt{check-forms} returns, but should be dereferenced for the
+values themselves only within the quotated computation.
+
+Examples:
 \begin{verbatim}
-(def-control-check (:apply (transform criterion) forms)
+(def-form-criterion (:apply (transform criterion) forms)
   (continue-check criterion
 		  `(multiple-value-list (apply #',transform ,forms))))
+
+(def-form-criterion (:not (subcriterion) exprs-form)
+  (let ((subcheck (gensym)))
+    `(let ((,subcheck ,(continue-check subcriterion exprs-form)))
+       (cond
+        ((check-result-errors ,subcheck)
+         ,subcheck)
+        ((check-result-failures ,subcheck)
+         (check-result :info (check-result-info ,subcheck)))
+        (t
+         (emit-failure :format "Expected failure from ~s"
+                       :args '(,subcriterion)))))))
 \end{verbatim}
-\par\fbox{Fill in details}
 
 %%% Local Variables: 
 %%% mode: latex

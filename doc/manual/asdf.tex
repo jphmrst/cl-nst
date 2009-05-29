@@ -39,6 +39,10 @@ Figure~\ref{fig:asdf} gives examples of \texttt{nst-testable} ASDF
 system definitions.
 \begin{figure}
 \begin{verbatim}
+;; NST and its ASDF interface must be loaded
+;; before we can process the defsystem form.
+(asdf:oos 'asdf:load-op :asdf-nst)
+
 (defsystem :mnst
     :class nst-testable
     :description "The NST test suite's self-test."
