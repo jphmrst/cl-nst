@@ -156,13 +156,13 @@ argument should be a string of just spaces."))
     (nst-junit-dump stream)))
 
 (defgeneric junit-group-result (group &rest args &key
-                                dir file verbose
+                                dir file verbose stream
                                 if-dir-does-not-exist if-file-exists))
 
 (defmethod junit-group-result ((group symbol) &rest args &key
-                               dir file verbose
+                               dir file verbose stream
                                if-dir-does-not-exist if-file-exists)
-  (declare (ignorable dir file if-dir-does-not-exist if-file-exists)
+  (declare (ignorable dir file if-dir-does-not-exist if-file-exists stream)
            (ignore verbose))
   (apply #'junit-group-result (group-report group) args))
 
