@@ -1,9 +1,4 @@
 
-%%% Local Variables: 
-%%% mode: latex
-%%% TeX-master: "manual"
-%%% End: 
-
 \section{Issues, bugs and enhancements}\index{bugs}\index{enhancements}
 \begin{enumerate}
 \item There are still, sometimes, warnings from the use of fixture
@@ -15,15 +10,22 @@
 \item The def-test form \texttt{:perf} might be extended to provide
   (implementation-dependent) checks on memory limits as well as time
   limits.
-\item Some sort of timeout mechanism (again, possibly
-  implementation-dependent) could be helpful for measuring correctness
-  via termination in more complicated algorithms.
+\item Some sort of timeout mechanism --- perhaps
+  implementation-dependent --- could be helpful for measuring
+  correctness via termination in more complicated algorithms.
 \end{enumerate}
 
 \subsection{Removed features}
 \label{temp-removed}
 Some features of the NST 0.9 have not yet been reimplemented in NST
 1.0.  Tell John if one is urgent for you.
+
+\subsubsection{Test group documentation}
+The \texttt{def-test-group} form should allow group
+documentation:\index{documentation@\texttt{:documentation}}.
+\begin{verbatim}
+    (:documentation DOC-STRING)
+\end{verbatim}
 
 \subsubsection{Alternate fixture definitions}
 The
@@ -62,6 +64,11 @@ command below.
       (:with (:seq (:predicate symbolp) (:eql 1) (:symbol d)))
       '(a 1 d))
 \end{verbatim}
+
+\subsubsection{Compilation deferral control}
+In earlier versions the \texttt{:defer-compile} switch on test
+definition allowed control over when an expression would be compiled.
+\index{defer-compile@\texttt{:defer-compile}}
 
 \subsubsection{In the runtime system}
 
@@ -135,3 +142,8 @@ If \texttt{BOOL} evaluates to non-null, then fixtures will be
 re-opened \emph{e.g.}\ when required multiple times by opening
 different fixtures that use them.
 \\ Syntax: \texttt{:nst :reopen BOOL}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual"
+%%% End: 
