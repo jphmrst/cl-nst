@@ -1,20 +1,21 @@
+
 \section{Tests and test criteria}
-\fbox{Reword} The
-\texttt{def-test}\index{test}\index{def-test@\texttt{def-test}}
-form allows a higher-level description of tests.  
-(\texttt{def-check} is a deprecated, but still supported, synonym for \texttt{def-test}.)
-The basic syntactic
-forms are:
+Individual unit tests are encoded with the \texttt{def-test} form:
 \input{../common/check-syntax}
-The \textit{setup}, \textit{cleanup} and \textit{fixtures} forms are
-passed as-is to the underlying \texttt{def-test}, and work the same
-way.  The \textit{criterion} is a list or symbol specifying the
-properties which should hold for the \textit{forms}.  When there are
-no \textit{setup}, \textit{cleanup} or \textit{fixtures} arguments,
-the \textit{name} may be given without parentheses.  Likewise, any
-criterion consisting of a single symbol, e.g.\ \texttt{(:pass)}, may
-be abbreviated as just the symbol without the parentheses, e.g.\
-\texttt{:pass}.
+%
+The \texttt{SETUP}, \texttt{CLEANUP} and \texttt{FIXTURES} are just as
+for test groups, but apply only to the one test.  The
+\texttt{CRITERION} is a list or symbol specifying the properties which
+should hold for the \texttt{FORM}s.
+
+When there are no \texttt{SETUP}, \texttt{CLEANUP} or
+\texttt{FIXTURES} arguments, the \texttt{NAME} may be given without
+parentheses.  Likewise, any criterion consisting of a single symbol,
+e.g.\ \texttt{(:pass)}, may be abbreviated as just the symbol without
+the parentheses, e.g.\ \texttt{:pass}.
+
+The \texttt{def-check} form is a deprecated synonym for
+\texttt{def-test}.
 
 \def\criteriaGroup#1#2{\subsection{#1} #2}
 \def\secText#1{#1}

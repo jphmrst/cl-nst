@@ -103,8 +103,8 @@ Examples:
 Since the arguments to the criterion in \texttt{def-form-criterion}
 are passed unevaluated as for macro arguments, they can contain
 \emph{subcriteria} which can be incorporated into the main criterion's
-assessment.  NST provides the \texttt{continue-check} function for
-converting subcriteria into quoted Lisp:
+assessment.  The \texttt{continue-check} function converts subcriteria
+into quoted Lisp:
 \begin{verbatim}
   (continue-check criterion-form values-forms)
 \end{verbatim}

@@ -77,7 +77,7 @@ to the criterion argument.}
 \texttt{eql}.}
 {Exactly two forms.}
 {\noExpl}
-{\singleEx}{(def-test eqlforms1 :forms-eq (cadr '(a 3 c)) (caddr '(a c 3)))}
+{\singleEx}{(def-test eqlforms1 :forms-eql (cadr '(a 3 c)) (caddr '(a c 3)))}
 
 \kwdCriteriaDoc{forms-equal}{:forms-equal}
 {Passes for forms which evaluate to expressions which are
@@ -157,8 +157,10 @@ is that the latter deals only with evaluation of a form, whereas
 \texttt{:check-err} is more about the unit testing process.  This form
 is mostly useful for temporarily disregarding certain checks until
 some later fix, when they \emph{won't} throw an error.}}
-{\singleEx}
-{(def-test check-err1 (:check-err :forms-eq) 'asdfgh (error "this should be caught"))}
+{\tabbingEx}
+{\texttt{(de}\=\texttt{f-}\=\texttt{test check-err1}
+\\ \> \> \texttt{(:check-err :forms-eq)}
+\\ \> \texttt{'asdfgh (error "this should be caught"))}}
 
 \kwdCriteriaDoc{progn}{(:progn FORM FORM ...\ FORM CRITERION)}
 {Evaluates the \texttt{FORM}s in order, and then proceeds with
@@ -176,8 +178,10 @@ continues according ot the subordinate criterion.}
 index.}
 {\hasExpl{Note that containing criteria may have reordered forms and
 value from the original check.}}
-{\singleEx}
-{(def-test proj-1 (:proj (0 2) :forms-eq) 'a 3 (car '(a b)))}
+{\tabbingEx}
+{\texttt{(d}\=\texttt{ef}\=\texttt{-test proj-1}
+\\ \>\> \texttt{(:proj (0 2) :forms-eq)}
+\\ \> \texttt{'a 3 (car '(a b)))}}
 
 \end{criteriaGroup}
 
