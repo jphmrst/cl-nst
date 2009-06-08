@@ -465,13 +465,17 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
                ,core-run-body)
 
              ,@(when setup-supp-p
-                 `((defmethod core-run-test
-                       :before ((obj ,test-config-class-name))
+                 `((defmethod core-run-test :before ((obj ,suite-class-name))
+                     ,setup)
+                   (defmethod core-run-test :before ((obj
+                                                      ,standalone-class-name))
                      ,setup)))
 
              ,@(when cleanup-supp-p
-                 `((defmethod core-run-test
-                       :after ((obj ,test-config-class-name))
+                 `((defmethod core-run-test :after ((obj ,suite-class-name))
+                     ,cleanup)
+                   (defmethod core-run-test :after ((obj
+                                                     ,standalone-class-name))
                      ,cleanup)))
 
              ;; Test results are stored under a canonical name.

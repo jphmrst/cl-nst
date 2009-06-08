@@ -23,47 +23,47 @@
 
 (defclass nst-testable (system)
      ((nst-systems :initarg :nst-systems
-		   :reader nst-systems
-		   :initform nil
-		   :documentation
-		   "Other systems to which NST testing is delegated")
-      
+                   :reader nst-systems
+                   :initform nil
+                   :documentation
+                   "Other systems to which NST testing is delegated")
+
       (nst-packages :initarg :nst-packages
-		    :reader nst-packages
-		    :initform nil
-		    :documentation
-		    "Package whose def-test-groups are to be run.")
+                    :reader nst-packages
+                    :initform nil
+                    :documentation
+                    "Package whose def-test-groups are to be run.")
       (nst-package :initarg :nst-package
-		   :reader nst-package
-		   :initform nil
-		   :documentation
-		   "Packages whose def-test-groups are to be run.")
+                   :reader nst-package
+                   :initform nil
+                   :documentation
+                   "Packages whose def-test-groups are to be run.")
 
       (nst-group :initarg :nst-group
-		 :reader nst-group
-		 :initform nil
-		 :documentation
-		 "An NST test group, given as a dotted pair of a package
+                 :reader nst-group
+                 :initform nil
+                 :documentation
+                 "An NST test group, given as a dotted pair of a package
                   name plus the name of a test group in that package.")
       (nst-groups :initarg :nst-groups
-		  :reader nst-groups
-		  :initform nil
-		  :documentation
-		  "A list of NST test groups, each given as a dotted pair
+                  :reader nst-groups
+                  :initform nil
+                  :documentation
+                  "A list of NST test groups, each given as a dotted pair
                    of a package name plus the name of a test group in that
                    package.")
 
       (nst-test :initarg :nst-test
-		:reader nst-test
-		:initform nil
-		:documentation
-		"A single NST test, given as a three-element list of a
+                :reader nst-test
+                :initform nil
+                :documentation
+                "A single NST test, given as a three-element list of a
                  package name, the test's group name, and the test name.")
       (nst-tests :initarg :nst-tests
-		 :reader nst-tests
-		 :initform nil
-		 :documentation
-		 "A list of NST tests, each given as a three-element list
+                 :reader nst-tests
+                 :initform nil
+                 :documentation
+                 "A list of NST tests, each given as a three-element list
                   of a package name, the test's group name, and the test
                   name."))
 
@@ -71,11 +71,11 @@
 
 (defmethod asdf::component-depends-on :around ((op load-op) (sys nst-testable))
   (append (loop for sub in (nst-systems sys) collect (list 'asdf:load-op sub))
-	  (call-next-method)))
+          (call-next-method)))
 
 (defmethod asdf::component-depends-on :around ((op test-op) (sys nst-testable))
   (append (loop for sub in (nst-systems sys) collect (list 'asdf:test-op sub))
-	  (call-next-method)))
+          (call-next-method)))
 
 ;;; THIS METHOD DOES NOT WORK.  None of the system's slots are filled
 ;;; in when this method is called; ASDF apparantly plugs these values
@@ -103,56 +103,56 @@
   ;; Now push in additional in-order-to's corresponding to
   ;; nst-systems.
   (let ((nst-systems (nst-systems sys))
-	(in-order-to (slot-value sys 'asdf::in-order-to)))
+        (in-order-to (slot-value sys 'asdf::in-order-to)))
     (when nst-systems
       (let* ((the-load-steps `((load-op ,@nst-systems)))
-	     (the-test-steps `((test-op ,@nst-systems)))
-	     other-ops)
-	(loop for op-steps in in-order-to do
-	  (destructuring-bind (op . steps) op-steps
-	    (case op
-	      (asdf:load-op (setf the-load-steps (nconc steps the-load-steps)))
-	      (asdf:test-op (setf the-test-steps (nconc steps the-test-steps)))
-	      (otherwise (push op-steps other-ops)))))
-	(setf (slot-value sys 'asdf::in-order-to)
-	      `((asdf:load-op ,@the-load-steps)
-		(asdf:test-op ,@the-test-steps)
-		,@other-ops))))))
+             (the-test-steps `((test-op ,@nst-systems)))
+             other-ops)
+        (loop for op-steps in in-order-to do
+          (destructuring-bind (op . steps) op-steps
+            (case op
+              (asdf:load-op (setf the-load-steps (nconc steps the-load-steps)))
+              (asdf:test-op (setf the-test-steps (nconc steps the-test-steps)))
+              (otherwise (push op-steps other-ops)))))
+        (setf (slot-value sys 'asdf::in-order-to)
+              `((asdf:load-op ,@the-load-steps)
+                (asdf:test-op ,@the-test-steps)
+                ,@other-ops))))))
 
 (defun all-nst-tested (nst-testable &optional
-				    (all-packages (make-hash-table :test 'eq))
-				    (all-groups (make-hash-table :test 'eq))
-				    (all-tests-by-group (make-hash-table
-							 :test 'eq)))
+                                    (all-packages (make-hash-table :test 'eq))
+                                    (all-groups (make-hash-table :test 'eq))
+                                    (all-tests-by-group (make-hash-table
+                                                         :test 'eq)))
   (with-accessors ((systems nst-systems)
-		   (packages nst-packages) (package nst-package)
-		   (group nst-group) (groups nst-groups)
-		   (test nst-test) (tests nst-tests)) nst-testable
+                   (packages nst-packages) (package nst-package)
+                   (group nst-group) (groups nst-groups)
+                   (test nst-test) (tests nst-tests)) nst-testable
 
     ;; First grab symbols from subsystems.
     (loop for system in systems do
       (all-nst-tested (find-system system)
-	  all-packages all-groups all-tests-by-group))
-    
+          all-packages all-groups all-tests-by-group))
+
     ;; Add local symbols
     (cond
      (test
       (multiple-value-bind (g ts) (test-spec-symbols test)
-	(note-test-by-group all-tests-by-group g ts)))
+        (note-test-by-group all-tests-by-group g ts)))
 
      (group
       (setf (gethash (group-spec-symbol group) all-groups) t))
-      
+
      (package (setf (gethash package all-packages) t))
-      
+
      (t
       (loop for spec in tests do
-	(multiple-value-bind (g ts) (test-spec-symbols spec)
-	  (note-test-by-group all-tests-by-group g ts)))
+        (multiple-value-bind (g ts) (test-spec-symbols spec)
+          (note-test-by-group all-tests-by-group g ts)))
       (loop for spec in groups do
-	(setf (gethash (group-spec-symbol spec) all-groups) t))
+        (setf (gethash (group-spec-symbol spec) all-groups) t))
       (loop for p in packages do
-	(setf (gethash p all-packages) t))))
+        (setf (gethash p all-packages) t))))
 
     (values all-packages all-groups all-tests-by-group)))
 
@@ -160,7 +160,7 @@
   (let ((group-table (gethash group table)))
     (unless group-table
       (setf group-table (make-hash-table :test 'eq)
-	    (gethash group table) group-table))
+            (gethash group table) group-table))
     (setf (gethash test group-table) t)))
 
 (defmethod operation-done-p ((o asdf:test-op) (c nst-testable))
@@ -177,7 +177,7 @@
                    (group-specs nst-groups)
                    (test-specs nst-tests)) c
     (cond
-      
+
       ;; For running a single package.
       (single-package
        (nst:run-package single-package))
@@ -200,23 +200,23 @@
       (t
        (loop for pk in packages do (nst:run-package pk))
        (loop for spec in group-specs do
-	 (let ((group (group-spec-symbol spec)))
-	   (nst:run-group group)))
+         (let ((group (group-spec-symbol spec)))
+           (nst:run-group group)))
        (loop for spec in test-specs do
-	 (multiple-value-bind (group test) (test-spec-symbols spec)
-	   (nst:run-test group test)
-	   (cons group test))))))
-  
+         (multiple-value-bind (group test) (test-spec-symbols spec)
+           (nst:run-test group test)
+           (cons group test))))))
+
   ;; Now, report all the results from both this system, and
   ;; subordinated systems.
   (multiple-value-bind (package-set group-set test-set) (all-nst-tested c)
     (report-multiple (loop for s being the hash-keys of package-set collect s)
-		     (loop for s being the hash-keys of group-set collect s)
-		     (loop for g being the hash-keys of test-set
-			   using (hash-value hash)
-			   append (loop for ts being the hash-keys of hash
-					collect (cons g ts)))
-		     :system c)))
+                     (loop for s being the hash-keys of group-set collect s)
+                     (loop for g being the hash-keys of test-set
+                           using (hash-value hash)
+                           append (loop for ts being the hash-keys of hash
+                                        collect (cons g ts)))
+                     :system c)))
 
 (defun group-spec-symbol (spec)
   (destructuring-bind (pk . gr) spec
@@ -225,4 +225,4 @@
 (defun test-spec-symbols (spec)
   (destructuring-bind (pk gr ts) spec
     (values (intern (symbol-name gr) (find-package pk))
-	    (intern (symbol-name ts) (find-package pk)))))
+            (intern (symbol-name ts) (find-package pk)))))
