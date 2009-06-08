@@ -50,8 +50,6 @@
       :echo ())
   (def-check ts2 :echo ()))
 
-
-
 (def-test-group failures ()
   (def-check f-1 (:seq (:symbol a) (:eql 3) (:eq 'b)) '(a 2 b))
   (def-check f-2 (:seq (:symbol a) (:eql 3) (:eq 'b)) (error "boom"))
