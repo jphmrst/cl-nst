@@ -307,6 +307,12 @@ work on many platforms, since the CL specification defines
 
 \begin{criteriaGroup}{Programmatic and debugging criteria}{}
 
+\kwdCriteriaDoc{info}{(:info MESSAGE SUBCRITERION)}
+{Add an informational note to the check result.}
+{Any.}
+{\noExpl}
+{\singleEx}{(def-test known-bug (:info "Known bug" (:eql 3)) 4)}
+
 \kwdCriteriaDoc{pass}{:pass}
 {A trivial test, which always passes.}
 {Any.}

@@ -71,3 +71,10 @@
   (def-check yyy-10 (:eql 10) yyy)
   )
 
+(def-test-group show-setup ()
+  (:setup   (format t "  S group~%"))
+  (:cleanup (format t "  C group~%"))
+  (:each-setup   (format t "    S-each group~%"))
+  (:each-cleanup (format t "    C-each group~%"))
+  (def-check ts1 :pass (format t "      ts1~%"))
+  (def-check ts2 :pass (format t "      ts2~%")))

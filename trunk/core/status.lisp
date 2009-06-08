@@ -261,21 +261,21 @@ instances, and the info field is of any value."
            ;;
            ((and (eql 1 total-items) errors)
             (format s "~@<Check ~a ~:[(group ~a) ~;~*~]raised an error~
-                            ~:[~*~;:~{~:@_ . ~w~}~]~:>"
+                            ~:[~2*~;:~{~:@_ . ~w~}~{~:@_ . ~a~}~]~:>"
               check-name *nst-group-shown* group-name
-              drill-down errors))
+              drill-down errors info))
 
            ((and (eql 1 total-items) warnings)
             (format s "~@<Check ~a ~:[(group ~a) ~;~*~]passed with warning~p~
-                            ~:[~*~;:~{~:@_ - ~w~}~]~:>"
+                            ~:[~2*~;:~{~:@_ - ~w~}~{~:@_ - ~a~}~]~:>"
               check-name *nst-group-shown* group-name
-              warnings drill-down warnings))
+              warnings drill-down warnings info))
 
            ((and (eql 1 total-items) failures)
             (format s "~@<Check ~a ~:[(group ~a) ~;~*~]failed~
-                            ~:[~*~;:~{~:@_ - ~w~}~]~:>"
+                            ~:[~2*~;:~{~:@_ - ~w~}~{~:@_ - ~a~}~]~:>"
               check-name *nst-group-shown* group-name
-              drill-down failures))
+              drill-down failures info))
 
            ;; When a query asks about a specific test.
            ;;
@@ -336,7 +336,9 @@ instances, and the info field is of any value."
         (format s "~@<~:[~2*~;~?~:@_~]~
                       in context: ~@<~{~a~^~:@_~}~:>~
                       ~@[~:@_stack: ~w~]~:>"
-          format format args context stack)
+          format format args
+          context
+          stack)
         )))
 
 
