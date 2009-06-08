@@ -38,6 +38,7 @@
                  (:mnst-simple . core-checks)
                  (:mnst-simple . a-setup-cleanup)
                  (:mnst-simple . setup-cleanup)
+                 (:mnst-simple . each-setup-cleanup)
                  (:mnst-simple . z-setup-cleanup))
     :depends-on (:nst)
     :in-order-to ((test-op (load-op :mnst)))

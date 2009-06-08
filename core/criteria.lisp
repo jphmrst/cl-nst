@@ -80,6 +80,12 @@
      (format t "~%~a~%~{~s~%~}" ,blurb forms)
      (emit-failure :format "Arguments dumped" :args nil)))
 
+(def-form-criterion (:info (string subcriterion) expr-list-form)
+  (let ((subcheck (gensym "subcheck")))
+    `(let ((,subcheck ,(continue-check subcriterion expr-list-form)))
+       (push ,string (check-result-info ,subcheck))
+       ,subcheck)))
+
 (def-form-criterion (:err (&key (type 'condition type-supp-p)) expr-form)
   (let ((x (gensym "x")) (block (gensym "block")))
     `(block ,block
