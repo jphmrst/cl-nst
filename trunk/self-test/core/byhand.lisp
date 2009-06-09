@@ -78,3 +78,14 @@
   (:each-cleanup (format t "    C-each group~%"))
   (def-check ts1 :pass (format t "      ts1~%"))
   (def-check ts2 :pass (format t "      ts2~%")))
+
+(def-fixtures simple-fixture ()
+  (magic-number 120)
+  (magic-symbol 'asdfg))
+
+(def-test-group some-magic ()
+  (def-test no-magic :true
+    (not (boundp 'magic-number)))
+  (def-test (with-magic :fixtures (simple-fixture))
+      (:eql 120)
+    magic-number))

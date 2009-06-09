@@ -41,8 +41,8 @@ symbol name given as the criterion argument.}
 {A single form.}
 {\noExpl}
 {\multiEx}
-{\passExample{(def-test sym1  () (:symbol a) (car '(a b c)))}
- \failExample{(def-test sym1x () (:symbol a) (cadr '(a b c)))}}
+{\passExample{(def-test sym1  (:symbol a) (car '(a b c)))}
+ \failExample{(def-test sym1x (:symbol a) (cadr '(a b c)))}}
 
 \kwdCriteriaDoc{eql}{(:eql FORM)}
 {Require a form to evaluate to an expression which is \texttt{eql} to
