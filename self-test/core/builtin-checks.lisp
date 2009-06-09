@@ -140,8 +140,7 @@
                             :cleanup (setf for-setup 1))
       (:eql 2)
     for-setup)
-  (def-test z-sc-for-setup-1 (:eql 1) for-setup)
-)
+  (def-test z-sc-for-setup-1 (:eql 1) for-setup))
 
 (def-test-group each-setup-cleanup ()
   (:setup (setf for-setup 1))
