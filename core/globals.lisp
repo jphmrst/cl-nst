@@ -79,17 +79,6 @@ current criterion.")
 (defvar +package-groups+ (make-hash-table :test 'eq)
   "Map from packages to the test groups declared in each package.")
 
-;;;
-;;; Generic functions whose methods are defined by the various macros.
-;;;
-(defmacro add-class-name-static-method (fn)
-  `(progn
-     (defmethod ,fn ((g symbol)) (,fn (find-class g)))
-     (defmethod ,fn ((g standard-class)) (,fn (class-prototype g)))))
-
-(defmacro add-class-name-instantiator-method (fn)
-  `(defmethod ,fn ((g symbol)) (,fn (make-instance g))))
-
 ;; Properties of groups.  Many of these function have methods on
 ;; symbols (presumably class names) that either relay to class
 ;; methods, or re-dispatch after instantiating an object of the named
@@ -247,34 +236,6 @@ default the current package."))
   "Internal debugging function: dump the results hash."
   (loop for ts being the hash-keys of +results-record+ using (hash-value rs) do
     (format t "~s -> ~s~%" ts rs)))
-
-;;;
-;;; Error conditions.
-;;;
-
-(define-condition nst-error () ())
-
-(defmacro define-nst-error (name fields (stream exp) &body printer)
-  `(progn
-     (define-condition ,name (nst-error) ,fields
-                       (:report (lambda (,exp ,stream) ,@printer)))
-     (set-pprint-dispatch ',name (lambda (,stream ,exp) ,@printer))))
-
-(define-nst-error no-nst-groups-in-package
-    ((package :initarg :package :reader package-of))
-  (stream exp)
-  (format stream "No NST packages in package ~s" (package-of exp)))
-
-(define-nst-error no-such-nst-group
-    ((group :initarg :group :reader group))
-  (stream exp)
-  (format stream "No such NST group ~s" (group exp)))
-
-(define-nst-error no-such-nst-test
-    ((group :initarg :group :reader group)
-     (test :initarg :test :reader test))
-  (stream exp)
-  (format stream "No such NST test ~s in group ~s" (test exp) (group exp)))
 
 ;;;
 ;;; More generic functions whose methods are defined by the various
@@ -398,70 +359,3 @@ encoded as :before and :after methods.")
 (defgeneric nst-repl-property-encode (prop val)
   (:documentation
    "Encode an NST property's display value as an internal value."))
-
-;;;
-;;; Helper functions
-;;;
-
-;; Versions of car and cdr for when we expect to have either a list or
-;; a symbol.
-
-(defun symbol-or-car (name-or-name-and-args)
-  "Return the first element given a list, or return a symbol."
-  (cond ((symbolp name-or-name-and-args) name-or-name-and-args)
-        ((consp name-or-name-and-args) (car name-or-name-and-args))
-        (t (cerror "Return nil" "Unable to parse ~S to find the name in it."
-                   name-or-name-and-args)
-           nil)))
-
-(defun cdr-or-nil (name-or-name-and-args)
-  "Return the cdr given a list, or return nil if given a symbol."
-  (cond ((symbolp name-or-name-and-args) nil)
-        ((listp name-or-name-and-args) (cdr name-or-name-and-args))
-        (t (cerror "Return nil" "Unable to parse ~S to find the name in it."
-                   name-or-name-and-args)
-           nil)))
-
-;; Tests on numbers.
-
-(defmacro log10 (v) `(/ (log ,v) (log 10)))
-
-(defun sig-place (n value)
-  "Returns the n-th significant place of value"
-  (let* ((xlog (if (zerop value) 0 (log10 (abs value))))
-         (xlog-up (floor xlog)))
-    (expt 10 (- xlog-up (- n 1)))))
-
-(defun eql-for-sigdigits (digits n1 n2)
-  "Test whether two numbers are eql to the given number of significant digits."
-  (and (numberp n1) (numberp n2)
-       (let ((rounder (sig-place digits n1)))
-         (eql (round n1 rounder) (round n2 rounder)))))
-
-;; Operations on lambda lists, for processing test specs.
-
-(defun lambda-list-names (lambda-list supp-p)
-  "Pick out the names from a lambda-list, omitting the ampersand-prefixed
-delimiters."
-  (let ((generic-list (extract-lambda-list lambda-list))
-        (result))
-    (labels ((descend (list)
-                (unless (null list)
-                  (let ((item (car list)))
-                    (cond
-                      ((listp item)
-                       (cond
-                         (supp-p (descend item))
-                         (t (push (car item) result)
-                            (when (caddr item)
-                              (push (caddr item) result)))))
-                     ((symbolp item)
-                      (unless (member item
-                                      #+allegro '(&allow-other-keys &aux
-                                                  &body &environment &key
-                                                  &optional &rest &whole)
-                                      #-allegro lambda-list-keywords)
-                        (push item result))))
-                    (descend (cdr list))))))
-      (descend generic-list)
-      (nreverse result))))
