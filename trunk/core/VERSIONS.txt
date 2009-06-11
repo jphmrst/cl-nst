@@ -1,0 +1,6 @@
+
+1.1.2 -
+
+ Add deprecation warning to several disused macros.
+
+1.1.1 - First public release.
