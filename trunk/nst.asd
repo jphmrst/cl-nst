@@ -25,7 +25,7 @@
 
 (defsystem :nst
     :description "The NST unit/regression testing system"
-    :version "1.1.1"
+    :version "1.1.2"
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :mnst)))
@@ -36,9 +36,14 @@
                            ;; and documentation generation.
                            (:file "package")
 
-                           ;; Flags, generic function declarations,
-                           ;; and helper functions.
-                           (:file "globals"  :depends-on ("package"))
+                           ;; Helper functions.
+                           (:file "utils"  :depends-on ("package"))
+
+                           ;; Error declarations.
+                           (:file "errors"  :depends-on ("package"))
+
+                           ;; Flags and generic function declarations.
+                           (:file "globals"  :depends-on ("errors" "utils"))
 
                            ;; The def-group macro.
                            (:file "group" :depends-on ("globals"))
@@ -61,7 +66,8 @@
 
                            ;; Standard criteria declarations.
                            (:file "criteria"
-                                  :depends-on ("permuter" "check" "status"))
+                                  :depends-on ("errors"
+                                               "permuter" "check" "status"))
 
                            ;; Interaction with NST via the REPL.
                            (:file "command"
