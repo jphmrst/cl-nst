@@ -65,7 +65,13 @@
                  :documentation
                  "A list of NST tests, each given as a three-element list
                   of a package name, the test's group name, and the test
-                  name."))
+                  name.")
+
+      (nst-init :initarg :nst-init
+                :reader nst-init
+                :documentation
+                "NST initialization steps.  Should a list of lists, each of
+                 which gives arguments to run-nst-command/the REPL alias."))
 
   (:documentation "Class of ASDF systems that use NST for their test-op."))
 
@@ -166,6 +172,12 @@
 (defmethod operation-done-p ((o asdf:test-op) (c nst-testable))
   "Always re-run NST."
   (values nil))
+
+(defmethod perform :after ((o asdf:load-op) (c nst-testable))
+  "Run the NST initialization options for this system."
+  (let ((options (nst-init c)))
+    (loop for opt in options do
+      (apply #'nst:run-nst-command opt))))
 
 (defmethod perform ((o asdf:test-op) (c nst-testable))
   ;; First, run the tests that are local to this system.
