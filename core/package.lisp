@@ -41,7 +41,7 @@
 
              #:def-criterion-alias  #:def-check-alias
              #:def-values-criterion #:def-value-check
-             #:def-from-criterion   #:def-control-check
+             #:def-form-criterion   #:def-control-check
                                         ; def-check-alias,
                                         ; def-value-check and
                                         ; def-control-check will be
@@ -49,12 +49,14 @@
 
              #:continue-check
              #:emit-failure
+             #:add-failure
              #:emit-warning
              #:emit-success
              #:check-result
 
              #:run-package #:run-group #:run-test
              #:report-multiple #:report-package #:report-group #:report-test
+             #:run-nst-command
              #:nst-cmd
 
              #:nst-junit-dump
