@@ -56,7 +56,6 @@
 
              #:run-package #:run-group #:run-test
              #:report-multiple #:report-package #:report-group #:report-test
-             #:run-nst-command
              #:nst-cmd
 
              #:nst-junit-dump
@@ -64,7 +63,16 @@
 
              #:*nst-output-stream*
              #:*default-report-verbosity*
-             #:*debug-on-error*))
+             #:*debug-on-error*
+
+             #:arbitrary
+             #:compound-structure
+             #:def-arbitrary-instance-type
+
+             ;; If ever we break up the NST package, this name should
+             ;; go into the programmer's API package.
+             #:protect-nst-config
+             #:apply-debug-options))
 
 (defun nst::make-package-documentation ()
   "Write documentation for this package, using system package-doc."

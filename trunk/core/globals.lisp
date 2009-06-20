@@ -46,6 +46,18 @@
 (defvar *debug-on-error* nil
   "User variable: if non-null, will break into the Lisp REPL debugger upon encountering an unexpected error.  If t, will record the error and continue with other tests.")
 
+(defvar *nst-debug* nil
+  "User variable: apply customizable debugging settings.")
+
+(defvar *default-debug-config*
+    '(:nst-set ((:debug-on-error t) (:verbose :vverbose)))
+  "User variable: the default setting applied by default.  Should be a list of
+alternating keyword/forms matching:
+ - nst-set - list of lists, each with arguments to :nst :set
+ - progn   - list of forms to be evaluated")
+
+(defvar *default-debug-protect* nil)
+
 (defparameter *nst-info-shows-expected* nil
   "Debugging-oriented user flag: when tracing NST structures, print expected
 values as hardcoded by the macros, rather than recalled via the generic
@@ -73,6 +85,48 @@ current criterion.")
 
 (defparameter *nst-group-shown* nil
   "Dynamic-scoped variable tracking whether the name of a group has been printed, so that tests need not repeat it.")
+
+(defmacro protect-nst-config (&body forms)
+  `(let ((*nst-verbosity* *nst-verbosity*)
+         (*default-report-verbosity* *default-report-verbosity*)
+         (*debug-on-error* *debug-on-error*)
+         (*nst-info-shows-expected* *nst-info-shows-expected*)
+         (*nst-output-stream* *nst-output-stream*))
+     (declare (special *nst-verbosity*  *default-report-verbosity*
+                       *debug-on-error* *nst-info-shows-expected*
+                       *nst-output-stream*))
+     ,@forms))
+
+(defmacro apply-debug-options (forms-spec protect-vars &body forms)
+  (let ((protects (gensym)))
+    `(protect-nst-config
+      (let ((,protects (make-hash-table :test 'eq)))
+        (cond
+          (*nst-debug*
+           (destructuring-bind (&key nst-set progn) ,forms-spec
+             (declare (ignorable nst-set progn))
+             (loop for (name val) in nst-set do (run-nst-command :set name val))
+             (loop for form in progn do
+               (eval form))
+             (loop for (var-name . package-name) in ,protect-vars do
+               (when (boundp var-name)
+                 (setf (gethash (intern (symbol-name var-name)
+                                        (find-package package-name))
+                                ,protects)
+                       (symbol-value var-name))))))
+          (t nil))
+        (prog1 (progn ,@forms)
+          (when *nst-debug*
+            (loop for (var-name . package-name) in ,protect-vars do
+              (when (boundp var-name)
+                (setf (symbol-value var-name)
+                      (gethash (intern (symbol-name var-name)
+                                       (find-package package-name))
+                               ,protects))))))))))
+
+(defmacro apply-default-debug-options (&body forms)
+  `(apply-debug-options *default-debug-config* *default-debug-protect*
+      ,@forms))
 ;;;
 ;;; Internal tables.
 ;;;
