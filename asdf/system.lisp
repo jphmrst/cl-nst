@@ -68,10 +68,32 @@
                   name.")
 
       (nst-init :initarg :nst-init
+                :initform nil
                 :reader nst-init
                 :documentation
                 "NST initialization steps.  Should a list of lists, each of
-                 which gives arguments to run-nst-command/the REPL alias."))
+                 which gives arguments to run-nst-command/the REPL alias.")
+
+      (nst-debug-config :initarg :nst-debug-config
+                        :initform nst::*default-debug-config*
+                        :reader nst-debug-config
+                        :documentation
+                        "NST debugging customization for this system.  Should be
+                         a list of keyword arguments; see
+                         *nst-default-debug-config*.")
+      (nst-debug-protect :initarg :nst-debug-protect
+                         :initform nil
+                         :reader nst-debug-protect
+                         :documentation
+                         "Globals to be saved/restored in an NST debug run.
+                          List of elements (package . symbol)")
+      (nst-push-debug-config :initarg :nst-push-debug-config
+                             :initform nil
+                             :reader nst-push-debug-config
+                             :documentation
+                             "If non-null, then when this system is loaded
+                              its :nst-debug and :nst-debug-protect setting
+                              will be used as NST's defaults."))
 
   (:documentation "Class of ASDF systems that use NST for their test-op."))
 
@@ -177,7 +199,14 @@
   "Run the NST initialization options for this system."
   (let ((options (nst-init c)))
     (loop for opt in options do
-      (apply #'nst:run-nst-command opt))))
+      (apply #'nst::run-nst-command opt)))
+
+  ;; Check whether we should export our debug configuration as NST's
+  ;; defaults.  This allows the :run-test, :run-package, etc. commands
+  ;; to pick up a system's debug configuration.
+  (when (nst-push-debug-config c)
+    (setf nst::*default-debug-config* (nst-debug-config c)
+          nst::*default-debug-protect* (nst-debug-protect c))))
 
 (defmethod perform ((o asdf:test-op) (c nst-testable))
   ;; First, run the tests that are local to this system.
@@ -187,37 +216,42 @@
 
                    (packages nst-packages)
                    (group-specs nst-groups)
-                   (test-specs nst-tests)) c
-    (cond
+                   (test-specs nst-tests)
 
-      ;; For running a single package.
-      (single-package
-       (nst:run-package single-package))
+                   (debug-args nst-debug-config)
+                   (debug-protect nst-debug-protect)) c
+    (format t "debug-args ~s~%debug-protect ~s~%" debug-args debug-protect)
+    (apply-debug-options debug-args debug-protect
+      (cond
 
-      ;; For running a single group.
-      (single-group
-       (let ((group-actual (intern (symbol-name (cdr single-group))
-                                   (find-package (car single-group)))))
-         (nst:run-group group-actual)))
+       ;; For running a single package.
+       (single-package
+        (nst:run-package single-package))
 
-      ;; For running a single test.
-      (single-test
-       (let ((group-actual (intern (symbol-name (cadr single-test))
-                                   (find-package (car single-test))))
-             (test-actual (intern (symbol-name (caddr single-test))
-                                  (find-package (car single-test)))))
-         (nst:run-test group-actual test-actual)))
+       ;; For running a single group.
+       (single-group
+        (let ((group-actual (intern (symbol-name (cdr single-group))
+                                    (find-package (car single-group)))))
+          (nst:run-group group-actual)))
 
-      ;; For running possibly several (or none) of each.
-      (t
-       (loop for pk in packages do (nst:run-package pk))
-       (loop for spec in group-specs do
-         (let ((group (group-spec-symbol spec)))
-           (nst:run-group group)))
-       (loop for spec in test-specs do
-         (multiple-value-bind (group test) (test-spec-symbols spec)
-           (nst:run-test group test)
-           (cons group test))))))
+       ;; For running a single test.
+       (single-test
+        (let ((group-actual (intern (symbol-name (cadr single-test))
+                                    (find-package (car single-test))))
+              (test-actual (intern (symbol-name (caddr single-test))
+                                   (find-package (car single-test)))))
+          (nst:run-test group-actual test-actual)))
+
+       ;; For running possibly several (or none) of each.
+       (t
+        (loop for pk in packages do (nst:run-package pk))
+        (loop for spec in group-specs do
+              (let ((group (group-spec-symbol spec)))
+                (nst:run-group group)))
+        (loop for spec in test-specs do
+              (multiple-value-bind (group test) (test-spec-symbols spec)
+                (nst:run-test group test)
+                (cons group test)))))))
 
   ;; Now, report all the results from both this system, and
   ;; subordinated systems.

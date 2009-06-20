@@ -20,29 +20,6 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
-;;;
-;;; Generating status data within checks.
-;;;
-
-(defun emit-warning (&key format args)
-  "For use within user-defined check criteria: emit a warning."
-  (declare (special *nst-context* *nst-stack* *nst-check-name*))
-  (check-result
-   :warnings (list (make-check-note :context *nst-context* :stack *nst-stack*
-                                    :format format :args args))))
-(defun emit-failure (&key format args info)
-  "For use within user-defined check criteria: explain a failure."
-  (declare (special *nst-context* *nst-stack* *nst-check-name*))
-  (check-result
-   :failures (list (make-check-note :context *nst-context* :stack *nst-stack*
-                                    :format format :args args))
-   :info info))
-(defun emit-success ()
-  "For use within user-defined check criteria: record a successful check."
-  (check-result))
-
-
-
 #+allegro
 (defmacro make-backtrace-lines ()
   `(let ((raw (with-output-to-string (stream)
@@ -294,8 +271,9 @@ instances, and the info field is of any value."
            ;;
            (t (format s "Check ~a ~:[(group ~a) ~;~*~]~
                                  ~:[failed~*~;passed~:[~; with warnings~]~]~
-                           : ~@<~@{~:[~2*~;~a~:@_~{ - ~w~^~:@_~}~]~}~:>"
+                           ~:[~;: ~@<~@{~:[~2*~;~a~:@_~{ - ~w~^~:@_~}~]~}~:>~]"
                 check-name *nst-group-shown* group-name succeeded warnings
+                (or errors failures warnings)
                 errors "Errors:" errors  failures "Failures:" failures
                 warnings "Warnings:" warnings)))))))
 
@@ -699,3 +677,46 @@ six-value summary of the results:
       *nst-info-shows-expected*)
     (format stream "Stored test results:~%")
     (format stream "~w" report)))
+
+;;;
+;;; Generating status data within checks.
+;;;
+
+(defun emit-warning (&key format args)
+  "For use within user-defined check criteria: emit a warning."
+  (declare (special *nst-context* *nst-stack* *nst-check-name*))
+  (check-result
+   :warnings (list (make-check-note :context *nst-context* :stack *nst-stack*
+                                    :format format :args args))))
+
+(defun emit-failure (&key format args info)
+  "For use within user-defined check criteria: explain a failure."
+  (declare (special *nst-context* *nst-stack* *nst-check-name*))
+  (check-result
+   :failures (list (make-check-note :context *nst-context* :stack *nst-stack*
+                                    :format format :args args))
+   :info info))
+(defun add-failure (result &key format args)
+  "For use within user-defined check criteria: add a failure to a result."
+  (declare (special *nst-context* *nst-stack* *nst-check-name*))
+
+  (push (make-check-note :context *nst-context* :stack *nst-stack*
+                         :format format :args args)
+        (check-result-failures result)))
+
+(defun emit-success ()
+  "For use within user-defined check criteria: record a successful check."
+  (check-result))
+
+(defun add-error (result &key format args)
+  "For use within user-defined check criteria: add an error to a result."
+  (declare (special *nst-context* *nst-stack* *nst-check-name*))
+
+  (push (make-check-note :context *nst-context* :stack *nst-stack*
+                         :format format :args args)
+        (check-result-errors result)))
+
+(defun add-info (result item)
+  "For use within user-defined check criteria: add an info note to a result."
+  (declare (special *nst-context* *nst-stack* *nst-check-name*))
+  (push item (check-result-info result)))
