@@ -88,6 +88,10 @@ interactive namespace for debugging with the
   3
   CL-USER(79): 
 \end{verbatim}
+Fixtures can be opened into a different package than where they were
+first defined, but these bindings are in addition to the bindings in
+the original package, and are made by a symbol import to the
+additional package.
 
 Calling \texttt{:nst} or \texttt{(nst-cmd}) without a command argument
 repeats the last test-executing command.
