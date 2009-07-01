@@ -67,7 +67,9 @@
     (format-args (setf format (car format) args (cdr args)))
     (t (setf format "~w" args (list e))))
   (let ((other-args nil))
-    #+allegro (setf other-args (list* :zoom (make-backtrace-lines) other-args))
+    #+(and allegro (not macosx)) (setf other-args
+                                       (list* :zoom (make-backtrace-lines)
+                                              other-args))
     (make-check-result :erring 1
                        :errors (list (apply #'make-error-check-note
                                             :context *nst-context*
