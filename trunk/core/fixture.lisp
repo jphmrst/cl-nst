@@ -129,20 +129,25 @@ use of this fixture.
            (call-next-method)))
 
        ;; Function for expanding names into the current namespace.
-       (defmethod open-fixture ((f ,name) &optional (in-package *package*))
+       (defmethod open-fixture ((f ,name) &optional
+                                (in-package *package* in-package-supp-p))
          ,@(when documentation `(,documentation))
          (declare (special ,@(loop for used-fixture in uses
-                                 append (bound-names used-fixture))
-                           ,@assumes))
+                                   append (bound-names used-fixture))
+                           ,@(loop for var-form in bindings
+                                   collect (car var-form))
+                           ,@assumes
+                           *open-via-repl*))
+         (when (and in-package-supp-p (not *open-via-repl*))
+           (warn "Use of the optional package argument to open-fixture is deprecated, ~
+                  and is likely to be removed in a future version."))
          (unless (packagep in-package)
            (setf in-package (find-package in-package)))
-         (setf ,@(loop for (var form) in bindings
-                     append
-                       (cond
-                        (name `((symbol-value (intern (symbol-name ',var)
-                                                      in-package))
-                                ,form))
-                        (t nil))))
+         ,@(loop for (var form) in bindings
+               collect
+                 `(setf ,(cond (var `(symbol-value (intern (symbol-name ',var) in-package)))
+                               (t (gensym)))
+                        ,form))
          ',name)
 
        (defmethod trace-fixture ((f ,name))

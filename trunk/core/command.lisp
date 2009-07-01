@@ -185,8 +185,10 @@ available from compile-time forward.")
     (:open :short-help "Inject fixtures into the current name space."
            :args (&rest fixtures)
            :repeatable t)
-    (loop for fixture in fixtures do
-      (open-fixture fixture)))
+    (let ((*open-via-repl* t))
+      (declare (special *open-via-repl*))
+      (loop for fixture in fixtures do
+        (open-fixture fixture))))
 
 (def-nst-interactive-command
     (:run-package :short-help "Run all NST tests stored in the given packages."
