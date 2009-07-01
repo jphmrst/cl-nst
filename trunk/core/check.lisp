@@ -153,7 +153,7 @@ Example:
           (list "~@<~?~_~@<~:~{@_  ~s~}~:>~:>"
                 (car blurb-format) (cdr blurb-format) forms)
           blurb-format)))
-    `(eval-when (:compile-toplevel :load-toplevel)
+    `(eval-when (:compile-toplevel :load-toplevel :execute)
        #+allegro (eval-when (:load-toplevel)
                    (excl:record-source-file ',name :type :nst-criterion))
        (defmethod blurb-context-line (,stream (,id (eql ',name)) ,args ,forms)
