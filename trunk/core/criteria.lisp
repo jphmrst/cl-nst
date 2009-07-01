@@ -41,24 +41,24 @@
 (def-values-criterion (:eq (eq-form) (check-form))
   `(if (eq ,eq-form check-form)
      (check-result)
-     (emit-failure :format "Not eq to ~s" :args '(,eq-form))))
+     (emit-failure :format "Not eq to value of ~s" :args '(,eq-form))))
 
 (def-criterion-alias (:symbol name) `(:eq ',name))
 
 (def-values-criterion (:eql (eql-form) (check-form))
   `(if (eql ,eql-form check-form)
      (check-result)
-     (emit-failure :format "Not eql to ~s" :args '(,eql-form))))
+     (emit-failure :format "Not eql to value of ~s" :args '(,eql-form))))
 
 (def-values-criterion (:equal (eql-form) (check-form))
   `(if (equal ,eql-form check-form)
      (check-result)
-     (emit-failure :format "Not equal to ~s" :args '(,eql-form))))
+     (emit-failure :format "Not equal to value of ~s" :args '(,eql-form))))
 
 (def-values-criterion (:equalp (eql-form) (check-form))
   `(if (equalp ,eql-form check-form)
      (check-result)
-     (emit-failure :format "Not equalp to ~s" :args '(,eql-form))))
+     (emit-failure :format "Not equalp to value of ~s" :args '(,eql-form))))
 
 (def-criterion-alias (:forms-eq)    `(:predicate eq))
 (def-criterion-alias (:forms-eql)   `(:predicate eql))
