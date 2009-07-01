@@ -8,6 +8,6 @@ docs:
 	@echo - Quick reference card in doc/quickref/quickref.pdf
 
 clean:
-	rm -f *.fasl \
-		doc/*/*.ps  doc/*/*.dvi doc/*/*.aux doc/*/*.log doc/*/*.toc \
-		doc/*/*.idx doc/*/*.out doc/*/*.pdf doc/*/*.ilg doc/*/*.ind
+	rm -f *.fasl *.ps */*.ps */*/*.ps \
+	      doc/*/*.dvi doc/*/*.aux doc/*/*.log doc/*/*.toc \
+	      doc/*/*.idx doc/*/*.out doc/*/*.pdf doc/*/*.ilg doc/*/*.ind
