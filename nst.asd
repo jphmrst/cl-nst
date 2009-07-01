@@ -75,4 +75,8 @@
 
                            ;; Generating JUnit-friendly XML.
                            (:file "junit"
-                                  :depends-on ("status"))))))
+                                  :depends-on ("status"))
+
+                           ;; Sample-testing predicates.
+                           (:file "sampling"
+                                  :depends-on ("check"))))))

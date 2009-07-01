@@ -9,6 +9,7 @@
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: t
+%%% TeX-PDF-mode: t
 %%% End: 
 
 \documentclass{article}
@@ -31,7 +32,7 @@
 \thispagestyle{empty}
 \begin{center}
   \LARGE Getting started with NST\footnote{This document was last
-    updated for NST version 1.1.0.  Written by John Maraist, Smart
+    updated for NST version 1.1.1.  Written by John Maraist, Smart
     Information Flow Technologies, 211 N.\ First St.\ Suite 300,
     Minneapolis, MN 55401; \textsl{jmaraist} at \textsl{sift.info}.}
 \end{center}
@@ -110,6 +111,7 @@ but a no-argument criterion use \texttt{(NAME)} can be abbreviated as
 \def\criteriaDoc#1#2#3#4#5#6#7#8{\criterion{#2}{#3}{#5}{#4}}
 \def\noExpl{}
 \def\hasExpl#1{}
+\def\manualOrRef#1#2{#2}
 \input{../common/criteria}
 
 \section*{Interactive debugging}

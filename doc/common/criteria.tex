@@ -114,7 +114,7 @@ of the forms following the criterion.}
 \begin{criteriaGroup}{Compound criteria}{}
 
 \kwdCriteriaDoc{not}{(:not CRITERION)}
-{Passes when testing according to \texttt{CRITERION} either fails (but
+{Passes when testing according to \texttt{CRITERION} fails (but
 does not throw an error).}
 {As required by the subordinate criterion.}
 {\noExpl}
@@ -302,6 +302,15 @@ work on many platforms, since the CL specification defines
 \\ \>  (m\=ake-instance 'classcheck
 \\ \> \>  :s1 10 :s2 'zz :s3 '(q w e r)))
 }
+
+\end{criteriaGroup}
+
+\begin{criteriaGroup}{Special criteria}{}
+
+\kwdCriteriaDoc{sample}{(:sample \&key domains where verify values sample-size qualifying-sample max-tries)}
+{Experimentally test a program property by generating random data.  See \manualOrRef{Section~\ref{quickcheck}}{the users' manual} for more information.}
+{Forms must match lambda list \texttt{values}.}
+{\noExpl}{\noEx}{}
 
 \end{criteriaGroup}
 
