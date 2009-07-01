@@ -22,31 +22,44 @@
 
 #+allegro
 (defmacro make-backtrace-lines ()
-  `(let ((raw (with-output-to-string (stream)
-                (let ((top-level:*zoom-print-circle* nil)
-                      (*print-right-margin* 1000000))
-                  (declare (special top-level:*zoom-print-circle*
-                                    *print-right-margin*))
-                  (top-level.debug:zoom stream :function nil :verbose nil
-                                        :moderate t :specials nil
-                                        :length 5 :level nil)))))
+  `(block backtrace-maker
+     (let ((raw (with-output-to-string (stream)
+                  (let ((top-level:*zoom-print-circle* nil)
+                        (*print-right-margin* 1000000))
+                    (declare (special top-level:*zoom-print-circle*
+                                      *print-right-margin*))
+                    (top-level.debug:zoom stream :function nil :verbose nil
+                                          :moderate t :specials nil
+                                          :length 5 :level nil)))))
 
-     (let ((lines (loop for spot = (position #\Newline raw)
-                      while spot
-                      collect (string-left-trim " ->" (subseq raw 0 spot))
-                      do (setf raw (subseq raw (+ 1 spot))))))
-       (pop lines)
-       (pop lines)
+       (handler-bind ((error #'(lambda (cnd)
+                                 (declare (ignorable cnd))
+                                 (return-from backtrace-maker
+                                   (list "Caught error while formatting backtrace, returning raw lines"
+                                         raw)))))
+         (let ((lines (loop for spot = (position #\Newline raw)
+                          while spot
+                          collect (string-left-trim " ->" (subseq raw 0 spot))
+                          do (setf raw (subseq raw (+ 1 spot))))))
+           (pop lines)
+           (pop lines)
 
-       (loop while (not (search "emit-error " (car lines))) do (pop lines))
-       (pop lines)
-       (if (search ":internal" (car lines)) (pop lines))
-       (loop while (search "core-run-test" (car lines)) do (pop lines))
-       (let ((first (position-if #'(lambda (x) (search "core-run-test" x))
-                                 lines)))
-         (setf lines (subseq lines 0 first)))
+           (handler-bind
+               ((error #'(lambda (cnd)
+                           (declare (ignorable cnd))
+                           (return-from backtrace-maker
+                             (list* "Caught error while identifying backtrace core, returning raw lines"
+                                    lines)))))
+             (loop while (not (search "emit-error " (car lines)))
+                 do (pop lines))
+             (pop lines)
+             (if (search ":internal" (car lines)) (pop lines))
+             (loop while (search "core-run-test" (car lines)) do (pop lines))
+             (let ((first (position-if #'(lambda (x) (search "core-run-test" x))
+                                       lines)))
+               (setf lines (subseq lines 0 first)))
 
-       lines)))
+             lines))))))
 
 (defun emit-error (e &rest format-args &aux format args)
   (declare (special *nst-context* *nst-stack*))
@@ -54,7 +67,7 @@
     (format-args (setf format (car format) args (cdr args)))
     (t (setf format "~w" args (list e))))
   (let ((other-args nil))
-    ;; #+allegro (setf other-args (list* :zoom (make-backtrace-lines) other-args))
+    #+allegro (setf other-args (list* :zoom (make-backtrace-lines) other-args))
     (make-check-result :erring 1
                        :errors (list (apply #'make-error-check-note
                                             :context *nst-context*
