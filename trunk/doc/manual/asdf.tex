@@ -1,10 +1,9 @@
 \section{Integration with ASDF}
-
-The easiest way to use NST in a project is through ASDF.  NST provides
-an extension \texttt{asdf:nst-testable} of class \texttt{asdf:system}.
-Specify that a system should be \texttt{nst-testable} with the
-\texttt{:class} argument to \texttt{asdf:defsystem}, and provide one
-or more of the following additional arguments:
+NST provides an extension \texttt{asdf:nst-testable} of class
+\texttt{asdf:system} to help automate testing.  Specify that a system
+should be \texttt{nst-testable} with the \texttt{:class} argument to
+\texttt{asdf:defsystem}, and provide one or more of the following
+additional arguments:
 \begin{itemize}
 \item\texttt{:nst-systems ({\slshape system} {\slshape system}
     $\cdots$ {\slshape system})}\par Specifies a list of other systems
@@ -23,7 +22,7 @@ or more of the following additional arguments:
     {\slshape test}))}\par When the system is tested, all the named
   tests should be run.
 \end{itemize}
-The last three arguments to an \texttt{nst-testable} system are
+The next three arguments to an \texttt{nst-testable} system are
 mutually exclusive, and moreover exclude any of the above arguments:
 \begin{itemize}
 \item\texttt{:nst-package {\slshape package}}\par When the system is
@@ -35,8 +34,16 @@ mutually exclusive, and moreover exclude any of the above arguments:
       test})}\par When the system is tested, the given test should be
   run.
 \end{itemize}
-Figure~\ref{fig:asdf} gives examples of \texttt{nst-testable} ASDF
-system definitions.
+Another optional argument to an \texttt{nst-testable} system
+definition is:
+\begin{itemize}
+\item\texttt{:nst-init ({\slshape arg-list ...\ arg-list})}\par
+  Initializing arguments to NST, to be executed after this system is
+  loaded.  Each \texttt{arg-list} is passed as the arguments as if to
+  a call to the \texttt{nst-cmd} macro.
+\end{itemize}
+Figure~\ref{fig:asdf} gives examples of \texttt{nst-testable}
+ASDF system definitions.
 \begin{figure}
 \begin{verbatim}
 ;; NST and its ASDF interface must be loaded

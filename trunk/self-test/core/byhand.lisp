@@ -2,7 +2,7 @@
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
-;;; Copyright (c) 2006, 2007, 2008 Smart Information Flow Technologies.
+;;; Copyright (c) 2006-2009 Smart Information Flow Technologies.
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
 ;;; NST is free software: you can redistribute it and/or modify it
@@ -37,23 +37,23 @@
 (def-fixtures fix3 () (z3 (format t "Bindings from fix3~%")))
 
 (def-test-group gr0 (fix1))
-(def-test-group gr1 (fix1) (def-check t1 :echo ()))
-(def-test-group gr2a (fix1) (def-check ts1 :echo ()) (def-check ts2 :echo ()))
+(def-test-group gr1 (fix1) (def-test t1 :echo ()))
+(def-test-group gr2a (fix1) (def-test ts1 :echo ()) (def-test ts2 :echo ()))
 (def-test-group gr2b (fix1)
   (:setup   (format t "  Setup for group gr2b~%"))
   (:cleanup (format t "  Cleanup for group gr2b~%"))
   (:each-setup   (format t "          Setup for each test of group gr2b~%"))
   (:each-cleanup (format t "          Cleanup for each test of group gr2b~%"))
-  (def-check (ts1 :fixtures (fix2)
+  (def-test (ts1 :fixtures (fix2)
                   :setup (format t "            Setup for ts1~%")
                   :cleanup (format t "            Cleanup for ts1~%"))
       :echo ())
-  (def-check ts2 :echo ()))
+  (def-test ts2 :echo ()))
 
 (def-test-group failures ()
-  (def-check f-1 (:seq (:symbol a) (:eql 3) (:eq 'b)) '(a 2 b))
-  (def-check f-2 (:seq (:symbol a) (:eql 3) (:eq 'b)) (error "boom"))
-  (def-check nofail (:seq (:symbol a) (:eql 3) (:eq 'b)) '(a 3 b))
+  (def-test f-1 (:seq (:symbol a) (:eql 3) (:eq 'b)) '(a 2 b))
+  (def-test f-2 (:seq (:symbol a) (:eql 3) (:eq 'b)) (error "boom"))
+  (def-test nofail (:seq (:symbol a) (:eql 3) (:eq 'b)) '(a 3 b))
   )
 
 (eval-when (:load-toplevel :execute)
@@ -67,8 +67,8 @@
 (defvar zzz 0)
 (defvar yyy 10)
 (def-test-group changers ()
-  (def-check zzz-10 (:eql 10) zzz)
-  (def-check yyy-10 (:eql 10) yyy)
+  (def-test zzz-10 (:eql 10) zzz)
+  (def-test yyy-10 (:eql 10) yyy)
   )
 
 (def-test-group show-setup ()
@@ -76,8 +76,8 @@
   (:cleanup (format t "  C group~%"))
   (:each-setup   (format t "    S-each group~%"))
   (:each-cleanup (format t "    C-each group~%"))
-  (def-check ts1 :pass (format t "      ts1~%"))
-  (def-check ts2 :pass (format t "      ts2~%")))
+  (def-test ts1 :pass (format t "      ts1~%"))
+  (def-test ts2 :pass (format t "      ts2~%")))
 
 (def-fixtures simple-fixture ()
   (magic-number 120)
@@ -89,3 +89,28 @@
   (def-test (with-magic :fixtures (simple-fixture))
       (:eql 120)
     magic-number))
+
+(def-test-group samples ()
+  (def-test bad-reverse
+      (:sample :sample-size 10
+               :domains ((x (list :elem symbol)))
+               :verify (progn (format t "Testing with ~s~%" x)
+                              (equal x (reverse x)))))
+  (def-test err-reverse
+      (:sample :sample-size 10
+               :domains ((x (list :elem symbol)))
+               :verify (progn (format t "Testing with ~s~%" x)
+                              (equal x (reverse (error "boom"))))))
+
+  (def-test reverse
+      (:sample :sample-size 10
+               :domains ((x (list :elem symbol)))
+               :verify (progn (format t "Testing with ~s~%" x)
+                              (equal x (reverse (reverse x))))))
+  (def-test sqrt
+      (:sample :sample-size 10
+               :max-tries 12
+               :domains ((x real))
+               :where (progn (format t "Considering ~a~%" x)
+                             (> x 1))
+               :verify (< (sqrt x) x))))
