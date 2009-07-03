@@ -1,7 +1,6 @@
 
 1.1.2 -
-
- Add deprecation warnings to several disused macros.
+ Deprecation warnings on several disused macros.
  Clarified error output message for :eq/:eql/:equal/:equalp.
  Ticket 98 - customizable meaning for ":nst :debug" via ASDF.
  Ticket 99 - fixed Makefile for documentation.
@@ -10,4 +9,4 @@
  Ticket 103 discussion - now using "import" for ":nst :open".
  New criterion for quickcheck-style sampling of generated data.
 
-1.1.1 - First public release.
+1.1.1 - First public release, June 2009.
