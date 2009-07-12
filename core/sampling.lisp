@@ -126,7 +126,7 @@
            ((< raw 0) raw)
            (t (+ 1 raw))))))
 
-#-allegro
+#-(or allegro sbcl)
 (def-arbitrary-instance-type (short-float :scalar t)
                (coin-flip (random most-positive-short-float)
                           (- (random (- least-negative-short-float)))))
@@ -139,7 +139,7 @@
     (coin-flip (random most-positive-double-float)
                 (- (random (- least-negative-double-float)))))
 
-#-allegro
+#-(or allegro sbcl)
 (def-arbitrary-instance-type (long-float :scalar t)
      (coin-flip (random most-positive-long-float)
                 (- (random (- least-negative-long-float)))))
@@ -314,15 +314,15 @@
   (:method ((n (eql (find-class 'ratio))))   n)
 
   (:method ((n (eql (find-class 'float))))
-     (coin-flip #-allegro (find-class 'short-float)
+     (coin-flip #-(or sbcl allegro) (find-class 'short-float)
                 (find-class 'single-float)
                 (find-class 'double-float)
-                #-allegro (find-class 'long-float)))
+                #-(or allegro sbcl) (find-class 'long-float)))
 
-  #-allegro (:method ((n (eql (find-class 'short-float)))) n)
+  #-(or allegro sbcl) (:method ((n (eql (find-class 'short-float)))) n)
   (:method ((n (eql (find-class 'single-float)))) n)
   (:method ((n (eql (find-class 'double-float)))) n)
-  #-allegro (:method ((n (eql (find-class 'long-float)))) n)
+  #-(or allegro sbcl) (:method ((n (eql (find-class 'long-float)))) n)
 
   (:method ((n (eql (find-class 'complex)))) n))
 
