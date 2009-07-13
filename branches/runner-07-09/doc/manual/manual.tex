@@ -1,0 +1,68 @@
+%% File manual.tex
+%%
+%% NST by John Maraist, based on RRT by Robert Goldman.
+%%
+%% NST is Copyright (c) 2006-2009 Smart Information Flow Technologies.
+%% RRT is Copyright (c) 2005 Robert Goldman, released under the LGPL,
+%% and the Lisp-specific preamble to that license.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% TeX-PDF-mode: t
+%%% End: 
+
+\documentclass{article}
+\usepackage{array}
+\usepackage{makeidx}
+\usepackage{tightlist}
+\usepackage[pdftex]{hyperref}
+\title{NST 1.1 users' manual}
+\setcounter{tocdepth}{2}
+\makeindex
+\parskip 0.6em
+\parindent 0pt
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+\parskip -0.5em
+
+\noindent This document is the manual and users' guide to the NST test
+framework.  NST is a unit test system for Common Lisp which provides
+support for test fixture data, stateful setup and cleanup of tests,
+grouping of tests, and (we think!) a useful runtime interface.
+Suggestions and comments are welcome; a list of known bugs and
+infelicities concludes this document.  The files in the NST
+distribution's \texttt{self-test} directory, especially
+\texttt{self-test/core/builtin-checks.lisp}, holds the NST tests for
+NST and contain many examples (some of which we have adapted for this
+manual).
+
+\tableofcontents
+\parskip 0.6em
+\parindent 0pt
+
+\paragraph{Contributors.}
+The primarily author of both NST and this manual is John
+Maraist\footnote{Smart Information Flow Technologies, 211 North First
+  Street, Suite 300, Minneapolis, MN 55401; \textsl{jmaraist} at
+  \textsl{sift.info}.}.  Robert P.\ Goldman provided guidance,
+comments and suggestions through the development.  Other contributors:
+Mike Pelican, Steve Harp and Michael Atighetchi.
+\cleardoublepage
+\addtocontents{toc}{\setcounter{tocdepth}{1}}
+
+\input{fixtures}
+\input{groups}
+\input{checks}
+\input{criteria}
+\input{quickcheck}
+\input{runtime}
+\input{asdf}
+\appendix
+\addtocontents{toc}{\setcounter{tocdepth}{1}}
+\input{junit}
+\input{issues}
+\printindex
+\end{document}
