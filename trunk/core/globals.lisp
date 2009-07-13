@@ -370,6 +370,162 @@ encoded as :before and :after methods.")
       (t
        (error 'no-nst-groups-in-package :package package-or-name)))))
 
+;;; --------------------------------------------------------------
+;;; This section of function definitions is not immediately in use,
+;;; but I'm planning to shift over to them to eliminate (all but one)
+;;; side package creation, and to (mostly) reduce class generation to
+;;; one per fixture/class/test (the exception being 2nd class per
+;;; fixture applied to a test).
+
+(defun run-group-tests (group-obj)
+  "Programmatic entry point for running all tests in a group."
+  (do-group-prefixture-setup group-obj)
+  (do-group-fixture-assignment group-obj)
+  (do-group-afterfixture-cleanup group-obj))
+
+(defgeneric do-group-prefixture-setup (group-obj)
+  (:documentation
+   "Pre-fixture group application setup specs add a method to this function.")
+  (:method-combination progn)
+  (:method progn (group-obj) (declare (ignorable group-obj))))
+
+(defgeneric do-group-afterfixture-cleanup (group-obj)
+  (:documentation
+   "After-group fixture cleanup specs add a method to this function.")
+  (:method-combination progn)
+  (:method progn (group-obj) (declare (ignorable group-obj))))
+
+(defgeneric do-group-fixture-assignment (group-obj)
+  (:documentation
+   "Fixture declarations translate to an :around method making let* bindings
+for the group application class.")
+  (:method progn (group-obj)
+     (do-group-postfixture-setup group-obj)
+     (do-group-test-iteration group-obj)
+     (do-group-withfixture-cleanup group-obj)))
+
+(defgeneric do-group-postfixture-setup (group-obj)
+  (:documentation "Fixture setup specs add a method to this function
+for the group application class.")
+  (:method-combination progn)
+  (:method progn (group-obj) (declare (ignorable group-obj))))
+
+(defgeneric do-group-withfixture-cleanup (group-obj)
+  (:documentation "With-fixtures cleanup specs add a method to this function
+for the group application class.")
+  (:method-combination progn)
+  (:method progn (group-obj) (declare (ignorable group-obj))))
+
+(defun do-group-test-iteration (group-inst)
+  ;; We might manually inline this function inside
+  ;; do-group-fixture-assignment --- I think no one else will call it.
+
+  (let ((group-name (group-name group-inst)))
+    (when (> *nst-verbosity* 3)
+      (format t "    Starting run loop for ~s~%" group-inst))
+    (loop for test in (test-names group-inst) do
+          (when (> *nst-verbosity* 3)
+            (format t "      Starting loop entry ~s~%" test))
+          (let ((in-suite-class-name (suite-class-name group-name test)))
+            (when (> *nst-verbosity* 3)
+              (format t "    Suite class name ~s~%" in-suite-class-name)
+              (format t "    Actual class ~s~%"
+                (find-class in-suite-class-name)))
+            (let ((test-inst (make-instance in-suite-class-name)))
+              (when (> *nst-verbosity* 3)
+                (format t "    Instance ~s~%" test-inst))
+              (do-test-main test-inst)))
+          ;; (format t "      Exiting loop entry ~s~%" test)
+          )
+    ;;(format t "    Exiting run loop for ~s~%" group-inst)
+    ))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(defun run-standalone-test (test-obj)
+  "Programmatic entry point for running a standalone test."
+  (do-standalone-pre-group-fixture-setup test-obj)
+  (do-standalone-group-fixture-assignment test-obj)
+  (do-standalone-after-group-fixture-cleanup test-obj))
+
+(defgeneric do-standalone-pre-group-fixture-setup (testobj)
+  (:documentation
+   "Pre-fixture application setup specs add a method to this function
+for the group application class.")
+  (:method-combination progn)
+  (:method progn (testobj) (declare (ignorable testobj))))
+
+(defgeneric do-standalone-after-group-fixture-cleanup (standalone-testobj)
+  (:documentation
+   "After-group fixture cleanup specs add a method to this function
+for the group application class.")
+  (:method-combination progn)
+  (:method progn (standalone-testobj) (declare (ignorable standalone-testobj))))
+
+(defgeneric do-standalone-group-fixture-assignment (standalone-testobj)
+  (:documentation
+   "Fixture declarations translate to an :around method making let* bindings
+for the group application class.")
+  (:method (testobj)
+     (do-standalone-with-group-fixture-setup testobj)
+     (do-test-main testobj)
+     (do-standalone-with-group-fixture-cleanup testobj)))
+
+(defgeneric do-standalone-with-group-fixture-setup (testobj)
+  (:documentation "Fixture setup specs add a method to this function
+for the group application class.")
+  (:method-combination progn)
+  (:method progn (standalone-testobj) (declare (ignorable standalone-testobj))))
+
+(defgeneric do-standalone-with-group-fixture-cleanup (testobj)
+  (:documentation "With-fixtures cleanup specs add a method to this function
+for the group application class.")
+  (:method-combination progn)
+  (:method progn (testobj) (declare (ignorable testobj))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(defun do-test-main (test-inst)
+  "Test execution gateway for both group and standalone execution."
+  (do-test-prefixture-setup test-inst)
+  (do-test-fixture-assignment test-inst)
+  (do-test-afterfixture-cleanup test-inst))
+
+(defgeneric do-test-prefixture-setup (test-obj)
+  (:documentation
+   "Pre-fixture test application setup specs add a method to this function.")
+  (:method-combination progn)
+  (:method progn (test-obj) (declare (ignorable test-obj))))
+
+(defgeneric do-test-afterfixture-cleanup (test-obj)
+  (:documentation
+   "After-test fixture cleanup specs add a method to this function.")
+  (:method-combination progn)
+  (:method progn (test-obj) (declare (ignorable test-obj))))
+
+(defgeneric do-test-fixture-assignment (test-obj)
+  (:documentation
+   "Fixture declarations translate to an :around method making let* bindings
+for the test application class.")
+  (:method (test-obj)
+     (do-test-postfixture-setup test-obj)
+     (core-run-test test-obj)
+     (do-test-withfixture-cleanup test-obj)))
+
+(defgeneric do-test-withfixture-cleanup (test-obj)
+  (:documentation "Fixture setup specs add a method to this function
+for the test application class.")
+  (:method-combination progn)
+  (:method progn (test-obj) (declare (ignorable test-obj))))
+
+(defgeneric do-test-postfixture-setup (test-obj)
+  (:documentation "With-fixtures cleanup specs add a method to this function
+for the test application class.")
+  (:method-combination progn)
+  (:method progn (test-obj) (declare (ignorable test-obj))))
+
+;;; ------------------------------------------------------------
+
 (defun run-group (group)
   "Run a group by its user-given name."
   (let ((group-class (group-class-name group)))
