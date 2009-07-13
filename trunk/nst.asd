@@ -45,6 +45,13 @@
                            ;; Flags and generic function declarations.
                            (:file "globals"  :depends-on ("errors" "utils"))
 
+                           ;;
+                           (:file "artifacts"  :depends-on ("globals"))
+
+                           ;; Main control flow of test and group
+                           ;; execution.
+                           (:file "runner"  :depends-on ("artifacts"))
+
                            ;; The def-group macro.
                            (:file "group" :depends-on ("globals"))
 
