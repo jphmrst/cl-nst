@@ -26,7 +26,6 @@
 (in-package :asdf-nst-test)
 
 (def-test-group group1 ()
-  (def-check pass-1 :pass 'a)
-  (def-check fail-1 (:not :fail) 'a)
-  (def-check seq (:seq (:pass) (:eql 4)) (list 3 (+ 1 3)))
-  )
+  (def-test pass-1 :pass 'a)
+  (def-test fail-1 (:not :fail) 'a)
+  (def-test seq (:seq (:pass) (:eql 4)) (list 3 (+ 1 3))))

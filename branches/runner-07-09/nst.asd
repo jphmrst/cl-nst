@@ -53,16 +53,18 @@
                            (:file "runner"  :depends-on ("artifacts"))
 
                            ;; The def-group macro.
-                           (:file "group" :depends-on ("globals"))
+                           (:file "group" :depends-on ("artifacts"))
 
-                           ;; The def-check macro, and the general
-                           ;; expansion and handling of check
+                           ;; Definition and expansion of check
                            ;; criteria.
-                           (:file "check" :depends-on ("globals"))
+                           (:file "check" :depends-on ("artifacts"))
+
+                           ;; The def-check macro.
+                           (:file "test-def" :depends-on ("check"))
 
                            ;; The def-fixture macro, and processing
                            ;; anonymous fixture declarations.
-                           (:file "fixture"  :depends-on ("globals"))
+                           (:file "fixture"  :depends-on ("artifacts"))
 
                            ;; Helper functions for permuting lists.
                            (:file "permuter" :depends-on ("package"))

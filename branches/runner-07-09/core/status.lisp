@@ -497,8 +497,8 @@ six-value summary of the results:
 
 (defun test-report (group test)
   "Top-level function for reporting the results of a test."
-  (gethash (canonical-storage-name (standalone-class-name group test))
-           +results-record+))
+  (declare (ignorable group))
+  (gethash (check-name test) +results-record+))
 
 (defun multiple-report (packages groups tests &key system)
   (let* ((package-reports (loop for p in packages collect (package-report p)))

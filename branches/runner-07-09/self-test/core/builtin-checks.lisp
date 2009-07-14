@@ -41,7 +41,7 @@
   (def-test (fix0 :fixtures (f1)) :true (boundp 'c)))
 
 (def-test-group g1a1 ()
-  (def-test (fix0 :fixtures (f1)) :true (boundp 'c)))
+  (def-test (fix1 :fixtures (f1)) :true (boundp 'c)))
 
 (def-fixtures f2 (:uses (f1))
   (d 4) (e 'asdfg) (f c))
@@ -53,12 +53,12 @@
   (def-test using-c :true (boundp 'c)))
 
 (def-test-group g3a (f1)
-  (def-test fix0 :true (boundp 'c))
-  (def-test fix1 :true (not (boundp '*this-name-should-not-be-bound*))))
+  (def-test fix2 :true (boundp 'c))
+  (def-test fix3 :true (not (boundp '*this-name-should-not-be-bound*))))
 
 (def-test-group g4 (f1)
-  (def-test fix0 :true (boundp 'c))
-  (def-test fix1 :true (not (boundp '*this-name-should-not-be-bound*))))
+  (def-test fix4 :true (boundp 'c))
+  (def-test fix5 :true (not (boundp '*this-name-should-not-be-bound*))))
 
 (def-test-group h1 (f1 f1a)
   (def-test two-fixtures :true (eq d e))
@@ -106,8 +106,10 @@
   (def-test permute2a (:permute (:seq (:eq 'a) (:eq 'b))) '(a b))
   (def-test permute2b (:permute (:seq (:eq 'b) (:eq 'a))) '(a b))
   (def-test no-values1 (:drop-values (:symbol a)) (values 'a 'b 'c))
-  (def-test values-drop1 (:apply (lambda (x y) x) (:symbol a)) (values 'a 'b))
-  (def-test values-drop3 (:apply (lambda (x y z) y) (:symbol b))
+  (def-test values-drop1 (:apply (lambda (x y) (declare (ignorable y)) x)
+                                 (:symbol a)) (values 'a 'b))
+  (def-test values-drop3 (:apply (lambda (x y z) (declare (ignorable x z)) y)
+                                 (:symbol b))
     (values 'a 'b 'c))
   (def-test value-list1 (:value-list (:seq (:symbol a) (:eq 'b)))
     (values 'a 'b))
@@ -123,7 +125,7 @@
   (def-test check-err1 (:check-err :forms-eq)
     'asdfgh (error "this should be caught"))
   (def-test proj-1 (:proj (0 2) :forms-eq) 'a 3 (car '(a b)))
-  (def-test (two-fixtures :fixtures (f1 f1a)) :forms-eq d e)
+  (def-test (two-fixtures-2 :fixtures (f1 f1a)) :forms-eq d e)
   )
 
 (defparameter for-setup 0
@@ -147,12 +149,12 @@
   (:cleanup (setf for-setup 0))
   (:each-setup (setf for-setup 2))
   (:each-cleanup (setf for-setup 0))
-  (def-test a-sc-for-setup-1 (:eql 2) for-setup)
-  (def-test (sc-for-setup-2 :setup (setf for-setup 3)
+  (def-test a-sc-for-setup-2 (:eql 2) for-setup)
+  (def-test (sc-for-setup-3 :setup (setf for-setup 3)
                             :cleanup (setf for-setup 2))
       (:info "This is a known bug" (:eql 3))
     for-setup)
-  (def-test z-sc-for-setup-1 (:eql 2) for-setup)
+  (def-test z-sc-for-setup-2 (:eql 2) for-setup)
 )
 
 (def-test-group a-setup-cleanup ()
