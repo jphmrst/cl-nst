@@ -15,6 +15,19 @@
   correctness via termination in more complicated algorithms.
 \item The JUnit implementation should be more tightly integrated with
   ASDF, allowing automatic generation of XML at each test.
+\item NST uses Allegro CL-specific features to capture backtraces from
+  errors in NST tests.  However, due to a bug in the Allegro for
+  Macintosh, this feature is not safe on that platform.  Therefore, by
+  default this feature is disabled on MacOS.  Users can re-enable
+  backtrace capture by adding \texttt{:nst-unsafe-allegro-backtraces}
+  to the \texttt{*features*} global user
+  variable.\index{@nst-unsafe-allegro-backtraces\texttt{:nst-unsafe-allegro-backtraces}}\index{features@\texttt{*features*}}
+
+  The bug arises in situations where the \texttt{:err} criterion
+  expects to find one type of error, but in fact an error of a
+  different type is thrown.  NST will hang and must be manually
+  interrupted.  We have reported this issue to
+  Franz.\index{err@\texttt{:err}}
 \end{enumerate}
 
 \subsection{Removed features}
