@@ -38,12 +38,20 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
 
   ;; Decode the name-or-name-and-args, pulling out the individual
   ;; components, and indicating which are given in this test.
-  (multiple-value-bind (name setup setup-supp-p cleanup cleanup-supp-p
-                             fixtures fixtures-supp-p)
+  (multiple-value-bind (test-name setup setup-supp-p cleanup cleanup-supp-p
+                                  fixtures fixtures-supp-p)
       (decode-defcheck-name-and-args name-or-name-and-args)
-    (declare (ignorable fixtures-supp-p))
+    (declare (ignorable fixtures-supp-p) (special *group-class-name*))
 
-    (let* ((*nst-context* nil)
+    (let* ((name (gensym (concatenate 'string
+                           (package-name (symbol-package *group-class-name*))
+                           "-"
+                           (symbol-name *group-class-name*)
+                           "-"
+                           (package-name (symbol-package test-name))
+                           "--"
+                           (symbol-name test-name))))
+           (*nst-context* nil)
            (core-run-body
             (cond
              ((eql 1 (length forms))
@@ -55,51 +63,55 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
       (multiple-value-bind (fixture-class-names anon-fixture-forms)
           (process-fixture-list fixtures)
 
-        `(block ,name
-           (macrolet ((eval-dbg (form) `(progn (format t "~%~s~%" ,form)
-                                               (eval ,form)
-                                               (format t "OK~%"))))
-             ,@anon-fixture-forms
+        `(block ,test-name
+           ,@anon-fixture-forms
 
-             (defclass ,name (,@fixture-class-names) ()
-               (:metaclass singleton-class))
+           (defclass ,name (,@fixture-class-names) ()
+                     (:metaclass singleton-class))
 
-             (let ((gproto (class-prototype (find-class ',*group-class-name*))))
-               (setf (test-list gproto)
-                     (nconc (test-list gproto) (list ',name))))
+           (defmethod group-name ((obj ,name)) ',*group-class-name*)
+           (defmethod check-user-name ((obj ,name)) ',test-name)
+           (defmethod check-group-name ((obj ,name)) ',name)
 
-             (defmethod group-name ((obj ,name)) ',*group-class-name*)
-             (defmethod check-name ((obj ,name)) ',name)
+           (defmethod core-run-test ((obj ,name))
+             (declare (special ,@(loop for fx in fixture-class-names
+                                     append (bound-names fx))
+                               ,@(loop for fx in *group-fixture-classes*
+                                     append (bound-names fx))))
+             ,core-run-body)
 
-             (defmethod core-run-test ((obj ,name))
-               (declare (special ,@(loop for fx in fixture-class-names
-                                         append (bound-names fx))
-                                 ,@(loop for fx in *group-fixture-classes*
-                                         append (bound-names fx))))
-               ,core-run-body)
+           ,@(when setup-supp-p
+               `((defmethod do-group-each-test-setup progn ((obj ,name))
+                   ,setup)))
 
-             ,@(when setup-supp-p
-                 `((defmethod do-group-each-test-setup progn ((obj ,name))
-                     ,setup)))
+           ,@(when cleanup-supp-p
+               `((defmethod do-group-each-test-cleanup progn ((obj ,name))
+                   ,cleanup)))
 
-             ,@(when cleanup-supp-p
-                 `((defmethod do-group-each-test-cleanup progn ((obj ,name))
-                     ,cleanup)))
-
-             ;; Clear any previous stored results, since we've just
-             ;; (re-)defined this check.
-             #|(when (boundp '+results-record+)
+           ;; Clear any previous stored results, since we've just
+           ;; (re-)defined this check.
+           #|(when (boundp '+results-record+)
                  (remhash ',suite-class-name
                           (symbol-value '+results-record+)))|#
 
-             ;; Provide debugging information about this test.
-             (defmethod trace-test ((gr (eql ',*group-class-name*))
-                                    (ts (eql ',name)))
-               (format t "Test ~s (group ~s)~%" gr ts)
-               (format t " - Given name and args: ~s~%"
-                 ',name-or-name-and-args)
-               (format t " - Given criterion: ~s~%" ',criterion)
-               (format t " - Given forms: ~@<~{~s~^ ~:_~}~:>~%" ',forms))))))))
+           ;; Store the new artifact against the uses of its
+           ;; name in NST.
+           (note-executable ',test-name (make-instance ',name))
+
+           ;; Provide debugging information about this test.
+           (defmethod trace-test ((gr ,*group-class-name*)
+                                  (ts ,name))
+             (format t "Test ~s (group ~s)~%" gr ts)
+             (format t " - Given name and args: ~s~%"
+               ',name-or-name-and-args)
+             (format t " - Given criterion: ~s~%" ',criterion)
+             (format t " - Given forms: ~@<~{~s~^ ~:_~}~:>~%" ',forms))
+
+           (let ((gproto (make-instance ',*group-class-name*)))
+             (setf (test-list gproto)
+               (nconc (test-list gproto) (list ',name))
+               (gethash ',test-name (test-name-lookup gproto))
+               (make-instance ',name))))))))
 
 (defmacro def-check (&rest args)
   (warn "def-check is deprecated; use def-test instead")

@@ -37,8 +37,13 @@
 ;; methods, or re-dispatch after instantiating an object of the named
 ;; class.
 
+(defgeneric group-record-p (obj)
+  (:method (obj) (declare (ignorable obj)) nil)
+  (:documentation "Return non-nil if an item is a group record."))
+
 (defgeneric group-name (group-instance)
-  (:documentation "Map from a group instance back to its symbolic name."))
+  (:documentation
+   "Map from a group or test instance back to its symbolic name."))
 
 (defgeneric test-names (fixture-or-group)
   (:documentation "The names of tests in a group.  Will be given an eql-method
@@ -57,6 +62,8 @@ group-specific activities.")
    "Map from groups to the private names of the group's fixtures."))
 (add-class-name-static-method group-fixture-classes)
 
+(defgeneric test-name-lookup (group))
+
 (defgeneric test-fixture-classes (name))
 (add-class-name-static-method test-fixture-classes)
 
@@ -68,11 +75,25 @@ group-specific activities.")
     (when group-hash
       (loop for g being the hash-keys of group-hash collect g))))
 
-;; Information by Lisp package.
+(defgeneric check-user-name (check-instance)
+  (:documentation "Map from a check instance back to its user symbolic name.")
+  (:method ((s symbol)) s))
 
-(defgeneric check-name (check-instance)
-  (:documentation "Map from a check instance back to its symbolic name.")
-  (:method ((s symbol)) (check-name (make-instance s))))
+(defgeneric check-group-name (check-instance)
+  (:documentation "Map from a check instance back to its internal name."))
+
+(defun ensure-group-instance (group)
+  (cond
+    ((symbolp group) (make-instance group))
+    (t group)))
+
+(defun ensure-test-instance (group test)
+  (cond
+    ((symbolp test)
+     (cond
+      ((find-class test nil) (make-instance test))
+      (t (gethash test (test-name-lookup (ensure-group-instance group))))))
+    (t test)))
 
 ;; Fixture properties and operations.
 

@@ -53,12 +53,12 @@
   (def-test using-c :true (boundp 'c)))
 
 (def-test-group g3a (f1)
-  (def-test fix2 :true (boundp 'c))
-  (def-test fix3 :true (not (boundp '*this-name-should-not-be-bound*))))
+  (def-test fix1 :true (boundp 'c))
+  (def-test fix2 :true (not (boundp '*this-name-should-not-be-bound*))))
 
 (def-test-group g4 (f1)
-  (def-test fix4 :true (boundp 'c))
-  (def-test fix5 :true (not (boundp '*this-name-should-not-be-bound*))))
+  (def-test fix1 :true (boundp 'c))
+  (def-test fix2 :true (not (boundp '*this-name-should-not-be-bound*))))
 
 (def-test-group h1 (f1 f1a)
   (def-test two-fixtures :true (eq d e))

@@ -33,6 +33,7 @@
   "Run all groups in a package."
   (let* ((user-package (find-package package-or-name))
          (group-names (package-groups user-package)))
+    (note-artifact-choice (package-name user-package) user-package)
 
     ;; Print a message at the appropriate level of verbosity.
     (when (> *nst-verbosity* 0)
@@ -53,27 +54,35 @@
     (format t "Running group ~s~%" group-class)))
 
   (unless group-class (error 'no-such-nst-group :group group-class))
-  (let ((group-inst (make-instance group-class)))
+  (run-group-inst (make-instance group-class)))
+
+(defun run-group-inst (group-inst)
+  (let ((test-lookups (test-name-lookup group-inst)))
+    (note-artifact-choice (group-name group-inst) group-inst)
     (run-group-tests group-inst
                      (loop for test-name in (test-names group-inst)
-                         collect (make-instance test-name)))))
+                         collect (gethash test-name test-lookups)))))
+
+(defun run-test-inst (test-inst)
+  (let ((group-inst (make-instance (group-name test-inst))))
+    (note-artifact-choice (check-user-name test-inst) test-inst)
+    (run-group-tests group-inst (list test-inst))))
 
 (defun run-test (group test)
   "Run a test standalone by its user-given name (and its group's name)."
-  (let ((test-class (find-class test))
-        (group-class (find-class group)))
-
-    (unless test-class (error 'no-such-nst-test :group group :test test))
+  (let ((group-class (find-class group)))
     (unless group-class (error 'no-such-nst-group :group group))
-    (let ((test-inst (make-instance test))
-          (group-inst (make-instance group)))
+    (let ((group-inst (make-instance group)))
+      (let* ((test-lookups (test-name-lookup group-inst))
+             (test-inst (gethash test test-lookups)))
+        (unless test-inst (error 'no-such-nst-test :group group :test test))
+        (note-artifact-choice (check-user-name test-inst) test-inst)
 
-      ;; Print a message at the appropriate level of verbosity.
-      (when (> *nst-verbosity* 0)
-        (format t "Running test ~s (group ~s)~%" test group))
+        ;; Print a message at the appropriate level of verbosity.
+        (when (> *nst-verbosity* 0)
+          (format t "Running test ~s (group ~s)~%" test group))
 
-      (run-group-tests (make-instance group-inst)
-                       (list (make-instance test-inst))))))
+        (run-group-tests group-inst (list test-inst))))))
 
 ;;; --------------------------------------------------------------
 
@@ -182,18 +191,20 @@ encoded as :before and :after methods.")
   (:method :around (test)
     "Capture the result of the test."
     (let ((*nst-group-name* (group-name test))
-          (*nst-check-name* (check-name test))
+          (*nst-check-user-name* (check-user-name test))
+          (*nst-check-internal-name* (check-group-name test))
           (start-time))
+      (declare (special *nst-group-name* *nst-check-user-name*))
       (when (> *nst-verbosity* 1)
-        (format t " - Executing test ~s~%" (check-name test)))
+        (format t " - Executing test ~s~%" *nst-check-user-name*))
       (setf start-time (get-internal-real-time))
       (let ((result (call-next-method))
             (end-time (get-internal-real-time)))
         (setf (result-stats-elapsed-time result)
               (- end-time start-time)
-              (gethash (check-name (type-of test))
-                       +results-record+)
+              (gethash (check-group-name test) +results-record+)
               result)
         (when (> *nst-verbosity* 1)
           (format t "   ~s~%" result))
         result))))
+

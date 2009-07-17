@@ -86,7 +86,9 @@ alternating keyword/forms matching:
 values as hardcoded by the macros, rather than recalled via the generic
 functions whose methods the macros define.")
 
-(defparameter *nst-check-name* nil
+(defparameter *nst-check-user-name* nil
+  "Dynamic variable used to set the name of a test in its result report.")
+(defparameter *nst-check-internal-name* nil
   "Dynamic variable used to set the name of a test in its result report.")
 (defparameter *nst-group-name* nil
   "Dynamic variable used to set the name of the group in a test result report.")
@@ -150,11 +152,10 @@ current criterion.")
 (defmacro apply-default-debug-options (&body forms)
   `(apply-debug-options *default-debug-config* *default-debug-protect*
       ,@forms))
-
-;;;
-;;; Management of global properties.
-;;;
 
+;;
+;; Management of global properties.
+;;
 (defgeneric set-nst-property (name value)
   (:method (name value)
      (declare (ignorable value))

@@ -304,6 +304,3 @@ when def-check-alias is macroexpanded."
 
 (defvar +storage-name-to-test-package+
     (make-hash-table :test 'eq))
-
-(defmethod canonical-storage-name ((s symbol))
-  (canonical-storage-name (make-instance s)))

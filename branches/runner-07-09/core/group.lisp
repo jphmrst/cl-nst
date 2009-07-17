@@ -120,10 +120,13 @@ forms - zero or more test forms, given by def-check."
                                            :initform ',anon-fixture-forms)
                        (test-list :allocation :class
                                   :accessor test-list
-                                  :initform nil))
+                                  :initform nil)
+                       (test-name-lookup :allocation :class
+                                         :reader test-name-lookup
+                                         :initform (make-hash-table :test 'eq)))
                    (:metaclass singleton-class))
 
-                 (finalize-inheritance (find-class ',group-name))
+                 #|(finalize-inheritance (find-class ',group-name))|#
                  #|(let ((proto (class-prototype (find-class ',group-name))))
                      (setf (slot-value proto 'anon-fixture-forms)
                            ',anon-fixture-forms))|#
@@ -157,6 +160,10 @@ forms - zero or more test forms, given by def-check."
 
                  (defmethod test-names ((group ,group-name)) ',test-names)
 
+                 (defmethod group-record-p ((obj ,group-name))
+                   (declare (ignorable obj))
+                   t)
+
                  ;; WARNING!  This hook crashes Allegro Lisp.
                  #-allegro (set-pprint-dispatch ',group-name
                              #'(lambda (stream object)
@@ -174,7 +181,8 @@ forms - zero or more test forms, given by def-check."
 
                  ,@expanded-check-forms
 
+                 ;; Store the new artifact against the uses of its
+                 ;; name in NST.
+                 (note-executable ',group-name (make-instance ',group-name))
+
                  ',group-name))))))))
-
-
-
