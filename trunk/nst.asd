@@ -25,7 +25,7 @@
 
 (defsystem :nst
     :description "The NST unit/regression testing system"
-    :version "1.1.2"
+    :version "1.2.0"
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :mnst)))
@@ -48,21 +48,26 @@
                            ;;
                            (:file "artifacts"  :depends-on ("globals"))
 
+                           ;;
+                           (:file "pick"  :depends-on ("artifacts"))
+
                            ;; Main control flow of test and group
                            ;; execution.
                            (:file "runner"  :depends-on ("artifacts"))
 
                            ;; The def-group macro.
-                           (:file "group" :depends-on ("globals"))
+                           (:file "group" :depends-on ("pick"))
 
-                           ;; The def-check macro, and the general
-                           ;; expansion and handling of check
+                           ;; Definition and expansion of check
                            ;; criteria.
-                           (:file "check" :depends-on ("globals"))
+                           (:file "check" :depends-on ("pick"))
+
+                           ;; The def-check macro.
+                           (:file "test-def" :depends-on ("check"))
 
                            ;; The def-fixture macro, and processing
                            ;; anonymous fixture declarations.
-                           (:file "fixture"  :depends-on ("globals"))
+                           (:file "fixture"  :depends-on ("artifacts"))
 
                            ;; Helper functions for permuting lists.
                            (:file "permuter" :depends-on ("package"))

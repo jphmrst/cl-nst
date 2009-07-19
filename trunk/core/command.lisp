@@ -214,6 +214,50 @@ available from compile-time forward.")
    (run-test group test)
    (report-multiple nil nil (list (cons group test)))))
 
+
+(def-nst-interactive-command
+    (:run :short-help "Run NST packages, groups and tests."
+          :args (&rest stuff)
+          :repeatable t)
+  (apply-default-debug-options
+   (let (report-packages report-groups report-tests)
+     (loop for id in stuff do
+       (let ((interps (lookup-artifact id)))
+         (cond
+          ((null interps)
+           (format t "There is no NST-testable unit with the name ~a.~%" id))
+
+          ((> (length interps) 1)
+           (format t "~a is ambiguous; try again with one of:~%" id)
+           (loop for interp in interps do
+             (cond
+              ((packagep interp)
+               (format t " - :nst :run-package :~a~%" id))
+
+              ((group-record-p interp)
+               (format t " - :nst :run-group ~s~%" (group-name interp)))
+
+              (t
+               (format t " - :nst :run-test ~s ~s~%"
+                 (group-name interp) (check-user-name interp))))))
+
+          (t (let ((interp (car interps)))
+               (cond
+                ((packagep interp)
+                 (push interp report-packages)
+                 (run-package interp))
+
+                ((group-record-p interp)
+                 (push interp report-groups)
+                 (run-group-inst interp))
+
+                (t
+                 (let ()
+                   (push interp report-groups)
+                   (run-group-inst interp)))))))))
+     (when (or report-packages report-groups report-tests)
+       (report-multiple report-packages report-groups report-tests)))))
+
 (def-nst-interactive-command
     (:report :short-help "Show a summary of test results."
              :long-help "Show a summary of test results.  Usage:

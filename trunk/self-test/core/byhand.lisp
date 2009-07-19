@@ -26,7 +26,7 @@
 
 ;;; This file contains a sample test block under development.
 
-(def-value-check (:echo () (&rest chk))
+(def-values-criterion (:echo () (&rest chk))
   `(declare (ignorable chk))
   `(progn
      (format t "              * Core check echo~%")
@@ -44,25 +44,17 @@
   (:cleanup (format t "  Cleanup for group gr2b~%"))
   (:each-setup   (format t "          Setup for each test of group gr2b~%"))
   (:each-cleanup (format t "          Cleanup for each test of group gr2b~%"))
-  (def-test (ts1 :fixtures (fix2)
-                  :setup (format t "            Setup for ts1~%")
-                  :cleanup (format t "            Cleanup for ts1~%"))
+  (def-test (ts1a :fixtures (fix2)
+                  :setup (format t "            Setup for ts1a~%")
+                  :cleanup (format t "            Cleanup for ts1a~%"))
       :echo ())
-  (def-test ts2 :echo ()))
+  (def-test ts3 :echo ()))
 
 (def-test-group failures ()
   (def-test f-1 (:seq (:symbol a) (:eql 3) (:eq 'b)) '(a 2 b))
   (def-test f-2 (:seq (:symbol a) (:eql 3) (:eq 'b)) (error "boom"))
   (def-test nofail (:seq (:symbol a) (:eql 3) (:eq 'b)) '(a 3 b))
   )
-
-(eval-when (:load-toplevel :execute)
-  (defparameter gr1-class (nst::group-class-name 'gr1))
-  (defparameter gr1-inst (nst::make-instance gr1-class))
-  (defparameter gr2a-class (nst::group-class-name 'gr2a))
-  (defparameter gr2a-inst (nst::make-instance gr2a-class))
-  (defparameter gr2b-class (nst::group-class-name 'gr2b))
-  (defparameter gr2b-inst (nst::make-instance gr2b-class)))
 
 (defvar zzz 0)
 (defvar yyy 10)
@@ -76,8 +68,8 @@
   (:cleanup (format t "  C group~%"))
   (:each-setup   (format t "    S-each group~%"))
   (:each-cleanup (format t "    C-each group~%"))
-  (def-test ts1 :pass (format t "      ts1~%"))
-  (def-test ts2 :pass (format t "      ts2~%")))
+  (def-test ts1b :pass (format t "      ts1b~%"))
+  (def-test ts4 :pass (format t "      ts4~%")))
 
 (def-fixtures simple-fixture ()
   (magic-number 120)
@@ -102,12 +94,12 @@
                :verify (progn (format t "Testing with ~s~%" x)
                               (equal x (reverse (error "boom"))))))
 
-  (def-test reverse
+  (def-test normal-reverse
       (:sample :sample-size 10
                :domains ((x (list :elem symbol)))
                :verify (progn (format t "Testing with ~s~%" x)
                               (equal x (reverse (reverse x))))))
-  (def-test sqrt
+  (def-test sqrt-fn
       (:sample :sample-size 10
                :max-tries 12
                :domains ((x real))

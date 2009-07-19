@@ -14,14 +14,26 @@ system commands:\index{help@\texttt{:help}}
  (nst-cmd :help)
 \end{verbatim}
 
-There are three commands for running tests:
+There are a numnber of commands for running tests, but most of the
+time only one will be needed:
+\begin{itemize}
+\item\texttt{:nst :run {\itshape name}}\index{run@\texttt{:run}}
+  \par Run all tests in the named package, or in the named group, or
+  run the named test.  It is not necessary to prefix the name with a
+  package prefix.
+\end{itemize}
+When a name corresponds to several different types of entities, or to
+different entities in different packages, it is necessary to use a
+more specific instruction:
 \begin{itemize}
 \item\texttt{:nst :run-package {\itshape package-name}}\index{run-package@\texttt{:run-package}}
 \par Run all tests defined in groups under the given package.
 \item\texttt{:nst :run-group {\itshape group-name}}\index{run-group@\texttt{:run-group}}
-\par Run all tests in the given group.
+  \par Run all tests in the given group.  Where appropriate, the name
+  should be package-prefixied.
 \item\texttt{:nst :run-test {\itshape group-name} {\itshape test-name}}\index{run-test@\texttt{:run-test}}
-\par Run the named test.
+  \par Run the named test.  Where appropriate, the names should be
+  package-prefixied.
 \end{itemize}
 
 There are two commands for (re)printing the results of tests:

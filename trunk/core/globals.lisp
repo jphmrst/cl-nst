@@ -26,13 +26,36 @@
 ;;; ----------------------------------------------------------------------
 
 ;;;
-;;;  Base classes.
+;;;  Singleton classes.
 ;;;
-(defclass group-base-class () ()
-  (:documentation "Base class of group behavior."))
+;;; Adapted from Tim Bradshaw's example singleton-class.lisp.
 
-(defclass standalone-test-base-class () ()
-  (:documentation "Base class of standalone test execution behavior."))
+
+(defclass singleton-class (standard-class)
+  ((singleton :accessor singleton :initform nil)))
+
+(defmethod validate-superclass ((class singleton-class)
+                                (superclass standard-class))
+  ;; it's OK for a standard class to be a superclass of a singleton
+  ;; class
+  t)
+
+(defmethod validate-superclass ((class singleton-class)
+                                (superclass singleton-class))
+  ;; it's OK for a singleton class to be a subclass of a singleton class
+  t)
+
+(defmethod validate-superclass ((class standard-class)
+                                (superclass singleton-class))
+  ;; but it is not OK for a standard class which is not a singleton class
+  ;; to be a subclass of a singleton class
+  nil)
+
+(defmethod make-instance ((class singleton-class) &key)
+  (with-accessors ((singleton singleton)) class
+    (unless singleton
+      (setf singleton (call-next-method)))
+    singleton))
 
 ;;;
 ;;;  Flags and dynamic variable declarations.
@@ -63,7 +86,9 @@ alternating keyword/forms matching:
 values as hardcoded by the macros, rather than recalled via the generic
 functions whose methods the macros define.")
 
-(defparameter *nst-check-name* nil
+(defparameter *nst-check-user-name* nil
+  "Dynamic variable used to set the name of a test in its result report.")
+(defparameter *nst-check-internal-name* nil
   "Dynamic variable used to set the name of a test in its result report.")
 (defparameter *nst-group-name* nil
   "Dynamic variable used to set the name of the group in a test result report.")
@@ -127,11 +152,10 @@ current criterion.")
 (defmacro apply-default-debug-options (&body forms)
   `(apply-debug-options *default-debug-config* *default-debug-protect*
       ,@forms))
-
-;;;
-;;; Management of global properties.
-;;;
 
+;;
+;; Management of global properties.
+;;
 (defgeneric set-nst-property (name value)
   (:method (name value)
      (declare (ignorable value))

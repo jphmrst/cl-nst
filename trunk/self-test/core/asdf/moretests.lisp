@@ -27,11 +27,11 @@
 (def-fixtures fix-for-more () (c 3) (d 'asdfg))
 
 (def-test-group more1 ()
-  (def-check triv :pass))
+  (def-test triv0 :pass))
 
 (def-test-group more2 ()
-  (def-check triv :pass)
-  (def-check (fix0 :fixtures (fix-for-more)) :true (boundp 'c)))
+  (def-test triv1 :pass)
+  (def-test (fix0 :fixtures (fix-for-more)) :true (boundp 'c)))
 
 (def-test-group more3 ()
-  (def-check (fix0 :fixtures (fix-for-more)) :true (boundp 'c)))
+  (def-test (fix1 :fixtures (fix-for-more)) :true (boundp 'c)))
