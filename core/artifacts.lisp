@@ -37,8 +37,13 @@
 ;; methods, or re-dispatch after instantiating an object of the named
 ;; class.
 
+(defgeneric group-record-p (obj)
+  (:method (obj) (declare (ignorable obj)) nil)
+  (:documentation "Return non-nil if an item is a group record."))
+
 (defgeneric group-name (group-instance)
-  (:documentation "Map from a group instance back to its symbolic name."))
+  (:documentation
+   "Map from a group or test instance back to its symbolic name."))
 
 (defgeneric test-names (fixture-or-group)
   (:documentation "The names of tests in a group.  Will be given an eql-method
@@ -57,20 +62,7 @@ group-specific activities.")
    "Map from groups to the private names of the group's fixtures."))
 (add-class-name-static-method group-fixture-classes)
 
-(defgeneric test-in-group-class-name (group-name)
-  (:documentation
-   "Map from groups to the private name with which NST associates a class with
-which every test in the group is associated for testing the whole group of
-tests.")
-  (:method (default) (declare (ignorable default)) nil))
-(add-class-name-static-method test-in-group-class-name)
-
-(defgeneric standalone-test-in-group-class-name (group-name)
-  (:documentation
-   "Map from groups to the private name with which NST associates a class with
-which every test in the group is associated for a standalone test.")
-  (:method (default) (declare (ignorable default)) nil))
-(add-class-name-static-method standalone-test-in-group-class-name)
+(defgeneric test-name-lookup (group))
 
 (defgeneric test-fixture-classes (name))
 (add-class-name-static-method test-fixture-classes)
@@ -83,33 +75,25 @@ which every test in the group is associated for a standalone test.")
     (when group-hash
       (loop for g being the hash-keys of group-hash collect g))))
 
-;; Information by Lisp package.
+(defgeneric check-user-name (check-instance)
+  (:documentation "Map from a check instance back to its user symbolic name.")
+  (:method ((s symbol)) s))
 
-(defgeneric check-name (check-instance)
-  (:documentation "Map from a check instance back to its symbolic name."))
+(defgeneric check-group-name (check-instance)
+  (:documentation "Map from a check instance back to its internal name."))
 
-(defgeneric suite-test-classes (group-prototype))
-(defgeneric standalone-test-classes (group-prototype))
-(defgeneric config-test-classes (group-prototype))
+(defun ensure-group-instance (group)
+  (cond
+    ((symbolp group) (make-instance group))
+    (t group)))
 
-(defun suite-class-name (group-name test-name)
-  (gethash test-name
-           (suite-test-classes (class-prototype (find-class group-name)))))
-
-(defun standalone-class-name (group-name test-name)
-  (gethash test-name
-           (standalone-test-classes (class-prototype
-                                     (find-class group-name)))))
-
-(defun test-config-class-name (group-name test-name)
-  (gethash test-name
-           (config-test-classes (class-prototype
-                                      (find-class group-name)))))
-
-(defgeneric canonical-storage-name (test-name)
-  (:documentation
-   "Map from various test names and instances to the private name against which
-NST associates test results."))
+(defun ensure-test-instance (group test)
+  (cond
+    ((symbolp test)
+     (cond
+      ((find-class test nil) (make-instance test))
+      (t (gethash test (test-name-lookup (ensure-group-instance group))))))
+    (t test)))
 
 ;; Fixture properties and operations.
 
@@ -118,29 +102,12 @@ NST associates test results."))
 an eql-method by the macros which expand tests and groups."))
 (add-class-name-static-method bound-names)
 
-(defgeneric group-fixture-class-name (fixture-name)
-  (:documentation
-   "Map from fixture names to the private name with which NST associates the
-corresponding internal name-binding NST class for adding fixtures to a group.")
-  (:method (default) (declare (ignorable default)) nil))
-(add-class-name-static-method group-fixture-class-name)
-
-(defgeneric test-fixture-class-name (fixture-name)
-  (:documentation
-   "Map from fixture names to the private name with which NST associates the
-corresponding internal name-binding NST class for adding fixtures to a test.")
-  (:method (default) (declare (ignorable default)) nil))
-(add-class-name-static-method test-fixture-class-name)
-
 (defgeneric open-fixture (fixture-name &optional package)
   (:documentation
    "Inject the names defined by the named fixture into the given package, by
 default the current package."))
 (defmethod open-fixture ((s symbol) &optional (in-package *package*))
   (open-fixture (make-instance s) in-package))
-
-(defgeneric anon-fixture-forms (forms))
-(add-class-name-static-method anon-fixture-forms)
 
 ;; Diagnostic information display.
 

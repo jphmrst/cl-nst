@@ -193,7 +193,7 @@ note is an instance of the check-note structure below.  The four note types are:
 Each of these fields is a list; warnings, failures and errors are check-note
 instances, and the info field is of any value."
   (group-name *nst-group-name*)
-  (check-name *nst-check-name*)
+  (check-name *nst-check-user-name*)
   (warnings nil) (failures nil) (errors nil) (info nil))
 
 (defun interesting-result-p (result)
@@ -498,8 +498,8 @@ six-value summary of the results:
 
 (defun test-report (group test)
   "Top-level function for reporting the results of a test."
-  (gethash (canonical-storage-name (standalone-class-name group test))
-           +results-record+))
+  (let ((test-inst (ensure-test-instance group test)))
+    (gethash (check-group-name test-inst) +results-record+)))
 
 (defun multiple-report (packages groups tests &key system)
   (let* ((package-reports (loop for p in packages collect (package-report p)))

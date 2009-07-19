@@ -21,70 +21,10 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
-;;; ----------------------------------------------------------------------
 ;;; This file defines the functions which implement the main control
 ;;; flow of test and group execution.
 
-
-;;;
-;;; More generic functions whose methods are defined by the various
-;;; macros.
-;;;
-
-;; Internal test execution functions.
-
-(defgeneric core-run (group-or-test)
-  (:documentation
-   "Group fixtures provide name-binding :around methods to this generic
-function; group setup and cleanup become :before and :after methods.")
-  (:method ((group-inst group-base-class))
-     (let ((group-name (group-name group-inst)))
-       (when (> *nst-verbosity* 3)
-         (format t "    Starting run loop for ~s~%" group-inst))
-       (loop for test in (test-names group-inst) do
-         (when (> *nst-verbosity* 3)
-           (format t "      Starting loop entry ~s~%" test))
-         (let ((in-suite-class-name (suite-class-name group-name test)))
-           (when (> *nst-verbosity* 3)
-             (format t "    Suite class name ~s~%" in-suite-class-name)
-             (format t "    Actual class ~s~%"
-               (find-class in-suite-class-name)))
-           (let ((test-inst (make-instance in-suite-class-name)))
-             (when (> *nst-verbosity* 3)
-               (format t "    Instance ~s~%" test-inst))
-             (core-run-test test-inst)))
-         ;; (format t "      Exiting loop entry ~s~%" test)
-             )
-         ;;(format t "    Exiting run loop for ~s~%" group-inst)
-       )
-     nil))
-
-(defgeneric core-run-test (test)
-  (:documentation
-   "Test fixtures provide name-binding :around methods to this generic function
-for individual tests.  Every-test and test-specific setup and cleanup are
-encoded as :before and :after methods.")
-
-  (:method :around (test)
-    "Capture the result of the test."
-    (let ((*nst-group-name* (group-name test))
-          (*nst-check-name* (check-name test))
-          (start-time))
-      (when (> *nst-verbosity* 1)
-        (format t " - Executing test ~s~%" (check-name test)))
-      (setf start-time (get-internal-real-time))
-      (let ((result (call-next-method))
-            (end-time (get-internal-real-time)))
-        (setf (result-stats-elapsed-time result)
-              (- end-time start-time)
-              (gethash (canonical-storage-name (type-of test))
-                       +results-record+)
-              result)
-        (when (> *nst-verbosity* 1)
-          (format t "   ~s~%" result))
-        result))))
-
-;;;
+;;; ----------------------------------------------------------------------
 ;;; Programmatic starters for a test from Lisp.  Other starters such
 ;;; as via ASDF and vendor-specific REPL macros call these functions;
 ;;; from pure Lisp these are the top-level calls.
@@ -93,6 +33,7 @@ encoded as :before and :after methods.")
   "Run all groups in a package."
   (let* ((user-package (find-package package-or-name))
          (group-names (package-groups user-package)))
+    (note-artifact-choice (package-name user-package) user-package)
 
     ;; Print a message at the appropriate level of verbosity.
     (when (> *nst-verbosity* 0)
@@ -105,11 +46,45 @@ encoded as :before and :after methods.")
       (t
        (error 'no-nst-groups-in-package :package package-or-name)))))
 
+(defun run-group (group-class)
+  "Run a group by its user-given name."
+  ;; Print a message at the appropriate level of verbosity.
+  (cond
+   ((> *nst-verbosity* 0)
+    (format t "Running group ~s~%" group-class)))
+
+  (unless group-class (error 'no-such-nst-group :group group-class))
+  (run-group-inst (make-instance group-class)))
+
+(defun run-group-inst (group-inst)
+  (let ((test-lookups (test-name-lookup group-inst)))
+    (note-artifact-choice (group-name group-inst) group-inst)
+    (run-group-tests group-inst
+                     (loop for test-name in (test-names group-inst)
+                         collect (gethash test-name test-lookups)))))
+
+(defun run-test-inst (test-inst)
+  (let ((group-inst (make-instance (group-name test-inst))))
+    (note-artifact-choice (check-user-name test-inst) test-inst)
+    (run-group-tests group-inst (list test-inst))))
+
+(defun run-test (group test)
+  "Run a test standalone by its user-given name (and its group's name)."
+  (let ((group-class (find-class group)))
+    (unless group-class (error 'no-such-nst-group :group group))
+    (let ((group-inst (make-instance group)))
+      (let* ((test-lookups (test-name-lookup group-inst))
+             (test-inst (gethash test test-lookups)))
+        (unless test-inst (error 'no-such-nst-test :group group :test test))
+        (note-artifact-choice (check-user-name test-inst) test-inst)
+
+        ;; Print a message at the appropriate level of verbosity.
+        (when (> *nst-verbosity* 0)
+          (format t "Running test ~s (group ~s)~%" test group))
+
+        (run-group-tests group-inst (list test-inst))))))
+
 ;;; --------------------------------------------------------------
-;;; This section of function definitions is not immediately in use,
-;;; but I'm planning to shift over to them to eliminate side package
-;;; creation, and to reduce class generation to one per
-;;; fixture/class/test.
 
 (defun run-group-tests (group-obj test-objs)
   "Programmatic entry point for running all tests in a group."
@@ -133,14 +108,18 @@ encoded as :before and :after methods.")
   (:documentation
    "Fixture declarations translate to an :around method making let* bindings
 for the group application class.")
-  (:method progn (group-obj test-objs)
+  (:method (group-obj test-objs)
     (do-group-postfixture-setup group-obj)
     (when (> *nst-verbosity* 3)
       (format t "    Starting run loop for ~s~%" group-obj))
     (loop for test-inst in test-objs do
       (when (> *nst-verbosity* 3) (format t "    Instance ~s~%" test-inst))
-      (do-test-main test-inst)
-          #|(format t "      Exiting loop entry ~s~%" test)|#)
+      (do-group-each-test-setup group-obj)
+      (do-test-prefixture-setup test-inst)
+      (do-test-fixture-assignment test-inst)
+      (do-test-afterfixture-cleanup test-inst)
+      (do-group-each-test-cleanup group-obj)
+      #|(format t "      Exiting loop entry ~s~%" test)|#)
     #|(format t "    Exiting run loop for ~s~%" group-obj)|#
     (do-group-withfixture-cleanup group-obj)))
 
@@ -156,13 +135,17 @@ for the group application class.")
   (:method-combination progn)
   (:method progn (group-obj) (declare (ignorable group-obj))))
 
-;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+(defgeneric do-group-each-test-setup (group-obj)
+  (:documentation
+   "Group each-test setup specs add a method to this function.")
+  (:method-combination progn)
+  (:method progn (group-obj) (declare (ignorable group-obj))))
 
-(defun do-test-main (test-inst)
-  "Test execution gateway for both group and standalone execution."
-  (do-test-prefixture-setup test-inst)
-  (do-test-fixture-assignment test-inst)
-  (do-test-afterfixture-cleanup test-inst))
+(defgeneric do-group-each-test-cleanup (group-obj)
+  (:documentation
+   "Group each-test cleanup specs add a method to this function.")
+  (:method-combination progn)
+  (:method progn (group-obj) (declare (ignorable group-obj))))
 
 (defgeneric do-test-prefixture-setup (test-obj)
   (:documentation
@@ -185,41 +168,43 @@ for the test application class.")
      (core-run-test test-obj)
      (do-test-withfixture-cleanup test-obj)))
 
-(defgeneric do-test-withfixture-cleanup (test-obj)
-  (:documentation "Fixture setup specs add a method to this function
-for the test application class.")
-  (:method-combination progn)
-  (:method progn (test-obj) (declare (ignorable test-obj))))
-
 (defgeneric do-test-postfixture-setup (test-obj)
   (:documentation "With-fixtures cleanup specs add a method to this function
 for the test application class.")
   (:method-combination progn)
   (:method progn (test-obj) (declare (ignorable test-obj))))
 
-;;; ------------------------------------------------------------
+(defgeneric do-test-withfixture-cleanup (test-obj)
+  (:documentation "Fixture setup specs add a method to this function
+for the test application class.")
+  (:method-combination progn)
+  (:method progn (test-obj) (declare (ignorable test-obj))))
 
-(defun run-group (group)
-  "Run a group by its user-given name."
-  (let ((group-class (group-class-name group)))
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    ;; Print a message at the appropriate level of verbosity.
-    (cond
-      ((> *nst-verbosity* 3)
-       (format t "Running group ~s --> ~s~%" group group-class))
-      ((> *nst-verbosity* 0)
-       (format t "Running group ~s~%" group)))
+(defgeneric core-run-test (test)
+  (:documentation
+   "Test fixtures provide name-binding :around methods to this generic function
+for individual tests.  Every-test and test-specific setup and cleanup are
+encoded as :before and :after methods.")
 
-    (unless group-class (error 'no-such-nst-group :group group))
-    (core-run (make-instance group-class))))
+  (:method :around (test)
+    "Capture the result of the test."
+    (let ((*nst-group-name* (group-name test))
+          (*nst-check-user-name* (check-user-name test))
+          (*nst-check-internal-name* (check-group-name test))
+          (start-time))
+      (declare (special *nst-group-name* *nst-check-user-name*))
+      (when (> *nst-verbosity* 1)
+        (format t " - Executing test ~s~%" *nst-check-user-name*))
+      (setf start-time (get-internal-real-time))
+      (let ((result (call-next-method))
+            (end-time (get-internal-real-time)))
+        (setf (result-stats-elapsed-time result)
+              (- end-time start-time)
+              (gethash (check-group-name test) +results-record+)
+              result)
+        (when (> *nst-verbosity* 1)
+          (format t "   ~s~%" result))
+        result))))
 
-(defun run-test (group test)
-  "Run a test standalone by its user-given name (and its group's name)."
-  (let ((test-class (standalone-class-name group test)))
-
-    ;; Print a message at the appropriate level of verbosity.
-    (when (> *nst-verbosity* 0)
-      (format t "Running test ~s (group ~s)~%" test group))
-
-    (unless test-class (error 'no-such-nst-test :group group :test test))
-    (core-run (make-instance test-class))))
