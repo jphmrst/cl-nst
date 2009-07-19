@@ -107,9 +107,11 @@ use of this fixture.
            (setf in-package (find-package in-package)))
 
          ,@(loop for (var form) in bindings
-                 collect
-                 `(setf ,(cond (var `(symbol-value ',var)) (t (gensym)))
-                         ,form))
+                 append
+                 `((when (> *nst-verbosity* 3)
+                     (format t ,(format nil " - Calculating ~a~~%" var)))
+                         (setf ,(cond (var `(symbol-value ',var)) (t (gensym)))
+                         ,form)))
 
          (import ',(loop for var-form in bindings
                          if (car var-form) collect (car var-form))
