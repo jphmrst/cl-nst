@@ -9,5 +9,6 @@ docs:
 
 clean:
 	rm -f *.fasl *.ps */*.ps */*/*.ps \
+	      *~ */*~ */*/*~ \
 	      doc/*/*.dvi doc/*/*.aux doc/*/*.log doc/*/*.toc \
 	      doc/*/*.idx doc/*/*.out doc/*/*.pdf doc/*/*.ilg doc/*/*.ind

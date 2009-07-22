@@ -25,7 +25,20 @@
 
 (defsystem :nst
     :description "The NST unit/regression testing system"
-    :version "1.2.0"
+                                        ; In the svn repository, the
+                                        ; version number is what we're
+                                        ; working on now.
+                                        ;
+                                        ; This version number and the
+                                        ; number in VERSIONS.txt must
+                                        ; be kept manually
+                                        ; synchronized.
+                                        ;
+                                        ; The patch number (third
+                                        ; number) should be
+                                        ; incremented immediately
+                                        ; after a version is shipped.
+    :version "1.2.1"
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :mnst)))
