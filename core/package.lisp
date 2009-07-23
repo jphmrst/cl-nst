@@ -80,21 +80,3 @@
   (funcall (symbol-function (intern (symbol-name 'package-doc)
                                     (find-package :package-doc)))
            (find-package :nst)))
-
-;;; The packages below are internal --- user symbols map to NST
-;;; internal symbols which live in thse packages.  By "hiding" these
-;;; symbols here, we avoid the need to gensym into user packages.
-(defpackage :nst-suite-class-names
-    (:documentation "A test suite defines local names for the class corresponding to the suite itself; this package holds these names."))
-(defpackage :nst-standalone-class-names
-    (:documentation "A test suite defines local names for the class corresponding to the object instantiated for standalone execution of a single test in that suite; this package holds these names."))
-(defpackage :nst-test-config-class-names
-    (:documentation "A test suite defines local names for the class corresponding to the object instantiated for the in-group execution of tests in that suite; this package holds these names."))
-(defpackage :nst-test-in-group-class-names)
-
-(defpackage :nst-fixture-group-class-names)
-(defpackage :nst-fixture-test-class-names)
-
-(defpackage :group-class-name-package)
-(defpackage :test-in-group-class-name-package)
-(defpackage :standalone-test-in-group-class-name-package)
