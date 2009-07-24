@@ -504,7 +504,18 @@ six-value summary of the results:
 (defun multiple-report (packages groups tests &key system)
   (let* ((package-reports (loop for p in packages collect (package-report p)))
          (group-reports (loop for g in groups collect (group-report g)))
-         (test-reports (loop for (g . ts) in tests collect (test-report g ts)))
+         (test-reports
+          (loop for item in tests
+              append (cond
+                      ((consp item)
+                       (destructuring-bind (g . ts) item
+                         (list (test-report g ts))))
+
+                      ((test-record-p item)
+                       (list (test-report (group-name item)
+                                          (test-name-lookup item))))
+
+                      (t nil))))
          (result (make-multi-results :package-reports package-reports
                                      :group-reports group-reports
                                      :test-reports test-reports

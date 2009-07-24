@@ -119,8 +119,10 @@ for the group application class.")
       (do-test-fixture-assignment test-inst)
       (do-test-afterfixture-cleanup test-inst)
       (do-group-each-test-cleanup group-obj)
-      #|(format t "      Exiting loop entry ~s~%" test)|#)
-    #|(format t "    Exiting run loop for ~s~%" group-obj)|#
+      (when (> *nst-verbosity* 3)
+        (format t "      Exiting loop entry ~s~%" test-inst)))
+    (when (> *nst-verbosity* 3)
+      (format t "    Exiting run loop for ~s~%" group-obj))
     (do-group-withfixture-cleanup group-obj)))
 
 (defgeneric do-group-postfixture-setup (group-obj)

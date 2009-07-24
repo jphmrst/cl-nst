@@ -28,6 +28,9 @@
 ;;; is here; further below we define platform-specific command-line
 ;;; interfaces.
 
+(defpackage :nst-artifact-lookup-package
+    (:documentation "Auxiliary package for canonical NST command names."))
+
 (defvar *last-repl-call* '(:help))
 (defgeneric consider-repl-call-save (name args)
   (:method (name args) (declare (ignorable name args))))
@@ -36,16 +39,60 @@
   (:documentation "Top-level command interpreter for the NST tester")
   (:method (command &rest args)
      (declare (ignorable args))
-     (format t "Unrecognized NST command ~s~%~
-                Use :nst :help for a list of NST commands." command))
+     (cond
+       ((and (symbolp command)
+             (not (eq (find-package :nst-artifact-lookup-package)
+                      (symbol-package command))))
+        (apply #'run-command-actual
+               (intern (symbol-name command) :nst-artifact-lookup-package)
+               args))
+       (t
+        (format t "Unrecognized NST command ~s~%~
+                   Use :nst :help for a list of NST commands." command))))
   (:method :before (command &rest args) (consider-repl-call-save command args)))
+
 (defgeneric nst-short-help (command)
-  (:documentation "Return the short help message for an NST REPL command."))
+  (:documentation "Return the short help message for an NST REPL command.")
+  (:method (command)
+     (declare (ignorable args))
+     (cond
+       ((and (symbolp command)
+             (not (eq (find-package :nst-artifact-lookup-package)
+                      (symbol-package command))))
+        (nst-short-help (intern (symbol-name command)
+                                :nst-artifact-lookup-package)))
+       (t
+        (format t "Unrecognized NST command ~s~%~
+                   Use :nst :help for a list of NST commands." command)))))
+
 (defgeneric nst-long-help (command)
-  (:documentation "Return the long help message for an NST REPL command."))
+  (:documentation "Return the long help message for an NST REPL command.")
+  (:method (command)
+     (declare (ignorable args))
+     (cond
+       ((and (symbolp command)
+             (not (eq (find-package :nst-artifact-lookup-package)
+                      (symbol-package command))))
+        (nst-long-help (intern (symbol-name command)
+                               :nst-artifact-lookup-package)))
+       (t
+        (format t "Unrecognized NST command ~s~%~
+                   Use :nst :help for a list of NST commands." command)))))
+
 (defgeneric nst-arg-names (command)
   (:documentation "Return a string giving help for the argument names for an ~
-                   NST REPL command."))
+                   NST REPL command.")
+  (:method (command)
+     (declare (ignorable args))
+     (cond
+       ((and (symbolp command)
+             (not (eq (find-package :nst-artifact-lookup-package)
+                      (symbol-package command))))
+        (nst-arg-names (intern (symbol-name command)
+                               :nst-artifact-lookup-package)))
+       (t
+        (format t "Unrecognized NST command ~s~%~
+                   Use :nst :help for a list of NST commands." command)))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defgeneric prep-arg-names-help (arg-list)
@@ -92,12 +139,13 @@ available from compile-time forward.")
                                              (args nil args-supp-p)
                                              (repeatable))
                                        &body forms)
-  (let* ((args-var (gensym))
+  (let* ((canonical (intern (symbol-name name) :nst-artifact-lookup-package))
+         (args-var (gensym))
          (command-run-forms (if args-supp-p
                                 `((destructuring-bind ,args ,args-var ,@forms))
                                 forms)))
     `(progn
-       (defmethod run-command-actual ((cmd (eql ,name)) &rest ,args-var)
+       (defmethod run-command-actual ((cmd (eql ',canonical)) &rest ,args-var)
          ,@(unless args-supp-p `((declare (ignorable ,args-var))))
          (block nst-command
            (handler-bind ((nst-error #'(lambda (e)
@@ -107,11 +155,11 @@ available from compile-time forward.")
        ,(when repeatable
           `(defmethod consider-repl-call-save ((cmd (eql ,name)) args)
              (setf *last-repl-call* (cons cmd args))))
-       (defmethod nst-arg-names ((cmd (eql ,name)))
+       (defmethod nst-arg-names ((cmd (eql ',canonical)))
          ,(prep-arg-names-help args))
-       (defmethod nst-short-help ((cmd (eql ,name)))
+       (defmethod nst-short-help ((cmd (eql ',canonical)))
          ,short-help)
-       (defmethod nst-long-help ((cmd (eql ,name)))
+       (defmethod nst-long-help ((cmd (eql ',canonical)))
          ,@(cond
             (long-help-special-supp-p long-help-special)
             (long-help-supp-p (list long-help))
@@ -251,10 +299,14 @@ available from compile-time forward.")
                  (push interp report-groups)
                  (run-group-inst interp))
 
+                ((test-record-p interp)
+                 (push interp report-tests)
+                 (run-test-inst interp))
+
                 (t
-                 (let ()
-                   (push interp report-groups)
-                   (run-group-inst interp)))))))))
+                 (error
+                  "Unrecognizable artifact ~s returned by lookup-artifact"
+                  interp))))))))
      (when (or report-packages report-groups report-tests)
        (report-multiple report-packages report-groups report-tests)))))
 

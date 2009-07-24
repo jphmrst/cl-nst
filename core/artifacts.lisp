@@ -40,6 +40,9 @@
 (defgeneric group-record-p (obj)
   (:method (obj) (declare (ignorable obj)) nil)
   (:documentation "Return non-nil if an item is a group record."))
+(defgeneric test-record-p (obj)
+  (:method (obj) (declare (ignorable obj)) nil)
+  (:documentation "Return non-nil if an item is a group record."))
 
 (defgeneric group-name (group-instance)
   (:documentation
