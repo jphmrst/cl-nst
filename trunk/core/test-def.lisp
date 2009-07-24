@@ -94,10 +94,6 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
                  (remhash ',suite-class-name
                           (symbol-value '+results-record+)))|#
 
-           ;; Store the new artifact against the uses of its
-           ;; name in NST.
-           (note-executable ',test-name (make-instance ',name))
-
            ;; Provide debugging information about this test.
            (defmethod trace-test ((gr ,*group-class-name*)
                                   (ts ,name))
@@ -106,6 +102,24 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
                ',name-or-name-and-args)
              (format t " - Given criterion: ~s~%" ',criterion)
              (format t " - Given forms: ~@<~{~s~^ ~:_~}~:>~%" ',forms))
+
+           ;; Pretty printer.
+           (set-pprint-dispatch ',name
+                   #'(lambda (stream object)
+                       (declare (ignorable object))
+                       (format stream
+                           ,(format nil "Test ~s of group ~s"
+                              test-name
+                              *group-class-name*))))
+
+           ;; Pass the test record predicate.
+           (defmethod test-record-p ((obj ,name)) t)
+
+           (defmethod test-name-lookup ((ts ,name)) ',test-name)
+
+           ;; Store the new artifact against the uses of its
+           ;; name in NST.
+           (note-executable ',test-name (make-instance ',name))
 
            (let ((gproto (make-instance ',*group-class-name*)))
              (setf (test-list gproto)

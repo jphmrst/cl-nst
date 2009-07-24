@@ -34,6 +34,22 @@
   (:method ((s symbol)) (intern (symbol-name s) :nst-artifact-lookup-package)))
 
 ;;
+;; Debug this feature
+;;
+(defvar *debug-nst-picker* nil "Debugging flag for this experimental feature.")
+(defun picker-debug (formatter &rest vals)
+  (when *debug-nst-picker*
+    (apply #'format (concatenate 'string "PICK ~@<" formatter "~:>~%") vals)))
+(defun dump-picker ()
+  (loop for name being the hash-keys of +artifact-lookup+
+        using (hash-value artifact-set)
+        do
+     (format t "~s maps to:~%" name artifact-set)
+     (loop for artifact being the hash-keys of artifact-set do
+       (format t " - ~@<~w ~_(internal type: ~a)~:>~%"
+         artifact (type-of artifact)))))
+
+;;
 ;; Single point of artifact lookup.
 ;;
 (defparameter +artifact-lookup+ (make-hash-table :test 'eq)
@@ -47,13 +63,34 @@ hash-table mapping items to t.")
          (name-set (gethash name-symbol +artifact-lookup+)))
     (unless name-set (setf name-set (make-hash-table :test 'eq)
                            (gethash name-symbol +artifact-lookup+) name-set))
+    (picker-debug "Mapping %s to %s (~a)"
+                  name artifact (type-of artifact))
     (setf (gethash artifact name-set) t)))
 
 (defun note-executable (name artifact)
+  (when (test-record-p artifact)
+    (prune-superceded-test-artifacts name artifact))
   (when (group-record-p artifact)
     (let ((package (symbol-package name)))
       (note-artifact (package-name package) package)))
   (note-artifact (symbol-name name) artifact))
+
+(defun prune-superceded-test-artifacts (name test)
+  (let* ((cname (canonicalize-lookup-name name))
+         (artifacts (gethash cname +artifact-lookup+)))
+    (when artifacts
+      (let ((group-name (group-name test))
+            (test-name (check-user-name test))
+            (to-prune nil))
+        (loop for candidate being the hash-keys of artifacts do
+          (when (and (test-record-p candidate)
+                     (eq (group-name candidate) group-name)
+                     (eq (check-user-name candidate) test-name))
+            (push candidate to-prune)))
+        (when (member (gethash cname +last-named-artifact-use+) to-prune)
+          (note-artifact-choice cname test))
+        (loop for item in to-prune do
+          (remhash item artifacts))))))
 
 ;;
 ;; Record explicit run choices, for when we have many.
@@ -69,19 +106,28 @@ hash-table mapping items to t.")
 ;;
 (defun lookup-artifact (name)
   "Input is a symbol, output is a list."
-  (let* (;; Our internal translation for looking up names.
-         (canonical (canonicalize-lookup-name name))
-         ;; List of the artifacts corresponding to that name.
-         (content (loop for key being the hash-keys
-                        of (gethash canonical +artifact-lookup+) collect key)))
-    (cond
-      ;; If there's more than one thing by that name, see if we've
-      ;; recently used one.
-      ((> (length content) 1)
-       (let ((last (gethash canonical +last-named-artifact-use+)))
-         (cond
-           (last (list last))
-           (t content))))
 
-      ;; Otherwise, return the original (singleton or empty) list.
-      (t content))))
+  ;; Our internal translation for looking up names.
+  (let* ((canonical (canonicalize-lookup-name name))
+         (artifact-set (gethash canonical +artifact-lookup+)))
+
+    ;; Make sure the name corresponds to something.
+    (cond
+     (artifact-set
+
+      ;; Pull out the artifacts corresponding to that name.
+      (let ((content (loop for key being the hash-keys of artifact-set
+                           collect key)))
+        (cond
+         ;; If there's more than one thing by that name, see if we've
+         ;; recently used one.
+         ((> (length content) 1)
+          (let ((last (gethash canonical +last-named-artifact-use+)))
+            (cond
+             (last (list last))
+             (t content))))
+
+         ;; Otherwise, return the original (singleton or empty) list.
+         (t content))))
+
+     (t nil))))

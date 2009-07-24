@@ -160,17 +160,15 @@ forms - zero or more test forms, given by def-check."
 
                  (defmethod test-names ((group ,group-name)) ',test-names)
 
-                 (defmethod group-record-p ((obj ,group-name))
-                   (declare (ignorable obj))
-                   t)
+                 ;; Pass the group record predicate.
+                 (defmethod group-record-p ((obj ,group-name)) t)
 
                  ;; WARNING!  This hook crashes Allegro Lisp.
-                 #-allegro (set-pprint-dispatch ',group-name
-                             #'(lambda (stream object)
-                                 (declare (ignorable object))
-                                 (format stream
-                                     ,(format nil "Group ~s internal NST class"
-                                        group-name))))
+                 (set-pprint-dispatch ',group-name
+                   #'(lambda (stream object)
+                       (declare (ignorable object))
+                       (format stream
+                           ,(format nil "Group ~s" group-name))))
 
                  (defmethod trace-group ((g ,group-name))
                    (format t "Group ~s:~%" ',group-name)
