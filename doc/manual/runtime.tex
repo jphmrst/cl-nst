@@ -60,7 +60,8 @@ configuration.
 \item\texttt{:nst :set {\itshape property} {\itshape value}}\index{set@\texttt{:set}}
 \item\texttt{:nst :unset {\itshape property} {\itshape value}}\index{unset@\texttt{:unset}}
 \end{itemize}
-There are currently two properties which can be manipulated by \texttt{:set}\,:
+There are currently three properties which can be manipulated by
+\texttt{:set}\,:
 \begin{itemize}
 \item\texttt{:verbose}\index{verbose@\texttt{:verbose}}~~ Controls the
   level of output at various points of NST.  Valid settings are:
@@ -80,6 +81,22 @@ There are currently two properties which can be manipulated by \texttt{:set}\,:
 
   The \texttt{:debug} command is a short-cut for setting this
   property.\index{debug@\texttt{:debug}}
+
+\item\texttt{:backtraces}\index{backtraces@\texttt{:backtraces}}~~
+  When this property has a non-nil value, NST attempts to capture
+  attempts the Lisp backtrace when a test throws an error.  This
+  property is only available on platform which allow programmatic
+  examination of backtraces, which is not standardized in Common Lisp;
+  currently we have implemented this feature on Allegro only.
+
+  This property has a complicated default setting.  Firstly, if the
+  symbol \texttt{'common-lisp-user::*nst-generate-backtraces*} is
+  bound when NST loads, NST will use its value as the initial value
+  for this property.  Otherwise by default, on MacOS systems the
+  property initializes to \texttt{nil} because of a known error on
+  that system, but this setting can be overriden by the property
+  \texttt{:nst-unsafe-allegro-backtraces}.  Finally, if none of these
+  issues apply, the initial value is \texttt t.
 \end{itemize}
 
 Fixtures\index{fixtures!debugging} can be \emph{opened} into the
