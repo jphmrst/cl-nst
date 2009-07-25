@@ -48,7 +48,8 @@
                ((error #'(lambda (cnd)
                            (declare (ignorable cnd))
                            (return-from backtrace-maker
-                             (list* "Caught error while identifying backtrace core, returning raw lines"
+                             (list* "Caught error while identifying backtrace ~
+                                     core, returning raw lines"
                                     lines)))))
              (loop while (not (search "emit-error " (car lines)))
                  do (pop lines))
@@ -67,10 +68,8 @@
     (format-args (setf format (car format) args (cdr args)))
     (t (setf format "~w" args (list e))))
   (let ((other-args nil))
-    #+(and (or nst-unsafe-allegro-backtraces
-               (not macosx))
-           allegro) (setf other-args
-                          (list* :zoom (make-backtrace-lines) other-args))
+    #+allegro (setf other-args
+                    (list* :zoom (make-backtrace-lines) other-args))
     (make-check-result :erring 1
                        :errors (list (apply #'make-error-check-note
                                             :context *nst-context*

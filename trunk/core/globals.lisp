@@ -58,16 +58,29 @@
     singleton))
 
 ;;;
-;;;  Flags and dynamic variable declarations.
+;;;  User-controlled options.
 ;;;
 (defvar *nst-verbosity* 1
   "User variable determining how verbose NST's output to the REPL should be.  Internally, this variable takes an integer value: 0 and below are silent, 1 is the default, 2 and 3 are more verbose.  The command-line interpreter assigns keywords to these values, from most terse to most verbose: :silent, nil, :quiet, :default, t, :verbose, :vverbose (:quiet and :default are the same, and are the initial setting).")
 
-(defvar *default-report-verbosity* 2
-  "User variable determining the default value for *nst-verbosity* when printing reports (2 by default).")
-
 (defvar *debug-on-error* nil
   "User variable: if non-null, will break into the Lisp REPL debugger upon encountering an unexpected error.  If t, will record the error and continue with other tests.")
+
+(defvar *generate-backtraces*
+    (cond
+      ((boundp 'common-lisp-user::*nst-generate-backtraces*)
+       (symbol-value 'common-lisp-user::*nst-generate-backtraces*))
+      ((member :nst-unsafe-allegro-backtraces *features*) t)
+      ((member :macos *features*) nil)
+      (t (member :allegro *features*)))
+  "User variable: if non-null, will attempt to capture the Lisp backtrace of errors in tests.")
+
+;;;
+;;;  Flags and dynamic variable declarations.
+;;;
+
+(defvar *default-report-verbosity* 2
+  "User variable determining the default value for *nst-verbosity* when printing reports (2 by default).")
 
 (defvar *nst-debug* nil
   "User variable: apply customizable debugging settings.")

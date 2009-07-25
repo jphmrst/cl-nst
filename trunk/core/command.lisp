@@ -173,7 +173,10 @@ available from compile-time forward.")
   `(progn
      (defmethod set-nst-property ((name (eql ,name)) value)
        (setf ,variable (nst-repl-property-encode ,name value))
-       (format t "Set property ~a to ~s~%" ',variable value))
+       (format t "Set property ~a to ~s~%" ',name value))
+     (defmethod show-nst-property ((name (eql ,name)))
+       (format t "Property ~a is set to ~s~%"
+         ',name (funcall #',unfilter ,variable)))
      (defmethod nst-repl-property-doc ((n (eql ,name)))
        ,doc)
      (defmethod nst-repl-property-encode ((n (eql ,name)) value)
@@ -204,6 +207,13 @@ available from compile-time forward.")
                 ((eql x 2) :verbose)
                 ((eql x 3) :vverbose)
                 ((> x 3)   :trace))))
+
+#+allegro
+(def-nst-property :backtraces *generate-backtraces*
+  :doc
+  "When non-nil, attempts to capture the Lisp backtrace of errors in tests."
+  :filter   (lambda (x) (if x t nil))
+  :unfilter (lambda (x) (if x t nil)))
 
 (def-nst-interactive-command (:help :short-help "Print a list of commands."
                                     :long-help "Print this help message.")
@@ -343,14 +353,16 @@ The last form shows all interesting results."
   (format *standard-output* "Results cleared."))
 
 (def-nst-interactive-command
-    (:set :short-help "Set an NST property."
+    (:set :short-help "Set or show an NST property."
           :long-help-special
           ((with-output-to-string (*standard-output*)
-             (format t "Set an NST property.  Available properties:~%")
+             (format t "Set or show an NST property.  Available properties:~%")
              (loop for prop in +nst-repl-properties+ do
                (format t "~%~s~%~a~%" prop (nst-repl-property-doc prop)))))
-          :args (name value))
-    (set-nst-property name value))
+          :args (name &optional (value nil value-supp-p)))
+    (cond
+      (value-supp-p (set-nst-property name value))
+      (t (show-nst-property name))))
 
 (def-nst-interactive-command
     (:unset :short-help "Clear an NST property." :args (name))
