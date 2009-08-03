@@ -173,3 +173,46 @@ minor mode should apply."
    (block check-file
      (when (nst-auto-mode-match-p) (return-from check-file t))
      (return-from check-file 0))))
+
+;; Indentation documentation at
+;; http://tonic.physics.sunysb.edu/docs/emacs/xemacs.html#SEC191 .
+
+(defmacro nst-form-indentation (name args)
+  `(progn
+     (put ',name 'lisp-indent-function ,args)
+     (put ',name 'fi:lisp-indent-hook  ,args)))
+
+(nst-form-indentation def-fixtures 1)
+(nst-form-indentation nst:def-fixtures 1)
+(nst-form-indentation def-test-group 2)
+(nst-form-indentation nst:def-test-group 2)
+(nst-form-indentation def-check 2)
+(nst-form-indentation nst:def-check 2)
+(nst-form-indentation def-test 2)
+(nst-form-indentation nst:def-test 2)
+(nst-form-indentation def-check-alias 1)
+(nst-form-indentation nst:def-check-alias 1)
+(nst-form-indentation def-criterion-alias 1)
+(nst-form-indentation nst:def-criterion-alias 1)
+(nst-form-indentation def-value-check 1)
+(nst-form-indentation nst:def-value-check 1)
+(nst-form-indentation def-values-criterion 1)
+(nst-form-indentation nst:def-values-criterion 1)
+(nst-form-indentation def-control-check 1)
+(nst-form-indentation nst:def-control-check 1)
+(nst-form-indentation def-form-criterion 1)
+(nst-form-indentation nst:def-form-criterion 1)
+(nst-form-indentation continue-check 1)
+(nst-form-indentation nst:continue-check 1)
+(nst-form-indentation add-failure 1)
+(nst-form-indentation nst:add-failure 1)
+(nst-form-indentation add-error 1)
+(nst-form-indentation nst:add-error 1)
+(nst-form-indentation add-info 1)
+(nst-form-indentation nst:add-info 1)
+
+(nst-form-indentation :info 1)
+(nst-form-indentation :apply 1)
+(nst-form-indentation :check-err 1)
+(nst-form-indentation :proj 1)
+(nst-form-indentation :sample 0)
