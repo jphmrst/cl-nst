@@ -48,10 +48,13 @@
                                         ; deprecated and then dropped
 
              #:continue-check
+
              #:emit-failure
-             #:add-failure
              #:emit-warning
              #:emit-success
+             #:add-failure
+             #:add-error
+             #:add-info
              #:check-result
 
              #:run-package #:run-group #:run-test
