@@ -102,12 +102,14 @@ subsequences of a current check definition.
            (format-at-verbosity 3 "Checking (~s~{ ~s~}~%" ',criterion ',forms)
            (block ,checker-block
              (handler-bind
-                 ((error #'(lambda (e)
-                             (format-at-verbosity 4
-                               "Caught ~s in the handler for ~s~%"
-                               e ',criterion)
-                             (unless *debug-on-error*
-                               (return-from ,checker-block (emit-error e))))))
+                 ((error
+                   #'(lambda (e)
+                       (declare (special *current-group* *current-test*))
+                       (format-at-verbosity 4
+                           "Caught ~s in the handler for ~s, (~a, ~a)~%"
+                         e ',criterion *current-group* *current-test*)
+                       (unless *debug-on-error*
+                         (return-from ,checker-block (emit-error e))))))
                ,body))))))))
 
 #+allegro (excl::define-simple-parser def-values-criterion caadr :nst-criterion)

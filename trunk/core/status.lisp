@@ -43,27 +43,42 @@
                           while spot
                           collect (string-left-trim " ->" (subseq raw 0 spot))
                           do (setf raw (subseq raw (+ 1 spot))))))
-           (pop lines)
-           (pop lines)
+           (unless (search "emit-error " (car lines))  (pop lines))
+           (unless (search "emit-error " (car lines))  (pop lines))
 
-           (handler-bind
-               ((error #'(lambda (cnd)
-                           (declare (ignorable cnd))
-                           (format-at-verbosity 3
-                               "Caught error identifying backtrace core~%")
-                           (return-from backtrace-maker
-                             (list* "Caught error while identifying backtrace core, returning raw lines"
-                                    lines)))))
-             (loop while (not (search "emit-error " (car lines)))
-                 do (pop lines))
-             (pop lines)
-             (if (search ":internal" (car lines)) (pop lines))
-             (loop while (search "core-run-test" (car lines)) do (pop lines))
-             (let ((first (position-if #'(lambda (x) (search "core-run-test" x))
-                                       lines)))
-               (setf lines (subseq lines 0 first)))
+           (let ((orig-lines (loop for line in lines collect line)))
 
-             lines))))))
+             (handler-bind
+                 ((error #'(lambda (cnd)
+                             (declare (ignorable cnd))
+                             (format-at-verbosity 3
+                                 "Caught error ~s identifying backtrace core~%"
+                               cnd)
+                             (return-from backtrace-maker
+                               (list* "Caught error while identifying backtrace core, returning raw lines"
+                                      lines)))))
+               (loop while (and lines
+                                (not (search ,(if (string= "zz"
+                                                          (symbol-name 'zz))
+                                                 "emit-error "
+                                                 "EMIT-ERROR ")
+                                             (car lines))))
+                     do (pop lines))
+               (cond
+                ;; We found the "emit-error" line, and it's not at the
+                ;; top of the list of lines.
+                (lines (pop lines))
+
+                ;; There is no "emit-error" line, so restore the
+                ;; original list of lines.
+                (t (setf lines orig-lines)))
+               (if (search ":internal" (car lines)) (pop lines))
+               (loop while (search "core-run-test" (car lines)) do (pop lines))
+               (let ((first (position-if #'(lambda (x)
+                                             (search "core-run-test" x))
+                                         lines)))
+                 (setf lines (subseq lines 0 first)))
+               lines)))))))
 
 (defun emit-error (e &rest format-args &aux format args)
   (declare (special *nst-context* *nst-stack*))
