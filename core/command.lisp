@@ -252,9 +252,15 @@ available from compile-time forward.")
     (:run-package :short-help "Run all NST tests stored in the given packages."
                   :args (&rest packages)
                   :repeatable t)
-  (apply-default-debug-options
-   (loop for package in packages do (run-package package))
-   (report-multiple packages nil nil)))
+    (apply-default-debug-options
+     (let (ran-package)
+       (loop for package in packages do
+         (cond
+           ((find-package package)
+            (push package ran-packages)
+            (run-package package) )
+           (t (format t "No such package ~a" package))))
+       (report-multiple (nreverse ran-packages) nil nil))))
 
 (def-nst-interactive-command
     (:run-group :short-help "Run all NST tests in the given groups."
