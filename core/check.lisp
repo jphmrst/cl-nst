@@ -237,7 +237,7 @@ Example:
 
 
 #+allegro (excl::define-simple-parser def-criterion-alias caadr :nst-criterion)
-(defmacro def-criterion-alias ((name &rest args)
+(defmacro def-criterion-alias (name-or-name-and-args
                            &body forms
                            &aux
                            (documentation nil)
@@ -253,53 +253,62 @@ that appear with it.
 that will be substituted for the \(name &rest args\) where they appear
 in a def-check.  Typically the ARGS will be substituted into the forms
 when def-check-alias is macroexpanded."
-  (when (stringp (car forms))
-    (setf documentation (pop forms)
-          documentation-supp-p t))
-  (when (eq (caar forms) 'declare)
-    (setf declaration-form (pop forms)
-          declaration-form-supp-p t))
-  (cond
-   ((eql (length forms) 1)
-    (setf expansion (pop forms)))
-   (t
-    (error "Ill-formed (d~@<ef-check-alias (~s~{ ~s~}) ~
+  (let (name args)
+    (cond
+     ((symbolp name-or-name-and-args)
+      (setf name name-or-name-and-args args nil))
+     ((listp name-or-name-and-args)
+      (setf name (car name-or-name-and-args)
+            args (cdr name-or-name-and-args)))
+     (t (error "Expected either a symbol or a list: ~s"
+               name-or-name-and-args)))
+    (when (stringp (car forms))
+      (setf documentation (pop forms)
+            documentation-supp-p t))
+    (when (eq (caar forms) 'declare)
+      (setf declaration-form (pop forms)
+            declaration-form-supp-p t))
+    (cond
+     ((eql (length forms) 1)
+      (setf expansion (pop forms)))
+     (t
+      (error "Ill-formed (d~@<ef-check-alias (~s~{ ~s~}) ~
                             ~:[~*~;~:@_~s~]~
                             ~:[~*~;~:@_~s~]~
                             ~{~:@_~s~}~:>)"
-           name args
-           documentation-supp-p documentation
-           declaration-form-supp-p declaration-form
-           forms)))
+             name args
+             documentation-supp-p documentation
+             declaration-form-supp-p declaration-form
+             forms)))
 
-  (let* ((forms (gensym "forms")) (stream (gensym "stream"))
-         (id (gensym "id")) (exp (gensym "exp"))
-         (given-args (gensym "given-args")))
-    `(eval-when (:compile-toplevel :load-toplevel :execute)
-       #+allegro (excl:record-source-file ',name :type :nst-criterion)
-       (defmethod blurb-context-line (,stream (,id (eql ',name))
+    (let* ((forms (gensym "forms")) (stream (gensym "stream"))
+           (id (gensym "id")) (exp (gensym "exp"))
+           (given-args (gensym "given-args")))
+      `(eval-when (:compile-toplevel :load-toplevel :execute)
+         #+allegro (excl:record-source-file ',name :type :nst-criterion)
+         (defmethod blurb-context-line (,stream (,id (eql ',name))
+                                        ,given-args ,forms)
+           (destructuring-bind ,args ,given-args
+             ,@(when declaration-form-supp-p `(,declaration-form))
+             (let ((,exp ,expansion))
+               (blurb-context-line ,stream
+                                   (car ,exp) (cdr ,exp) ,forms))))
+         (defmethod detail-context-line (,stream (,id (eql ',name))
+                                         ,given-args ,forms)
+           (destructuring-bind ,args ,given-args
+             ,@(when declaration-form-supp-p `(,declaration-form))
+             (let ((,exp ,expansion))
+               (detail-context-line ,stream
+                                    (car ,exp) (cdr ,exp) ,forms))))
+         (defmethod stack-transformer ((,id (eql ',name))) nil)
+         (defmethod build-check-form ((,id (eql ',name))
                                       ,given-args ,forms)
-         (destructuring-bind ,args ,given-args
-           ,@(when declaration-form-supp-p `(,declaration-form))
-           (let ((,exp ,expansion))
-             (blurb-context-line ,stream
-                                 (car ,exp) (cdr ,exp) ,forms))))
-       (defmethod detail-context-line (,stream (,id (eql ',name))
-                                       ,given-args ,forms)
-         (destructuring-bind ,args ,given-args
-           ,@(when declaration-form-supp-p `(,declaration-form))
-           (let ((,exp ,expansion))
-             (detail-context-line ,stream
-                                  (car ,exp) (cdr ,exp) ,forms))))
-       (defmethod stack-transformer ((,id (eql ',name))) nil)
-       (defmethod build-check-form ((,id (eql ',name))
-                                    ,given-args ,forms)
-         ,@(when documentation-supp-p
-             (when (stringp documentation) `(,documentation)))
-         (destructuring-bind ,args ,given-args
-           ,@(when declaration-form-supp-p `(,declaration-form))
-           (let ((,exp ,expansion))
-             (build-check-form (car ,exp) (cdr ,exp) ,forms)))))))
+           ,@(when documentation-supp-p
+               (when (stringp documentation) `(,documentation)))
+           (destructuring-bind ,args ,given-args
+             ,@(when declaration-form-supp-p `(,declaration-form))
+             (let ((,exp ,expansion))
+               (build-check-form (car ,exp) (cdr ,exp) ,forms))))))))
 
 #+allegro (excl::define-simple-parser def-check-alias caadr :nst-criterion)
 (defmacro def-check-alias (&rest args)
