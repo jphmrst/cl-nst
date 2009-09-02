@@ -177,6 +177,11 @@ forms - zero or more test forms, given by def-check."
                    (format t " - Defines tests: ~@<~{~s~^ ~:_~}~:>~%"
                      ',test-names))
 
+                 ;; Clear the list of tests when redefining the group.
+                 (let ((actual (make-instance ',group-name)))
+                   (setf (test-list actual) nil)
+                   (clrhash (test-name-lookup actual)))
+
                  ,@expanded-check-forms
 
                  ;; Store the new artifact against the uses of its
