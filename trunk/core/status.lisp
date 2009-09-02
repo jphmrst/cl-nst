@@ -34,6 +34,8 @@
 
        (handler-bind ((error #'(lambda (cnd)
                                  (declare (ignorable cnd))
+                                 (format-at-verbosity 3
+                                     "Caught error formatting backtrace~%")
                                  (return-from backtrace-maker
                                    (list "Caught error while formatting backtrace, returning raw lines"
                                          raw)))))
@@ -47,6 +49,8 @@
            (handler-bind
                ((error #'(lambda (cnd)
                            (declare (ignorable cnd))
+                           (format-at-verbosity 3
+                               "Caught error identifying backtrace core~%")
                            (return-from backtrace-maker
                              (list* "Caught error while identifying backtrace ~
                                      core, returning raw lines"
@@ -452,9 +456,8 @@ six-value summary of the results:
          (sym-pack (loop for k being the hash-keys
                          of (gethash user-package +package-groups+)
                          collect k)))
-    (when (> *nst-verbosity* 3)
-      (format t "Reporting for actual package ~s~%" user-package)
-      (format t "sym-pack ~s~%" sym-pack))
+    (format-at-verbosity 3
+      "Reporting for actual package ~s~%sym-pack ~s~%" user-package sym-pack)
     (when sym-pack
       (with-accessors ((name package-result-package-name)
                        (checks package-result-group-results)) result

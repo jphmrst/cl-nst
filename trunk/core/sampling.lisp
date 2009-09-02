@@ -424,6 +424,9 @@
                 (block verify-once
                   (handler-bind ((error
                                   #'(lambda (e)
+                                      (format-at-verbosity 4
+                                          "Caught ~s in :sample criterion~%"
+                                        e)
                                       (add-error
                                        ,result
                                        :format ,(format nil

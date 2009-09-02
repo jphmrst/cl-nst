@@ -75,6 +75,18 @@
       (t (member :allegro *features*)))
   "User variable: if non-null, will attempt to capture the Lisp backtrace of errors in tests.")
 
+(defmacro format-at-verbosity (lv format &rest args)
+  (let ((lv-val (gensym)))
+    `(let ((,lv-val ,lv))
+       (when (>= *nst-verbosity* ,lv-val)
+         (format t ,format ,@args)))))
+
+(defmacro at-verbosity (lv &rest forms)
+  (let ((lv-val (gensym)))
+    `(let ((,lv-val ,lv))
+       (when (>= *nst-verbosity* ,lv-val)
+         ,@forms))))
+
 ;;;
 ;;;  Flags and dynamic variable declarations.
 ;;;

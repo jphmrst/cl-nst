@@ -108,9 +108,9 @@ use of this fixture.
 
          ,@(loop for (var form) in bindings
                  append
-                 `((when (> *nst-verbosity* 3)
-                     (format t ,(format nil " - Calculating ~a~~%" var)))
-                         (setf ,(cond (var `(symbol-value ',var)) (t (gensym)))
+                 `((format-at-verbosity 3
+                       ,(format nil " - Calculating ~a~~%" var))
+                   (setf ,(cond (var `(symbol-value ',var)) (t (gensym)))
                          ,form)))
 
          (import ',(loop for var-form in bindings
