@@ -253,7 +253,7 @@ available from compile-time forward.")
                   :args (&rest packages)
                   :repeatable t)
     (apply-default-debug-options
-     (let (ran-package)
+     (let (ran-packages)
        (loop for package in packages do
          (cond
            ((find-package package)
