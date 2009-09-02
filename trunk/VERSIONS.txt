@@ -1,8 +1,12 @@
 
-1.2.1 - 
+1.2.2 - 
 
 
-1.2.0 - released July 22, 2009
+1.2.1 - private release, September 2, 2009
+ Ticket 104 - fixed issues with modern/classic capitalization, occasional
+              hanging in backtrace collector
+
+1.2.0 - public release, July 22, 2009
  Deprecation warnings on several disused macros.
  Clarified error output message for :eq/:eql/:equal/:equalp.
  Ticket 98 - customizable meaning for ":nst :debug" via ASDF.
