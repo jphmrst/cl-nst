@@ -78,9 +78,9 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
                                      append (bound-names fx))
                                ,@(loop for fx in *group-fixture-classes*
                                        append (bound-names fx))))
-             (declare (special *current-group* *current-test*))
              (let ((*current-group* ',*group-class-name*)
                    (*current-test*  ',test-name))
+               (declare (special *current-group* *current-test*))
                ,core-run-body))
 
            ,@(when setup-supp-p
