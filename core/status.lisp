@@ -43,8 +43,14 @@
                           while spot
                           collect (string-left-trim " ->" (subseq raw 0 spot))
                           do (setf raw (subseq raw (+ 1 spot))))))
-           (unless (search "emit-error " (car lines))  (pop lines))
-           (unless (search "emit-error " (car lines))  (pop lines))
+           (unless (search ,(if (string= "zz"
+                                         (symbol-name 'zz))
+                              "emit-error "
+                              "EMIT-ERROR ") (car lines))  (pop lines))
+           (unless (search ,(if (string= "zz"
+                                         (symbol-name 'zz))
+                              "emit-error "
+                              "EMIT-ERROR ") (car lines))  (pop lines))
 
            (let ((orig-lines (loop for line in lines collect line)))
 
@@ -59,11 +65,11 @@
                                       lines)))))
                (loop while (and lines
                                 (not (search ,(if (string= "zz"
-                                                          (symbol-name 'zz))
-                                                 "emit-error "
-                                                 "EMIT-ERROR ")
+                                                           (symbol-name 'zz))
+                                                "emit-error "
+                                                "EMIT-ERROR ")
                                              (car lines))))
-                     do (pop lines))
+                   do (pop lines))
                (cond
                 ;; We found the "emit-error" line, and it's not at the
                 ;; top of the list of lines.
@@ -72,10 +78,20 @@
                 ;; There is no "emit-error" line, so restore the
                 ;; original list of lines.
                 (t (setf lines orig-lines)))
-               (if (search ":internal" (car lines)) (pop lines))
-               (loop while (search "core-run-test" (car lines)) do (pop lines))
-               (let ((first (position-if #'(lambda (x)
-                                             (search "core-run-test" x))
+               (if (search ,(if (string= "zz" (symbol-name 'zz))
+                              ":internal"
+                              ":INTERNAL") (car lines)) (pop lines))
+               (loop while (search ,(if (string= "zz" (symbol-name 'zz))
+                                      "core-run-test"
+                                      "CORE-RUN-TEST")
+                                   (car lines))
+                   do (pop lines))
+               (let ((first
+                      (position-if #'(lambda (x)
+                                       (search ,(if (string= "zz"
+                                                             (symbol-name 'zz))
+                                                    "core-run-test"
+                                                    "CORE-RUN-TEST") x))
                                          lines)))
                  (setf lines (subseq lines 0 first)))
                lines)))))))
