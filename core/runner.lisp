@@ -36,9 +36,8 @@
     (note-artifact-choice (package-name user-package) user-package)
 
     ;; Print a message at the appropriate level of verbosity.
-    (when (> *nst-verbosity* 0)
-      (format t "~@<Running package ~s (groups ~{~s~^ ~:_~})~:>~%"
-        (package-name user-package) group-names))
+    (format-at-verbosity 0 "~@<Running package ~s (groups ~{~s~^ ~:_~})~:>~%"
+        (package-name user-package) group-names)
 
     (cond
       (group-names
@@ -49,9 +48,7 @@
 (defun run-group (group-class)
   "Run a group by its user-given name."
   ;; Print a message at the appropriate level of verbosity.
-  (cond
-   ((> *nst-verbosity* 0)
-    (format t "Running group ~s~%" group-class)))
+  (format-at-verbosity 0 "Running group ~s~%" group-class)
 
   (unless group-class (error 'no-such-nst-group :group group-class))
   (run-group-inst (make-instance group-class)))
@@ -79,8 +76,7 @@
         (note-artifact-choice (check-user-name test-inst) test-inst)
 
         ;; Print a message at the appropriate level of verbosity.
-        (when (> *nst-verbosity* 0)
-          (format t "Running test ~s (group ~s)~%" test group))
+        (format-at-verbosity 0 "Running test ~s (group ~s)~%" test group)
 
         (run-group-tests group-inst (list test-inst))))))
 
@@ -110,19 +106,16 @@
 for the group application class.")
   (:method (group-obj test-objs)
     (do-group-postfixture-setup group-obj)
-    (when (> *nst-verbosity* 3)
-      (format t "    Starting run loop for ~s~%" group-obj))
+    (format-at-verbosity 3 "    Starting run loop for ~s~%" group-obj)
     (loop for test-inst in test-objs do
-      (when (> *nst-verbosity* 3) (format t "    Instance ~s~%" test-inst))
+      (format-at-verbosity 3 "    Instance ~s~%" test-inst)
       (do-group-each-test-setup group-obj)
       (do-test-prefixture-setup test-inst)
       (do-test-fixture-assignment test-inst)
       (do-test-afterfixture-cleanup test-inst)
       (do-group-each-test-cleanup group-obj)
-      (when (> *nst-verbosity* 3)
-        (format t "      Exiting loop entry ~s~%" test-inst)))
-    (when (> *nst-verbosity* 3)
-      (format t "    Exiting run loop for ~s~%" group-obj))
+      (format-at-verbosity 3 "      Exiting loop entry ~s~%" test-inst))
+    (format-at-verbosity 3 "    Exiting run loop for ~s~%" group-obj)
     (do-group-withfixture-cleanup group-obj)))
 
 (defgeneric do-group-postfixture-setup (group-obj)
@@ -197,8 +190,7 @@ encoded as :before and :after methods.")
           (*nst-check-internal-name* (check-group-name test))
           (start-time))
       (declare (special *nst-group-name* *nst-check-user-name*))
-      (when (> *nst-verbosity* 1)
-        (format t " - Executing test ~s~%" *nst-check-user-name*))
+      (format-at-verbosity 1 " - Executing test ~s~%" *nst-check-user-name*)
       (setf start-time (get-internal-real-time))
       (let ((result (call-next-method))
             (end-time (get-internal-real-time)))
@@ -206,7 +198,6 @@ encoded as :before and :after methods.")
               (- end-time start-time)
               (gethash (check-group-name test) +results-record+)
               result)
-        (when (> *nst-verbosity* 1)
-          (format t "   ~s~%" result))
+        (format-at-verbosity 1 "   ~s~%" result)
         result))))
 

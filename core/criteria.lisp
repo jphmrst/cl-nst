@@ -91,10 +91,16 @@
     `(block ,block
        (handler-bind ((,type #'(lambda (,x)
                                  (declare (ignorable ,x))
+                                 (format-at-verbosity 4
+                                     "Caught ~s as expected by :err criterion~%"
+                                   ,x)
                                  (return-from ,block (check-result))))
                       ,@(when (and type-supp-p (not (eq type 'error)))
                           `((error
                              #'(lambda (,x)
+                                 (format-at-verbosity 4
+                                     "Caught ~s but :err expected ~s~%"
+                                   ,x ',type)
                                  (unless *debug-on-error*
                                    (return-from ,block (emit-error ,x))))))))
          ,expr-form)
@@ -225,6 +231,9 @@
     `(block ,x
        (handler-bind ((error #'(lambda (,x)
                                  (declare (ignorable ,x))
+                                 (format-at-verbosity 4
+                                     "Caught ~s as expected by :check-err~%"
+                                   ,x)
                                  (return-from ,x (check-result)))))
          ,(continue-check criterion forms))
        (emit-failure :format "~@<No expected error for check ~s on:~

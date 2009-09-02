@@ -99,11 +99,13 @@ subsequences of a current check definition.
                                                     (t `',forms)))
                                     *nst-context*)))
            (declare (special *nst-context*))
-           (when (> *nst-verbosity* 3)
-             (format t "Checking (~s~{ ~s~}~%" ',criterion ',forms))
+           (format-at-verbosity 3 "Checking (~s~{ ~s~}~%" ',criterion ',forms)
            (block ,checker-block
              (handler-bind
                  ((error #'(lambda (e)
+                             (format-at-verbosity 4
+                               "Caught ~s in the handler for ~s"
+                               e ',criterion)
                              (unless *debug-on-error*
                                (return-from ,checker-block (emit-error e))))))
                ,body))))))))

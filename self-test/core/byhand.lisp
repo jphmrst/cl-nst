@@ -106,3 +106,9 @@
                :where (progn (format t "Considering ~a~%" x)
                              (> x 1))
                :verify (< (sqrt x) x))))
+
+(def-test-group slow-pass ()
+  (def-test sp1 :true (progn (sleep 10) t))
+  (def-test sp2 :true (progn (sleep 10) t))
+  (def-test sp3 :true (progn (sleep 10) t))
+  (def-test sp4 :true (progn (sleep 10) t)))
