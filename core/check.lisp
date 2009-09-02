@@ -104,7 +104,7 @@ subsequences of a current check definition.
              (handler-bind
                  ((error #'(lambda (e)
                              (format-at-verbosity 4
-                               "Caught ~s in the handler for ~s"
+                               "Caught ~s in the handler for ~s~%"
                                e ',criterion)
                              (unless *debug-on-error*
                                (return-from ,checker-block (emit-error e))))))

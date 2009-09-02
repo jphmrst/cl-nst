@@ -52,8 +52,7 @@
                            (format-at-verbosity 3
                                "Caught error identifying backtrace core~%")
                            (return-from backtrace-maker
-                             (list* "Caught error while identifying backtrace ~
-                                     core, returning raw lines"
+                             (list* "Caught error while identifying backtrace core, returning raw lines"
                                     lines)))))
              (loop while (not (search "emit-error " (car lines)))
                  do (pop lines))
