@@ -14,6 +14,7 @@ Under both of the latter two mechanisms, the criteria definition is
 made as Lisp code calculating a \emph{test report}.
 
 \subsection{Aliases over criteria}
+\label{sec:def-criterion-alias}
 The simplest mechanism for defining a new criterion involves simply
 defining one criterion to rewrite as another using
 \texttt{def-criterion-alias}:
@@ -33,6 +34,7 @@ backquoted result.  For example:
 \\ \texttt{(def-test-alias (:symbol name) `(:eq ',name))}
 
 \subsection{Reporting forms}
+\label{sec:criteria-forms-report}
 The other two criteria-defining mechanisms define the expansion of a
 criterion into Lisp.  For both of these mechanisms, this Lisp code is
 expected to return a test report.  NST provides three functions for
@@ -50,6 +52,7 @@ building test reports:
 \end{itemize}
 
 \subsection{Defining criteria for values}
+\label{sec:def-values-criterion}
 The Lisp body of a \texttt{def-values-criterion} should evaluate to a
 quoted Lisp expression calculating a test report.  These criteria
 definitions are like functions with two sets of formal parameters:
@@ -100,6 +103,7 @@ Examples:
 \end{verbatim}
 
 \subsection{Processing subcriteria}
+\label{sec:subcriteria}
 Since the arguments to the criterion in \texttt{def-form-criterion}
 are passed unevaluated as for macro arguments, they can contain
 \emph{subcriteria} which can be incorporated into the main criterion's
@@ -116,6 +120,7 @@ In fact, \texttt{def-form-criterion} and \texttt{def-values-criterion}
 expand to method definitions which are used in \texttt{continue-check}.
 
 \subsection{Defining criteria for a values-returning form}
+\label{sec:def-form-criterion}
 As for \texttt{def-values-criterion}, the body of a
 \texttt{def-form-criterion} should specify a quoted Lisp expression
 calculating a test report.  The difference between these forms is that
