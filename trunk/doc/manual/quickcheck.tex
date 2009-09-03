@@ -16,6 +16,7 @@ we address in the next two sections: describing how the sample data
 can be generating, and specifying the test itself.
 
 \subsection{Generating sample data}
+\label{sec:quickcheck-data}
 Data generation is centered around the generic function
 \texttt{arbitrary}.  This function takes a single argument, which
 determines the type of the value to be generated.  For simple types,
@@ -164,14 +165,16 @@ we discuss below.  Types are not associated with \texttt{scalar} are
 referred to as \emph{compound} (although there is no corresponding
 type specification).  To avoid generating structures too large to hold
 in memory, NST provides the global variable
-\texttt{*max-compound-structure-depth*} which sets the maximum nesting
-depth of compound data structures: beyond that depth, \texttt{scalar}
-rather than \texttt{t} is the default element generator.  This
-restriction does not apply to explicitly specified element types, only
-to the use of defaults.
+\texttt{*max-compound-structure-depth*}\label{max-compound-structure-depth}
+which sets the maximum nesting depth of compound data structures:
+beyond that depth, \texttt{scalar} rather than \texttt{t} is the
+default element generator.  This restriction does not apply to
+explicitly specified element types, only to the use of defaults.
 
 New type specifications are defined with the
-\texttt{def-arbitrary-instance-type} macro.
+\texttt{def-arbitrary-instance-type}
+macro.
+\label{def-arbitrary-instance-type}
 \begin{verbatim}
   (def-arbitrary-instance-type (SPECIFICATION-NAME
                                  [ :key KEYWORD-PARAMS ]
@@ -210,6 +213,7 @@ arguments allow specifications for the left and right components:
 \end{verbatim}
 
 \subsection{Invariants as tests}
+\label{sec:quickcheck-tests}
 Invariants to be tested, and the domains over which they range, are
 specified in the \texttt{:sample} criterion:
 \begin{verbatim}

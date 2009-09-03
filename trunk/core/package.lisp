@@ -34,6 +34,13 @@
                   #:extract-lambda-list
                   #:generic-function-methods #:method-specializers
                   #:eql-specializer-object)
+
+    ;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+    ;; * REMEMBER! * REMEMBER! * REMEMBER! * REMEMBER! * REMEMBER! * *
+    ;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+    ;; * * * Mirror and document the exported API in the manual. * * *
+    ;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
     (:export #:def-fixtures
              #:def-test-group
              #:def-test #:def-check     ; def-check will be deprecated
@@ -75,7 +82,15 @@
              ;; If ever we break up the NST package, this name should
              ;; go into the programmer's API package.
              #:protect-nst-config
-             #:apply-debug-options))
+             #:apply-debug-options)
+
+    ;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+    ;; * REMEMBER! * REMEMBER! * REMEMBER! * REMEMBER! * REMEMBER! * *
+    ;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+    ;; * * * Mirror and document the exported API in the manual. * * *
+    ;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+    )
 
 (defun nst::make-package-documentation ()
   "Write documentation for this package, using system package-doc."
