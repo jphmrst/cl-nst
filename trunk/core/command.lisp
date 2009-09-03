@@ -230,8 +230,7 @@ available from compile-time forward.")
 (def-nst-interactive-command
     (:debug :short-help "Activate NST debugging."
             :args (&optional (val t))
-            :long-help "Activate NST debugging by activating
-            *default-debug-config* before each test operation.")
+            :long-help "Activate NST debugging by activating *default-debug-config* before each test operation.")
   (cond
     ((and *nst-debug* val) (format t "NST debugging is on.~%"))
     (val                   (format t "Turned NST debugging on.~%"))

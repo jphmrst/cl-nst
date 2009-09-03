@@ -27,15 +27,24 @@
     :version "1.0.0"
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
-    :depends-on (:nst)
     :components ((:module "asdf" :components
-			  (;; The ASDF-NST package.
-			   (:file "package")
-		 
-			   ;; An NST-testable ASDF class
-			   (:file "system"  :depends-on ("package"))
-		 
-;;;			   ;; An ASDF system class providing a summary
-;;;			   ;; of other NST-testable systems.
-;;;			   (:file "summary"  :depends-on ("package"))
-			   ))))
+                          (;; The ASDF-NST package.
+                           (:file "package")
+
+                           ;; Dynamic variables and generic functions.
+                           (:file "globals"  :depends-on ("package"))
+
+                           ;; An NST-testable ASDF class
+                           (:file "runnable"  :depends-on ("globals"))
+
+                           ;; An NST-testable ASDF class
+                           (:file "system"  :depends-on ("runnable"))
+
+                                        ; See also: misc.lisp has the
+                                        ; beginnings of a :nst-file
+                                        ; type on which we should
+                                        ; allow deferred
+                                        ; compilation/loading until
+                                        ; test time.
+
+                           ))))
