@@ -69,6 +69,9 @@
 
 (defparameter zzz 0)
 
+(def-test-group core-checks-sub ()
+  (def-test err-3 (:err :type division-by-zero) (error "Miss this")))
+
 (def-test-group core-checks ()
   (def-test pass-1 :pass 'a)
   (def-test fail-1 (:not :fail) 'a)

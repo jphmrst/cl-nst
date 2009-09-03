@@ -89,6 +89,7 @@
 (def-form-criterion (:err (&key (type 'condition type-supp-p)) expr-form)
   (let ((x (gensym "x")) (block (gensym "block")))
     `(block ,block
+       (format-at-verbosity 4 "    Setting up ~s handler for :err~%" ',type)
        (handler-bind ((,type #'(lambda (,x)
                                  (declare (ignorable ,x))
                                  (format-at-verbosity 4

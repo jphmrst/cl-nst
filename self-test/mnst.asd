@@ -24,7 +24,7 @@
 (in-package :mnst-asd)
 
 (defsystem :mnst
-    :class nst-testable
+    :class nst-test-holder
     :description "M as in meta: NST- (or otherwise) testing NST."
     :serial t
     :nst-systems (:masdfnst)
@@ -41,7 +41,6 @@
                  (:mnst-simple . each-setup-cleanup)
                  (:mnst-simple . z-setup-cleanup))
     :depends-on (:nst)
-    :in-order-to ((test-op (load-op :mnst)))
     :components ((:module "core" :components
                           (;; Manually-run tests, for inspecting the
                            ;; order of fixture, setup, cleanup and
@@ -55,23 +54,3 @@
 ;;;                       (:file "anon-fixtures-mnst")
 
                            ))))
-
-(defclass nst-file (cl-source-file) ())
-(defmethod perform ((o compile-op) (c nst-file)) nil)
-(defmethod operation-done-p ((op compile-op) (file nst-file)) nil)
-(defmethod input-files ((op load-op) (file nst-file))
-  (list (component-pathname file)))
-(defmethod output-files ((o compile-op) (c nst-file)) nil)
-
-;;;(defmethod perform ((op test-op)
-;;;                 (system (eql (find-system :mnst))))
-;;;  (eval (list (intern (symbol-name '#:run-nst-commands)
-;;;                   (find-package :mnst))
-;;;           :run-package
-;;;           (quote (intern (symbol-name :mnst)
-;;;                          (find-package 'cl-user))))))
-
-(defmethod operation-done-p ((o test-op) (sys (eql (find-system :mnst))))
-  "We need to make sure that operation-done-p doesn't return its
-normal value, or a test-op will be run only once."
-  (values nil))

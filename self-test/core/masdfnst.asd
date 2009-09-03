@@ -25,7 +25,7 @@
 (in-package :masdfnst-asd)
 
 (defsystem :masdfnst
-    :class nst-testable
+    :class nst-test-holder
 
     :in-order-to ((test-op (load-op :masdfnst)))
 
