@@ -171,12 +171,12 @@ current criterion.")
 (defmacro apply-debug-options (forms-spec protect-vars &body forms)
   (let ((protects (gensym)))
     `(let ((,protects (assemble-protected-option-values ',protect-vars)))
-       (run-debug-options ,forms-spec)
+       (run-debug-options ',forms-spec)
        (prog1 (progn ,@forms)
          (restore-protected-option-values ,protects)))))
 
 (defmacro apply-default-debug-options (&body forms)
-  `(apply-debug-options *default-debug-config* *default-debug-protect*
+  `(apply-debug-options ,*default-debug-config* ,*default-debug-protect*
       ,@forms))
 
 (defmacro protect-nst-config (&body forms)
