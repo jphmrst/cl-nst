@@ -131,6 +131,64 @@ default the current package."))
   (elapsed-time 0)
   (timestamp (multiple-value-list (get-decoded-time))))
 
+
+;;;
+;;; Tracking what an artifact is by name.
+;;;
+(defvar +name-use+ (make-hash-table :test 'eq)
+  "Known uses of names.")
+
+(defstruct name-use
+  "Record for tracking the artifacts which NST associates with a name."
+  fixture group (tests (make-hash-table :test 'eq)))
+
+(set-pprint-dispatch 'name-use
+  #'(lambda (stream usage)
+      (with-accessors ((fixture name-use-fixture)
+                       (group name-use-group)
+                       (tests name-use-tests)) usage
+        (let ((tests-p (> (hash-table-count tests) 0)))
+          (cond
+            ((and fixture (not group) (not tests-p))
+             (format stream
+                 "~@<~a (package ~a) is a fixture~
+                 ~:@_ - ~@<binds names~{ ~a~^,~:_~}~:>~
+                 ~:>"
+               (type-of fixture)
+               (package-name (symbol-package (type-of fixture)))
+               (bound-names fixture)))
+
+            ((and group (not fixture) (not tests-p))
+             (format stream
+                 "~@<~a (package ~a) is a test group~
+                  ~:@_ - ~@<Contains test~p~{ ~a~^,~:_~}~:>~:>"
+               (type-of group)
+               (package-name (symbol-package (type-of group)))
+               (length (test-names group)) (test-names group)))
+
+            ((and tests-p (not fixture) (not group))
+             (case (hash-table-count tests)
+               (1
+                (loop for group being the hash-keys of tests
+                      using (hash-value tst)
+                      do
+                   (format stream "~a (package ~a) is a test in group ~a"
+                     (test-name-lookup tst)
+                     (package-name (symbol-package (test-name-lookup tst)))
+                     group)))
+               (otherwise
+                (loop for group being the hash-keys of tests
+                      using (hash-value tst)
+                      do
+                   (format stream "~a (package ~a) is a test in group ~a~%"
+                     (test-name-lookup tst)
+                     (package-name (symbol-package (test-name-lookup tst)))
+                     group)))))
+
+            (t
+             (format stream "MULTI")))))))
+
+
 ;;;
 ;;; Recording of results.  We use a hash table here --- unlike the
 ;;; method-based recording of test symbols, we're not worried about

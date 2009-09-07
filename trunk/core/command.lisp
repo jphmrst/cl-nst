@@ -277,7 +277,6 @@ available from compile-time forward.")
    (run-test group test)
    (report-multiple nil nil (list (cons group test)))))
 
-
 (def-nst-interactive-command
     (:run :short-help "Run NST packages, groups and tests."
           :args (&rest stuff)
@@ -372,6 +371,16 @@ The last form shows all interesting results."
 (def-nst-interactive-command
     (:unset :short-help "Clear an NST property." :args (name))
     (set-nst-property name nil))
+
+(def-nst-interactive-command
+    (:whatis :short-help "Query what NST artifacts a name denotes" :args (name))
+    (let ((usage (gethash name +name-use+)))
+      (cond
+        ((null usage) (format t "The symbol ~s is not known to NST" name))
+        ((typep usage 'name-use) (pprint usage))
+        (t (error "The name use record for ~s is a ~s instead of name-use"
+                  name (type-of usage))))
+      nil))
 
 (defun run-nst-command (&rest args)
   (cond

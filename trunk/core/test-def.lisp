@@ -100,6 +100,17 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
              (defclass ,name (,@fixture-class-names) ()
                        (:metaclass singleton-class))
 
+             (finalize-inheritance (find-class ',name))
+
+             (eval-when (:load-toplevel :execute)
+               (let ((this-name-use (gethash ',test-name +name-use+)))
+                 (unless this-name-use
+                   (setf this-name-use (make-name-use)
+                         (gethash ',test-name +name-use+) this-name-use))
+                 (let ((tests-by-group (name-use-tests this-name-use)))
+                   (setf (gethash ',test-name tests-by-group)
+                         (make-instance ',name)))))
+
              (defmethod group-name ((obj ,name)) ',*group-class-name*)
              (defmethod check-user-name ((obj ,name)) ',test-name)
              (defmethod check-group-name ((obj ,name)) ',name)
