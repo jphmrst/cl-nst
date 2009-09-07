@@ -43,39 +43,54 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
       (decode-defcheck-name-and-args name-or-name-and-args)
     (declare (ignorable fixtures-supp-p) (special *group-class-name*))
 
-    (let ((reuse-name nil)
-          (purge-ids nil))
+
+    (let ((name nil)                    ; The internal symbol used to
+                                        ; track the results of this
+                                        ; test.
+          (purge-ids nil))              ; IDs of previous record of
+                                        ; running this test.
+
+      ;; Find any records of running previous versions of this test.
       (loop for report being the hash-values of +results-record+
             using (hash-key id)
             do
          (when (and (eq test-name (check-result-check-name report))
                     (eq *group-class-name* (check-result-group-name report)))
            (push id purge-ids)))
+
+      ;; If we find one, reuse the symbol.
       (when (eql 1 (length purge-ids))
-        (setf reuse-name (car purge-ids)))
+        (setf name (car purge-ids)))
+
+      ;; Get rid of any previous records.  For ticket:118, this would
+      ;; become setting up initial records.
       (loop for id in purge-ids do
         (remhash id +results-record+))
 
-      (let* ((name (cond
-                     (reuse-name reuse-name)
-                     (t (gensym (concatenate 'string
-                                  (package-name (symbol-package
-                                                 *group-class-name*))
-                                  "-"
-                                  (symbol-name *group-class-name*)
-                                  "-"
-                                  (package-name (symbol-package test-name))
-                                  "--"
-                                  (symbol-name test-name))))))
-             (*nst-context* nil)
-             (core-run-body
-              (cond
-               ((eql 1 (length forms))
-                (continue-check criterion
-                  `(common-lisp:multiple-value-list ,(car forms))))
-               (t
-                (continue-check criterion (cons 'list forms))))))
+      ;; If we aren't reusing a name, make up a new one.
+      (unless name
+        (setf name (gensym (concatenate 'string
+                             (package-name (symbol-package
+                                            *group-class-name*))
+                             "-"
+                             (symbol-name *group-class-name*)
+                             "-"
+                             (package-name (symbol-package test-name))
+                             "--"
+                             (symbol-name test-name)))))
+
+      (let ((*nst-context* nil)
+            (core-run-body
+             (cond ((eql 1 (length forms))
+                    (continue-check criterion
+                      `(common-lisp:multiple-value-list ,(car forms))))
+                   (t (continue-check criterion (cons 'list forms))))))
+                                        ; The expansion of the actual
+                                        ; test form.
         (declare (special *nst-context*))
+
+        ;; Expand the fixtures into the definitions we'll actually
+        ;; use.
         (multiple-value-bind (fixture-class-names anon-fixture-forms)
             (process-fixture-list fixtures)
 
