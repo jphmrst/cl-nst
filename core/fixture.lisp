@@ -76,6 +76,12 @@ use of this fixture.
          #|(let ((proto (class-prototype (find-class ',name))))
              (setf (slot-value proto 'bound-names) ',bound-names))|#)
 
+       (let ((this-name-use (gethash ',name +name-use+)))
+         (unless this-name-use
+           (setf this-name-use (make-name-use)
+                 (gethash ',name +name-use+) this-name-use))
+         (setf (name-use-fixture this-name-use) (make-instance ',name)))
+
        (defmethod do-group-fixture-assignment :around ((,g-param ,name)
                                                        ,t-param)
          (declare (ignorable ,t-param)
@@ -129,8 +135,7 @@ use of this fixture.
          (format t " - Inner bindings: ~@<~{~s~^ ~_~}~:>~%" ',inner)
          (format t " - Documentation string: ~s~%" ,documentation)
 
-       ',name)
-    )))
+       ',name))))
 
 (defun process-fixture-list (fixture-list)
   "Trivial, for now, because anonymous fixtures are offline."

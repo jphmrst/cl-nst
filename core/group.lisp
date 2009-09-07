@@ -126,7 +126,15 @@ forms - zero or more test forms, given by def-check."
                                          :initform (make-hash-table :test 'eq)))
                    (:metaclass singleton-class))
 
-                 #|(finalize-inheritance (find-class ',group-name))|#
+                 (finalize-inheritance (find-class ',group-name))
+                 (eval-when (:load-toplevel :execute)
+                   (let ((this-name-use (gethash ',group-name +name-use+)))
+                     (unless this-name-use
+                       (setf this-name-use (make-name-use)
+                             (gethash ',group-name +name-use+) this-name-use))
+                     (setf (name-use-group this-name-use)
+                           (make-instance ',group-name))))
+
                  #|(let ((proto (class-prototype (find-class ',group-name))))
                      (setf (slot-value proto 'anon-fixture-forms)
                            ',anon-fixture-forms))|#
@@ -163,7 +171,6 @@ forms - zero or more test forms, given by def-check."
                  ;; Pass the group record predicate.
                  (defmethod group-record-p ((obj ,group-name)) t)
 
-                 ;; WARNING!  This hook crashes Allegro Lisp.
                  (set-pprint-dispatch ',group-name
                    #'(lambda (stream object)
                        (declare (ignorable object))
