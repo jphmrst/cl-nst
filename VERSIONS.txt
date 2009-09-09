@@ -1,4 +1,7 @@
 
+1.2.3 -
+
+
 1.2.2 - private release, September 9, 2009
  Ticket 104 - recompilation of a test now removes the record of its
               pass/failure.
