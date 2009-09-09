@@ -1,0 +1,277 @@
+
+\section{Verifying invariants against sampled data}
+\label{quickcheck}
+The \texttt{:sample} criterion provides random generation of data for
+validating program properties.\footnote{This feature appears first in
+  NST version 1.1.2.}  Our approach is based on Claessen and Hughes's
+Quickcheck\footnote{Koen Claessen and John Hughes, ``QuickCheck: a
+  lightweight tool for random testing of Haskell programs,'' from
+  \emph{Proceedings of the International Conference on Functional
+    Programming}, 2000.  QuickCheck papers, code and other resources
+  are available at \textsl{www.cs.chalmers.se/\~{}rjmh/QuickCheck}~.}.
+
+This style of testing is somewhat more complicated to than specific
+tests on single, bespoke forms.  There are two distinct efforts, which
+we address in the next two sections: describing how the sample data
+can be generating, and specifying the test itself.
+
+\subsection{Generating sample data}
+\label{sec:quickcheck-data}
+Data generation is centered around the generic function
+\texttt{arbitrary}.  This function takes a single argument, which
+determines the type of the value to be generated.  For simple types,
+the name of the type (or the class object, such as returned by
+\texttt{find-class}) by itself is a complete specification.  For more
+complicated types, \texttt{arbitrary} can also take a list argument,
+where the first element gives the type and the remaining elements are
+keyword argument providing additional requirements for the generated
+value.
+
+NST provides method of \texttt{arbitrary} for many standard Lisp
+types, listed in Table~\ref{table:built-in-arbitrary-types}.  Types in
+the first column --- the standard numeric types plus the common
+supertype \texttt{t} --- are not associated with additional keyword
+arguments.
+\begin{verbatim}
+  (nst:arbitrary t)
+  (nst:arbitrary 'complex)
+  (nst:arbitrary 'integer)
+  (nst:arbitrary 'ratio)
+  (nst:arbitrary 'single-float)
+\end{verbatim}
+Keyword arguments for other NST-provided type specifiers
+are as follows:
+\begin{table}
+\begin{center}
+  \texttt{
+    \begin{tabular}{lll|ll||l}
+      \multicolumn{5}{c}{\textrm{\textbf{Standard Lisp types}}}
+          & \multicolumn{1}{c}{\textrm{\textbf{Other types}}}
+      \\ \hline
+         number  & character & symbol & cons   & hash-table & scalar
+      \\ real & string    &        & list   & &
+      \\ rational &       &        & vector & &
+      \\ integer  &       &        & array  & &
+      \\ float &&&&t&
+      \\ fixnum &&&& &
+      \\ bignum &&&& &
+      \\ ratio &&&& &
+      \\ \multicolumn{2}{l}{short-float\footnotemark} &&& &
+      \\ \multicolumn{2}{l}{single-float} &&& &
+      \\ \multicolumn{2}{l}{double-float\addtocounter{footnote}{-1}\footnotemark} &&& &
+      \\ \multicolumn{2}{l}{long-float} &&& &
+      \\ complex &&&& &
+      \\ \cline{1-3} \multicolumn{3}{c}{\textrm{Considered \texttt{scalar}}}
+    \end{tabular}}
+\end{center}
+\caption{NST provides methods of generic function \texttt{arbitrary} generating values of the types in this table.}
+\label{table:built-in-arbitrary-types}
+\end{table}
+\footnotetext{Not available on Allegro Lisp.}
+
+\begin{itemize}
+\item Types \texttt{character} and \texttt{string}:
+  \begin{itemize}
+  \item Argument \texttt{noncontrol}.  Excludes the control characters
+    associated with ASCII code 0 through 31.
+  \item Argument \texttt{range}.  Allows the range of characters to be
+    restricted to a particular subset:
+    \begin{center}
+      \begin{tabular}{>{\ttfamily:}c|l}
+        \multicolumn{1}{c|}{Value} & \multicolumn{1}{c}{Meaning}
+        \\ \hline standard & Codes up to 96
+        \\ ascii & Codes through 127
+        \\ ascii-ext & Codes through 255
+      \end{tabular}
+    \end{center}
+    Omitted or with any other value, characters with any code up to
+    \texttt{char-code-limit} can result.  Examples:
+\begin{verbatim}
+  (nst:arbitrary 'character)
+  (nst:arbitrary '(character :noncontrol t
+                             :range :standard))
+\end{verbatim}
+  \end{itemize}
+  
+\item Type \texttt{symbol}:
+  \begin{itemize}
+  \item Argument \texttt{existing}.  If non-nil, requires that the
+    result be a previously-interned symbol.
+  \item Argument \texttt{exported}.  Requires that the result be not
+    only a previously-interned symbol, but also one exported by its
+    package.  Ignored if \texttt{:existing} is explicitly set to nil.
+  \item Argument \texttt{package}.  Specifies the package from which
+    the symbol will be generated.  If omitted, a package is selected
+    at random from the existing ones.
+  \item Argument \texttt{nonnull}.  If non-nil, allows
+    \texttt{arbitrary} to ignore other restriction to guarantee
+    returning a non-nil symbol.  When null, \texttt{arbitrary} may
+    return nil.
+  \item Argument \texttt{gensym}.  If non-nil, and if
+    \texttt{:existing} is explicitly set to nil, returns a new
+    uninterned symbol.
+  \end{itemize}
+  
+\item Type \texttt{cons}:
+  \begin{itemize}
+  \item Arguments \texttt{car} and \texttt{cdr} should be additional
+    type specifications, used direct the generation of respectively
+    the left and right elements of the result.  Each defaults to
+    \texttt{t}~.
+  \end{itemize}
+  
+\item Types \texttt{list} and \texttt{vector}:
+  \begin{itemize}
+  \item Argument \texttt{length} specifies the length of the structure.
+    If omitted, will be randomly generated.
+  \item Argument \texttt{elem} directs the generation of the
+    container's elements.  For both, the default element type is
+    \texttt{t}~.
+  \end{itemize}
+  
+\item Type \texttt{array}:
+  \begin{itemize}
+  \item Argument \texttt{elem}.  As for \texttt{list} and
+    \texttt{vector}.
+  \item Argument \texttt{dimens}.  Should be a list of nonnegative
+    integers specifying the length of each dimension of the array.  If
+    omitted, will be randomly generated.
+  \item Argument \texttt{rank}.  Specifies the number of dimensions.
+    If omitted but \texttt{:dimens} is given, will be set to the
+    length of \texttt{:dimens}.  If both \texttt{:rank} and
+    \texttt{:dimens} are omitted, then both are randomly generated.
+  \end{itemize}
+  
+\item Type \texttt{hash-table}:
+  \begin{itemize}
+  \item Argument \texttt{size}.  Specifies the number of entries in
+    the table.  If omitted, will be randomly generated.
+  \item Argument \texttt{test}.  Specifies the hash table's test
+    function.  If omitted, will be randomly selected from \texttt{eq},
+    \texttt{eql}, \texttt{equal} and \texttt{equalp}.
+  \item Arguments \texttt{key} and \texttt{val} direct the generation
+    of the table's keys and values, respectively.  For the keys, the
+    default element type is \texttt{t} when the test function is
+    \texttt{eq} or \texttt{eql}, and \texttt{scalar} otherwise.  For
+    the values, the default element type is \texttt{t}~.
+  \end{itemize}
+\end{itemize}
+
+Beyond those standard Lisp types, NST provides the type
+\texttt{scalar} as a supertype of the numeric types,
+\texttt{character}, \texttt{string} and \texttt{symbol}.  Users may
+extend this definition to include additional type specifications, as
+we discuss below.  Types are not associated with \texttt{scalar} are
+referred to as \emph{compound} (although there is no corresponding
+type specification).  To avoid generating structures too large to hold
+in memory, NST provides the global variable
+\texttt{*max-compound-structure-depth*}\label{max-compound-structure-depth}
+which sets the maximum nesting depth of compound data structures:
+beyond that depth, \texttt{scalar} rather than \texttt{t} is the
+default element generator.  This restriction does not apply to
+explicitly specified element types, only to the use of defaults.
+
+New type specifications are defined with the
+\texttt{def-arbitrary-instance-type}
+macro.
+\label{def-arbitrary-instance-type}
+\begin{verbatim}
+  (def-arbitrary-instance-type (SPECIFICATION-NAME
+                                 [ :key KEYWORD-PARAMS ]
+                                 [ :scalar BOOL ] )
+    FORM
+    ...
+    FORM)
+\end{verbatim}
+When a non-null value is provided for the \texttt{:scalar} argument,
+the new specifier is taken to be generable by the \texttt{scalar}
+specification.
+\begin{verbatim}
+  (def-arbitrary-instance-type (ratio :scalar t)
+    (/ (arbitrary 'integer)
+       (let ((raw (arbitrary (find-class 'integer))))
+         (cond
+           ((< raw 0) raw)
+           (t (+ 1 raw))))))
+\end{verbatim}
+The \texttt{:key} argument gives a list of keyword arguments which may
+accompany the new specification.  For the \texttt{cons} type, keyword
+arguments allow specifications for the left and right components:
+\begin{verbatim}
+  (def-arbitrary-instance-type (cons :key ((car t car-supp-p)
+                                           (cdr t cdr-supp-p)))
+    (compound-structure
+     (when (and (not car-supp-p)
+                (>= *current-compound-structure-depth*
+                    *max-compound-structure-depth*))
+       (setf car 'scalar))
+     (when (and (not cdr-supp-p)
+                (>= *current-compound-structure-depth*
+                    *max-compound-structure-depth*))
+       (setf cdr 'scalar))
+     (cons (arbitrary car) (arbitrary cdr))))
+\end{verbatim}
+
+\subsection{Invariants as tests}
+\label{sec:quickcheck-tests}
+Invariants to be tested, and the domains over which they range, are
+specified in the \texttt{:sample} criterion:
+\begin{verbatim}
+  (:sample [ :value LAMBDA-LIST ]
+           [ :domains ((NAME SPEC) ... (NAME SPEC)) ]
+           [ :where FORM ]
+           :verify FORM
+           [ :sample-size NUMBER ]
+           [ :qualifying-sample NUMBER ]
+           [ :max-tries NUMBER ] )
+\end{verbatim}
+The \texttt{verify} argument is the expression to be (repeatedly)
+evaluated, and which is expected always to return a non-null value.
+This is the sole required argument, although in any particular use it
+is unlikely to be the only argument given.  The other arguments are:
+\begin{itemize}
+\item The \texttt{domains} argument declares the variables in the
+  \texttt{verify} expression which are to be given multiple randomized
+  values.  The default value is \texttt{nil}, denoting an empty list.
+\item The \texttt{value} argument is a lambda list to which the values
+  given by the argument form should be applied.  The default value is
+  \texttt{nil}, denoting no such arguments.
+\item The \texttt{where} argument is a condition which determines the
+  validity of the input argument.  For example, the condition would
+  assert that a number is positive in an application where a negative
+  value would be known to cause a failure.  The default value is
+  \texttt{t}, allowing any values.
+\item The \texttt{sample-size} argument gives the base specification
+  of the number of value sets which will be generated.  Two further
+  arguments have some bearing on the number of generation attempts
+  when the \texttt{where} argument is non-\texttt{t}.  The
+  \texttt{qualifying-sample} argument gives the minimum acceptable
+  size of actual tested values, not counting sets rejected via the
+  \texttt{where} expression.  The \texttt{max-tries} argument gives
+  the maximum number of value sets to be generated.
+\end{itemize}
+
+Examples:
+\begin{verbatim}
+  (:sample :sample-size 10
+           :domains ((x (list :elem symbol)))
+           :verify (equal x (reverse (reverse x))))
+\end{verbatim}
+
+\begin{verbatim}
+  (:sample :domains ((x real))
+           :where (> x 1)
+           :verify (< (sqrt x) x)
+           :sample-size 10
+           :max-tries 12)
+\end{verbatim}
+
+\begin{verbatim}
+
+\end{verbatim}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual"
+%%% TeX-PDF-mode: t
+%%% End: 
