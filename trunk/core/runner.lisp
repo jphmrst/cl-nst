@@ -84,9 +84,19 @@
 
 (defun run-group-tests (group-obj test-objs)
   "Programmatic entry point for running all tests in a group."
-  (do-group-prefixture-setup group-obj)
-  (do-group-fixture-assignment group-obj test-objs)
-  (do-group-afterfixture-cleanup group-obj))
+  (flet ((log-errors (e msg)
+           (loop for test-obj in test-objs do
+             (setf (gethash (check-group-name test-obj) +results-record+)
+                   (config-error-note e test-obj msg)))
+           (return-from run-group-tests nil)))
+    (handler-bind
+        ((error #'(lambda (e) (log-errors e "Error in pre-fixture setup"))))
+      (do-group-prefixture-setup group-obj))
+    (handler-bind
+        ((error #'(lambda (e) (log-errors e "Error binding fixtures"))))
+      (do-group-fixture-assignment group-obj test-objs)))
+  (handler-bind ()
+    (do-group-afterfixture-cleanup group-obj)))
 
 (defgeneric do-group-prefixture-setup (group-obj)
   (:documentation
@@ -105,18 +115,40 @@
    "Fixture declarations translate to an :around method making let* bindings
 for the group application class.")
   (:method (group-obj test-objs)
-    (do-group-postfixture-setup group-obj)
+    (handler-bind
+        ((error
+          #'(lambda (e)
+              (loop for test-obj in test-objs do
+                (setf (gethash (check-group-name test-obj) +results-record+)
+                      (config-error-note e test-obj
+                       "Error in post-fixture application setup")))
+              (return-from do-group-fixture-assignment nil))))
+      (do-group-postfixture-setup group-obj))
     (format-at-verbosity 3 "    Starting run loop for ~s~%" group-obj)
     (loop for test-inst in test-objs do
       (format-at-verbosity 3 "    Instance ~s~%" test-inst)
-      (do-group-each-test-setup group-obj)
-      (do-test-prefixture-setup test-inst)
-      (do-test-fixture-assignment test-inst)
-      (do-test-afterfixture-cleanup test-inst)
-      (do-group-each-test-cleanup group-obj)
+      (flet ((log-test-error (e msg)
+               (setf (gethash (check-group-name test-inst) +results-record+)
+                     (config-error-note e test-inst msg))
+               (return-from do-group-fixture-assignment nil)))
+        (handler-bind
+            ((error #'(lambda (e)
+                        (log-test-error e "Error in group each-test setup"))))
+          (do-group-each-test-setup group-obj))
+        (handler-bind
+            ((error #'(lambda (e)
+                        (log-test-error e "Error in test pre-fixture setup"))))
+          (do-test-prefixture-setup test-inst))
+        (handler-bind ()
+          (do-test-fixture-assignment test-inst))
+        (handler-bind ()
+          (do-test-afterfixture-cleanup test-inst))
+        (handler-bind ()
+          (do-group-each-test-cleanup group-obj)))
       (format-at-verbosity 3 "      Exiting loop entry ~s~%" test-inst))
     (format-at-verbosity 3 "    Exiting run loop for ~s~%" group-obj)
-    (do-group-withfixture-cleanup group-obj)))
+      (handler-bind ()
+        (do-group-withfixture-cleanup group-obj))))
 
 (defgeneric do-group-postfixture-setup (group-obj)
   (:documentation "Fixture setup specs add a method to this function
@@ -159,7 +191,14 @@ for the group application class.")
    "Fixture declarations translate to an :around method making let* bindings
 for the test application class.")
   (:method (test-obj)
-     (do-test-postfixture-setup test-obj)
+     (handler-bind
+         ((error
+           #'(lambda (e)
+               (setf (gethash (check-group-name test-obj) +results-record+)
+                     (config-error-note e test-obj
+                                        "Error in test post-fixture setup"))
+               (return-from do-test-fixture-assignment nil))))
+       (do-test-postfixture-setup test-obj))
      (core-run-test test-obj)
      (do-test-withfixture-cleanup test-obj)))
 
