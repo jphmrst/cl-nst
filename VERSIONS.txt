@@ -1,6 +1,11 @@
 
 1.2.2 - 
-
+ Ticket 104 - recompilation of a test now removes the record of its
+              pass/failure.
+ Ticket 113 - about halfway implemented.
+ Ticket 119 - partial fix: affected tests do now show up as erring, although the
+              message is cryptic.
+ Start of NST API documentation in manual.
 
 1.2.1 - private release, September 2, 2009
  Ticket 104 - fixed issues with modern/classic capitalization, occasional

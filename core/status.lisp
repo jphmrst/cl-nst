@@ -112,6 +112,17 @@
                                             :args args
                                             :error e
                                             other-args)))))
+
+(defun config-error-note (error test-obj msg)
+  (let ((*nst-group-name* (group-name test-obj))
+        (*nst-check-user-name* (check-user-name test-obj)))
+    (declare (special *nst-group-name* *nst-check-user-name*))
+    (emit-error error :format (format nil msg))))
+
+(defun fixture-binding-error-note (fixture-name variable-name error)
+  (emit-error error
+              (format nil "~~@<Error binding ~s for fixture ~s:~~_ ~~s~~:>"
+                variable-name fixture-name)))
 
 ;;;
 ;;; Result records for high-level checks.
@@ -367,7 +378,6 @@ instances, and the info field is of any value."
           context
           stack)
         )))
-
 
 (defstruct (error-check-note (:include check-note))
   "A note issued in regards to a thrown error."
