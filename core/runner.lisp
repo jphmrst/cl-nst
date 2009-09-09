@@ -84,18 +84,29 @@
 
 (defun run-group-tests (group-obj test-objs)
   "Programmatic entry point for running all tests in a group."
-  (flet ((log-errors (e msg)
-           (loop for test-obj in test-objs do
-             (setf (gethash (check-group-name test-obj) +results-record+)
-                   (config-error-note e test-obj msg)))
-           (return-from run-group-tests nil)))
+  (handler-bind
+      ((error #'(lambda (e)
+                  (loop for test-obj in test-objs do
+                    (setf (gethash (check-group-name test-obj) +results-record+)
+                          (emit-config-error e test-obj
+                                 "Error in pre-fixture setup")))
+                  (return-from run-group-tests nil))))
+    (do-group-prefixture-setup group-obj))
+  (block group-fixture-assignment
     (handler-bind
-        ((error #'(lambda (e) (log-errors e "Error in pre-fixture setup"))))
-      (do-group-prefixture-setup group-obj))
-    (handler-bind
-        ((error #'(lambda (e) (log-errors e "Error binding fixtures"))))
+        ((error #'(lambda (e)
+                    (loop for test-obj in test-objs do
+                      (setf (gethash (check-group-name test-obj)
+                                     +results-record+)
+                            (emit-config-error e test-obj
+                                 "Error binding group fixtures")))
+                    (return-from group-fixture-assignment nil))))
       (do-group-fixture-assignment group-obj test-objs)))
-  (handler-bind ()
+  (handler-bind ((error #'(lambda (e)
+                            (loop for test-obj in test-objs do
+                              (add-test-config-error test-obj
+                                  "Error in post-fixtures cleanup: ~s" e))
+                            (return-from run-group-tests nil))))
     (do-group-afterfixture-cleanup group-obj)))
 
 (defgeneric do-group-prefixture-setup (group-obj)
@@ -120,34 +131,63 @@ for the group application class.")
           #'(lambda (e)
               (loop for test-obj in test-objs do
                 (setf (gethash (check-group-name test-obj) +results-record+)
-                      (config-error-note e test-obj
+                      (emit-config-error e test-obj
                        "Error in post-fixture application setup")))
               (return-from do-group-fixture-assignment nil))))
       (do-group-postfixture-setup group-obj))
+
     (format-at-verbosity 3 "    Starting run loop for ~s~%" group-obj)
+
     (loop for test-inst in test-objs do
-      (format-at-verbosity 3 "    Instance ~s~%" test-inst)
-      (flet ((log-test-error (e msg)
-               (setf (gethash (check-group-name test-inst) +results-record+)
-                     (config-error-note e test-inst msg))
-               (return-from do-group-fixture-assignment nil)))
+      (block this-test
+        (format-at-verbosity 3 "    Instance ~s~%" test-inst)
         (handler-bind
             ((error #'(lambda (e)
-                        (log-test-error e "Error in group each-test setup"))))
+                        (setf (gethash (check-group-name test-inst)
+                                       +results-record+)
+                          (emit-config-error
+                           e test-inst "Error in group each-test setup"))
+                        (return-from this-test nil))))
           (do-group-each-test-setup group-obj))
-        (handler-bind
-            ((error #'(lambda (e)
-                        (log-test-error e "Error in test pre-fixture setup"))))
-          (do-test-prefixture-setup test-inst))
-        (handler-bind ()
-          (do-test-fixture-assignment test-inst))
-        (handler-bind ()
-          (do-test-afterfixture-cleanup test-inst))
-        (handler-bind ()
-          (do-group-each-test-cleanup group-obj)))
-      (format-at-verbosity 3 "      Exiting loop entry ~s~%" test-inst))
+        (block test-inner
+          (handler-bind
+              ((error
+                #'(lambda (e)
+                    (setf (gethash (check-group-name test-inst)
+                                   +results-record+)
+                      (emit-config-error e test-inst
+                                         "Error in test pre-fixture setup"))
+                    (return-from test-inner nil))))
+            (do-test-prefixture-setup test-inst))
+          (block test-fixture-assignment
+            (handler-bind
+                ((error
+                  #'(lambda (e)
+                      (setf (gethash (check-group-name test-inst)
+                                     +results-record+)
+                        (emit-config-error e test-inst
+                                           "Error binding test fixtures"))
+                      (return-from test-fixture-assignment nil))))
+              (do-test-fixture-assignment test-inst)))
+          (handler-bind
+              ((error #'(lambda (e)
+                          (add-test-config-error test-inst
+                                "Error in test postfixture cleanup: ~s" e)
+                          (return-from test-inner))))
+            (do-test-afterfixture-cleanup test-inst)))
+        (handler-bind ((error #'(lambda (e)
+                                  (add-test-config-error test-inst
+                                     "Error in group each-test cleanup: ~s" e)
+                                  (return-from this-test))))
+          (do-group-each-test-cleanup group-obj))
+        (format-at-verbosity 3 "      Exiting loop entry ~s~%" test-inst)))
+
     (format-at-verbosity 3 "    Exiting run loop for ~s~%" group-obj)
-      (handler-bind ()
+      (handler-bind ((error #'(lambda (e)
+                                (loop for test-obj in test-objs do
+                                  (add-test-config-error test-obj
+                                      "Error in group fixtures cleanup: ~s" e))
+                                (return-from do-group-fixture-assignment))))
         (do-group-withfixture-cleanup group-obj))))
 
 (defgeneric do-group-postfixture-setup (group-obj)
@@ -195,12 +235,16 @@ for the test application class.")
          ((error
            #'(lambda (e)
                (setf (gethash (check-group-name test-obj) +results-record+)
-                     (config-error-note e test-obj
+                     (emit-config-error e test-obj
                                         "Error in test post-fixture setup"))
                (return-from do-test-fixture-assignment nil))))
        (do-test-postfixture-setup test-obj))
      (core-run-test test-obj)
-     (do-test-withfixture-cleanup test-obj)))
+     (handler-bind ((error #'(lambda (e)
+                               (add-test-config-error test-obj
+                                     "Error in test fixtures cleanup: ~s" e)
+                               (return-from do-test-fixture-assignment nil))))
+       (do-test-withfixture-cleanup test-obj))))
 
 (defgeneric do-test-postfixture-setup (test-obj)
   (:documentation "With-fixtures cleanup specs add a method to this function

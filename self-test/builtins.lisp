@@ -1,4 +1,4 @@
-;;; File simple-mnst.lisp
+;;; File builtins.lisp
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
@@ -18,11 +18,7 @@
 ;;; You should have received a copy of the GNU Lesser General Public
 ;;; License along with NST.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
-(defpackage :mnst-simple
-    (:documentation "Package for a simple NST test suite")
-    (:use :common-lisp :nst))
-
-(in-package :mnst-simple)
+(in-package :mnst)
 
 (def-fixtures f1 ()
   (c 3) (d 'asdfg))
@@ -64,13 +60,7 @@
   (def-test two-fixtures :true (eq d e))
   )
 
-(def-test-group err (f1 f1a) (def-test error1 (:eql 3) (error "blah")))
-
-
 (defparameter zzz 0)
-
-(def-test-group core-checks-sub ()
-  (def-test err-3 (:err :type division-by-zero) (error "Miss this")))
 
 (def-test-group core-checks ()
   (def-test pass-1 :pass 'a)
@@ -90,8 +80,6 @@
   (def-test forms-equal-1 :forms-equal (mapcar #'1+ '(1 10 100)) '(2 11 101))
   (def-test err-1 :err (error "Catch this error"))
   (def-test err-2 (:err :type division-by-zero) (/ 5 0))
-  (def-test err-3 (:err :type division-by-zero) (error "Miss this"))
-  ;; (def-test err-4 (:eql 1) (div-five-by 0))
   (def-test any-1 (:any (:eql 0) (:eql 1) (:eql 2)) 1)
   (def-test any-2 (:not (:any (:eql 0) (:eql 1) (:eql 2))) 3)
   (def-test any-3 (:any (:err) (:eql 1) (:eql 2)) 1)
@@ -157,10 +145,10 @@
                             :cleanup (setf for-setup 2))
       (:info "This is a known bug" (:eql 3))
     for-setup)
-  (def-test z-sc-for-setup-2 (:eql 2) for-setup)
+  (def-test z-sc-for-setup-2 (:info "This is a known bug" (:eql 2))
+    for-setup)
 )
 
 (def-test-group a-setup-cleanup ()
   (def-test a-verify-setup-cleanup (:eql 0) for-setup))
 
-(defun div-five-by (x) (/ 5 x))

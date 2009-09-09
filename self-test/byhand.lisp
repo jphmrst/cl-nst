@@ -113,10 +113,9 @@
   (def-test sp3 :true (progn (sleep 10) t))
   (def-test sp4 :true (progn (sleep 10) t)))
 
-(def-fixtures boom-fix () (x 3) (y (error "I fail")) (z 10))
-(def-test-group boom-fix-test (boom-fix)
-  (def-test bf1 :true t)
-  (def-test bf2 :true t)
-  (def-test bf3 :true t)
-  (def-test bf4 :true t))
+(def-test-group err (mnst::f1 mnst::f1a)
+  (def-test error1 (:eql 3) (error "blah")))
+
+(def-test-group core-checks-sub ()
+  (def-test err-3 (:err :type division-by-zero) (error "Miss this")))
 
