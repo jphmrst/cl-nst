@@ -28,29 +28,30 @@
     :description "M as in meta: NST- (or otherwise) testing NST."
     :serial t
     :nst-systems (:masdfnst)
-    :nst-groups ((:mnst-simple . g1)
-                 (:mnst-simple . g1a)
-                 (:mnst-simple . g1a1)
-                 (:mnst-simple . g2a)
-                 (:mnst-simple . g3a)
-                 (:mnst-simple . g4)
-                 (:mnst-simple . h1)
-                 (:mnst-simple . core-checks)
-                 (:mnst-simple . a-setup-cleanup)
-                 (:mnst-simple . setup-cleanup)
-                 (:mnst-simple . each-setup-cleanup)
-                 (:mnst-simple . z-setup-cleanup))
+    :nst-packages (:mnst)
     :depends-on (:nst)
-    :components ((:module "core" :components
-                          (;; Manually-run tests, for inspecting the
-                           ;; order of fixture, setup, cleanup and
-                           ;; test execution.
-                           (:file "byhand")
+    :components ((:file "packages")
 
-                           ;; A simple test suite
-                           (:file "builtin-checks")
+                 ;; A simple test suite
+                 (:file "builtins")
 
-;;;                       ;; Checks with anonymous fixtures
-;;;                       (:file "anon-fixtures-mnst")
+                 ;; Manually-run tests, for inspecting the order of
+                 ;; fixture, setup, cleanup and test execution.
+                 (:file "byhand")
 
-                           ))))
+                 ;; Criteria for NST-testing the result of running
+                 ;; NST.
+                 (:file "reflect")
+
+                 ;; NST tests expected to produce errors, to be run
+                 ;; reflectively to confirm the expected failure
+                 ;; states
+                 (:file "faildata")
+
+                 ;; NST tests on NST runs.
+                 (:file "selftest")
+
+;;;              ;; Checks with anonymous fixtures
+;;;              (:file "anon-fixtures-mnst")
+
+                 ))

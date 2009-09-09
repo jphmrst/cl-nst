@@ -113,7 +113,7 @@
                                             :error e
                                             other-args)))))
 
-(defun config-error-note (error test-obj msg)
+(defun emit-config-error (error test-obj msg)
   (let ((*nst-group-name* (group-name test-obj))
         (*nst-check-user-name* (check-user-name test-obj)))
     (declare (special *nst-group-name* *nst-check-user-name*))
@@ -765,6 +765,7 @@ six-value summary of the results:
    :failures (list (make-check-note :context *nst-context* :stack *nst-stack*
                                     :format format :args args))
    :info info))
+
 (defun add-failure (result &key format args)
   "For use within user-defined check criteria: add a failure to a result."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
@@ -784,6 +785,13 @@ six-value summary of the results:
   (push (make-check-note :context *nst-context* :stack *nst-stack*
                          :format format :args args)
         (check-result-errors result)))
+
+(defun add-test-config-error (test-obj format &rest args)
+  (let ((*nst-group-name* (group-name test-obj))
+        (*nst-check-user-name* (check-user-name test-obj))
+        (report (gethash (check-group-name test-obj) +results-record+)))
+    (declare (special *nst-group-name* *nst-check-user-name*))
+    (add-error report :format format :args args)))
 
 (defun add-info (result item)
   "For use within user-defined check criteria: add an info note to a result."
