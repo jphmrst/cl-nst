@@ -105,8 +105,8 @@ argument should be a string of just spaces."))
          (format s
              ">~:{~%~a  ~@<<error message=\"~a raised an error: ~a\" type=~s><![CDATA[~
                          ~:@_  Lisp backtrace (within NST context):~
-                         ~:@_    ~:[expression top-level~
-                                  ~;~@<~:*~{~a~^~:@_~}~:>~]~
+                         ~:@_<br>~:[expression top-level~
+                                  ~;<table border=\"1\">~@<~:*~{<tr><td nowrap=\"nowrap\">~a</td></tr>~^~:@_~}~:></table>~]~
                          ~:@_]]></error>~:>~}~%"
            (loop for error-note in errors
                  collect (with-accessors ((error error-check-note-error))
