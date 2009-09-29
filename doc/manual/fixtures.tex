@@ -24,6 +24,12 @@ fixture in one set may refer back to other fixtures in the same set
 (again \emph{\`a la} \texttt{let*}) but forward references are not
 allowed.
 
+The names of a fixture and the names it binds can be exported from the
+package where the fixture is defined using the
+\texttt{export-bound-names} and \texttt{export-fixture-name}
+arguments.  The default value of both is \texttt{nil} unless a
+non-\texttt{nil} value is provided for \texttt{export-names}.
+
 Examples of fixture definitions:
 \begin{verbatim}
   (def-fixtures f1 ()

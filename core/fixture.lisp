@@ -23,11 +23,19 @@
 
 #+allegro (excl::define-simple-parser def-fixtures second :nst-fixture-set)
 (defmacro def-fixtures (name
-                        (&key uses assumes outer inner documentation)
+                        (&key uses assumes outer inner documentation
+                              export-names
+                              (export-bound-names nil
+                                                  export-bound-names-supp-p)
+                              (export-fixture-name
+                               nil export-fixture-name-supp-p))
                         &body bindings)
   "(def-fixtures (FIXTURE-NAME :uses USES :assumes ASSUMES
                     :outer OUTER :inner INNER
-                    :documentation DOCUMENTATION)
+                    :documentation DOCUMENTATION
+                    :export-names FLAG
+                    :export-bound-names FLAG
+                    :export-fixture-name FLAG)
   (NAME FORM)
   (NAME FORM)
   ...
@@ -50,6 +58,15 @@ documentation - a documentation string for the fixture set.
 
 outer - list of declarations to be made outside the let-binding of names of any
 use of this fixture.
+
+export-fixture-name - When non-nil, the fixture name will be added to the
+list of symbols exported by the current package.
+
+export-bound-names - When non-nil, the names bound by this fixture will be
+added to the list of symbols exported by the current package.
+
+export-names - When non-nil, sets the default value to t for the two options
+above.
 "
   (declare (ignorable assumes outer inner))
 
@@ -57,6 +74,12 @@ use of this fixture.
   ;; latter into the former so that internally it's all uniform.
   (unless (listp uses) (setf uses (list uses)))
   (unless (listp assumes) (setf assumes (list assumes)))
+
+  (when export-names
+    (unless export-bound-names-supp-p
+      (setf export-bound-names t))
+    (unless export-fixture-name-supp-p
+      (setf export-fixture-name t)))
 
   (let ((bound-names (loop for binding in bindings collect (car binding)))
         (g-param (gensym))
@@ -135,7 +158,17 @@ use of this fixture.
          (format t " - Inner bindings: ~@<~{~s~^ ~_~}~:>~%" ',inner)
          (format t " - Documentation string: ~s~%" ,documentation)
 
-       ',name))))
+         ',name)
+
+       ,@(when (or export-bound-names export-fixture-name)
+           `((eval-when (:compile-toplevel :load-toplevel :execute)
+               (export '(,@(when export-bound-names
+                             (loop for bnd in bindings collect (car bnd)))
+                         ,@(when export-fixture-name (list name)))
+                       ,(intern (package-name *package*)
+                                (find-package :keyword))))))
+
+       ',name)))
 
 (defun process-fixture-list (fixture-list)
   "Trivial, for now, because anonymous fixtures are offline."
