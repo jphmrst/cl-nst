@@ -39,9 +39,12 @@
      (emit-failure :format "Form not t: ~s" :args (list bool))))
 
 (def-values-criterion (:eq (eq-form) (check-form))
-  `(if (eq ,eq-form check-form)
-     (check-result)
-     (emit-failure :format "Not eq to value of ~s" :args '(,eq-form))))
+  (let ((result (gensym)))
+    `(let ((,result check-form))
+       (if (eq ,eq-form ,result)
+           (check-result)
+           (emit-failure :format "Not eq to value of ~s:~_Value ~s"
+                         :args `(',,eq-form ,,result))))))
 
 (def-criterion-alias (:symbol name) `(:eq ',name))
 
