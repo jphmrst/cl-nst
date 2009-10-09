@@ -1,4 +1,7 @@
 
+1.2.5 - 
+
+
 1.2.4 - internal release, October 9, 2009
  Add restarts for use in interactive operation.
  (Start to) capture fixture names when errors arise in fixture application.
