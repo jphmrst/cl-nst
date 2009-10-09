@@ -182,6 +182,9 @@ current criterion.")
 (defmacro protect-nst-config (&body forms)
   `(apply-debug-options () () ,@forms))
 
+(defparameter *binding-variable* nil
+  "Variable tracking the binding of names by fixtures, checked when binding fails.")
+
 ;;
 ;; Management of global properties.
 ;;
