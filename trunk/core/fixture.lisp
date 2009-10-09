@@ -82,6 +82,9 @@ above.
       (setf export-fixture-name t)))
 
   (let ((bound-names (loop for binding in bindings collect (car binding)))
+        (bindings-with-tracking
+         (loop for (name form) in bindings
+               collect `(,name (progn (setf *binding-variable* ',name) ,form))))
         (g-param (gensym))
         (t-param (gensym)))
 
@@ -111,16 +114,18 @@ above.
                   (special ,@(loop for used-fixture in uses
                                  append (bound-names used-fixture))
                            ,@assumes))
-         (let* ,bindings
+         (let* ,bindings-with-tracking
            (declare (special ,@bound-names))
+           (setf *binding-variable* nil)
            (call-next-method)))
 
        (defmethod do-test-fixture-assignment :around ((,t-param ,name))
          (declare (special ,@(loop for used-fixture in uses
                                  append (bound-names used-fixture))
                            ,@assumes))
-         (let* ,bindings
+         (let* ,bindings-with-tracking
            (declare (special ,@bound-names))
+           (setf *binding-variable* nil)
            (call-next-method)))
 
        ;; Function for expanding names into the current namespace.
