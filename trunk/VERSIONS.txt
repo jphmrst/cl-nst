@@ -1,12 +1,15 @@
 
-1.2.4 -
- 
+1.2.4 - internal release, October 9, 2009
+ Add restarts for use in interactive operation.
+ (Start to) capture fixture names when errors arise in fixture application.
+ Better failure checking of cleanup operations.
+ Added :export-* options to fixtures.
 
-1.2.3 - private release, October 2, 2009
+1.2.3 - internal release, October 2, 2009
  Added :export-names, :export-fixture-name and :export-bound-names to
    the def-fixtures macro.
 
-1.2.2 - private release, September 9, 2009
+1.2.2 - internal release, September 9, 2009
  Ticket 104 - recompilation of a test now removes the record of its
               pass/failure.
  Ticket 113 - about halfway implemented.
@@ -14,7 +17,7 @@
               message is cryptic.
  Start of NST API documentation in manual.
 
-1.2.1 - private release, September 2, 2009
+1.2.1 - internal release, September 2, 2009
  Ticket 104 - fixed issues with modern/classic capitalization, occasional
               hanging in backtrace collector
 
