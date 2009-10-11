@@ -44,5 +44,6 @@
     ;; :nst-tests ((:asdf-nst-test2 :g1a :fix0)
     ;;             (:asdf-nst-test :core-checks :warn-1))
 
+    :depends-on (:nst :nst-selftest-utils)
     :components ((:file "packages")
                  (:file "tests") (:file "moretests")))

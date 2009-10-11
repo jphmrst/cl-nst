@@ -26,7 +26,7 @@
 (defsystem :nst-manual-tests
     :description "Utilities for hand-run NST tests."
     :serial t
-    :depends-on (:nst)
+    :depends-on (:nst :nst-selftest-utils)
     :components ((:file "package")
 
                  ;; Manually-run tests, for inspecting the order of

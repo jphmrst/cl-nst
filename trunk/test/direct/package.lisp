@@ -1,5 +1,5 @@
 
 (defpackage :nst-simple-tests
     (:documentation "Package for reflective NST test suites")
-    (:use :common-lisp :nst))
+    (:use :common-lisp :nst :nst-test-utils))
 

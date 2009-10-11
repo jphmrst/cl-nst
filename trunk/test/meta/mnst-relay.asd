@@ -28,6 +28,7 @@
     :description
     "Does not define NST tests, but runs the ones in a different system"
     :serial t
+    :depends-on (:nst :nst-selftest-utils)
     :nst-systems (:mnst))
 
 (defmethod operation-done-p ((o test-op) (sys (eql (find-system :mnst-relay))))

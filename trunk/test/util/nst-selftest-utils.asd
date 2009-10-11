@@ -1,4 +1,4 @@
-;;; File mnst.asd
+;;; nst-selftest-utils.asd
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
@@ -19,26 +19,11 @@
 ;;; License along with NST.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
 
-(asdf:oos 'asdf:load-op :asdf-nst)
-(defpackage :nst-meta-asd (:use :common-lisp :asdf))
-(in-package :nst-meta-asd)
+(defpackage :nst-selftest-asd (:use :common-lisp :asdf))
+(in-package :nst-selftest-asd)
 
-(defsystem :nst-meta-tests
-    :class nst-test-holder
-    :description "M as in meta: NST- (or otherwise) testing NST."
+(defsystem :nst-selftest-utils
+    :description "Cmmon utilities for NST self-tests."
     :serial t
-    :nst-packages (:mnst)
-    :depends-on (:nst :nst-selftest-utils)
-    :components ((:file "packages")
-
-                 ;; Criteria for NST-testing the result of running
-                 ;; NST.
-                 (:file "reflect")
-
-                 ;; NST tests expected to produce errors, to be run
-                 ;; reflectively to confirm the expected failure
-                 ;; states
-                 (:file "faildata")
-
-                 ;; NST tests on NST runs.
-                 (:file "selftest")))
+    :depends-on (:nst)
+    :components ((:file "package")))
