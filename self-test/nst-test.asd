@@ -23,7 +23,7 @@
 (defpackage :mnst-asd (:use :common-lisp :asdf))
 (in-package :mnst-asd)
 
-(defsystem :mnst
+(defsystem :nst-test
     :class nst-test-holder
     :description "M as in meta: NST- (or otherwise) testing NST."
     :serial t
