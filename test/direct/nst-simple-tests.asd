@@ -29,7 +29,7 @@
     :serial t
     ;; :nst-systems (:masdfnst)
     :nst-packages (:nst-simple-tests)
-    :depends-on (:nst)
+    :depends-on (:nst :nst-selftest-utils)
     :components ((:file "package")
 
                  ;; A simple test suite
