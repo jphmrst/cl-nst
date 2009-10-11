@@ -27,31 +27,5 @@
     :class nst-test-holder
     :description "M as in meta: NST- (or otherwise) testing NST."
     :serial t
-    :nst-systems (:masdfnst)
-    :nst-packages (:mnst)
-    :depends-on (:nst)
-    :components ((:file "packages")
-
-                 ;; A simple test suite
-                 (:file "builtins")
-
-                 ;; Manually-run tests, for inspecting the order of
-                 ;; fixture, setup, cleanup and test execution.
-                 (:file "byhand")
-
-                 ;; Criteria for NST-testing the result of running
-                 ;; NST.
-                 (:file "reflect")
-
-                 ;; NST tests expected to produce errors, to be run
-                 ;; reflectively to confirm the expected failure
-                 ;; states
-                 (:file "faildata")
-
-                 ;; NST tests on NST runs.
-                 (:file "selftest")
-
-;;;              ;; Checks with anonymous fixtures
-;;;              (:file "anon-fixtures-mnst")
-
-                 ))
+    :nst-systems (:nst-simple-tests)
+    :depends-on (:nst :nst-simple-tests))
