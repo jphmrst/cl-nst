@@ -20,8 +20,8 @@
 ;;; <http://www.gnu.org/licenses/>.
 
 (asdf:oos 'asdf:load-op :asdf-nst)
-(defpackage :mnst-asd (:use :common-lisp :asdf))
-(in-package :mnst-asd)
+(defpackage :nst-meta-asd (:use :common-lisp :asdf))
+(in-package :nst-meta-asd)
 
 (defsystem :nst-meta-tests
     :class nst-test-holder
