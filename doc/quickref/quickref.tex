@@ -37,7 +37,23 @@
     Minneapolis, MN 55401; \textsl{jmaraist} at \textsl{sift.info}.}
 \end{center}
 
-\section*{Overview}
+\section*{In this document}
+The key elements to getting starting with NST are:
+%
+\\\hspace*{0.5em}--- The syntactic \textbf{forms} for specifying tests
+(below).
+%
+\\\hspace*{0.5em}--- The \textbf{criteria} used in tests
+(p.\,\pageref{sec:criteria}).
+%
+\\\hspace*{0.5em}--- Using NST for \textbf{interactive debugging}
+(p.\,\pageref{sec:interact}).
+%
+\\\hspace*{0.5em}--- Combining NST with \textbf{ASDF} to help automate
+testing (p.\,\pageref{sec:asdf}).
+\end{enumerate}
+
+\section*{Nomenclature}
 \emph{Fixtures} are data structures and values which may be referred
 to by name during testing.  NST provides the ability to use fixtures
 across multiple tests and test groups, and to inject fixtures into the
@@ -102,6 +118,7 @@ built-in criteria are listed below; see the manual for a discussion of
 the forms which define new criteria.
 
 \section*{Criteria}
+\label{sec:criteria}
 Criteria forms have the following structure:
 \begin{verbatim}
   (CRITERIA-NAME ARG ARG ... ARG)
@@ -118,6 +135,7 @@ but a no-argument criterion use \texttt{(NAME)} can be abbreviated as
 \input{../common/criteria}
 
 \section*{Interactive debugging}
+\label{sec:interact}
 NST defines a REPL alias \texttt{:nst} under Allegro CL.  The general
 form of commands is:
 \begin{verbatim}
@@ -128,6 +146,7 @@ Use \mbox{\texttt{:nst :help}} for a list of commands, and
 commands.
 
 \section*{ASDF}
+\label{sec:asdf}
 NST tests can be referenced from ASDF systems, allowing easy
 invocation to unit tests relevant to a system.  The system
 \textsl{self-test/masdfnst.asd} gives an example of its use.  The
