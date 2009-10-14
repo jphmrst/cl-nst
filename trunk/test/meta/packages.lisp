@@ -2,7 +2,8 @@
 (defpackage :nst-meta
     (:documentation "Package for reflective NST test suites")
     (:nicknames :mnst)
-    (:use :common-lisp :nst :nst-test-utils))
+    (:use :common-lisp :nst :nst-test-utils)
+    (:import-from :nst #:ensure-group-instance #:ensure-test-instance))
 
 (defpackage :nst-meta-sources
     (:documentation

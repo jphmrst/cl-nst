@@ -1,4 +1,4 @@
-;;; File mnst.asd
+;;; File nst-meta-tests.asd
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;

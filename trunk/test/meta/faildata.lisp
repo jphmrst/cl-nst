@@ -1,6 +1,9 @@
 
 (in-package :mnst-src)
 
+(def-test-group simple-pass ()
+  (def-test sp :true t))
+
 (def-fixtures boom-fix () (x 3) (y (error "I fail")) (z 10))
 (def-test-group boom-fix-test (boom-fix)
   (def-test bf1 :true t)
