@@ -1,0 +1,55 @@
+
+(in-package :mnst-src)
+
+(def-test-group simple-pass ()
+  (def-test sp :true t))
+
+(def-fixtures boom-fix () (x 3) (y (error "I fail")) (z 10))
+(def-test-group boom-fix-test (boom-fix)
+  (def-test bf1 :true t)
+  (def-test bf2 :true t)
+  (def-test bf3 :true t)
+  (def-test bf4 :true t))
+
+(def-test-group boom-group-setup ()
+  (:setup (error "Setup error"))
+  (:cleanup t)
+  (def-test bgs1 :true t)
+  (def-test bgs2 :true t)
+  (def-test bgs3 :true t)
+  (def-test bgs4 :true t))
+
+(def-test-group boom-group-cleanup ()
+  (:setup t)
+  (:cleanup (error "Setup error"))
+  (def-test bgc1 :true t)
+  (def-test bgc2 :true t)
+  (def-test bgc3 :true t)
+  (def-test bgc4 :true t))
+
+(def-test-group boom-test-fixture ()
+  (def-test bf1 :true t)
+  (def-test (bf2 :fixtures (boom-fix)) :true t)
+  (def-test bf3 :true t)
+  (def-test bf4 :true t))
+
+(def-test-group boom-test-setup ()
+  (def-test bts1 :true t)
+  (def-test (bts2 :setup (error "Setup error") :cleanup t)
+      :true t)
+  (def-test bts3 :true t)
+  (def-test bts4 :true t))
+
+(def-test-group boom-test-cleanup ()
+  (def-test btc1 :true t)
+  (def-test (btc2 :setup t :cleanup (error "Setup error"))
+      :true t)
+  (def-test btc3 :true t)
+  (def-test btc4 :true t))
+
+(def-test-group miss-difftyped-err ()
+  (def-test err-3 (:err :type division-by-zero) (error "Miss this"))
+  ;; (def-test err-4 (:eql 1) (div-five-by 0))
+  )
+
+(defun div-five-by (x) (/ 5 x))
