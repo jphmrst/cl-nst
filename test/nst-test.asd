@@ -27,5 +27,5 @@
     :class nst-test-holder
     :description "M as in meta: NST- (or otherwise) testing NST."
     :serial t
-    :nst-systems (:nst-simple-tests)
-    :depends-on (:nst :nst-simple-tests))
+    :nst-systems (:nst-simple-tests :nst-meta-tests)
+    :depends-on (:nst :nst-simple-tests :nst-meta-tests))
