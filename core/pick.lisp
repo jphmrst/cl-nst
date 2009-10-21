@@ -50,7 +50,7 @@ hash-table mapping items to t.")
   (loop for name being the hash-keys of *artifact-lookup*
         using (hash-value artifact-set)
         do
-     (format t "~s maps to:~%" name artifact-set)
+     (format t "~s maps to:~%" name)
      (loop for artifact being the hash-keys of artifact-set do
        (format t " - ~@<~w ~_(internal type: ~a)~:>~%"
          artifact (type-of artifact)))))
