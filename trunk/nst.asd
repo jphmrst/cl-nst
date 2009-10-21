@@ -80,7 +80,7 @@
 
                            ;; The def-fixture macro, and processing
                            ;; anonymous fixture declarations.
-                           (:file "fixture"  :depends-on ("artifacts"))
+                           (:file "fixture"  :depends-on ("runner" "artifacts"))
 
                            ;; Helper functions for permuting lists.
                            (:file "permuter" :depends-on ("package"))

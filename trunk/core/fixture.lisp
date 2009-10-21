@@ -83,8 +83,16 @@ above.
 
   (let ((bound-names (loop for binding in bindings collect (car binding)))
         (bindings-with-tracking
-         (loop for (name form) in bindings
-               collect `(,name (progn (setf *binding-variable* ',name) ,form))))
+         (loop for (var-name form) in bindings
+               collect
+               (let ((block (gensym "block")))
+                 `(,var-name (block ,block
+                               (setf *binding-variable* ',var-name)
+                               (with-retry
+                                   (,(format nil
+                                         "Try binding ~s for fixture ~s again."
+                                       var-name name))
+                                 (return-from ,block ,form)))))))
         (g-param (gensym))
         (t-param (gensym)))
 

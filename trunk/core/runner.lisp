@@ -82,42 +82,60 @@
 
 ;;; --------------------------------------------------------------
 
+(defmacro with-retry ((continuation-label) &body forms)
+  (let ((inner (gensym)) (outer (gensym)) (e (gensym)))
+    `(block ,outer
+         (loop do
+           (block ,inner
+             (handler-bind ((error #'(lambda (,e)
+                                       (cerror ,continuation-label ,e)
+                                       (return-from ,inner))))
+               (return-from ,outer
+                 (progn ,@forms))))))))
+
 (defun run-group-tests (group-obj test-objs)
   "Programmatic entry point for running all tests in a group."
-  (handler-bind
-      ((error #'(lambda (e)
-                  (loop for test-obj in test-objs do
-                    (setf (gethash (check-group-name test-obj) +results-record+)
-                          (emit-config-error e test-obj
-                                 "Error in pre-fixture setup")))
-                  (when *debug-on-error*
-                    (cerror "~@<Exit from attempting tests in this group, ~_~
-                             and continue with tests from other groups.~:>" e))
-                  (return-from run-group-tests nil))))
-    (do-group-prefixture-setup group-obj))
-  (block group-fixture-assignment
+  (with-retry ("Try performing group setup again.")
     (handler-bind
         ((error #'(lambda (e)
                     (loop for test-obj in test-objs do
                       (setf (gethash (check-group-name test-obj)
                                      +results-record+)
                             (emit-config-error e test-obj
-                                 (format nil "Error binding group fixture ~s"
-                                   *binding-variable*))))
+                              "Error in pre-fixture setup")))
                     (when *debug-on-error*
-                      (cerror "~@<Clean up from this group's tests (prefixture)~
+                      (cerror "~@<Exit from attempting tests in this group, ~_~
+                             and continue with tests from other groups.~:>" e))
+                    (return-from run-group-tests nil))))
+      (do-group-prefixture-setup group-obj)))
+  (with-retry
+      ("Try running this group's tests again, reapplying group fixtures")
+    (block group-fixture-assignment
+      (handler-bind
+          ((error #'(lambda (e)
+                      (loop for test-obj in test-objs do
+                        (setf (gethash (check-group-name test-obj)
+                                       +results-record+)
+                          (emit-config-error e test-obj
+                            (format nil "Error binding group fixture ~s"
+                              *binding-variable*))))
+                      (when *debug-on-error*
+                        (cerror
+                         "~@<Clean up from this group's tests (prefixture)~
                          , ~_and continue with tests from other groups.~:>" e))
-                    (return-from group-fixture-assignment nil))))
-      (do-group-fixture-assignment group-obj test-objs)))
-  (handler-bind ((error #'(lambda (e)
-                            (loop for test-obj in test-objs do
-                              (add-test-config-error test-obj
-                                  "Error in post-fixtures cleanup: ~s" e))
-                            (when *debug-on-error*
-                              (cerror "Continue with tests from other groups."
-                                      e))
-                            (return-from run-group-tests nil))))
-    (do-group-afterfixture-cleanup group-obj)))
+                      (return-from group-fixture-assignment nil))))
+        (do-group-fixture-assignment group-obj test-objs))))
+  (with-retry ("Try performing group cleanup again.")
+    (handler-bind
+        ((error #'(lambda (e)
+                    (loop for test-obj in test-objs do
+                      (add-test-config-error test-obj
+                        "Error in post-fixtures cleanup: ~s" e))
+                    (when *debug-on-error*
+                      (cerror "Continue with tests from other groups."
+                              e))
+                    (return-from run-group-tests nil))))
+      (do-group-afterfixture-cleanup group-obj))))
 
 (defgeneric do-group-prefixture-setup (group-obj)
   (:documentation
@@ -136,114 +154,122 @@
    "Fixture declarations translate to an :around method making let* bindings
 for the group application class.")
   (:method (group-obj test-objs)
-     (handler-bind
-         ((error
-           #'(lambda (e)
-               (loop for test-obj in test-objs do
-                 (setf (gethash (check-group-name test-obj)
-                                +results-record+)
-                       (emit-config-error e test-obj
-                         "Error in post-fixture application setup")))
-               (when *debug-on-error*
-                 (cerror "~@<Clean up from this group's tests (prefixture), ~_~
+     (with-retry ("Try performing postfixture group setup again.")
+       (handler-bind
+           ((error
+             #'(lambda (e)
+                 (loop for test-obj in test-objs do
+                       (setf (gethash (check-group-name test-obj)
+                                      +results-record+)
+                         (emit-config-error e test-obj
+                           "Error in post-fixture application setup")))
+                 (when *debug-on-error*
+                   (cerror "~@<Clean up from this group's tests (postfixture), ~_~
                              and continue with tests from other groups.~:>" e))
-               (return-from do-group-fixture-assignment nil))))
-       (do-group-postfixture-setup group-obj))
+                 (return-from do-group-fixture-assignment nil))))
+         (do-group-postfixture-setup group-obj)))
 
-           (format-at-verbosity 3 "    Starting run loop for ~s~%" group-obj)
+     (format-at-verbosity 3 "    Starting run loop for ~s~%" group-obj)
 
-           (unwind-protect
-               (progn
-                 (loop for test-inst in test-objs do
-                   (block this-test
-                     (format-at-verbosity 3 "    Instance ~s~%" test-inst)
-                     (handler-bind
-                         ((error #'(lambda (e)
-                                     (setf (gethash (check-group-name test-inst)
-                                                    +results-record+)
-                                       (emit-config-error
-                                           e test-inst
-                                         "Error in group each-test setup"))
-                                     (when *debug-on-error*
-                                       (cerror
-                                           "~@<Continue with other tests from ~
+     (unwind-protect
+         (progn
+           (with-retry ("Re-run all tests in this group.")
+             (loop for test-inst in test-objs do
+               (block this-test
+                 (format-at-verbosity 3 "    Instance ~s~%" test-inst)
+                 (with-retry ("Try each-test setup for this group again.")
+                   (handler-bind
+                       ((error #'(lambda (e)
+                                   (setf (gethash (check-group-name test-inst)
+                                                  +results-record+)
+                                     (emit-config-error
+                                         e test-inst
+                                       "Error in group each-test setup"))
+                                   (when *debug-on-error*
+                                     (cerror
+                                      "~@<Continue with other tests from ~
                                    this group ~_(not likely to succeed).~:>" e))
-                                     (return-from this-test nil))))
-                       (do-group-each-test-setup group-obj))
-                     (unwind-protect
-                         (block test-inner
+                                   (return-from this-test nil))))
+                     (do-group-each-test-setup group-obj)))
+                 (unwind-protect
+                     (block test-inner
+                       (with-retry ("Try this test's setup again.")
+                         (handler-bind
+                             ((error
+                               #'(lambda (e)
+                                   (setf (gethash (check-group-name test-inst)
+                                                  +results-record+)
+                                     (emit-config-error e test-inst
+                                       "Error in test pre-fixture setup"))
+                                   (when *debug-on-error*
+                                     (cerror
+                                      "~@<Perform group each-test ~_~
+                                            cleanup, and continue with other ~
+                                            tests from this group.~:>" e))
+                                   (return-from test-inner nil))))
+                           (do-test-prefixture-setup test-inst)))
+                       (unwind-protect
+                           (with-retry ("Try this test again, reapplying test fixtures.")
+                             (block test-fixture-assignment
+                               (handler-bind
+                                   ((error
+                                     #'(lambda (e)
+                                         (setf (gethash (check-group-name
+                                                         test-inst)
+                                                        +results-record+)
+                                           (emit-config-error
+                                               e test-inst
+                                             (format nil
+                                                 "Error binding test fixture ~s"
+                                               *binding-variable*)))
+                                         (when *debug-on-error*
+                                           (cerror "Cleanup from this test, ~
+                             and continue with other tests from this group." e))
+                                         (return-from test-fixture-assignment
+                                           nil))))
+                                 (do-test-fixture-assignment test-inst))))
+                         (with-retry ("Try test cleanup again.")
                            (handler-bind
                                ((error
                                  #'(lambda (e)
-                                     (setf (gethash (check-group-name test-inst)
-                                                    +results-record+)
-                                       (emit-config-error e test-inst
-                                         "Error in test pre-fixture setup"))
+                                     (add-test-config-error test-inst
+                                       "Error in test postfixture cleanup: ~s"
+                                       e)
                                      (when *debug-on-error*
                                        (cerror
-                                           "~@<Perform group each-test ~_~
-                                            cleanup, and continue with other ~
-                                            tests from this group.~:>" e))
-                                     (return-from test-inner nil))))
-                             (do-test-prefixture-setup test-inst))
-                           (unwind-protect
-                               (block test-fixture-assignment
-                                 (handler-bind
-                                     ((error
-                                       #'(lambda (e)
-                                           (setf (gethash (check-group-name
-                                                           test-inst)
-                                                          +results-record+)
-                                             (emit-config-error
-                                                 e test-inst
-                                               (format nil
-                                                   "Error binding test fixture ~s"
-                                                 *binding-variable*)))
-                                           (when *debug-on-error*
-                                             (cerror "Cleanup from this test, ~
-                             and continue with other tests from this group." e))
-                                           (return-from test-fixture-assignment
-                                             nil))))
-                                   (do-test-fixture-assignment test-inst)))
-                             (handler-bind
-                                 ((error
-                                   #'(lambda (e)
-                                       (add-test-config-error test-inst
-                                         "Error in test postfixture cleanup: ~s"
-                                         e)
-                                       (when *debug-on-error*
-                                         (cerror
-                                             "Continue with other tests from this group."
-                                           e))
-                                             (return-from test-inner))))
-                               (do-test-afterfixture-cleanup test-inst))))
-                       (handler-bind
-                           ((error
-                             #'(lambda (e)
-                                 (add-test-config-error test-inst
-                                   "Error in group each-test cleanup: ~s" e)
-                                 (when *debug-on-error*
-                                   (cerror "~@<Continue with other tests ~
+                                        "Continue with other tests from this group."
+                                        e))
+                                     (return-from test-inner))))
+                             (do-test-afterfixture-cleanup test-inst)))))
+                   (with-retry ("Try each-test cleanup again.")
+                     (handler-bind
+                         ((error
+                           #'(lambda (e)
+                               (add-test-config-error test-inst
+                                 "Error in group each-test cleanup: ~s" e)
+                               (when *debug-on-error*
+                                 (cerror "~@<Continue with other tests ~
                                                 from this group ~_(this error ~
                                                 likely to recur).~:>" e))
-                                 (return-from this-test))))
-                         (do-group-each-test-cleanup group-obj))
-                       (format-at-verbosity 3
-                           "      Exiting loop entry ~s~%" test-inst))))
+                               (return-from this-test))))
+                       (do-group-each-test-cleanup group-obj)))
+                   (format-at-verbosity 3
+                       "      Exiting loop entry ~s~%" test-inst)))))
 
-                 (format-at-verbosity 3
-                     "    Exiting run loop for ~s~%" group-obj))
+           (format-at-verbosity 3
+               "    Exiting run loop for ~s~%" group-obj))
 
-             (handler-bind
-                 ((error #'(lambda (e)
-                             (loop for test-obj in test-objs do
+       (with-retry ("Try performing group with-fixtures cleanup again.")
+         (handler-bind
+             ((error #'(lambda (e)
+                         (loop for test-obj in test-objs do
                                (add-test-config-error test-obj
                                  "Error in group fixtures cleanup: ~s" e))
-                             (when *debug-on-error*
-                               (cerror
-                                   "Continue with tests from other groups." e))
-                             (return-from do-group-fixture-assignment))))
-               (do-group-withfixture-cleanup group-obj)))))
+                         (when *debug-on-error*
+                           (cerror
+                            "Continue with tests from other groups." e))
+                         (return-from do-group-fixture-assignment))))
+           (do-group-withfixture-cleanup group-obj))))))
 
 (defgeneric do-group-postfixture-setup (group-obj)
   (:documentation "Fixture setup specs add a method to this function
