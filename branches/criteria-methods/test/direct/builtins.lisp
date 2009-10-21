@@ -62,6 +62,9 @@
 
 (defparameter zzz 0)
 
+(def-test-group eql-g ()
+  (def-test (eql-1) (:eql 3) (+ 2 1)))
+
 (def-test-group core-checks ()
   (def-test pass-1 :pass 'a)
   (def-test fail-1 (:not :fail) 'a)
