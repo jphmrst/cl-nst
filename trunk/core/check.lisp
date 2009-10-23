@@ -29,17 +29,19 @@ first element is that symbol and whose remaining elements are options."
   (cond
    ((symbolp name-or-name-and-args)
     (return-from decode-defcheck-name-and-args
-      (values name-or-name-and-args nil nil nil nil nil nil)))
+      (values name-or-name-and-args nil nil nil nil nil nil nil nil)))
    ((listp name-or-name-and-args)
     (destructuring-bind (name &key (setup nil setup-supp-p)
                                    (cleanup nil cleanup-supp-p)
-                                   (fixtures nil fixtures-supp-p))
+                                   (fixtures nil fixtures-supp-p)
+                                   (group nil group-supp-p))
         name-or-name-and-args
       (return-from decode-defcheck-name-and-args
         (values name
                 setup setup-supp-p
                 cleanup cleanup-supp-p
-                fixtures fixtures-supp-p))))
+                fixtures fixtures-supp-p
+                group group-supp-p))))
    (t
     (error "~@<Expected symbol or list for def-check argument~_ ~s~:>"
            name-or-name-and-args))))

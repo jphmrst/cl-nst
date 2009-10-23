@@ -30,7 +30,7 @@
 
 NAME-OR-NAME-AND-OPTIONS ::= name | NAME-AND-OPTIONS
 
-NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
+NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                             [ :setup FORM ] [ :cleanup FORM ] )"
 
   (declare (special *group-class-name* *group-fixture-classes*))
@@ -39,10 +39,11 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
   ;; Decode the name-or-name-and-args, pulling out the individual
   ;; components, and indicating which are given in this test.
   (multiple-value-bind (test-name setup setup-supp-p cleanup cleanup-supp-p
-                                  fixtures fixtures-supp-p)
+                                  fixtures fixtures-supp-p group group-supp-p)
       (decode-defcheck-name-and-args name-or-name-and-args)
-    (declare (ignorable fixtures-supp-p) (special *group-class-name*))
-
+    (declare (ignore fixtures-supp-p group))
+    (when group-supp-p
+      (error "Keyword argument :group is not currently supported"))
 
     (let ((name nil)                    ; The internal symbol used to
                                         ; track the results of this
@@ -167,9 +168,9 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
 
              (let ((gproto (make-instance ',*group-class-name*)))
                (setf (test-list gproto)
-                 (nconc (test-list gproto) (list ',name))
-                 (gethash ',test-name (test-name-lookup gproto))
-                 (make-instance ',name)))))))))
+                     (nconc (test-list gproto) (list ',name)))
+               (setf (gethash ',test-name (test-name-lookup gproto))
+                     (make-instance ',name)))))))))
 
 (defmacro def-check (&rest args)
   (warn "def-check is deprecated; use def-test instead")
