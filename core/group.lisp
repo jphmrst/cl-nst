@@ -144,6 +144,9 @@ forms - zero or more test forms, given by def-check."
                  ;; dropped.
                  (defmethod group-name ((g ,group-name)) ',group-name)
 
+                 (defmethod group-fixture-class-names ((g ,group-name))
+                   ',fixture-class-names)
+
                  ;; Fixture processing.
                  ,@anon-fixture-forms
 
@@ -166,7 +169,9 @@ forms - zero or more test forms, given by def-check."
                        progn ((obj ,group-name))
                      ,@each-cleanup))
 
-                 (defmethod test-names ((group ,group-name)) ',test-names)
+                 (defmethod test-names ((group ,group-name))
+                   (loop for tt in (test-list group)
+                         collect (test-name-lookup (make-instance tt))))
 
                  ;; Pass the group record predicate.
                  (defmethod group-record-p ((obj ,group-name)) t)
