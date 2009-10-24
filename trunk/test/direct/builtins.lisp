@@ -152,3 +152,9 @@
 (def-test-group a-setup-cleanup ()
   (def-test a-verify-setup-cleanup (:eql 0) for-setup))
 
+(def-test-group test-adder ()
+  (def-test given1 (:each (:symbol a)) '(a a a a a))
+  (def-test given2 (:seq (:symbol a) (:eql 2) (:eq 'b)) '(a 2 b)))
+
+(def-test (given3 :group test-adder) (:predicate numberp) 3)
+(def-test (given4 :group test-adder) (:proj (0 2) :forms-eq) 'a 3 (car '(a b)))
