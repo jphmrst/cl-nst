@@ -15,3 +15,11 @@
         (---test-fails mnst-src::simple-checkpoints mnst-src::check-fail-3)
         (---test-errs mnst-src::simple-checkpoints mnst-src::check-error-1))))
 
+(def-test-group permuting-empty-lists ()
+  (def-test verify-permute-nil-g
+      (--nst-group mnst-src::permute-nil-g
+        (---test-passes mnst-src::permute-nil-g
+                        mnst-src::pass-though-no-cands-0)
+        (---test-fails mnst-src::permute-nil-g mnst-src::fail-for-no-cands-1)
+        (---test-fails mnst-src::permute-nil-g mnst-src::fail-for-no-cands-2))))
+
