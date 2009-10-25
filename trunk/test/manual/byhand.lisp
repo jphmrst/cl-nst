@@ -125,8 +125,3 @@
 
 (def-test-group apply-erring-fixtures-t ()
   (def-test (err-by-fix-t :fixtures (erring-fixture)) :true t))
-
-(def-test-group permute-nil-g ()
-  (def-test sng (:permute (:seq (:eq 'a))) '())
-  (def-test permute1 (:permute (:seq (:eq 'a))) '())
-  )

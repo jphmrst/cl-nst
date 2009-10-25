@@ -63,3 +63,10 @@
   (def-test check-error-1 :pass (error "This throws an error")))
 
 (defun div-five-by (x) (/ 5 x))
+
+;; For checking permutations of an empty list.
+(def-test-group permute-nil-g ()
+  (def-test pass-though-no-cands-0 (:permute :pass) '())
+  (def-test fail-for-no-cands-1 (:permute (:seq (:eq 'a))) '())
+  (def-test fail-for-no-cands-2 (:permute (:seq (:eq 'a))) '())
+  )
