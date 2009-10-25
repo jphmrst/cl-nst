@@ -26,7 +26,7 @@
   (let ((inst (gensym)) (result (gensym)))
     `(let* ((,inst (ensure-test-instance ',group-name ',test-name))
             (,result (gethash (nst::check-group-name ,inst) results-hash)))
-       (format t " Result type ~s~%" (type-of ,result))
+       ;; (format t " Result type ~s~%" (type-of ,result))
        ,(continue-check `(:all ,@subcriteria) `(list ,result)))))
 
 (def-criterion-alias (---test-passes group-name test-name)
@@ -36,7 +36,11 @@
                                   (null (nst::check-result-errors r)))))))
 (def-criterion-alias (---test-fails group-name test-name)
   `(---on-test ,group-name ,test-name
-               (:predicate (lambda (r) (nst::check-result-failures r)))))
+               (:all
+                (:predicate (lambda (r) (null (nst::check-result-errors r))))
+                (:predicate (lambda (r) (nst::check-result-failures r))))))
 (def-criterion-alias (---test-errs group-name test-name)
   `(---on-test ,group-name ,test-name
-               (:predicate (lambda (r) (nst::check-result-errors r)))))
+               (:all
+                (:predicate (lambda (r) (null (nst::check-result-failures r))))
+                (:predicate (lambda (r) (nst::check-result-errors r))))))

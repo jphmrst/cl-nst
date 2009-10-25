@@ -216,6 +216,11 @@ minor mode should apply."
 (nst-form-indentation nst::format-at-verbosity 2)
 (nst-form-indentation emit-config-error 2)
 (nst-form-indentation add-test-config-error 1)
+(nst-form-indentation --nst-run 1)
+(nst-form-indentation --nst-packaage 1)
+(nst-form-indentation --nst-group 1)
+(nst-form-indentation --nst-test 2)
+(nst-form-indentation ---on-test 2)
 
 (nst-form-indentation :info 1)
 (nst-form-indentation :apply 1)
