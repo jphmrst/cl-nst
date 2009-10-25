@@ -29,17 +29,19 @@ first element is that symbol and whose remaining elements are options."
   (cond
    ((symbolp name-or-name-and-args)
     (return-from decode-defcheck-name-and-args
-      (values name-or-name-and-args nil nil nil nil nil nil)))
+      (values name-or-name-and-args nil nil nil nil nil nil nil nil)))
    ((listp name-or-name-and-args)
     (destructuring-bind (name &key (setup nil setup-supp-p)
                                    (cleanup nil cleanup-supp-p)
-                                   (fixtures nil fixtures-supp-p))
+                                   (fixtures nil fixtures-supp-p)
+                                   (group nil group-supp-p))
         name-or-name-and-args
       (return-from decode-defcheck-name-and-args
         (values name
                 setup setup-supp-p
                 cleanup cleanup-supp-p
-                fixtures fixtures-supp-p))))
+                fixtures fixtures-supp-p
+                group group-supp-p))))
    (t
     (error "~@<Expected symbol or list for def-check argument~_ ~s~:>"
            name-or-name-and-args))))
@@ -48,11 +50,24 @@ first element is that symbol and whose remaining elements are options."
 
 (defun extract-parameters (x) x)
 (defun continue-check (criterion form)
-  (unless (listp criterion)
-    (setf criterion (list criterion)))
-  `(apply-criterion ',(car criterion) ',(cdr criterion) ',form))
+  (apply-criterion (car criterion) (cdr criterion) form))
 (defun build-continue-check-expr (criterion form)
   `(apply-criterion ',(car criterion) ',(cdr criterion) ',form))
+
+(defmacro def-criterion ((name args-formals values-formals) &body forms)
+  (let ((fp (gensym "values-form")) (ap (gensym "args")))
+    `(progn
+       (defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)
+         (destructuring-bind ,args-formals ,ap
+           (destructuring-bind ,values-formals (eval ,fp)
+             ,@forms))))))
+
+(defmacro def-criterion-unevaluated ((name args-formals forms-formals)
+                                     &body forms)
+  (let ((ap (gensym "args")))
+    `(defmethod apply-criterion ((top (eql ',name)) ,ap ,forms-formals)
+       (destructuring-bind ,args-formals ,ap
+         ,@forms))))
 
 (defmacro def-values-criterion ((name args-formals forms-formals &key (declare nil decl-supp-p)) &body forms)
   (let ((ap (gensym "args")) (fp (gensym "form")))
@@ -69,10 +84,21 @@ first element is that symbol and whose remaining elements are options."
        (destructuring-bind ,args-formals ,ap
          (eval (progn ,@forms))))))
 
+(defmacro with-criterion-name-args ((name-var formals-var) expr
+                                    &body forms)
+  (let ((res (gensym)))
+    `(let ((,res ,expr) ,name-var ,formals-var)
+       (cond
+         ((symbolp ,res) (setf ,name-var ,res ,formals-var nil))
+         (t (setf ,name-var (car ,res) ,formals-var (cdr ,res))))
+       ,@forms)))
+
 (defmacro def-criterion-alias ((name . args-formals) form)
-  (let ((valforms (gensym)))
-    `(def-form-criterion (,name ,args-formals ,valforms)
-       (build-continue-check-expr ,form ,valforms))))
+  (let ((vsf (gensym "values-form"))
+        (new-name (gensym "new-name")) (new-args (gensym "new-args")))
+    `(def-criterion-unevaluated (,name ,args-formals ,vsf)
+         (with-criterion-name-args (,new-name ,new-args) ,form
+           (apply-criterion ,new-name ,new-args ,vsf)))))
 
 (defvar *error-checking* nil
   "Criteria such as :check-err set this variable to t (and declare it special)

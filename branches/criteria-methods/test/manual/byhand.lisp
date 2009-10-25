@@ -115,3 +115,13 @@
 (def-test-group core-checks-sub ()
   (def-test err-3 (:err :type division-by-zero) (error "Miss this")))
 
+(def-fixtures erring-fixture ()
+  (pf-a 120)
+  (pf-err (error "pf-err"))
+  (pf-z 'asdfg))
+
+(def-test-group apply-erring-fixtures-g (erring-fixture)
+  (def-test err-by-fix-g :true t))
+
+(def-test-group apply-erring-fixtures-t ()
+  (def-test (err-by-fix-t :fixtures (erring-fixture)) :true t))

@@ -23,209 +23,166 @@
 
 ;;; Built-in basic testing criteria.
 
-(def-values-criterion (:pass () (&rest chk) :declare ((ignorable chk)))
-  `(check-result))
+(def-criterion-unevaluated (:pass () chk)
+  (declare (ignorable chk))
+  (check-result))
 
-(def-values-criterion (:fail (&rest args) (&rest chk) :declare ((ignorable chk)))
-  `(emit-failure :format ,(car args) :args ,(cdr args)))
+(def-criterion-unevaluated (:fail (&rest args) chk)
+  (declare (ignorable chk))
+  (emit-failure :format (car args) :args (cdr args)))
 
-(def-values-criterion (:warn (&rest args) (&rest chk) :declare ((ignorable chk)))
-  ;; `(declare (ignorable chk))
-  `(emit-warning :format ,(car args) :args ,(cdr args)))
+(def-criterion-unevaluated (:warn (&rest args) chk)
+  (declare (ignorable chk))
+  (emit-warning :format (car args) :args (cdr args)))
 
-(def-values-criterion (:true () (bool))
-  `(if bool
-     (check-result)
-     (emit-failure :format "Form not t: ~s" :args (list bool))))
+(def-criterion (:true () (bool))
+  (if bool
+      (check-result)
+      (emit-failure :format "Expected non-null form, got: ~s"
+                    :args (list bool))))
 
-(def-values-criterion (:eq (eq-form) (check-form))
-  (let ((result (gensym)))
-    `(let ((,result check-form))
-       (if (eq ,eq-form ,result)
-           (check-result)
-           (emit-failure :format "Not eq to value of ~s:~_Value ~s"
-                         :args `(',,eq-form ,,result))))))
+(def-criterion (:eq (eq-form) (result))
+  (if (eq (eval eq-form) result)
+      (check-result)
+      (emit-failure :format "Not eq to value of ~s:~_Value ~s"
+                    :args `('eq-form ,result))))
 
 (def-criterion-alias (:symbol name) `(:eq ',name))
 
-(def-values-criterion (:eql (eql-form) (check-form))
-  `(if (eql ,eql-form check-form)
-     (check-result)
-     (emit-failure :format "Not eql to value of ~s" :args '(,eql-form))))
+(def-criterion (:eql (eql-form) (check-form))
+  (if (eql (eval eql-form) check-form)
+      (check-result)
+      (emit-failure :format "Not eql to value of ~s" :args (list eql-form))))
 
-(def-values-criterion (:equal (eql-form) (check-form))
-  `(if (equal ,eql-form check-form)
+(def-criterion (:equal (eql-form) (check-form))
+  (if (equal (eval eql-form) check-form)
      (check-result)
-     (emit-failure :format "Not equal to value of ~s" :args '(,eql-form))))
+     (emit-failure :format "Not equal to value of ~s" :args (list eql-form))))
 
-(def-values-criterion (:equalp (eql-form) (check-form))
-  `(if (equalp ,eql-form check-form)
-     (check-result)
-     (emit-failure :format "Not equalp to value of ~s" :args '(,eql-form))))
+(def-criterion (:equalp (eql-form) (check-form))
+  (if (equalp (eval eql-form) check-form)
+      (check-result)
+      (emit-failure :format "Not equalp to value of ~s" :args (list eql-form))))
 
 (def-criterion-alias (:forms-eq)    `(:predicate eq))
 (def-criterion-alias (:forms-eql)   `(:predicate eql))
 (def-criterion-alias (:forms-equal) `(:predicate equal))
 (def-criterion-alias (:value-list further) `(:apply list ,further))
 
-(def-values-criterion (:predicate (pred) (&rest forms))
-  `(if (apply #',pred forms)
-     (check-result)
-     (emit-failure :format "Predicate ~s fails" :args '(,pred))))
+(def-criterion (:predicate (pred) (&rest vals))
+  (if (apply pred vals)
+      (check-result)
+      (emit-failure :format "Predicate ~s fails for ~s"
+                    :args (list pred vals))))
 
 (def-criterion-alias (:drop-values criterion)
   `(:apply (lambda (x &rest others) (declare (ignorable others)) x)
            ,criterion))
 
 
-(def-values-criterion (:dump-forms (blurb) (&rest forms))
-  `(progn
-     (format t "~%~a~%~{~s~%~}" ,blurb forms)
-     (emit-failure :format "Arguments dumped" :args nil)))
+(def-criterion (:dump-forms (blurb) (&rest forms))
+  (format t "~%~a~%~{~s~%~}" blurb forms)
+  (emit-failure :format "Arguments dumped" :args nil))
 
-(def-form-criterion (:info (string subcriterion) expr-list-form)
-  (let ((subcheck (gensym "subcheck")))
-    `(let ((,subcheck ,(continue-check subcriterion expr-list-form)))
-       (push ,string (check-result-info ,subcheck))
-       ,subcheck)))
+(def-criterion-unevaluated (:info (string subcriterion) expr-list-form)
+  (let ((subcheck (continue-check subcriterion expr-list-form)))
+    (push string (check-result-info subcheck))
+    subcheck))
 
-(def-form-criterion (:err (&key (type 'condition type-supp-p)) expr-form)
-  (let ((x (gensym "x")) (block (gensym "block")))
-    `(block ,block
-       (format-at-verbosity 4 "    Setting up ~s handler for :err~%" ',type)
-       (handler-bind ((,type #'(lambda (,x)
-                                 (declare (ignorable ,x))
-                                 (format-at-verbosity 4
-                                     "Caught ~s as expected by :err criterion~%"
-                                   ,x)
-                                 (return-from ,block (check-result))))
-                      ,@(when (and type-supp-p (not (eq type 'error)))
-                          `((error
-                             #'(lambda (,x)
-                                 (format-at-verbosity 4
-                                     "Caught ~s but :err expected ~s~%"
-                                   ,x ',type)
-                                 (unless *debug-on-error*
-                                   (return-from ,block (emit-error ,x))))))))
-         ,expr-form)
-       (emit-failure :format "~@<No expected error:~{~_ ~s~}~:>"
-                     :args '(,(cond
-                               ((and (listp expr-form)
-                                     (eq 'list (car expr-form)))
-                                (cdr expr-form))
-                               (t (list expr-form))))))))
+(def-criterion-unevaluated (:err (&key (type 'condition)) expr-form)
+  (block err-criterion
+    (format-at-verbosity 4 "    Setting up ~s handler for :err~%" type)
+    (handler-bind
+        ((condition #'(lambda (e)
+                        (cond
+                         ((typep e type)
+                          (format-at-verbosity 4
+                              "Caught ~s as expected by :err criterion~%" e)
+                          (return-from err-criterion (check-result)))
+                         ((typep e 'error)
+                          (format-at-verbosity 4
+                              "Caught ~s but :err expected ~s~%" e type)
+                          (unless *debug-on-error*
+                            (return-from err-criterion (emit-error e))))))))
+      (eval expr-form))
 
-(def-form-criterion (:perf (&key (ms nil ms-supp-p)
-                                (sec nil sec-supp-p)
-                                (min nil min-supp-p)) expr-form)
-  (let ((core-form expr-form))
-    (cond
-     ((or sec-supp-p min-supp-p ms-supp-p)
-      (when (or (and sec-supp-p min-supp-p) (and ms-supp-p min-supp-p)
-                (and ms-supp-p sec-supp-p))
-        (error "Multiple time metrics given"))
-      (when sec-supp-p (setf ms (* 1000 sec)))
-      (when min-supp-p (setf ms (* 60000 min)))
-      (setf core-form
-        `(let* ((start-time (get-internal-real-time))
-                (*nst-stack* ,core-form)
-                (elapsed-ms
-                 (* ,(/ 1000
-                        internal-time-units-per-second)
-                    (- (get-internal-real-time)
-                       start-time))))
-           (if (> ,ms elapsed-ms)
-             (check-result)
-             (emit-failure
-              :format "Execution time ~dms exceeded allowed time ~dms"
-              :args '(elapsed-ms ,ms))))))
-     (t
-       (error
-        ":perf check requires performance criteria specification")))
-    core-form))
+    (emit-failure :format "~@<No expected error:~{~_ ~s~}~:>"
+                  :args `(,(cond
+                            ((and (listp expr-form)
+                                  (eq 'list (car expr-form)))
+                             (cdr expr-form))
+                            (t (list expr-form)))))))
 
-(def-form-criterion (:not (subcriterion) expr-list-form)
+(def-criterion-unevaluated (:perf (&key (ms nil ms-supp-p)
+                                        (sec nil sec-supp-p)
+                                        (min nil min-supp-p)) expr-form)
+  (cond
+   ((or sec-supp-p min-supp-p ms-supp-p)
+    (when (or (and sec-supp-p min-supp-p) (and ms-supp-p min-supp-p)
+              (and ms-supp-p sec-supp-p))
+      (error "Multiple time metrics given"))
+    (when sec-supp-p (setf ms (* 1000 sec)))
+    (when min-supp-p (setf ms (* 60000 min)))
+    (let* ((start-time (get-internal-real-time))
+           (eval-result (eval expr-form))
+           (end-time (get-internal-real-time))
+           (elapsed-ms
+            (* (/ 1000 internal-time-units-per-second)
+               (- end-time start-time))))
+      (declare (ignore eval-result))
+      (if (> ms elapsed-ms)
+        (check-result)
+        (emit-failure :format "Execution time ~dms exceeded allowed time ~dms"
+                      :args (list elapsed-ms ms)))))
+   (t
+    (error ":perf check requires performance criteria specification"))))
+
+(def-criterion-unevaluated (:not (subcriterion) expr-list-form)
   (let ((subcheck (gensym)))
     `(let ((,subcheck ,(continue-check subcriterion expr-list-form)))
        (cond
-        ((check-result-errors ,subcheck)
-         ,subcheck)
-        ((check-result-failures ,subcheck)
-         (check-result :info (check-result-info ,subcheck)))
-        (t
-         (emit-failure :format "Expected failure from ~s"
-                       :args '(,subcriterion)))))))
+         ((check-result-errors ,subcheck)
+          ,subcheck)
+         ((check-result-failures ,subcheck)
+          (check-result :info (check-result-info ,subcheck)))
+         (t
+          (emit-failure :format "Expected failure from ~s"
+                        :args '(,subcriterion)))))))
 
 
-(def-form-criterion (:all (&rest args) expr-list-form)
-  (let ((var (gensym "var")) (warnings (gensym "warnings"))
-        (failures (gensym "failures")) (errors (gensym "errors"))
-        (info (gensym "info"))
-        (*nst-context-evaluable* t))
+(def-criterion-unevaluated (:all (&rest subcriteria) expr-list-form)
+  (let ((*nst-context-evaluable* t))
     (declare (special *nst-context-evaluable*))
-    (labels ((test-next (args)
-               (cond
-                ((null args)
-                 `(check-result :warnings ,warnings
-                                     :failures ,failures
-                                     :errors ,errors :info ,info))
-                (t
-                 (destructuring-bind (first-arg &rest other-args) args
-                   (let ((subcheck (gensym "sub")))
-                     `(let ((,subcheck
-                             ,(continue-check first-arg var)))
-                        (setf ,warnings
-                          (nconc ,warnings
-                                 (check-result-warnings ,subcheck))
-                          ,failures
-                          (nconc ,failures
-                                 (check-result-failures ,subcheck))
-                          ,errors
-                          (nconc ,errors
-                                 (check-result-errors ,subcheck))
-                          ,info
-                          (nconc ,errors
-                                 (check-result-info ,subcheck)))
-                        (cond
-                          ((or ,failures ,errors)
-                           (check-result :warnings ,warnings
-                                              :failures ,failures
-                                              :errors ,errors
-                                              :info ,info))
-                          (t ,(test-next other-args))))))))))
-      `(let ((,var ,expr-list-form) ,warnings ,failures ,errors ,info)
-        ,(test-next args)))))
+    (let (warnings failures errors info)
+      (loop for subcriterion in subcriteria do
+        (let ((subresult (continue-check subcriterion expr-list-form)))
+          (setf warnings (nconc warnings (check-result-warnings subresult))
+                failures (nconc failures (check-result-failures subresult))
+                errors (nconc errors (check-result-errors subresult))
+                info (nconc errors (check-result-info subresult)))))
+      (check-result :warnings warnings :failures failures
+                    :errors errors :info info))))
 
-(def-form-criterion (:any (&rest criteria) expr-list-form)
-  (let ((new-stack (gensym "expr-list-form"))
-        (block (gensym "block")) (info (gensym "info"))
-        (result (gensym "result"))
-        (rf (gensym "rf")) (re (gensym "re")) (ri (gensym "ri"))
-        (*nst-context-evaluable* t))
-    `(let ((,new-stack ,expr-list-form) (,info nil))
-       (block ,block
-         ,@(loop for criterion in criteria collect
-                 `(let* ((,result ,(continue-check criterion new-stack))
-                         (,rf (check-result-failures ,result))
-                         (,re (check-result-errors ,result))
-                         (,ri (check-result-info ,result)))
-                    (cond
-                      ((check-result-errors ,result)
-                       (setf ,info (nconc ,info ,re ,rf ,ri)))
-                      (,rf
-                       (setf ,info (append ,info ,rf ,ri)))
-                      (t
-                       (return-from ,block
-                         (check-result
-                          :info (nconc ,info
-                                       (check-result-info ,result))))))))
-         (emit-failure :format "No disjuncts succeeded:~{~_ ~s~}"
-                       :args '(,criteria)
-                       :info ,info)))))
+(def-criterion-unevaluated (:any (&rest criteria) expr-list-form)
+  (let ((*nst-context-evaluable* t) (info nil))
+    (block any-criterion
+      (loop for criterion in criteria do
+        (let* ((result (continue-check criterion expr-list-form))
+               (rf (check-result-failures result))
+               (re (check-result-errors result))
+               (ri (check-result-info result)))
+          (when re (setf info (nconc info re)))
+          (when rf (setf info (nconc info rf)))
+          (when ri (setf info (nconc info ri)))
+          (unless (or re rf)
+            (return-from any-criterion
+              (check-result :info (nconc info (check-result-info result))))))))
+    (emit-failure :format "No disjuncts succeeded:~{~_ ~s~}"
+                  :args (list criteria) :info info)))
 
-(def-form-criterion (:apply (transform criterion) forms)
+(def-criterion-unevaluated (:apply (transform criterion) exprs-form)
   (continue-check criterion
-                  `(multiple-value-call #'list (apply #',transform ,forms))))
+    `(multiple-value-call #'list (apply #',transform ,exprs-form))))
 
 
 (def-form-criterion (:check-err (criterion) forms)

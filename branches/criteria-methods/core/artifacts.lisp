@@ -48,6 +48,9 @@
   (:documentation
    "Map from a group or test instance back to its symbolic name."))
 
+(defgeneric group-fixture-class-names (group-instance)
+  (:documentation "Map from a group instance to the list of fixture classes associated with it."))
+
 (defgeneric test-names (fixture-or-group)
   (:documentation "The names of tests in a group.  Will be given an eql-method
 by the macros which expand tests and groups."))

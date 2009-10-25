@@ -30,24 +30,38 @@
 
 NAME-OR-NAME-AND-OPTIONS ::= name | NAME-AND-OPTIONS
 
-NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
+NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                             [ :setup FORM ] [ :cleanup FORM ] )"
-
-  (declare (special *group-class-name* *group-fixture-classes*))
-                                        ; The def-group we're within.
 
   ;; Decode the name-or-name-and-args, pulling out the individual
   ;; components, and indicating which are given in this test.
   (multiple-value-bind (test-name setup setup-supp-p cleanup cleanup-supp-p
-                                  fixtures fixtures-supp-p)
+                                  fixtures fixtures-supp-p group group-supp-p)
       (decode-defcheck-name-and-args name-or-name-and-args)
-    (declare (ignorable fixtures-supp-p) (special *group-class-name*))
+    (declare (ignore fixtures-supp-p))
+    (when (and group-supp-p
+               (boundp '*group-class-name*)
+               (not (eq group (symbol-value '*group-class-name*))))
+      (error "Test :group option value ~s differs from enclosing group ~s"
+             group (symbol-value '*group-class-name*)))
+    (unless (or group-supp-p (boundp '*group-class-name*))
+      (error
+       "Must specify either :group option value or enclose test in group"))
 
-
-    (let ((name nil)                    ; The internal symbol used to
+    (let* ((*group-class-name*
+             (cond
+               ((boundp '*group-class-name*) (symbol-value '*group-class-name*))
+               (t group)))
+           (*group-fixture-classes*
+             (cond
+               ((boundp '*group-fixture-classes*)
+                (symbol-value '*group-fixture-classes*))
+               (t (group-fixture-class-names
+                   (make-instance *group-class-name*)))))
+           (name nil)                   ; The internal symbol used to
                                         ; track the results of this
                                         ; test.
-          (purge-ids nil))              ; IDs of previous record of
+           (purge-ids nil))             ; IDs of previous record of
                                         ; running this test.
 
       ;; Find any records of running previous versions of this test.
@@ -167,9 +181,9 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ]
 
              (let ((gproto (make-instance ',*group-class-name*)))
                (setf (test-list gproto)
-                 (nconc (test-list gproto) (list ',name))
-                 (gethash ',test-name (test-name-lookup gproto))
-                 (make-instance ',name)))))))))
+                     (nconc (test-list gproto) (list ',name)))
+               (setf (gethash ',test-name (test-name-lookup gproto))
+                     (make-instance ',name)))))))))
 
 (defmacro def-check (&rest args)
   (warn "def-check is deprecated; use def-test instead")
