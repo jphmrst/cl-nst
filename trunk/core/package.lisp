@@ -55,12 +55,20 @@
                                         ; deprecated and will be
                                         ; dropped.
 
+             ;; Do NOT change this package's exported-symbol list
+             ;; without updating the API in the manual (or filing a
+             ;; ticket for the addition).
+
              #:continue-check
 
              #:emit-failure #:emit-warning #:emit-success
              #:add-failure #:add-error #:add-info
              #:check-result             ; check-result is deprecated
                                         ; and will be dropped.
+
+             ;; Do NOT change this package's exported-symbol list
+             ;; without updating the API in the manual (or filing a
+             ;; ticket for the addition).
 
              #:run-package #:run-group #:run-test
              #:report-multiple #:report-package #:report-group #:report-test
@@ -69,6 +77,10 @@
              #:nst-junit-dump
              #:junit-results-by-group
 
+             ;; Do NOT change this package's exported-symbol list
+             ;; without updating the API in the manual (or filing a
+             ;; ticket for the addition).
+
              #:*nst-output-stream*
              #:*default-report-verbosity*
              #:*debug-on-error*
@@ -76,6 +88,10 @@
              #:arbitrary
              #:compound-structure
              #:def-arbitrary-instance-type
+
+             ;; Do NOT change this package's exported-symbol list
+             ;; without updating the API in the manual (or filing a
+             ;; ticket for the addition).
 
              ;; If ever we break up the NST package, this name should
              ;; go into the programmer's API package.
