@@ -75,7 +75,9 @@ all further errors themselves.")
 subsequences of a current check definition.
  - criterion is an expression denoting a check to be made.
  - forms is an expression which at runtime will evaluate to the stack of values
-   to be tested."
+   to be tested.
+ Forms is actually a poor name for this argument, because it seems always to be
+a single form, possibly something wrapped in progn or multiple-value-bind."
 
   (declare (special *nst-context-evaluable*))
   (let (criterion-name criterion-args)
@@ -101,7 +103,7 @@ subsequences of a current check definition.
                                                     (t `',forms)))
                                     *nst-context*)))
            (declare (special *nst-context*))
-           (format-at-verbosity 3 "Checking (~s~{ ~s~}~%" ',criterion ',forms)
+           (format-at-verbosity 3 "Checking (~s ~s)~%" ',criterion ',forms)
            (block ,checker-block
              (handler-bind
                  ((error
