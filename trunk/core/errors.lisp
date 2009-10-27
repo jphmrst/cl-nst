@@ -59,13 +59,14 @@
 (define-condition nst-hard-deprecation (warning
                                         nst-deprecation-warning-mixin) ()
   (:report (lambda (cnd stream)
-             (format stream "~s is deprecated and MAY NOT OPERATE ~
-                             CORRECTLY; use ~s instead."
-               (old-name cnd) (replacement cnd)))))
+             (format stream "~@<~s is deprecated and MAY NOT OPERATE CORRECTLY~
+                             ; use ~:[one of ~{~s~^, ~:_~}~;~s~] instead.~:>"
+               (old-name cnd) (listp (replacement cnd)) (replacement cnd)))))
 
 (define-condition nst-soft-deprecation (style-warning
                                         nst-deprecation-warning-mixin) ()
   (:report (lambda (cnd stream)
-             (format stream "~s is deprecated; use ~s instead."
-               (old-name cnd) (replacement cnd)))))
+             (format stream
+                 "~s is deprecated; use ~:[one of ~{~s~^, ~:_~}~;~s~] instead."
+               (old-name cnd) (listp (replacement cnd)) (replacement cnd)))))
 

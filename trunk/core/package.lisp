@@ -51,18 +51,16 @@
              #:def-form-criterion   #:def-control-check
                                         ; def-check-alias,
                                         ; def-value-check and
-                                        ; def-control-check will be
-                                        ; deprecated and then dropped
+                                        ; def-control-check are
+                                        ; deprecated and will be
+                                        ; dropped.
 
              #:continue-check
 
-             #:emit-failure
-             #:emit-warning
-             #:emit-success
-             #:add-failure
-             #:add-error
-             #:add-info
-             #:check-result
+             #:emit-failure #:emit-warning #:emit-success
+             #:add-failure #:add-error #:add-info
+             #:check-result             ; check-result is deprecated
+                                        ; and will be dropped.
 
              #:run-package #:run-group #:run-test
              #:report-multiple #:report-package #:report-group #:report-test
