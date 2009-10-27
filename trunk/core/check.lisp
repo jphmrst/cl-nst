@@ -186,7 +186,8 @@ Example:
 
 #+allegro (excl::define-simple-parser def-values-check caadr :nst-criterion)
 (defmacro def-value-check (&rest args)
-  (warn "def-value-check is deprecated; use def-values-criterion instead")
+  (warn 'nst-soft-deprecation
+        :old-name 'def-value-check :replacement 'def-values-criterion)
   `(def-values-criterion ,@args))
 
 #+allegro (excl::define-simple-parser def-form-criterion caadr :nst-criterion)
@@ -236,7 +237,8 @@ Example:
 
 #+allegro (excl::define-simple-parser def-control-check caadr :nst-criterion)
 (defmacro def-control-check (&rest args)
-  (warn "def-control-check is deprecated; use def-form-criterion instead")
+  (warn 'nst-soft-deprecation
+        :old-name 'def-control-check :replacement 'def-form-criterion)
   `(def-form-criterion ,@args))
 
 
@@ -316,7 +318,8 @@ when def-check-alias is macroexpanded."
 
 #+allegro (excl::define-simple-parser def-check-alias caadr :nst-criterion)
 (defmacro def-check-alias (&rest args)
-  (warn "def-check-alias is deprecated; use def-criterion-alias instead")
+  (warn 'nst-soft-deprecation
+        :old-name 'def-check-alias :replacement 'def-criterion-alias)
   `(def-criterion-alias ,@args))
 
 (defvar +storage-name-to-test-package+

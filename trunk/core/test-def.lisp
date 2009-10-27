@@ -186,7 +186,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                      (make-instance ',name)))))))))
 
 (defmacro def-check (&rest args)
-  (warn "def-check is deprecated; use def-test instead")
+  (warn 'nst-soft-deprecation :old-name 'def-check :replacement 'def-test)
   `(def-test ,@args))
 
 (defmacro debug-check (defcheck)

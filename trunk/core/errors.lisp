@@ -48,3 +48,24 @@
      (test :initarg :test :reader test))
   (stream exp)
   (format stream "No such NST test ~s in group ~s" (test exp) (group exp)))
+
+;;; -----------------------------------------------------------------
+
+(defclass nst-deprecation-warning-mixin ()
+     ((old-name :reader old-name :initarg :old-name)
+      (replacement :reader replacement :initarg :replacement))
+  (:documentation "Mixin of field used in deprecation warnings"))
+
+(define-condition nst-hard-deprecation (warning
+                                        nst-deprecation-warning-mixin) ()
+  (:report (lambda (cnd stream)
+             (format stream "~s is deprecated and MAY NOT OPERATE ~
+                             CORRECTLY; use ~s instead."
+               (old-name cnd) (replacement cnd)))))
+
+(define-condition nst-soft-deprecation (style-warning
+                                        nst-deprecation-warning-mixin) ()
+  (:report (lambda (cnd stream)
+             (format stream "~s is deprecated; use ~s instead."
+               (old-name cnd) (replacement cnd)))))
+
