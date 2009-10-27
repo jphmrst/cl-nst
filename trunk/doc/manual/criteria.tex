@@ -94,11 +94,11 @@ Examples:
 \begin{verbatim}
 (def-values-criterion (:pass () (&rest chk))
   `(declare (ignorable chk))
-  `(make-check-result))
+  `(check-result))
 
 (def-values-criterion (:eq (eq-form) (check-form))
   `(if (eq ,eq-form check-form)
-     (make-check-result)
+     (check-result)
      (emit-failure :format "Not eq to ~s" :args '(,eq-form))))
 \end{verbatim}
 
