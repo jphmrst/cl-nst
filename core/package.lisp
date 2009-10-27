@@ -63,7 +63,6 @@
              #:add-error
              #:add-info
              #:check-result
-             #:make-check-result
 
              #:run-package #:run-group #:run-test
              #:report-multiple #:report-package #:report-group #:report-test

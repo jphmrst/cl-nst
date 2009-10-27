@@ -344,7 +344,9 @@
                  ((and (null (check-result-errors ,result))
                        (null (check-result-failures ,result)))
                   (return-from ,permute-block
-                    (check-result)))))))))))
+                    (check-result))))))
+           (emit-failure :format "No permutation of ~s satisfies ~s"
+                         :args (list ,list ,criterion)))))))
 
 
 (def-form-criterion (:across (&rest criteria) forms)
