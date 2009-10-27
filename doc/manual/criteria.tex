@@ -42,6 +42,12 @@ building test reports:
 \begin{itemize}
 \item\texttt{(check-result)}\par This function indicates a successful
   test result.
+
+  Note that some older examples show \texttt{(make-check-result)}
+  instead of \texttt{(check-result)}.  The former is an internal
+  function and should not be used from outside the core NST files.
+  Calls to \texttt{(check-result)} add additional fields necessary for
+  correct use.
 \item\texttt{(emit-failure [ :format format-string [ :args args ] ] )}
   \par This function returns a report of test failure.  The
   \texttt{format-string} and \texttt{args} are as to the Common Lisp
