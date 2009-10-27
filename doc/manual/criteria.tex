@@ -40,14 +40,13 @@ criterion into Lisp.  For both of these mechanisms, this Lisp code is
 expected to return a test report.  NST provides three functions for
 building test reports:
 \begin{itemize}
-\item\texttt{(check-result)}\par This function indicates a successful
+\item\texttt{(emit-success)}\par This function indicates a successful
   test result.
 
-  Note that some older examples show \texttt{(make-check-result)}
-  instead of \texttt{(check-result)}.  The former is an internal
-  function and should not be used from outside the core NST files.
-  Calls to \texttt{(check-result)} add additional fields necessary for
-  correct use.
+  Note that some older examples show \texttt{(make-check-result)} or
+  \texttt{(check-result)}.  The former is an internal function and
+  should not be used from outside the core NST files.  The latter is
+  deprecated.
 \item\texttt{(emit-failure [ :format format-string [ :args args ] ] )}
   \par This function returns a report of test failure.  The
   \texttt{format-string} and \texttt{args} are as to the Common Lisp
@@ -100,11 +99,11 @@ Examples:
 \begin{verbatim}
 (def-values-criterion (:pass () (&rest chk))
   `(declare (ignorable chk))
-  `(check-result))
+  `(emit-success))
 
 (def-values-criterion (:eq (eq-form) (check-form))
   `(if (eq ,eq-form check-form)
-     (check-result)
+     (emit-success)
      (emit-failure :format "Not eq to ~s" :args '(,eq-form))))
 \end{verbatim}
 
