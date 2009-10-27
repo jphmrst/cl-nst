@@ -265,8 +265,13 @@ instances, and the info field is of any value."
     (when warnings (setf warning-count 1)))
   r)
 
-(defun check-result (&rest args)
+(defun new-check-result (&rest args)
   (calibrate-check-result (apply #'make-check-result args)))
+
+(defmacro check-result (&rest args)
+  (warn 'nst-soft-deprecation :old-name 'check-result
+        :replacement '(emit-success emit-failure emit-warning))
+  `(new-check-result ,@args))
 
 
 
@@ -766,6 +771,9 @@ six-value summary of the results:
                                     :format format :args args))
    :info info))
 
+(defun emit-success (&rest args)
+  (calibrate-check-result (apply #'make-check-result args)))
+
 (defun add-failure (result &key format args)
   "For use within user-defined check criteria: add a failure to a result."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
@@ -773,10 +781,6 @@ six-value summary of the results:
   (push (make-check-note :context *nst-context* :stack *nst-stack*
                          :format format :args args)
         (check-result-failures result)))
-
-(defun emit-success ()
-  "For use within user-defined check criteria: record a successful check."
-  (check-result))
 
 (defun add-error (result &key format args)
   "For use within user-defined check criteria: add an error to a result."
