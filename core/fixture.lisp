@@ -192,11 +192,16 @@ re-applied at subsequent fixture application rather than being recalculated.
 
        ,@(when (or export-bound-names export-fixture-name)
            `((eval-when (:compile-toplevel :load-toplevel :execute)
-               (export '(,@(when export-bound-names
-                             (loop for bnd in bindings collect (car bnd)))
-                         ,@(when export-fixture-name (list name)))
-                       ,(intern (package-name *package*)
-                                (find-package :keyword))))))
+               ,@(loop for bnd in bindings
+                     collect
+                       (let ((id (car bnd)))
+                         `(export ',id
+                                  ,(intern (package-name (symbol-package id))
+                                           (find-package :keyword)))))
+               ,@(when export-fixture-name
+                   `((export ',name
+                             ,(intern (package-name (symbol-package name))
+                                      (find-package :keyword))))))))
 
        ',name)))
 

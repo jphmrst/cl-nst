@@ -147,7 +147,7 @@ EXPANSION - An s-expression of code \(must be quoted or, more typically, backquo
 Example:
 \(def-value-check \(:eql \(eql-form\) \(check-form\)\)
   \`\(if \(eql ,eql-form check-form\)
-     \(check-result\)
+     \(emit-success\)
      \(emit-failure :format \"Not eql to ~s\" :args \'\(,eql-form\)\)\)\)"
 
   (let* ((stream (gensym "stream")) (id (gensym "id"))
