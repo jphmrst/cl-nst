@@ -109,6 +109,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
             (process-fixture-list fixtures)
 
           `(block ,test-name
+             #+allegro (excl:record-source-file ',test-name :type :nst-test)
              ,@anon-fixture-forms
 
              (defclass ,name (,@fixture-class-names) ()

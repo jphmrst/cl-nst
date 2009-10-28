@@ -151,7 +151,7 @@
         ((check-result-errors ,subcheck)
          ,subcheck)
         ((check-result-failures ,subcheck)
-         (check-result :info (check-result-info ,subcheck)))
+         (new-check-result :info (check-result-info ,subcheck)))
         (t
          (emit-failure :format "Expected failure from ~s"
                        :args '(,subcriterion)))))))
@@ -166,7 +166,7 @@
     (labels ((test-next (args)
                (cond
                 ((null args)
-                 `(check-result :warnings ,warnings
+                 `(new-check-result :warnings ,warnings
                                      :failures ,failures
                                      :errors ,errors :info ,info))
                 (t
@@ -188,7 +188,7 @@
                                  (check-result-info ,subcheck)))
                         (cond
                           ((or ,failures ,errors)
-                           (check-result :warnings ,warnings
+                           (new-check-result :warnings ,warnings
                                               :failures ,failures
                                               :errors ,errors
                                               :info ,info))
@@ -216,7 +216,7 @@
                        (setf ,info (append ,info ,rf ,ri)))
                       (t
                        (return-from ,block
-                         (check-result
+                         (new-check-result
                           :info (nconc ,info
                                        (check-result-info ,result))))))))
          (emit-failure :format "No disjuncts succeeded:~{~_ ~s~}"
@@ -290,7 +290,7 @@
                        ,warnings
                        (append ,warnings
                                (check-result-warnings ,result))))))))
-         (check-result :info ,info :warnings ,warnings)))))
+         (new-check-result :info ,info :warnings ,warnings)))))
 
 
 
@@ -328,7 +328,7 @@
                               (append
                                ,warnings
                                (check-result-warnings ,result))))))))
-         (check-result :info ,info :warnings ,warnings)))))
+         (new-check-result :info ,info :warnings ,warnings)))))
 
 (def-form-criterion (:permute (criterion) forms)
   (let ((permute-block (gensym)) (list (gensym "list-"))
@@ -381,7 +381,7 @@
                               (append
                                ,warnings
                                (check-result-warnings ,result))))))))
-         (check-result :info ,info :warnings ,warnings)))))
+         (new-check-result :info ,info :warnings ,warnings)))))
 
 
 (def-form-criterion (:slots (&rest clauses) forms)
@@ -418,4 +418,4 @@
                               (append
                                ,warnings
                                (check-result-warnings ,result))))))))
-         (check-result :info ,info :warnings ,warnings))))))
+         (new-check-result :info ,info :warnings ,warnings))))))

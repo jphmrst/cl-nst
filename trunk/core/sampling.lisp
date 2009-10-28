@@ -400,7 +400,7 @@
 
     `(multiple-value-bind ,values ,expr-list-form
        (let ((,qualifying-sample-var 0)
-             (,result (check-result))
+             (,result (emit-success))
              ,total-samples-run-var)
 
          (loop for ,sample-num-var from 0
