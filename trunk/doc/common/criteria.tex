@@ -104,7 +104,9 @@ may succeed under unexpected circumstances, if the argument is absent.  Note
 that the name of the type should \emph{not} be quoted, unlike other criterion arguments.}
 {Any.}
 {\noExpl}
-{\singleEx}{(def-test err1 (:err :type error) (error "this should be caught"))}
+{\multiEx}
+{\passExample{(def-test err1 (:err :type error) (error "this should be caught"))}
+ \passExample{(def-test err2 (:err) (error "this should be caught"))}}
 
 \kwdCriteriaDoc{perf}{(:perf [ :ns | :sec | :min ] TIME)}
 {Passes when the forms evaluate within the given time limit.}
