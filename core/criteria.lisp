@@ -346,7 +346,7 @@
                   (return-from ,permute-block
                     (emit-success))))))
            (emit-failure :format "No permutation of ~s satisfies ~s"
-                         :args (list ,list ,criterion)))))))
+                         :args (list ,list ',criterion)))))))
 
 
 (def-form-criterion (:across (&rest criteria) forms)
