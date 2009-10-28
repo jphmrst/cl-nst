@@ -759,17 +759,18 @@ six-value summary of the results:
 (defun emit-warning (&key format args)
   "For use within user-defined check criteria: emit a warning."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
-  (check-result
-   :warnings (list (make-check-note :context *nst-context* :stack *nst-stack*
-                                    :format format :args args))))
+  (new-check-result :warnings (list (make-check-note :context *nst-context*
+                                                     :stack *nst-stack*
+                                                     :format format
+                                                     :args args))))
 
 (defun emit-failure (&key format args info)
   "For use within user-defined check criteria: explain a failure."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
-  (check-result
-   :failures (list (make-check-note :context *nst-context* :stack *nst-stack*
-                                    :format format :args args))
-   :info info))
+  (new-check-result :failures (list (make-check-note :context *nst-context*
+                                                     :stack *nst-stack*
+                                                     :format format :args args))
+                    :info info))
 
 (defun emit-success (&rest args)
   (calibrate-check-result (apply #'make-check-result args)))
