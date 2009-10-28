@@ -24,7 +24,7 @@
 ;;; Built-in basic testing criteria.
 
 (def-values-criterion (:pass () (&rest chk) :declare ((ignorable chk)))
-  `(check-result))
+  `(emit-success))
 
 (def-values-criterion (:fail (&rest args) (&rest chk) :declare ((ignorable chk)))
   `(emit-failure :format ,(car args) :args ,(cdr args)))
@@ -35,14 +35,14 @@
 
 (def-values-criterion (:true () (bool))
   `(if bool
-     (check-result)
+     (emit-success)
      (emit-failure :format "Form not t: ~s" :args (list bool))))
 
 (def-values-criterion (:eq (eq-form) (check-form))
   (let ((result (gensym)))
     `(let ((,result check-form))
        (if (eq ,eq-form ,result)
-           (check-result)
+           (emit-success)
            (emit-failure :format "Not eq to value of ~s:~_Value ~s"
                          :args `(',,eq-form ,,result))))))
 
@@ -50,17 +50,17 @@
 
 (def-values-criterion (:eql (eql-form) (check-form))
   `(if (eql ,eql-form check-form)
-     (check-result)
+     (emit-success)
      (emit-failure :format "Not eql to value of ~s" :args '(,eql-form))))
 
 (def-values-criterion (:equal (eql-form) (check-form))
   `(if (equal ,eql-form check-form)
-     (check-result)
+     (emit-success)
      (emit-failure :format "Not equal to value of ~s" :args '(,eql-form))))
 
 (def-values-criterion (:equalp (eql-form) (check-form))
   `(if (equalp ,eql-form check-form)
-     (check-result)
+     (emit-success)
      (emit-failure :format "Not equalp to value of ~s" :args '(,eql-form))))
 
 (def-criterion-alias (:forms-eq)    `(:predicate eq))
@@ -70,7 +70,7 @@
 
 (def-values-criterion (:predicate (pred) (&rest forms))
   `(if (apply #',pred forms)
-     (check-result)
+     (emit-success)
      (emit-failure :format "Predicate ~s fails" :args '(,pred))))
 
 (def-criterion-alias (:drop-values criterion)
@@ -98,7 +98,7 @@
                                  (format-at-verbosity 4
                                      "Caught ~s as expected by :err criterion~%"
                                    ,x)
-                                 (return-from ,block (check-result))))
+                                 (return-from ,block (emit-success))))
                       ,@(when (and type-supp-p (not (eq type 'error)))
                           `((error
                              #'(lambda (,x)
@@ -135,7 +135,7 @@
                     (- (get-internal-real-time)
                        start-time))))
            (if (> ,ms elapsed-ms)
-             (check-result)
+             (emit-success)
              (emit-failure
               :format "Execution time ~dms exceeded allowed time ~dms"
               :args '(elapsed-ms ,ms))))))
@@ -238,7 +238,7 @@
                                  (format-at-verbosity 4
                                      "Caught ~s as expected by :check-err~%"
                                    ,x)
-                                 (return-from ,x (check-result)))))
+                                 (return-from ,x (emit-success)))))
          ,(continue-check criterion forms))
        (emit-failure :format "~@<No expected error for check ~s on:~
                                  ~{~_ ~s~}~:>"
@@ -344,7 +344,7 @@
                  ((and (null (check-result-errors ,result))
                        (null (check-result-failures ,result)))
                   (return-from ,permute-block
-                    (check-result))))))
+                    (emit-success))))))
            (emit-failure :format "No permutation of ~s satisfies ~s"
                          :args (list ,list ,criterion)))))))
 
