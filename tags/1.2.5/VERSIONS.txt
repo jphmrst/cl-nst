@@ -1,0 +1,43 @@
+
+1.2.5 - 
+ Ticket 134 - Fixed a bug in the :permute criteria.
+ Ticket 123 - Bug in output.
+ Replaced check-result with emit-success.
+ Improved deprecation warnings.
+ Several minor tweaks.
+
+1.2.4 - internal release, October 9, 2009
+ Add restarts for use in interactive operation.
+ (Start to) capture fixture names when errors arise in fixture application.
+ Better failure checking of cleanup operations.
+ Added :export-* options to fixtures.
+
+1.2.3 - internal release, October 2, 2009
+ Added :export-names, :export-fixture-name and :export-bound-names to
+   the def-fixtures macro.
+
+1.2.2 - internal release, September 9, 2009
+ Ticket 104 - recompilation of a test now removes the record of its
+              pass/failure.
+ Ticket 113 - about halfway implemented.
+ Ticket 119 - partial fix: affected tests do now show up as erring, although the
+              message is cryptic.
+ Start of NST API documentation in manual.
+
+1.2.1 - internal release, September 2, 2009
+ Ticket 104 - fixed issues with modern/classic capitalization, occasional
+              hanging in backtrace collector
+
+1.2.0 - public release, July 22, 2009
+ Deprecation warnings on several disused macros.
+ Clarified error output message for :eq/:eql/:equal/:equalp.
+ Ticket 98 - customizable meaning for ":nst :debug" via ASDF.
+ Ticket 99 - fixed Makefile for documentation.
+ Ticket 100 - re-activated links in generated PDF.
+ Ticket 102 - deactivated Allegro backtrace harvesting on Mac OS X.
+ Ticket 103 discussion - now using "import" for ":nst :open".
+ New criterion for quickcheck-style sampling of generated data.
+ New do-what-I-mean interactive command :nst :run.
+ Code improvements for compile/load-time improvements.
+
+1.1.1 - First public release, June 2009.
