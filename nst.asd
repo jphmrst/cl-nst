@@ -38,7 +38,7 @@
                                         ; number) should be
                                         ; incremented immediately
                                         ; after a version is shipped.
-    :version "1.2.5"
+    :version "1.2.6"
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :nst-test)))
