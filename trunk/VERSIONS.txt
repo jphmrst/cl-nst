@@ -1,4 +1,6 @@
 
+1.2.6 -
+
 1.2.5 - 
  Ticket 134 - Fixed a bug in the :permute criteria.
  Ticket 123 - Bug in output.
