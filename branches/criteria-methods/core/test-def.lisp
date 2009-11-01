@@ -99,21 +99,21 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
           (process-fixture-list fixtures)
 
         (let* ((*nst-context* nil)
-               (special-decl
-                `(declare (special ,@(loop for fx in fixture-class-names
-                                         append (bound-names fx))
-                                   ,@(loop for fx in *group-fixture-classes*
-                                         append (bound-names fx)))))
+               (fixture-names-special
+                `(special ,@(loop for fx in fixture-class-names
+                                  append (bound-names fx))
+                          ,@(loop for fx in *group-fixture-classes*
+                                  append (bound-names fx))))
                (core-run-body
                 (cond ((eql 1 (length forms))
                        (continue-check criterion
                          `(common-lisp:multiple-value-list
                            (locally
-                             ,special-decl
+                             (declare ,fixture-names-special)
                              ,(car forms)))))
                       (t (continue-check criterion
                            `(locally
-                              ,special-decl
+                              (declare ,fixture-names-special)
                               (list ,@forms)))))))
                                         ; The expansion of the actual
                                         ; test form.
@@ -141,10 +141,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
              (defmethod check-group-name ((obj ,name)) ',name)
 
              (defmethod core-run-test ((obj ,name))
-               (declare (special ,@(loop for fx in fixture-class-names
-                                       append (bound-names fx))
-                                 ,@(loop for fx in *group-fixture-classes*
-                                       append (bound-names fx))))
+               (declare (optimize (debug 3)) #| ,fixture-names-special |# )
                (let ((*current-group* ',*group-class-name*)
                      (*current-test*  ',test-name))
                  (declare (special *current-group* *current-test*))
