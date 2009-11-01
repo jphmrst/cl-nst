@@ -49,10 +49,23 @@ first element is that symbol and whose remaining elements are options."
 (defgeneric apply-criterion (top args form))
 
 (defun extract-parameters (x) x)
-(defun continue-check (criterion form)
+
+;;; (defmacro continue-check (criterion form)
+;;;   (warn "continue-check is deprecated; use check-subcriterion-on-value or check-subcriterion-on-form within def-criterion or def-criterion-unevaluated")
+;;;   `(continue-check ,criterion ,form))
+(defun continue-check #|continue-check-actual|# (criterion form)
   (unless (listp criterion)
     (setf criterion (list criterion)))
   `(apply-criterion ',(car criterion) ',(cdr criterion) ',form))
+
+(defun check-subcriterion-on-value (criterion expr)
+  (check-subcriterion-on-form criterion `(list ',expr)))
+(defun check-subcriterion-on-form (criterion form)
+  (unless (listp criterion)
+    (setf criterion (list criterion)))
+  (apply-criterion (car criterion) (cdr criterion) form))
+
+
 (defun build-continue-check-expr (criterion form)
   `(apply-criterion ',(car criterion) ',(cdr criterion) ',form))
 
@@ -60,14 +73,19 @@ first element is that symbol and whose remaining elements are options."
   (let ((fp (gensym "values-form")) (ap (gensym "args")))
     `(progn
        (defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)
+         (declare (optimize (debug 3)))
+         ;; (format t "Matching ~s~%  to ~s~%" ',ap ',args-formals)
          (destructuring-bind ,args-formals ,ap
+           ;; (format t "  done~%Evaluating ~s~%  to match to ~s~%" ,fp ',values-formals)
            (destructuring-bind ,values-formals (eval ,fp)
+             ;; (format t "  done~%")
              ,@forms))))))
 
 (defmacro def-criterion-unevaluated ((name args-formals forms-formals)
                                      &body forms)
   (let ((ap (gensym "args")))
     `(defmethod apply-criterion ((top (eql ',name)) ,ap ,forms-formals)
+       (declare (optimize (debug 3)))
        (destructuring-bind ,args-formals ,ap
          ,@forms))))
 
