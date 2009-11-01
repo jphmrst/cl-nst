@@ -50,7 +50,9 @@ first element is that symbol and whose remaining elements are options."
 
 (defun extract-parameters (x) x)
 (defun continue-check (criterion form)
-  (apply-criterion (car criterion) (cdr criterion) form))
+  (unless (listp criterion)
+    (setf criterion (list criterion)))
+  `(apply-criterion ',(car criterion) ',(cdr criterion) ',form))
 (defun build-continue-check-expr (criterion form)
   `(apply-criterion ',(car criterion) ',(cdr criterion) ',form))
 

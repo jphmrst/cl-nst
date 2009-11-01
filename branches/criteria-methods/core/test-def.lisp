@@ -93,20 +93,31 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                              "--"
                              (symbol-name test-name)))))
 
-      (let ((*nst-context* nil)
-            (core-run-body
-             (cond ((eql 1 (length forms))
-                    (continue-check criterion
-                      `(common-lisp:multiple-value-list ,(car forms))))
-                   (t (continue-check criterion (cons 'list forms))))))
+      ;; Expand the fixtures into the definitions we'll actually
+      ;; use.
+      (multiple-value-bind (fixture-class-names anon-fixture-forms)
+          (process-fixture-list fixtures)
+
+        (let* ((*nst-context* nil)
+               (special-decl
+                `(declare (special ,@(loop for fx in fixture-class-names
+                                         append (bound-names fx))
+                                   ,@(loop for fx in *group-fixture-classes*
+                                         append (bound-names fx)))))
+               (core-run-body
+                (cond ((eql 1 (length forms))
+                       (continue-check criterion
+                         `(common-lisp:multiple-value-list
+                           (locally
+                             ,special-decl
+                             ,(car forms)))))
+                      (t (continue-check criterion
+                           `(locally
+                              ,special-decl
+                              (list ,@forms)))))))
                                         ; The expansion of the actual
                                         ; test form.
-        (declare (special *nst-context*))
-
-        ;; Expand the fixtures into the definitions we'll actually
-        ;; use.
-        (multiple-value-bind (fixture-class-names anon-fixture-forms)
-            (process-fixture-list fixtures)
+          (declare (special *nst-context*))
 
           `(block ,test-name
              ,@anon-fixture-forms

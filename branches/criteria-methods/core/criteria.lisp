@@ -185,192 +185,126 @@
     `(multiple-value-call #'list (apply #',transform ,exprs-form))))
 
 
-(def-form-criterion (:check-err (criterion) forms)
-  (let ((x (gensym "x"))
-        (*error-checking* t))
-    (declare (special *error-checking*))
-    `(block ,x
-       (handler-bind ((error #'(lambda (,x)
-                                 (declare (ignorable ,x))
-                                 (format-at-verbosity 4
-                                     "Caught ~s as expected by :check-err~%"
-                                   ,x)
-                                 (return-from ,x (check-result)))))
-         ,(continue-check criterion forms))
-       (emit-failure :format "~@<No expected error for check ~s on:~
+(def-criterion-unevaluated (:check-err (criterion) forms)
+  (block check-err-block
+    (handler-bind ((error #'(lambda (e)
+                              (format-at-verbosity 4
+                                  "Caught ~s as expected by :check-err~%" e)
+                              (return-from check-err-block (check-result)))))
+      (continue-check criterion forms))
+    (emit-failure :format "~@<No expected error for check ~s on:~
                                  ~{~_ ~s~}~:>"
-                     :args '(,criterion
-                             ,(cond ((and (listp forms)
+                  :args (list criterion
+                              (cond ((and (listp forms)
                                           (eq 'list (car forms)))
                                      (cdr forms))
-                                    (t (list forms))))))))
+                                    (t (list forms)))))))
 
-(def-form-criterion (:progn (&rest forms-and-criterion) forms)
+(def-criterion-unevaluated (:progn (&rest forms-and-criterion) forms)
   (let ((progn-forms (butlast forms-and-criterion))
         (criterion (car (last forms-and-criterion))))
-    `(progn
-       ,@progn-forms
-       ,(continue-check criterion forms))))
+    (loop for form in progn-forms do (eval form))
+    (continue-check criterion forms)))
 
-(def-form-criterion (:proj (indices criterion) forms)
-  (let ((var (gensym))
-        (*nst-context-evaluable* t))
-    `(let ((,var ,forms))
-       ,(continue-check criterion
-                        `(list ,@(loop for idx in indices collect
-                                       `(nth ,idx ,var)))))))
+(def-criterion (:proj (indices criterion) (&rest values))
+  (continue-check criterion
+    `(list ,@(loop for idx in indices collect (nth idx values)))))
 
-(def-form-criterion (:values (&rest args) forms)
-  (continue-check `(:apply list (:seq ,@args)) forms))
+;;; (def-criterion-unevaluated (:values (&rest args) forms)
+;;;   (continue-check `(:apply list (:seq ,@args)) forms))
 
-(def-form-criterion (:each (criterion) forms)
-  (let ((block (gensym)) (list (gensym "list")) (var (gensym "var"))
-        (result (gensym "result"))
-        (warnings (gensym "w")) (info (gensym "info"))
-        (*nst-context-evaluable* t))
-    `(block ,block
-       (let ((,info nil) (,warnings nil))
-         (destructuring-bind (,list) ,forms
-           (loop for ,var in ,list do
-             (let ((,result ,(continue-check criterion `(list ,var))))
-               (cond
-                ((or (check-result-errors ,result)
-                     (check-result-failures ,result))
-                 (setf (check-result-info ,result)
-                   (append ,info (check-result-info ,result))
-                   (check-result-warnings ,result)
-                   (append ,warnings
-                           (check-result-warnings ,result)))
-                 (return-from ,block ,result))
-                (t
-                 (setf ,info (append ,info (check-result-info ,result))
-                       ,warnings
-                       (append ,warnings
-                               (check-result-warnings ,result))))))))
-         (check-result :info ,info :warnings ,warnings)))))
-
+(def-criterion (:each (criterion) (l))
+  (block each
+    (let ((info nil) (warnings nil))
+      (loop for value in l do
+        (let ((result (continue-check criterion `(list ,value))))
+          (cond
+            ((or (check-result-errors result)
+                 (check-result-failures result))
+             (setf (check-result-info result)
+                   (append info (check-result-info result))
+                   (check-result-warnings result)
+                   (append warnings (check-result-warnings result)))
+             (return-from each result))
+            (t
+             (setf info (append info (check-result-info result))
+                   warnings (append warnings
+                                (check-result-warnings result)))))))
+      (check-result :info info :warnings warnings))))
 
 
-(def-form-criterion (:seq (&rest criteria) forms)
-  (let ((block (gensym)) (list (gensym "list"))
-        (result (gensym "result")) (warnings (gensym "w"))
-        (info (gensym "info"))
-        (*nst-context-evaluable* t))
-    (declare (special *nst-context-evaluable*))
-    `(block ,block
-       (let ((,info nil) (,warnings nil))
-         (destructuring-bind (,list) ,forms
-           (unless (eql (length ,list) ,(length criteria))
-             (return-from ,block
-               (emit-failure :format "Expected list of length ~d"
-                             :args '(,(length criteria)))))
-           ,@(loop for criterion in criteria for idx from 0
-                   collect
-                   `(let ((,result
-                           ,(continue-check criterion
-                                            `(list (nth ,idx ,list)))))
-                      (cond
-                       ((or (check-result-errors ,result)
-                            (check-result-failures ,result))
-                        (setf (check-result-info ,result)
-                          (append ,info (check-result-info ,result))
-                          (check-result-warnings ,result)
-                          (append ,warnings
-                                  (check-result-warnings ,result)))
-                        (return-from ,block ,result))
-                       (t
-                        (setf ,info
-                              (append ,info (check-result-info ,result))
-                              ,warnings
-                              (append
-                               ,warnings
-                               (check-result-warnings ,result))))))))
-         (check-result :info ,info :warnings ,warnings)))))
+(def-criterion (:seq (&rest criteria) (l))
+  (block seq
+    (let ((info nil) (warnings nil))
+      (unless (eql (length l) (length criteria))
+        (return-from seq
+          (emit-failure :format "Expected list of length ~d, got ~s"
+                        :args `(,(length criteria) ,l))))
+      (loop for criterion in criteria for item in l do
+        (let ((result (continue-check criterion `(list ,item))))
+          (cond
+            ((or (check-result-errors result) (check-result-failures result))
+             (setf (check-result-info result)
+                   (append info (check-result-info result))
+                   (check-result-warnings result)
+                   (append warnings (check-result-warnings result)))
+             (return-from seq result))
+            (t
+             (setf info (append info (check-result-info result))
+                   warnings (append warnings
+                                    (check-result-warnings result)))))))
+      (check-result :info info :warnings warnings))))
 
-(def-form-criterion (:permute (criterion) forms)
-  (let ((permute-block (gensym)) (list (gensym "list-"))
-        (perms (gensym "perms-")) (x (gensym "x-"))
-        (result (gensym "result")))
-    `(block ,permute-block
-       (destructuring-bind (,list) ,forms
-         (let ((,perms (make-instance 'permuter :src ,list)))
-           (loop while (has-next ,perms) do
-             (let* ((,x (next-permutation ,perms))
-                    (,result ,(continue-check criterion `(list ,x))))
-               (cond
-                 ((and (null (check-result-errors ,result))
-                       (null (check-result-failures ,result)))
-                  (return-from ,permute-block
-                    (check-result)))))))))))
+(def-criterion (:permute (criterion) (l))
+  (block permute-block
+    (let ((perms (make-instance 'permuter :src l)))
+      (loop while (has-next perms) do
+        (let* ((x (next-permutation perms))
+               (result (continue-check criterion `(list ,x))))
+          (when (and (null (check-result-errors result))
+                     (null (check-result-failures result)))
+            (return-from permute-block (check-result)))))
+      (emit-failure :format "No permutation of ~s satisfies ~s"
+                    :args `(,l ,criterion)))))
 
 
-(def-form-criterion (:across (&rest criteria) forms)
-  (let ((block (gensym)) (list (gensym "list"))
-        (result (gensym "result")) (warnings (gensym "w"))
-        (info (gensym "info")))
-    `(block ,block
-       (let ((,info nil) (,warnings nil))
-         (destructuring-bind (,list) ,forms
-           (unless (eql (length ,list) ,(length criteria))
-             (return-from ,block
-               (emit-failure :format "Expected list of length ~d"
-                             :args '(,(length criteria)))))
-           ,@(loop for criterion in criteria for idx from 0
-                   collect
-                   `(let ((,result
-                           ,(continue-check criterion
-                                            `(list (aref ,list ,idx)))))
-                      (cond
-                       ((or (check-result-errors ,result)
-                            (check-result-failures ,result))
-                        (setf (check-result-info ,result)
-                          (append ,info (check-result-info ,result))
-                          (check-result-warnings ,result)
-                          (append ,warnings
-                                  (check-result-warnings ,result)))
-                        (return-from ,block ,result))
-                       (t
-                        (setf ,info
-                              (append ,info (check-result-info ,result))
-                              ,warnings
-                              (append
-                               ,warnings
-                               (check-result-warnings ,result))))))))
-         (check-result :info ,info :warnings ,warnings)))))
+(def-criterion (:across (&rest criteria) (v))
+  (block across-block
+    (let ((info nil) (warnings nil))
+      (unless (eql (length v) (length criteria))
+        (return-from across-block
+          (emit-failure :format "Expected sequence of length ~d"
+                        :args `(,(length criteria)))))
+      (loop for criterion in criteria for idx from 0 do
+        (let ((result (continue-check criterion `(list ,(nth idx v)))))
+          (cond
+            ((or (check-result-errors result) (check-result-failures result))
+             (setf (check-result-info result)
+                   (append info (check-result-info result))
+                   (check-result-warnings result)
+                   (append warnings (check-result-warnings result)))
+             (return-from across-block result))
+            (t (setf info (append info (check-result-info result))
+                     warnings (append warnings
+                                      (check-result-warnings result)))))))
+      (check-result :info info :warnings warnings))))
 
 
-(def-form-criterion (:slots (&rest clauses) forms)
-  (let ((block (gensym "oblock-")) (obj (gensym "o-"))
-        (slot-criterion (make-hash-table :test 'eq))
-        (result (gensym "result"))
-        (warnings (gensym "w")) (info (gensym "info")))
-    (loop for (slot criterion) in clauses do
-      (setf (gethash slot slot-criterion) criterion))
-    `(block ,block
-       (let ((,warnings nil) (,info nil))
-         (destructuring-bind (,obj) ,forms
-           ,@(loop for slot being the hash-keys of slot-criterion
-                   using (hash-value criterion)
-                   collect
-                   `(with-slots (,slot) ,obj
-                      (let ((,result
-                             ,(continue-check criterion `(list ,slot))))
-                        (cond
-                          ((or (check-result-errors ,result)
-                               (check-result-failures ,result))
-                           (setf (check-result-info ,result)
-                                 (append ,info
-                                         (check-result-info ,result))
-                                 (check-result-warnings ,result)
-                                 (append ,warnings
-                                         (check-result-warnings
-                                          ,result)))
-                           (return-from ,block ,result))
-                       (t
-                        (setf ,info
-                              (append ,info (check-result-info ,result))
-                              ,warnings
-                              (append
-                               ,warnings
-                               (check-result-warnings ,result))))))))
-         (check-result :info ,info :warnings ,warnings))))))
+(def-criterion (:slots (&rest clauses) (obj))
+  (block slots-block
+    (let ((warnings nil) (info nil))
+      (loop for (slot criterion) in clauses do
+        (let ((value (slot-value obj slot)))
+          (let ((result (continue-check criterion `(list ,value))))
+            (cond
+              ((or (check-result-errors result) (check-result-failures result))
+               (setf (check-result-info result)
+                     (append info (check-result-info result))
+                     (check-result-warnings result)
+                     (append warnings (check-result-warnings result)))
+               (return-from slots-block result))
+              (t
+               (setf info (append info (check-result-info result))
+                     warnings (append warnings
+                                      (check-result-warnings result)))))))
+        (check-result :info info :warnings warnings)))))

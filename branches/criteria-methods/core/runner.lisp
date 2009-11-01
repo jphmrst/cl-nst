@@ -345,7 +345,7 @@ for the test application class.")
                (when *debug-on-error*
                  (cerror (format nil
                              "Continue with other tests in this group (~s)"
-                           (group-name group-obj)) e))
+                           (group-name test-obj)) e))
                (return-from do-test-fixture-assignment nil))))
        (do-test-postfixture-setup test-obj))
      (unwind-protect (core-run-test test-obj)
@@ -357,7 +357,7 @@ for the test application class.")
                          (cerror
                           (format nil
                               "Continue with other tests in this group (~s)"
-                            (group-name group-obj)) e))
+                            (group-name test-obj)) e))
                        (return-from do-test-fixture-assignment nil))))
          (do-test-withfixture-cleanup test-obj)))))
 
