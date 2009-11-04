@@ -109,8 +109,8 @@
                        (format nil
                            "~@<Exit from attempting tests in this group (~s), ~
                              ~_and continue with tests from other groups.~:>"
-                         (group-name group-obj)) e)
-                      (return-from run-group-tests nil)))))
+                         (group-name group-obj)) e))
+                    (return-from run-group-tests nil))))
       (do-group-prefixture-setup group-obj)))
   (with-retry
       ((format nil "Restart testing group ~s (reapplying group fixtures)"
@@ -128,8 +128,8 @@
                         (cerror
                          (format nil
                              "~@<Skip group ~s (cleaning up first)~:>"
-                           (group-name group-obj)) e)
-                        (return-from group-fixture-assignment nil)))))
+                           (group-name group-obj)) e))
+                      (return-from group-fixture-assignment nil))))
         (do-group-fixture-assignment group-obj test-objs))))
   (with-retry ("Try performing group cleanup again.")
     (handler-bind
@@ -138,8 +138,8 @@
                       (add-test-config-error test-obj
                         "Error in post-fixtures cleanup: ~s" e))
                     (when *debug-on-error*
-                      (cerror "Continue with tests from other groups." e)
-                      (return-from run-group-tests nil)))))
+                      (cerror "Continue with tests from other groups." e))
+                    (return-from run-group-tests nil))))
       (do-group-afterfixture-cleanup group-obj))))
 
 (defgeneric do-group-prefixture-setup (group-obj)
@@ -171,8 +171,8 @@ for the group application class.")
                  (when *debug-on-error*
                    (cerror
                     (format nil "Skip group ~s (postfixture clean up first)"
-                      (group-name group-obj)) e)
-                   (return-from do-group-fixture-assignment nil)))))
+                      (group-name group-obj)) e))
+                 (return-from do-group-fixture-assignment nil))))
          (do-group-postfixture-setup group-obj)))
 
      (format-at-verbosity 3 "    Starting run loop for ~s~%" group-obj)
@@ -199,8 +199,8 @@ for the group application class.")
                                           "~@<Continue with other tests from ~
                                               this group ~_(~s, not likely to ~
                                               succeed).~:>"
-                                        (group-name group-obj)) e)
-                                     (return-from this-test nil)))))
+                                        (group-name group-obj)) e))
+                                   (return-from this-test nil))))
                      (do-group-each-test-setup group-obj)))
                  (unwind-protect
                      (block test-inner
@@ -218,8 +218,8 @@ for the group application class.")
                                       (format nil
                                           "Skip this test (run the group's ~
                                            each-test cleanup, but not the ~
-                                           test's cleanup)") e)
-                                     (return-from test-inner nil)))))
+                                           test's cleanup)") e))
+                                   (return-from test-inner nil))))
                            (do-test-prefixture-setup test-inst)))
                        (unwind-protect
                            (with-retry ("Restart this test ~
@@ -241,9 +241,9 @@ for the group application class.")
                                             (format nil
                                                 "Skip this test ~
                                                     (running all cleanup)"
-                                              (group-name group-obj)) e)
-                                           (return-from test-fixture-assignment
-                                             nil)))))
+                                              (group-name group-obj)) e))
+                                         (return-from test-fixture-assignment
+                                           nil))))
                                  (do-test-fixture-assignment test-inst))))
                          (with-retry ("Try test cleanup again.")
                            (handler-bind
@@ -257,8 +257,8 @@ for the group application class.")
                                         (format nil
                                             "Continue with other tests from this group (~s)."
                                           (group-name group-obj))
-                                        e)
-                                       (return-from test-inner)))))
+                                        e))
+                                     (return-from test-inner))))
                              (do-test-afterfixture-cleanup test-inst)))))
                    (with-retry ("Try each-test cleanup again.")
                      (handler-bind
@@ -272,8 +272,8 @@ for the group application class.")
                                       "~@<Continue with other tests from this ~
                                           group ~_(~s, this error likely to ~
                                           recur).~:>"
-                                    (group-name group-obj)) e)
-                                 (return-from this-test)))))
+                                    (group-name group-obj)) e))
+                               (return-from this-test))))
                        (do-group-each-test-cleanup group-obj)))
                    (format-at-verbosity 3
                        "      Exiting loop entry ~s~%" test-inst)))))
@@ -290,8 +290,8 @@ for the group application class.")
                          (when *debug-on-error*
                            (cerror
                             (format nil "Continue with tests from other groups."
-                                    (group-name group-obj)) e)
-                           (return-from do-group-fixture-assignment)))))
+                                    (group-name group-obj)) e))
+                         (return-from do-group-fixture-assignment))))
            (do-group-withfixture-cleanup group-obj))))))
 
 (defgeneric do-group-postfixture-setup (group-obj)
