@@ -12,7 +12,7 @@
 :warn
 
 Branch https://cvs.sift.info:1022/repos/nst/branches/criteria-methods
-Last merge from trunk->branch: 410
+Last merge from trunk->branch: 438
 Last merge from branch->trunk: 404 (none)
 
 :hide

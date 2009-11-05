@@ -23,7 +23,7 @@
 
 #+allegro (excl::define-simple-parser def-fixtures second :nst-fixture-set)
 (defmacro def-fixtures (name
-                        (&key uses assumes outer inner documentation
+                        (&key uses assumes outer inner documentation cache
                               export-names
                               (export-bound-names nil
                                                   export-bound-names-supp-p)
@@ -67,6 +67,9 @@ added to the list of symbols exported by the current package.
 
 export-names - When non-nil, sets the default value to t for the two options
 above.
+
+cache - When non-nil, the fixture values are cached at their first use, and
+re-applied at subsequent fixture application rather than being recalculated.
 "
   (declare (ignorable assumes outer inner))
 
@@ -86,13 +89,26 @@ above.
          (loop for (var-name form) in bindings
                collect
                (let ((block (gensym "block")))
-                 `(,var-name (block ,block
-                               (setf *binding-variable* ',var-name)
-                               (with-retry
-                                   (,(format nil
-                                         "Try binding ~s for fixture ~s again."
-                                       var-name name))
-                                 (return-from ,block ,form)))))))
+                 `(,var-name
+                   ,(let ((calc
+                           `(block ,block
+                              (setf *binding-variable* ',var-name)
+                              (with-retry
+                                  (,(format nil
+                                        "Try binding ~s for fixture ~s again."
+                                      var-name name))
+                                (return-from ,block ,form)))))
+                      (cond
+                        (cache
+                         `(let ((cache (cached-values (make-instance ',name))))
+                            (multiple-value-bind (cached found)
+                              (gethash ',var-name cache)
+                            (cond
+                              (found cached)
+                              (t (let ((res ,calc))
+                                   (setf (gethash ',var-name cache) res)
+                                   res))))))
+                        (t calc)))))))
         (g-param (gensym))
         (t-param (gensym)))
 
@@ -102,13 +118,14 @@ above.
        (eval-when (:compile-toplevel :load-toplevel :execute)
          (defclass ,name ()
               ((bound-names :reader bound-names :allocation :class
-                            :initform ',bound-names))
+                            :initform ',bound-names)
+               ,@(when cache
+                   `((cached-values :initform (make-hash-table :test 'eq)
+                                    :accessor cached-values))))
            (:metaclass singleton-class)
            ,@(when documentation `((:documentation ,documentation))))
 
-         (finalize-inheritance (find-class ',name))
-         #|(let ((proto (class-prototype (find-class ',name))))
-             (setf (slot-value proto 'bound-names) ',bound-names))|#)
+         (finalize-inheritance (find-class ',name)))
 
        (let ((this-name-use (gethash ',name +name-use+)))
          (unless this-name-use
@@ -175,11 +192,16 @@ above.
 
        ,@(when (or export-bound-names export-fixture-name)
            `((eval-when (:compile-toplevel :load-toplevel :execute)
-               (export '(,@(when export-bound-names
-                             (loop for bnd in bindings collect (car bnd)))
-                         ,@(when export-fixture-name (list name)))
-                       ,(intern (package-name *package*)
-                                (find-package :keyword))))))
+               ,@(loop for bnd in bindings
+                     collect
+                       (let ((id (car bnd)))
+                         `(export ',id
+                                  ,(intern (package-name (symbol-package id))
+                                           (find-package :keyword)))))
+               ,@(when export-fixture-name
+                   `((export ',name
+                             ,(intern (package-name (symbol-package name))
+                                      (find-package :keyword))))))))
 
        ',name)))
 

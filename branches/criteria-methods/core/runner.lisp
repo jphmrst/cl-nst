@@ -88,8 +88,9 @@
          (loop do
            (block ,inner
              (handler-bind ((error #'(lambda (,e)
-                                       (cerror ,continuation-label ,e)
-                                       (return-from ,inner))))
+                                       (when *debug-on-error*
+                                         (cerror ,continuation-label ,e)
+                                         (return-from ,inner)))))
                (return-from ,outer
                  (progn ,@forms))))))))
 
@@ -137,8 +138,7 @@
                       (add-test-config-error test-obj
                         "Error in post-fixtures cleanup: ~s" e))
                     (when *debug-on-error*
-                      (cerror "Continue with tests from other groups."
-                              e))
+                      (cerror "Continue with tests from other groups." e))
                     (return-from run-group-tests nil))))
       (do-group-afterfixture-cleanup group-obj))))
 
@@ -239,7 +239,7 @@ for the group application class.")
                                          (when *debug-on-error*
                                            (cerror
                                             (format nil
-                                                "Skip this test ~
+                                                "Skip test ~s ~
                                                     (running all cleanup)"
                                               (group-name group-obj)) e))
                                          (return-from test-fixture-assignment
@@ -288,9 +288,9 @@ for the group application class.")
                                (add-test-config-error test-obj
                                  "Error in group fixtures cleanup: ~s" e))
                          (when *debug-on-error*
-                           (cerror
-                            (format nil "Continue with tests from other groups."
-                                    (group-name group-obj)) e))
+                           (cerror (format nil
+                                       "Continue with tests from other groups.")
+                                   e))
                          (return-from do-group-fixture-assignment))))
            (do-group-withfixture-cleanup group-obj))))))
 

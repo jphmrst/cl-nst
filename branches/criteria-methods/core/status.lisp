@@ -104,7 +104,7 @@
   (let ((other-args nil))
     #+allegro (setf other-args
                     (list* :zoom (make-backtrace-lines) other-args))
-    (make-check-result :erring 1
+    (make-check-result ;; :erring 1
                        :errors (list (apply #'make-error-check-note
                                             :context *nst-context*
                                             :stack *nst-stack*
@@ -227,7 +227,8 @@
 
 
 
-(defstruct (check-result (:include result-stats (tests 1)))
+(defstruct (check-result (:include result-stats (tests 1))
+                         (:constructor %make-check-result))
   "Overall check result structure, containing notes of four distinct types.  A
 note is an instance of the check-note structure below.  The four note types are:
  warnings - generated warnings
@@ -239,6 +240,18 @@ instances, and the info field is of any value."
   (group-name *nst-group-name*)
   (check-name *nst-check-user-name*)
   (warnings nil) (failures nil) (errors nil) (info nil))
+
+(defun make-check-result (&key (group-name *nst-group-name*)
+                               (check-name *nst-check-user-name*)
+                               warnings failures errors info)
+  "Functional wrapper around the constructor for check-result
+structure, permitting the use of apply."
+  (%make-check-result :group-name group-name
+                      :check-name check-name
+                      :warnings warnings
+                      :failures failures
+                      :errors errors
+                      :info info))
 
 (defun interesting-result-p (result)
   (when (typep result 'check-result)
@@ -265,8 +278,13 @@ instances, and the info field is of any value."
     (when warnings (setf warning-count 1)))
   r)
 
-(defun check-result (&rest args)
+(defun new-check-result (&rest args)
   (calibrate-check-result (apply #'make-check-result args)))
+
+(defmacro check-result (&rest args)
+  (warn 'nst-soft-deprecation :old-name 'check-result
+        :replacement '(emit-success emit-failure emit-warning))
+  `(new-check-result ,@args))
 
 
 
@@ -754,17 +772,22 @@ six-value summary of the results:
 (defun emit-warning (&key format args)
   "For use within user-defined check criteria: emit a warning."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
-  (check-result
-   :warnings (list (make-check-note :context *nst-context* :stack *nst-stack*
-                                    :format format :args args))))
+  (new-check-result :warnings (list (make-check-note :context *nst-context*
+                                                     :stack *nst-stack*
+                                                     :format format
+                                                     :args args))))
 
 (defun emit-failure (&key format args info)
   "For use within user-defined check criteria: explain a failure."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
-  (check-result
-   :failures (list (make-check-note :context *nst-context* :stack *nst-stack*
-                                    :format format :args args))
-   :info info))
+  (new-check-result :failures (list (make-check-note :context *nst-context*
+                                                     :stack *nst-stack*
+                                                     :format format :args args))
+                    :info info))
+
+(defun emit-success (&rest args)
+  (calibrate-check-result
+   (apply #'make-check-result args)))
 
 (defun add-failure (result &key format args)
   "For use within user-defined check criteria: add a failure to a result."
@@ -773,10 +796,6 @@ six-value summary of the results:
   (push (make-check-note :context *nst-context* :stack *nst-stack*
                          :format format :args args)
         (check-result-failures result)))
-
-(defun emit-success ()
-  "For use within user-defined check criteria: record a successful check."
-  (check-result))
 
 (defun add-error (result &key format args)
   "For use within user-defined check criteria: add an error to a result."

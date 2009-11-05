@@ -120,6 +120,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
           (declare (special *nst-context*))
 
           `(block ,test-name
+             #+allegro (excl:record-source-file ',test-name :type :nst-test)
              ,@anon-fixture-forms
 
              (defclass ,name (,@fixture-class-names) ()
@@ -194,7 +195,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                      (make-instance ',name)))))))))
 
 (defmacro def-check (&rest args)
-  (warn "def-check is deprecated; use def-test instead")
+  (warn 'nst-soft-deprecation :old-name 'def-check :replacement 'def-test)
   `(def-test ,@args))
 
 (defmacro debug-check (defcheck)

@@ -9,6 +9,11 @@ for test groups, but apply only to the one test.  The
 \texttt{CRITERION} is a list or symbol specifying the properties which
 should hold for the \texttt{FORM}s.
 
+When a test is not enclosed within a group body, a group name must be
+provided by the \texttt{GROUP} option.  When a test is enclosed within
+a group body, the \texttt{GROUP} option is not required, but if
+provided it must agree with the group name.
+
 When there are no \texttt{SETUP}, \texttt{CLEANUP} or
 \texttt{FIXTURES} arguments, the \texttt{NAME} may be given without
 parentheses.  Likewise, any criterion consisting of a single symbol,

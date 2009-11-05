@@ -73,10 +73,10 @@ first element is that symbol and whose remaining elements are options."
     (setf criterion (list criterion)))
   (apply-criterion (car criterion) (cdr criterion) form))
 
-
 (defun build-continue-check-expr (criterion form)
   `(apply-criterion ',(car criterion) ',(cdr criterion) ',form))
 
+#+allegro (excl::define-simple-parser def-criterion caadr :nst-criterion)
 (defmacro def-criterion ((name args-formals values-formals) &body forms)
   (let ((fp (gensym "values-form")) (ap (gensym "args")))
     `(progn
@@ -89,6 +89,8 @@ first element is that symbol and whose remaining elements are options."
              ;; (format t "  done~%")
              ,@forms))))))
 
+#+allegro (excl::define-simple-parser def-criterion-unevaluated
+              caadr :nst-criterion)
 (defmacro def-criterion-unevaluated ((name args-formals forms-formals)
                                      &body forms)
   (let ((ap (gensym "args")))
@@ -97,6 +99,7 @@ first element is that symbol and whose remaining elements are options."
        (destructuring-bind ,args-formals ,ap
          ,@forms))))
 
+#+allegro (excl::define-simple-parser def-values-criterion caadr :nst-criterion)
 (defmacro def-values-criterion ((name args-formals forms-formals &key (declare nil decl-supp-p)) &body forms)
   (let ((ap (gensym "args")) (fp (gensym "form")))
     `(defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)
@@ -106,6 +109,7 @@ first element is that symbol and whose remaining elements are options."
            ,@(when decl-supp-p `((declare ,@declare)))
            (eval (progn ,@forms)))))))
 
+#+allegro (excl::define-simple-parser def-form-criterion caadr :nst-criterion)
 (defmacro def-form-criterion ((name args-formals form-formal) &rest forms)
   (let ((ap (gensym "args")))
     `(defmethod apply-criterion ((top (eql ',name)) ,ap ,form-formal)
@@ -145,6 +149,24 @@ all further errors themselves.")
      (declare (special *nst-context*))
      ,@forms))
 
+
+#+allegro (excl::define-simple-parser def-values-check caadr :nst-criterion)
+(defmacro def-value-check (&rest args)
+  (warn 'nst-soft-deprecation
+        :old-name 'def-value-check :replacement 'def-values-criterion)
+  `(def-values-criterion ,@args))
+
+#+allegro (excl::define-simple-parser def-control-check caadr :nst-criterion)
+(defmacro def-control-check (&rest args)
+  (warn 'nst-soft-deprecation
+        :old-name 'def-control-check :replacement 'def-form-criterion)
+  `(def-form-criterion ,@args))
+
+#+allegro (excl::define-simple-parser def-check-alias caadr :nst-criterion)
+(defmacro def-check-alias (&rest args)
+  (warn 'nst-soft-deprecation
+        :old-name 'def-check-alias :replacement 'def-criterion-alias)
+  `(def-criterion-alias ,@args))
 
 (defvar +storage-name-to-test-package+
     (make-hash-table :test 'eq))

@@ -1,6 +1,12 @@
 
-1.2.5 - 
+1.2.6 -
 
+1.2.5 - 
+ Ticket 134 - Fixed a bug in the :permute criteria.
+ Ticket 123 - Bug in output.
+ Replaced check-result with emit-success.
+ Improved deprecation warnings.
+ Several minor tweaks.
 
 1.2.4 - internal release, October 9, 2009
  Add restarts for use in interactive operation.

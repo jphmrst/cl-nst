@@ -25,7 +25,7 @@
 
 (def-criterion-unevaluated (:pass () chk)
   (declare (ignorable chk))
-  (check-result))
+  (emit-success))
 
 (def-criterion-unevaluated (:fail (&rest args) chk)
   (declare (ignorable chk))
@@ -37,13 +37,13 @@
 
 (def-criterion (:true () (bool))
   (if bool
-      (check-result)
+      (emit-success)
       (emit-failure :format "Expected non-null form, got: ~s"
                     :args (list bool))))
 
 (def-criterion (:eq (eq-form) (result))
   (if (eq (eval eq-form) result)
-      (check-result)
+      (emit-success)
       (emit-failure :format "Not eq to value of ~s:~_Value ~s"
                     :args `('eq-form ,result))))
 
@@ -51,17 +51,17 @@
 
 (def-criterion (:eql (eql-form) (check-form))
   (if (eql (eval eql-form) check-form)
-      (check-result)
+      (emit-success)
       (emit-failure :format "Not eql to value of ~s" :args (list eql-form))))
 
 (def-criterion (:equal (eql-form) (check-form))
   (if (equal (eval eql-form) check-form)
-     (check-result)
+     (emit-success)
      (emit-failure :format "Not equal to value of ~s" :args (list eql-form))))
 
 (def-criterion (:equalp (eql-form) (check-form))
   (if (equalp (eval eql-form) check-form)
-      (check-result)
+      (emit-success)
       (emit-failure :format "Not equalp to value of ~s" :args (list eql-form))))
 
 (def-criterion-alias (:forms-eq)    `(:predicate eq))
@@ -71,14 +71,13 @@
 
 (def-criterion (:predicate (pred) (&rest vals))
   (if (apply pred vals)
-      (check-result)
+      (emit-success)
       (emit-failure :format "Predicate ~s fails for ~s"
                     :args (list pred vals))))
 
 (def-criterion-alias (:drop-values criterion)
   `(:apply (lambda (x &rest others) (declare (ignorable others)) x)
            ,criterion))
-
 
 (def-criterion (:dump-forms (blurb) (&rest forms))
   (format t "~%~a~%~{~s~%~}" blurb forms)
@@ -98,14 +97,13 @@
                          ((typep e type)
                           (format-at-verbosity 4
                               "Caught ~s as expected by :err criterion~%" e)
-                          (return-from err-criterion (check-result)))
+                          (return-from err-criterion (emit-success)))
                          ((typep e 'error)
                           (format-at-verbosity 4
                               "Caught ~s but :err expected ~s~%" e type)
                           (unless *debug-on-error*
                             (return-from err-criterion (emit-error e))))))))
       (eval expr-form))
-
     (emit-failure :format "~@<No expected error:~{~_ ~s~}~:>"
                   :args `(,(cond
                             ((and (listp expr-form)
@@ -131,7 +129,7 @@
                (- end-time start-time))))
       (declare (ignore eval-result))
       (if (> ms elapsed-ms)
-        (check-result)
+        (emit-success)
         (emit-failure :format "Execution time ~dms exceeded allowed time ~dms"
                       :args (list elapsed-ms ms)))))
    (t
@@ -141,11 +139,10 @@
   (let ((subcheck (check-subcriterion-on-form subcriterion expr-list-form)))
     (cond
      ((check-result-errors subcheck)   subcheck)
-     ((check-result-failures subcheck) (check-result
-                                        :info (check-result-info subcheck)))
+     ((check-result-failures subcheck)
+      (new-check-result :info (check-result-info subcheck)))
      (t (emit-failure :format "Expected failure from ~s"
                       :args (list subcriterion))))))
-
 
 (def-criterion-unevaluated (:all (&rest subcriteria) expr-list-form)
   (let ((*nst-context-evaluable* t))
@@ -157,8 +154,8 @@
                 failures (nconc failures (check-result-failures subresult))
                 errors (nconc errors (check-result-errors subresult))
                 info (nconc errors (check-result-info subresult)))))
-      (check-result :warnings warnings :failures failures
-                    :errors errors :info info))))
+      (new-check-result :warnings warnings :failures failures
+                        :errors errors :info info))))
 
 (def-criterion-unevaluated (:any (&rest criteria) expr-list-form)
   (let ((*nst-context-evaluable* t) (info nil))
@@ -178,21 +175,21 @@
           (when ri (setf info (nconc info ri)))
           (unless (or re rf)
             (return-from any-criterion
-              (check-result :info (nconc info (check-result-info result)))))))
+              (new-check-result :info (nconc info
+                                             (check-result-info result)))))))
       (emit-failure :format "No disjuncts succeeded:~{~_ ~s~}"
                     :args (list criteria) :info info))))
 
 (def-criterion-unevaluated (:apply (transform criterion) exprs-form)
   (check-subcriterion-on-form criterion
     `(multiple-value-call #'list (apply #',transform ,exprs-form))))
-
 
 (def-criterion-unevaluated (:check-err (criterion) forms)
   (block check-err-block
     (handler-bind ((error #'(lambda (e)
                               (format-at-verbosity 4
                                   "Caught ~s as expected by :check-err~%" e)
-                              (return-from check-err-block (check-result)))))
+                              (return-from check-err-block (emit-success)))))
       (check-subcriterion-on-form criterion forms))
     (emit-failure :format "~@<No expected error for check ~s on:~
                                  ~{~_ ~s~}~:>"
@@ -232,8 +229,7 @@
              (setf info (append info (check-result-info result))
                    warnings (append warnings
                                 (check-result-warnings result)))))))
-      (check-result :info info :warnings warnings))))
-
+      (new-check-result :info info :warnings warnings))))
 
 (def-criterion (:seq (&rest criteria) (l))
   (block seq
@@ -246,13 +242,15 @@
         (let ((result (check-subcriterion-on-value criterion item)))
           (cond
             ((or (check-result-errors result) (check-result-failures result))
-             (setf (check-result-info result) (append info (check-result-info result))
+             (setf (check-result-info result)
+                   (append info (check-result-info result))
                    (check-result-warnings result)
                    (append warnings (check-result-warnings result)))
              (return-from seq result))
             (t (setf info (append info (check-result-info result))
-                     warnings (append warnings (check-result-warnings result)))))))
-      (check-result :info info :warnings warnings))))
+                     warnings (append warnings
+                                      (check-result-warnings result)))))))
+      (new-check-result :info info :warnings warnings))))
 
 (def-criterion (:permute (criterion) (l))
   (block permute-block
@@ -262,10 +260,9 @@
                (result (check-subcriterion-on-value criterion x)))
           (when (and (null (check-result-errors result))
                      (null (check-result-failures result)))
-            (return-from permute-block (check-result)))))
+            (return-from permute-block (emit-success)))))
       (emit-failure :format "No permutation of ~s satisfies ~s"
                     :args `(,l ,criterion)))))
-
 
 (def-criterion (:across (&rest criteria) (v))
   (block across-block
@@ -275,9 +272,7 @@
           (emit-failure :format "Expected sequence of length ~d"
                         :args `(,(length criteria)))))
       (loop for criterion in criteria for idx from 0 do
-        ;; (format t "Checking item ~d of vector ~s~%  against ~s~%" idx v criterion)
         (let ((result (check-subcriterion-on-value criterion (elt v idx))))
-          ;; (format t "  result is ~s~%" result)
           (cond
             ((or (check-result-errors result) (check-result-failures result))
              (setf (check-result-info result)
@@ -288,18 +283,14 @@
             (t (setf info (append info (check-result-info result))
                      warnings (append warnings
                                       (check-result-warnings result)))))))
-      (check-result :info info :warnings warnings))))
-
+      (new-check-result :info info :warnings warnings))))
 
 (def-criterion (:slots (&rest clauses) (obj))
   (block slots-block
     (let ((warnings nil) (info nil))
       (loop for (slot criterion) in clauses do
-        ;; (format t "Checking slot ~s of ~s~%  against ~s~%" slot obj criterion)
         (let ((value (slot-value obj slot)))
-          ;; (format t "  value is ~s~%" value)
           (let ((result (check-subcriterion-on-value criterion value)))
-            ;; (format t "  result is ~s~%" result)
             (cond
               ((or (check-result-errors result) (check-result-failures result))
                (setf (check-result-info result)
@@ -311,5 +302,4 @@
                (setf info (append info (check-result-info result))
                      warnings (append warnings
                                       (check-result-warnings result))))))))
-      ;; (format t "End of slots loop~%")
-      (check-result :info info :warnings warnings))))
+      (new-check-result :info info :warnings warnings))))
