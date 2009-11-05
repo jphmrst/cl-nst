@@ -164,18 +164,23 @@
   (let ((*nst-context-evaluable* t) (info nil))
     (block any-criterion
       (loop for criterion in criteria do
+        ;; (format t "Trying ~s on ~s~%" criterion expr-list-form)
         (let* ((result (check-subcriterion-on-form criterion expr-list-form))
                (rf (check-result-failures result))
                (re (check-result-errors result))
                (ri (check-result-info result)))
+          ;; (format t " - result is ~s~%" result)
+          ;; (format t "     re ~s~%" re)
+          ;; (format t "     rf ~s~%" rf)
+          ;; (format t "     ri ~s~%" ri)
           (when re (setf info (nconc info re)))
           (when rf (setf info (nconc info rf)))
           (when ri (setf info (nconc info ri)))
           (unless (or re rf)
             (return-from any-criterion
-              (check-result :info (nconc info (check-result-info result))))))))
-    (emit-failure :format "No disjuncts succeeded:~{~_ ~s~}"
-                  :args (list criteria) :info info)))
+              (check-result :info (nconc info (check-result-info result)))))))
+      (emit-failure :format "No disjuncts succeeded:~{~_ ~s~}"
+                    :args (list criteria) :info info))))
 
 (def-criterion-unevaluated (:apply (transform criterion) exprs-form)
   (check-subcriterion-on-form criterion

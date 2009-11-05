@@ -48,6 +48,14 @@ first element is that symbol and whose remaining elements are options."
 
 (defgeneric apply-criterion (top args form))
 
+(defmethod apply-criterion :around (top args form)
+  (let ((*nst-context* (cons (make-context-layer :criterion top
+                                                 :criterion-args args
+                                                 :given-stack form)
+                             *nst-context*)))
+    (declare (special *nst-context*))
+    (call-next-method)))
+
 (defun extract-parameters (x) x)
 
 ;;; (defmacro continue-check (criterion form)

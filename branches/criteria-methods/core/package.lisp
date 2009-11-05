@@ -46,6 +46,7 @@
              #:def-test #:def-check     ; def-check will be deprecated
                                         ; and then dropped
 
+             #:def-criterion #:def-criterion-unevaluated
              #:def-criterion-alias  #:def-check-alias
              #:def-values-criterion #:def-value-check
              #:def-form-criterion   #:def-control-check
@@ -55,6 +56,10 @@
                                         ; deprecated and then dropped
 
              #:continue-check
+                                        ; continue-check will be
+                                        ; deprecated and then dropped
+             #:check-subcriterion-on-value
+             #:check-subcriterion-on-form
 
              #:emit-failure
              #:emit-warning

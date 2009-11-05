@@ -60,7 +60,7 @@
   (def-test check-fail-1 :fail 'a)
   (def-test check-fail-2 (:eql 5) (+ 2 1))
   (def-test check-fail-3 (:symbol tre) 'ert)
-  (def-test check-error-1 :pass (error "This throws an error")))
+  (def-test check-error-1 :true (error "This throws an error")))
 
 (defun div-five-by (x) (/ 5 x))
 
