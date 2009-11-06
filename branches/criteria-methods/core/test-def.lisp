@@ -141,6 +141,14 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
              (handler-bind (#+sbcl (style-warning
                                     #'(lambda (c)
                                         (declare (ignore c))
+                                        ;;
+                                        ;; Uncomment to prove that
+                                        ;; SBCL does /not/ pass
+                                        ;; warnings through this
+                                        ;; handler.
+                                        ;;
+                                        ;; (format t "++++++++++ ++++++++++~%")
+                                        ;;
                                         (muffle-warning))))
                (defmethod group-name ((obj ,name)) ',*group-class-name*)
                (defmethod check-user-name ((obj ,name)) ',test-name)
