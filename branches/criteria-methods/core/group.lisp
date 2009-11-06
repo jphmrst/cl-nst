@@ -139,8 +139,8 @@ forms - zero or more test forms, given by def-check."
                      (setf (slot-value proto 'anon-fixture-forms)
                            ',anon-fixture-forms))|#
 
-                 ;; Retrieve a group name from its instance.  This is
-                 ;; increasingly trivial and should probably be
+                 ;; Retrieve a group name from its instance.  This
+                 ;; is increasingly trivial and should probably be
                  ;; dropped.
                  (defmethod group-name ((g ,group-name)) ',group-name)
 

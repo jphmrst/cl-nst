@@ -370,7 +370,9 @@ structure, permitting the use of apply."
       (with-accessors ((criterion context-layer-criterion)
                        (criterion-args context-layer-criterion-args)
                        (given-stack context-layer-given-stack)) cl
-        (format s "checki~@<ng (~s~@<~{~:_ ~s~}~:>) ~_on (~{~a~^ ~})~:>"
+        (format s
+            #-sbcl "checki~@<ng (~s~@<~{~:_ ~s~}~:>) ~_on (~{~a~^ ~})~:>"
+            #+sbcl "checking (~s~{~:_ ~s~}) on (~{~a~^ ~})"
           criterion criterion-args given-stack))))
 
 
@@ -389,9 +391,13 @@ structure, permitting the use of apply."
                        (format check-note-format)
                        (args check-note-args)) cn
         (declare (ignorable context stack))
-        (format s "~@<~:[~2*~;~?~:@_~]~
+        (format s
+            #-sbcl "~@<~:[~2*~;~?~:@_~]~
                       in context: ~@<~{~a~^~:@_~}~:>~
                       ~@[~:@_stack: ~w~]~:>"
+            #+sbcl "~:[~2*~;~?~:@_~]~
+                      in context: ~{~a~^~:@_~}~
+                      ~@[~:@_stack: ~w~]"
           format format args
           context
           stack)

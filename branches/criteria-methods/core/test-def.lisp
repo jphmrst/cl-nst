@@ -138,24 +138,28 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                    (setf (gethash ',test-name tests-by-group)
                          (make-instance ',name)))))
 
-             (defmethod group-name ((obj ,name)) ',*group-class-name*)
-             (defmethod check-user-name ((obj ,name)) ',test-name)
-             (defmethod check-group-name ((obj ,name)) ',name)
+             (handler-bind (#+sbcl (style-warning
+                                    #'(lambda (c)
+                                        (declare (ignore c))
+                                        (muffle-warning))))
+               (defmethod group-name ((obj ,name)) ',*group-class-name*)
+               (defmethod check-user-name ((obj ,name)) ',test-name)
+               (defmethod check-group-name ((obj ,name)) ',name)
 
-             (defmethod core-run-test ((obj ,name))
-               (declare (optimize (debug 3)) #| ,fixture-names-special |# )
-               (let ((*current-group* ',*group-class-name*)
-                     (*current-test*  ',test-name))
-                 (declare (special *current-group* *current-test*))
-                 ,core-run-body))
+               (defmethod core-run-test ((obj ,name))
+                 (declare (optimize (debug 3)) #| ,fixture-names-special |# )
+                 (let ((*current-group* ',*group-class-name*)
+                       (*current-test*  ',test-name))
+                   (declare (special *current-group* *current-test*))
+                   ,core-run-body))
 
-             ,@(when setup-supp-p
-                 `((defmethod do-group-each-test-setup progn ((obj ,name))
-                     ,setup)))
+               ,@(when setup-supp-p
+                   `((defmethod do-group-each-test-setup progn ((obj ,name))
+                       ,setup)))
 
-             ,@(when cleanup-supp-p
-                 `((defmethod do-group-each-test-cleanup progn ((obj ,name))
-                     ,cleanup)))
+               ,@(when cleanup-supp-p
+                   `((defmethod do-group-each-test-cleanup progn ((obj ,name))
+                       ,cleanup))))
 
              ;; Clear any previous stored results, since we've just
              ;; (re-)defined this check.

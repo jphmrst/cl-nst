@@ -49,14 +49,25 @@ first element is that symbol and whose remaining elements are options."
 (defgeneric apply-criterion (top args form))
 
 (defmethod apply-criterion :around (top args form)
+  (format-at-verbosity 3
+      "Applying criterion ~s~{ ~s~}~%  to ~s~%" top args form)
   (let ((*nst-context* (cons (make-context-layer :criterion top
                                                  :criterion-args args
                                                  :given-stack form)
                              *nst-context*)))
     (declare (special *nst-context*))
-    (call-next-method)))
+    (let ((result (call-next-method)))
+      (format-at-verbosity 3 "  Result at ~s is ~s~%" top result)
+      result)))
 
-(defun extract-parameters (x) x)
+(defun extract-parameters (x)
+  (loop for item in x
+        append (cond
+                 ((listp x) (extract-parameters x))
+                 ((and (symbolp x)
+                       (eql (symbol-package x) (find-package :common-lisp)))
+                  nil)
+                 (t (list x)))))
 
 ;;; (defmacro continue-check (criterion form)
 ;;;   (warn "continue-check is deprecated; use check-subcriterion-on-value or check-subcriterion-on-form within def-criterion or def-criterion-unevaluated")

@@ -67,7 +67,7 @@
 (def-criterion-alias (:value-list further) `(:apply list ,further))
 
 (def-criterion (:predicate (pred) (&rest vals))
-  (if (apply pred vals)
+  (if (apply (eval `(function ,pred)) vals)
       (emit-success)
       (emit-failure :format "Predicate ~s fails for ~s"
                     :args (list pred vals))))

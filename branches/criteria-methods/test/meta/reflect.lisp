@@ -10,7 +10,9 @@
         (loop for group in groups do (nst:run-group group))
         (loop for (group test) in tests do (nst:run-test group test))
         (setf results nst::+results-record+))
-      (nst:check-subcriterion-on-value `(:all ,@subcriteria) results))))
+      (format t "***** Running subcriteria~%")
+      (let ((nst::*debug-on-error* t))
+        (nst:check-subcriterion-on-value `(:all ,@subcriteria) results)))))
 
 (def-criterion-alias (--nst-package group-name &rest subcriteria)
   `(--nst-run (:packages (,group-name)) ,@subcriteria))
