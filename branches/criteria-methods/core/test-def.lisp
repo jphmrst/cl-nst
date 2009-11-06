@@ -63,6 +63,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                                         ; test.
            (purge-ids nil))             ; IDs of previous record of
                                         ; running this test.
+      (declare (special *group-class-name* *group-fixture-classes*))
 
       ;; Find any records of running previous versions of this test.
       (loop for report being the hash-values of +results-record+

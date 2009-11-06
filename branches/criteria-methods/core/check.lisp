@@ -91,16 +91,20 @@ first element is that symbol and whose remaining elements are options."
 
 #+allegro (excl::define-simple-parser def-criterion-unevaluated
               caadr :nst-criterion)
-(defmacro def-criterion-unevaluated ((name args-formals forms-formals)
+(defmacro def-criterion-unevaluated ((name args-formals forms-formals &key
+                                           (ignore-forms nil))
                                      &body forms)
   (let ((ap (gensym "args")))
     `(defmethod apply-criterion ((top (eql ',name)) ,ap ,forms-formals)
-       (declare (optimize (debug 3)))
+       (declare (optimize (debug 3))
+                ,@(when ignore-forms `((ignore ,forms-formals))))
        (destructuring-bind ,args-formals ,ap
          ,@forms))))
 
 #+allegro (excl::define-simple-parser def-values-criterion caadr :nst-criterion)
-(defmacro def-values-criterion ((name args-formals forms-formals &key (declare nil decl-supp-p)) &body forms)
+(defmacro def-values-criterion ((name args-formals forms-formals &key
+                                      (declare nil decl-supp-p))
+                                &body forms)
   (let ((ap (gensym "args")) (fp (gensym "form")))
     `(defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)
        (destructuring-bind ,args-formals ,ap

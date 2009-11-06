@@ -185,15 +185,16 @@ current criterion.")
 (defparameter *binding-variable* nil
   "Variable tracking the binding of names by fixtures, checked when binding fails.")
 
+(defgeneric show-nst-property (name)
+  (:documentation "Display a property value \(presumably\) to the REPL."))
+
 ;;
 ;; Management of global properties.
 ;;
 (defgeneric set-nst-property (name value)
   (:method (name value)
      (declare (ignorable value))
-     (format t "No such property ~s~%" name))
-  (:method ((name (eql :debug-on-error)) value)
-     (setf *debug-on-error* value)))
+     (format t "No such property ~s~%" name)))
 (defgeneric nst-repl-property-doc (n)
   (:documentation "Return the documentation string of an NST property."))
 (defgeneric nst-repl-property-display (n)

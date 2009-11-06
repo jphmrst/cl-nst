@@ -23,16 +23,13 @@
 
 ;;; Built-in basic testing criteria.
 
-(def-criterion-unevaluated (:pass () chk)
-  (declare (ignorable chk))
+(def-criterion-unevaluated (:pass () chk :ignore-forms t)
   (emit-success))
 
-(def-criterion-unevaluated (:fail (&rest args) chk)
-  (declare (ignorable chk))
+(def-criterion-unevaluated (:fail (&rest args) chk :ignore-forms t)
   (emit-failure :format (car args) :args (cdr args)))
 
-(def-criterion-unevaluated (:warn (&rest args) chk)
-  (declare (ignorable chk))
+(def-criterion-unevaluated (:warn (&rest args) chk :ignore-forms t)
   (emit-warning :format (car args) :args (cdr args)))
 
 (def-criterion (:true () (bool))

@@ -54,7 +54,6 @@
 (defgeneric nst-short-help (command)
   (:documentation "Return the short help message for an NST REPL command.")
   (:method (command)
-     (declare (ignorable args))
      (cond
        ((and (symbolp command)
              (not (eq (find-package :nst-artifact-lookup-package)
@@ -68,7 +67,6 @@
 (defgeneric nst-long-help (command)
   (:documentation "Return the long help message for an NST REPL command.")
   (:method (command)
-     (declare (ignorable args))
      (cond
        ((and (symbolp command)
              (not (eq (find-package :nst-artifact-lookup-package)
@@ -83,7 +81,6 @@
   (:documentation "Return a string giving help for the argument names for an ~
                    NST REPL command.")
   (:method (command)
-     (declare (ignorable args))
      (cond
        ((and (symbolp command)
              (not (eq (find-package :nst-artifact-lookup-package)
@@ -95,40 +92,42 @@
                    Use :nst :help for a list of NST commands." command)))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defgeneric prep-arg-names-help (arg-list)
-    (:documentation "This function formats the lambda list of an
+  (unless (fboundp 'prep-arg-names-help)
+    (defgeneric prep-arg-names-help (arg-list)
+      (:documentation "This function formats the lambda list of an
 NST REPL command for display in the online-help system.  The macro
 def-nst-interactive-command that expands a REPL command definition
 into the underlying Lisp defmethods uses this function to generate
 the bodies of the help-related methods, so this function must be
 available from compile-time forward.")
 
-    (:method (arg-list &aux (in-macrolist t) in-keylist)
-      (labels ((prep-arg-name (arg)
-                 (cond
-                  ((eq arg '&optional)
-                   (setf in-macrolist nil in-keylist t)
-                   arg)
-                  ((eq arg '&key)
-                   (setf in-macrolist nil in-keylist t)
-                   arg)
-                  ((eq arg '&rest)
-                   (setf in-macrolist nil in-keylist nil)
-                   arg)
-                  ((symbolp arg)
-                   (string-upcase (symbol-name arg)))
-                  ((stringp arg)
-                   (string-upcase arg))
-                  ((listp arg)
-                   (cond
-                    (in-keylist (prep-arg-name (car arg)))
-                    (in-macrolist (format nil "(~a)" (prep-arg-names-help arg)))
-                    (t (format nil "~a" arg))))
-                  (t (format nil "~a" arg)))))
-        (with-output-to-string (out)
-          (format out "~{~a~^ ~}"
-            (loop for arg in arg-list
-                collect (prep-arg-name arg))))))))
+      (:method (arg-list &aux (in-macrolist t) in-keylist)
+         (labels ((prep-arg-name (arg)
+                    (cond
+                     ((eq arg '&optional)
+                      (setf in-macrolist nil in-keylist t)
+                      arg)
+                     ((eq arg '&key)
+                      (setf in-macrolist nil in-keylist t)
+                      arg)
+                     ((eq arg '&rest)
+                      (setf in-macrolist nil in-keylist nil)
+                      arg)
+                     ((symbolp arg)
+                      (string-upcase (symbol-name arg)))
+                     ((stringp arg)
+                      (string-upcase arg))
+                     ((listp arg)
+                      (cond
+                       (in-keylist (prep-arg-name (car arg)))
+                       (in-macrolist
+                        (format nil "(~a)" (prep-arg-names-help arg)))
+                       (t (format nil "~a" arg))))
+                     (t (format nil "~a" arg)))))
+           (with-output-to-string (out)
+             (format out "~{~a~^ ~}"
+               (loop for arg in arg-list
+                   collect (prep-arg-name arg)))))))))
 
 (defvar +nst-repl-commands+ nil)
 (defvar +nst-repl-properties+ nil)
