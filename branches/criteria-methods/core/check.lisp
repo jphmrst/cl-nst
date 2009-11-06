@@ -164,7 +164,6 @@ all further errors themselves.")
      (declare (special *nst-context*))
      ,@forms))
 
-
 #+allegro (excl::define-simple-parser def-values-check caadr :nst-criterion)
 (defmacro def-value-check (&rest args)
   (warn 'nst-soft-deprecation

@@ -1,10 +1,16 @@
 
 (in-package :mnst)
 
+(defvar *debug-within-metatested* nil)
+
 (nst:def-criterion (--nst-run (args &rest subcriteria) ())
   (let ((results))
     (destructuring-bind (&key packages groups tests) args
-      (let ((nst::+results-record+ (make-hash-table :test 'eq)))
+      (let ((nst::+results-record+ (make-hash-table :test 'eq))
+            (nst::*debug-on-error*
+             (cond
+              (*debug-within-metatested* nst::*debug-on-error*)
+              (t nil))))
         (declare (special nst::+results-record+))
         (loop for package in packages do (nst:run-package package))
         (loop for group in groups do (nst:run-group group))
@@ -39,8 +45,17 @@
                (:all
                 (:predicate (lambda (r) (null (nst::check-result-errors r))))
                 (:predicate (lambda (r) (nst::check-result-failures r))))))
+
 (def-criterion-alias (---test-errs group-name test-name)
   `(---on-test ,group-name ,test-name
                (:all
                 (:predicate (lambda (r) (null (nst::check-result-failures r))))
                 (:predicate (lambda (r) (nst::check-result-errors r))))))
+
+(def-criterion-alias (---error-records subcriterion)
+  `(:apply (lambda (x) (check-result-errors x)) ,subcriterion))
+(def-criterion-alias (---fail-records subcriterion)
+  `(:apply (lambda (x) (check-result-failures x)) ,subcriterion))
+(def-criterion-alias (---warning-records subcriterion)
+  `(:apply (lambda (x) (check-result-warnings x)) ,subcriterion))
+

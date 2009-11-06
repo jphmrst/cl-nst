@@ -54,6 +54,7 @@
   (run-group-inst (make-instance group-class)))
 
 (defun run-group-inst (group-inst)
+  (format-at-verbosity 4 "Called (run-group-inst ~s)~%" group-inst)
   (let ((test-lookups (test-name-lookup group-inst)))
     (note-artifact-choice (group-name group-inst) group-inst)
     (run-group-tests group-inst
@@ -61,12 +62,14 @@
                          collect (gethash test-name test-lookups)))))
 
 (defun run-test-inst (test-inst)
+  (format-at-verbosity 4 "Called (run-test-inst ~s)~%" test-inst)
   (let ((group-inst (make-instance (group-name test-inst))))
     (note-artifact-choice (check-user-name test-inst) test-inst)
     (run-group-tests group-inst (list test-inst))))
 
 (defun run-test (group test)
   "Run a test standalone by its user-given name (and its group's name)."
+  (format-at-verbosity 4 "Called (run-test ~s ~s)~%" group test)
   (let ((group-class (find-class group)))
     (unless group-class (error 'no-such-nst-group :group group))
     (let ((group-inst (make-instance group)))
@@ -88,6 +91,9 @@
          (loop do
            (block ,inner
              (handler-bind ((error #'(lambda (,e)
+                                       (format-at-verbosity 4
+                                           "In the retry handler ~s~%"
+                                         continuation-label)
                                        (when *debug-on-error*
                                          (cerror ,continuation-label ,e)
                                          (return-from ,inner)))))
@@ -96,9 +102,13 @@
 
 (defun run-group-tests (group-obj test-objs)
   "Programmatic entry point for running all tests in a group."
+  (format-at-verbosity 4 "Called (run-group-tests ~s ~s)~%" group-obj test-objs)
   (with-retry ("Try performing group setup again.")
     (handler-bind
         ((error #'(lambda (e)
+                    (format-at-verbosity 4
+                        "In the setup handler for run-group-tests ~s ~s~%"
+                      group-obj test-objs)
                     (loop for test-obj in test-objs do
                       (setf (gethash (check-group-name test-obj)
                                      +results-record+)
@@ -112,12 +122,17 @@
                          (group-name group-obj)) e))
                     (return-from run-group-tests nil))))
       (do-group-prefixture-setup group-obj)))
+  (format-at-verbosity 4
+      "Passed setup in (run-group-tests ~s ~s)~%" group-obj test-objs)
   (with-retry
       ((format nil "Restart testing group ~s (reapplying group fixtures)"
          (group-name group-obj)))
     (block group-fixture-assignment
       (handler-bind
           ((error #'(lambda (e)
+                      (format-at-verbosity 4
+                          "In the test handler for run-group-tests ~s ~s~%"
+                        group-obj test-objs)
                       (loop for test-obj in test-objs do
                         (setf (gethash (check-group-name test-obj)
                                        +results-record+)
@@ -131,9 +146,14 @@
                            (group-name group-obj)) e))
                       (return-from group-fixture-assignment nil))))
         (do-group-fixture-assignment group-obj test-objs))))
+  (format-at-verbosity 4
+      "Passed test execution in (run-group-tests ~s ~s)~%" group-obj test-objs)
   (with-retry ("Try performing group cleanup again.")
     (handler-bind
         ((error #'(lambda (e)
+                    (format-at-verbosity 4
+                        "In the cleanup handler for run-group-tests ~s ~s~%"
+                      group-obj test-objs)
                     (loop for test-obj in test-objs do
                       (add-test-config-error test-obj
                         "Error in post-fixtures cleanup: ~s" e))
@@ -146,23 +166,37 @@
   (:documentation
    "Pre-fixture group application setup specs add a method to this function.")
   (:method-combination progn)
-  (:method progn (group-obj) (declare (ignorable group-obj))))
+  (:method progn (group-obj)
+    (declare (ignorable group-obj))
+    (format-at-verbosity 4
+        "Called (do-group-prefixture-setup ~s) :progn primary method~%"
+      group-obj)))
 
 (defgeneric do-group-afterfixture-cleanup (group-obj)
   (:documentation
    "After-group fixture cleanup specs add a method to this function.")
   (:method-combination progn)
-  (:method progn (group-obj) (declare (ignorable group-obj))))
+  (:method progn (group-obj)
+    (declare (ignorable group-obj))
+    (format-at-verbosity 4
+        "Called (do-group-afterfixture-setup ~s) :progn primary method~%"
+      group-obj)))
 
 (defgeneric do-group-fixture-assignment (group-obj test-objs)
   (:documentation
    "Fixture declarations translate to an :around method making let* bindings
 for the group application class.")
   (:method (group-obj test-objs)
+     (format-at-verbosity 4 "Called (do-group-fixture-assignment ~s ~s)~%"
+       group-obj test-objs)
      (with-retry ("Try performing postfixture group setup again.")
        (handler-bind
            ((error
              #'(lambda (e)
+                 (format-at-verbosity 4
+                     "In the postfixture setup handler for ~
+                                        do-group-fixture-assignment ~s ~s~%"
+                      group-obj test-objs)
                  (loop for test-obj in test-objs do
                        (setf (gethash (check-group-name test-obj)
                                       +results-record+)
@@ -187,20 +221,25 @@ for the group application class.")
                  (format-at-verbosity 3 "    Instance ~s~%" test-inst)
                  (with-retry ("Try each-test setup for this group again.")
                    (handler-bind
-                       ((error #'(lambda (e)
-                                   (setf (gethash (check-group-name test-inst)
-                                                  +results-record+)
-                                     (emit-config-error
-                                         e test-inst
-                                       "Error in group each-test setup"))
-                                   (when *debug-on-error*
-                                     (cerror
-                                      (format nil
-                                          "~@<Continue with other tests from ~
+                       ((error
+                         #'(lambda (e)
+                             (format-at-verbosity 4
+                                 "In the each-test setup handler for ~
+                                  do-group-fixture-assignment ~s ~s~%"
+                               group-obj test-objs)
+                             (setf (gethash (check-group-name test-inst)
+                                            +results-record+)
+                               (emit-config-error
+                                   e test-inst
+                                 "Error in group each-test setup"))
+                             (when *debug-on-error*
+                               (cerror
+                                (format nil
+                                    "~@<Continue with other tests from ~
                                               this group ~_(~s, not likely to ~
                                               succeed).~:>"
-                                        (group-name group-obj)) e))
-                                   (return-from this-test nil))))
+                                  (group-name group-obj)) e))
+                             (return-from this-test nil))))
                      (do-group-each-test-setup group-obj)))
                  (unwind-protect
                      (block test-inner
@@ -209,6 +248,10 @@ for the group application class.")
                          (handler-bind
                              ((error
                                #'(lambda (e)
+                                   (format-at-verbosity 4
+                                       "In the prefixture setup handler for ~
+                                        do-group-fixture-assignment ~s ~s~%"
+                                     group-obj test-objs)
                                    (setf (gethash (check-group-name test-inst)
                                                   +results-record+)
                                      (emit-config-error e test-inst
@@ -228,6 +271,10 @@ for the group application class.")
                                (handler-bind
                                    ((error
                                      #'(lambda (e)
+                                         (format-at-verbosity 4
+                                             "In the main test handler for ~
+                                           do-group-fixture-assignment ~s ~s~%"
+                                           group-obj test-objs)
                                          (setf (gethash (check-group-name
                                                          test-inst)
                                                         +results-record+)
@@ -249,13 +296,18 @@ for the group application class.")
                            (handler-bind
                                ((error
                                  #'(lambda (e)
+                                     (format-at-verbosity 4
+                                         "In the cleanup handler for ~
+                                          do-group-fixture-assignment ~s ~s~%"
+                                       group-obj test-objs)
                                      (add-test-config-error test-inst
                                        "Error in test postfixture cleanup: ~s"
                                        e)
                                      (when *debug-on-error*
                                        (cerror
                                         (format nil
-                                            "Continue with other tests from this group (~s)."
+                                            "Continue with other tests from ~
+                                             this group (~s)."
                                           (group-name group-obj))
                                         e))
                                      (return-from test-inner))))
@@ -264,6 +316,10 @@ for the group application class.")
                      (handler-bind
                          ((error
                            #'(lambda (e)
+                               (format-at-verbosity 4
+                                   "In the each-test cleanup handler for ~
+                                    do-group-fixture-assignment ~s ~s~%"
+                                 group-obj test-objs)
                                (add-test-config-error test-inst
                                  "Error in group each-test cleanup: ~s" e)
                                (when *debug-on-error*
@@ -284,6 +340,10 @@ for the group application class.")
        (with-retry ("Try performing group with-fixtures cleanup again.")
          (handler-bind
              ((error #'(lambda (e)
+                         (format-at-verbosity 4
+                             "In the group fixtures cleanup handler for ~
+                              do-group-fixture-assignment ~s ~s~%"
+                           group-obj test-objs)
                          (loop for test-obj in test-objs do
                                (add-test-config-error test-obj
                                  "Error in group fixtures cleanup: ~s" e))
@@ -298,46 +358,75 @@ for the group application class.")
   (:documentation "Fixture setup specs add a method to this function
 for the group application class.")
   (:method-combination progn)
-  (:method progn (group-obj) (declare (ignorable group-obj))))
+  (:method progn (group-obj)
+     (declare (ignorable group-obj))
+     (format-at-verbosity 4
+         "Called (do-group-postfixture-setup ~s) :progn primary method~%"
+       group-obj)))
 
 (defgeneric do-group-withfixture-cleanup (group-obj)
   (:documentation "With-fixtures cleanup specs add a method to this function
 for the group application class.")
   (:method-combination progn)
-  (:method progn (group-obj) (declare (ignorable group-obj))))
+  (:method progn (group-obj)
+     (declare (ignorable group-obj))
+     (format-at-verbosity 4
+         "Called (do-group-withfixture-cleanup ~s) :progn primary method~%"
+       group-obj)))
 
 (defgeneric do-group-each-test-setup (group-obj)
   (:documentation
    "Group each-test setup specs add a method to this function.")
   (:method-combination progn)
-  (:method progn (group-obj) (declare (ignorable group-obj))))
+  (:method progn (group-obj)
+     (declare (ignorable group-obj))
+     (format-at-verbosity 4
+         "Called (do-group-each-test-setup ~s) :progn primary method~%"
+       group-obj)))
 
 (defgeneric do-group-each-test-cleanup (group-obj)
   (:documentation
    "Group each-test cleanup specs add a method to this function.")
   (:method-combination progn)
-  (:method progn (group-obj) (declare (ignorable group-obj))))
+  (:method progn (group-obj)
+     (declare (ignorable group-obj))
+     (format-at-verbosity 4
+         "Called (do-group-each-test-cleanup ~s) :progn primary method~%"
+       group-obj)))
 
 (defgeneric do-test-prefixture-setup (test-obj)
   (:documentation
    "Pre-fixture test application setup specs add a method to this function.")
   (:method-combination progn)
-  (:method progn (test-obj) (declare (ignorable test-obj))))
+  (:method progn (test-obj)
+     (declare (ignorable test-obj))
+     (format-at-verbosity 4
+         "Called (do-test-prefixture-setup ~s) :progn primary method~%"
+       test-obj)))
 
 (defgeneric do-test-afterfixture-cleanup (test-obj)
   (:documentation
    "After-test fixture cleanup specs add a method to this function.")
   (:method-combination progn)
-  (:method progn (test-obj) (declare (ignorable test-obj))))
+  (:method progn (test-obj)
+     (declare (ignorable test-obj))
+     (format-at-verbosity 4
+         "Called (do-test-afterfixture-cleanup ~s) :progn primary method~%"
+       test-obj)))
 
 (defgeneric do-test-fixture-assignment (test-obj)
   (:documentation
    "Fixture declarations translate to an :around method making let* bindings
 for the test application class.")
   (:method (test-obj)
+     (format-at-verbosity 4 "Called (do-test-fixture-assignment ~s)~%"
+       test-obj)
      (handler-bind
          ((error
            #'(lambda (e)
+               (format-at-verbosity 4
+                   "In the setup handler for do-test-fixture-assignment ~s~%"
+                 test-obj)
                (setf (gethash (check-group-name test-obj)
                               +results-record+)
                  (emit-config-error e test-obj
@@ -351,6 +440,10 @@ for the test application class.")
      (unwind-protect (core-run-test test-obj)
        (handler-bind
            ((error #'(lambda (e)
+                       (format-at-verbosity 4
+                           "In the cleanup handler for ~
+                                              do-test-fixture-assignment ~s~%"
+                         test-obj)
                        (add-test-config-error test-obj
                           "Error in test fixtures cleanup: ~s" e)
                        (when *debug-on-error*
@@ -365,13 +458,21 @@ for the test application class.")
   (:documentation "With-fixtures cleanup specs add a method to this function
 for the test application class.")
   (:method-combination progn)
-  (:method progn (test-obj) (declare (ignorable test-obj))))
+  (:method progn (test-obj)
+     (declare (ignorable test-obj))
+     (format-at-verbosity 4
+         "Called (do-test-postfixture-setup ~s) :progn primary method~%"
+       test-obj)))
 
 (defgeneric do-test-withfixture-cleanup (test-obj)
   (:documentation "Fixture setup specs add a method to this function
 for the test application class.")
   (:method-combination progn)
-  (:method progn (test-obj) (declare (ignorable test-obj))))
+  (:method progn (test-obj)
+     (declare (ignorable test-obj))
+     (format-at-verbosity 4
+         "Called (do-test-withfixture-cleanup ~s) :progn primary method~%"
+       test-obj)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -383,6 +484,7 @@ encoded as :before and :after methods.")
 
   (:method :around (test)
     "Capture the result of the test."
+    (format-at-verbosity 4 "Called (core-run-test ~s) common :around~%" test)
     (let ((*nst-group-name* (group-name test))
           (*nst-check-user-name* (check-user-name test))
           (*nst-check-internal-name* (check-group-name test))
