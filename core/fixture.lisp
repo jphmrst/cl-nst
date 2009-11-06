@@ -114,6 +114,8 @@ re-applied at subsequent fixture application rather than being recalculated.
 
     `(progn
        #+allegro (excl:record-source-file ',name :type :nst-fixture-set)
+       #+allegro (loop for name in ',bound-names do
+         (excl:record-source-file name :type :nst-fixture))
 
        (eval-when (:compile-toplevel :load-toplevel :execute)
          (defclass ,name ()
