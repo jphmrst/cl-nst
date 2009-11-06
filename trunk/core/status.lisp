@@ -243,7 +243,12 @@ instances, and the info field is of any value."
 
 (defun make-check-result (&key (group-name *nst-group-name*)
                                (check-name *nst-check-user-name*)
-                               warnings failures errors info)
+                               warnings failures errors info
+                               (tests 0) (passing 0) (erring 0)
+                               (failing 0) (warning 0)
+                               (elapsed-time 0)
+                               (timestamp (multiple-value-list
+                                              (get-decoded-time))))
   "Functional wrapper around the constructor for check-result
 structure, permitting the use of apply."
   (%make-check-result :group-name group-name
@@ -251,7 +256,11 @@ structure, permitting the use of apply."
                       :warnings warnings
                       :failures failures
                       :errors errors
-                      :info info))
+                      :info info
+                      :tests tests :passing passing :erring erring
+                      :failing failing :warning warning
+                      :elapsed-time elapsed-time
+                      :timestamp timestamp))
 
 (defun interesting-result-p (result)
   (when (typep result 'check-result)
