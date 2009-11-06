@@ -104,17 +104,27 @@ a single form, possibly something wrapped in progn or multiple-value-bind."
                                     *nst-context*)))
            (declare (special *nst-context*))
            (format-at-verbosity 3 "Checking (~s ~s)~%" ',criterion ',forms)
-           (block ,checker-block
-             (handler-bind
-                 ((error
-                   #'(lambda (e)
-                       (declare (special *current-group* *current-test*))
-                       (format-at-verbosity 4
-                           "Caught ~s in the handler for ~s, (~a, ~a)~%"
-                         e ',criterion *current-group* *current-test*)
-                       (unless *debug-on-error*
-                         (return-from ,checker-block (emit-error e))))))
-               ,body))))))))
+           (let ((result
+                  (block ,checker-block
+                    (handler-bind
+                        ((error
+                          #'(lambda (e)
+                              (declare (special *current-group* *current-test*))
+                              (format-at-verbosity 4
+                                  "Caught ~s in the handler for ~s, (~a, ~a)~%"
+                                e ',criterion *current-group* *current-test*)
+                              (cond
+                                (*debug-on-error*
+                                 (format-at-verbosity 4
+                                     "Not debugging; passing error up~%"))
+                                (t
+                                 (format-at-verbosity 4
+                                     "Return-from block for reporting error~%")
+                                 (return-from ,checker-block (emit-error e)))))))
+                      ,body))))
+             (format-at-verbosity 4 "Exiting check of (~s ~s) with ~s~%"
+               ',criterion ',forms result)
+             result)))))))
 
 #+allegro (excl::define-simple-parser def-values-criterion caadr :nst-criterion)
 (defmacro def-values-criterion ((name criterion-args check-args &key
