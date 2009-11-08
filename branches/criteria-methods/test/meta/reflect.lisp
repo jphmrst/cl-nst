@@ -33,7 +33,11 @@
   (let* ((inst (ensure-test-instance group-name test-name))
          (result (gethash (nst::check-group-name inst) results-hash)))
     ;; (format t " Result type ~s~%" (type-of ,result))
-    (nst:check-subcriterion-on-value `(:all ,@subcriteria) result)))
+    (cond
+      (result
+       (nst:check-subcriterion-on-value `(:all ,@subcriteria) result))
+      (t (emit-failure :format "No record of test ~s (group ~s)"
+                       :args (list test-name group-name))))))
 
 (def-criterion-alias (---test-passes group-name test-name)
   `(---on-test ,group-name ,test-name
