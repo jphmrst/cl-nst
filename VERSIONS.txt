@@ -1,4 +1,8 @@
 
+1.2.7 -
+ Ticket 140 - NST was not resetting the list of a fixture set's bound names on a
+              redefinition of the fixture set.
+
 1.2.6 - public release, November 11, 2009
  Minor bug fixes and improvements.
 
