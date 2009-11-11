@@ -518,30 +518,33 @@ six-value summary of the results:
 
 (defun package-report (&optional (package *package*))
   "Top-level function for reporting the results of a package."
-  (let* ((result (make-package-result))
-         (user-package (find-package package))
-         (sym-pack (loop for k being the hash-keys
-                         of (gethash user-package +package-groups+)
-                         collect k)))
-    (format-at-verbosity 3
-      "Reporting for actual package ~s~%sym-pack ~s~%" user-package sym-pack)
-    (when sym-pack
-      (with-accessors ((name package-result-package-name)
-                       (checks package-result-group-results)) result
-        (setf name (package-name user-package))
-        (loop for remote-group in sym-pack do
-          (let* ((local-group (intern (symbol-name remote-group) user-package))
-                 (report (group-report local-group)))
-            (setf (gethash local-group checks) report)
-            (incf (result-stats-elapsed-time result)
-                  (result-stats-elapsed-time report))
-            (incf (result-stats-tests result)   (result-stats-tests report))
-            (incf (result-stats-passing result) (result-stats-passing report))
-            (incf (result-stats-erring result)  (result-stats-erring report))
-            (incf (result-stats-failing result) (result-stats-failing report))
-            (incf (result-stats-warning result)
-                  (result-stats-warning report))))))
-    result))
+  (let ((result (make-package-result))
+        (user-package (find-package package)))
+    (unless user-package
+      (error "No such package ~s" package))
+    (let ((sym-pack (loop for k being the hash-keys
+                        of (gethash user-package +package-groups+)
+                        collect k)))
+      (format-at-verbosity 3 "Reporting for actual package ~s~%sym-pack ~s~%"
+        user-package sym-pack)
+      (when sym-pack
+        (with-accessors ((name package-result-package-name)
+                         (checks package-result-group-results)) result
+          (setf name (package-name user-package))
+          (loop for remote-group in sym-pack do
+            (let* ((local-group (intern (symbol-name remote-group)
+                                        user-package))
+                   (report (group-report local-group)))
+              (setf (gethash local-group checks) report)
+              (incf (result-stats-elapsed-time result)
+                    (result-stats-elapsed-time report))
+              (incf (result-stats-tests result)   (result-stats-tests report))
+              (incf (result-stats-passing result) (result-stats-passing report))
+              (incf (result-stats-erring result)  (result-stats-erring report))
+              (incf (result-stats-failing result) (result-stats-failing report))
+              (incf (result-stats-warning result)
+                    (result-stats-warning report))))))
+      result)))
 
 (defun group-report (group)
   "Top-level function for reporting the results of a group."
