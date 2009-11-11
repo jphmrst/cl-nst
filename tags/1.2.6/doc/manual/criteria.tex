@@ -1,0 +1,175 @@
+\section{Defining test criteria}
+NST provides three mechanisms for defining new criteria.
+\begin{itemize}
+\item Defining a criterion by specifying how it should be rewritten to
+  another criterion.  This mechanism is the simplest, and is the most
+  limited in the manipulations it can define.
+\item Defining a criterion by specifying how it assesses the values
+  provided to it.
+\item Defining a criterion by specifying how it manipulates the
+  (possibly unevaluated) forms of a \texttt{def-check}.
+\end{itemize}
+The first mechanism is essentially a variation of \texttt{defmacro}.
+Under both of the latter two mechanisms, the criteria definition is
+made as Lisp code calculating a \emph{test report}.
+
+\subsection{Aliases over criteria}
+\label{sec:def-criterion-alias}
+The simplest mechanism for defining a new criterion involves simply
+defining one criterion to rewrite as another using
+\texttt{def-criterion-alias}:
+%
+{\ttfamily\begin{tabbing}
+\textrm{Syntax: 
+}(de\=f-criterion-alias (name \&rest args)
+\\ \> [ documentation ]
+\\ \> expansion)
+\end{tabbing}}
+The body of the expansion should be a Lisp form which, when evaluated,
+returns an S-expression quoting the new criterion which the rewrite
+should produce.  The \texttt{args} are passed as far Lisp macros: they
+are not evaluated and are most typically comma-inserted into a
+backquoted result.  For example:
+\\ \texttt{(def-test-alias (:forms-eq) `(:predicate eq))}
+\\ \texttt{(def-test-alias (:symbol name) `(:eq ',name))}
+
+\subsection{Reporting forms}
+\label{sec:criteria-forms-report}
+The other two criteria-defining mechanisms define the expansion of a
+criterion into Lisp.  For both of these mechanisms, this Lisp code is
+expected to return a test report.  NST provides three functions for
+building test reports:
+\begin{itemize}
+\item\texttt{(emit-success)}\par This function indicates a successful
+  test result.
+
+  Note that some older examples show \texttt{(make-check-result)} or
+  \texttt{(check-result)}.  The former is an internal function and
+  should not be used from outside the core NST files.  The latter is
+  deprecated.
+\item\texttt{(emit-failure [ :format format-string [ :args args ] ] )}
+  \par This function returns a report of test failure.  The
+  \texttt{format-string} and \texttt{args} are as to the Common Lisp
+  function \texttt{format}.
+\item\texttt{(emit-warning [ :format format-string [ :args args ] ] )}
+  \par Line \texttt{emit-failure}, but provides supplimentary
+  information as a warning.
+\end{itemize}
+
+\subsection{Defining criteria for values}
+\label{sec:def-values-criterion}
+The Lisp body of a \texttt{def-values-criterion} should evaluate to a
+quoted Lisp expression calculating a test report.  These criteria
+definitions are like functions with two sets of formal parameters:
+\begin{itemize}
+\item One set correspond to the actual parameters of the criterion
+  itself.  The values of these parameters are available to the
+  criterion expansion to guide the construction of the resulting Lisp
+  expression.
+\item The other set corresponds to the evaluation of the form under
+  examination by the \texttt{def-test}.  These values are available
+  only at run-time, and may appear unquoted within the result
+  expression, but are not bound during the evaluation which produces
+  the result expression.
+\end{itemize}
+% 
+{\ttfamily\begin{tabbing}
+\textrm{Syntax: 
+}(de\=f-values-criterion (na\=me \=subcriteria-lambda-list
+\\ \> \> \> test-values-lambda-list
+\\ \> \> \&key \= blurb-format
+\\ \> \>        \> full-format
+\\ \> \>        \> stack-transformer)
+\\ \> expansion)
+\end{tabbing}}
+%
+Every time the new criterion is used in a test, the \texttt{expansion}
+will be evaluated in a context which provides values to the
+\texttt{subcriteria-lambda-list}.  The resulting expression will be
+used as part of the body of a method to a NST-internal generic
+function which corresponds to the \texttt{def-test} itself.  This
+method, in code enclosing the resulting expression, will provide
+values to the \texttt{test-values-lambda-list}.
+
+The \texttt{test-values-lambda-list} will most often contain only a
+single symbol.  Declarations regarding the names in the
+\texttt{test-values-lambda-list} are OK, but should be quoted.
+
+Examples:
+\begin{verbatim}
+(def-values-criterion (:pass () (&rest chk))
+  `(declare (ignorable chk))
+  `(emit-success))
+
+(def-values-criterion (:eq (eq-form) (check-form))
+  `(if (eq ,eq-form check-form)
+     (emit-success)
+     (emit-failure :format "Not eq to ~s" :args '(,eq-form))))
+\end{verbatim}
+
+\subsection{Processing subcriteria}
+\label{sec:subcriteria}
+Since the arguments to the criterion in \texttt{def-form-criterion}
+are passed unevaluated as for macro arguments, they can contain
+\emph{subcriteria} which can be incorporated into the main criterion's
+assessment.  The \texttt{continue-check} function converts subcriteria
+into quoted Lisp:
+\begin{verbatim}
+  (continue-check criterion-form values-forms)
+\end{verbatim}
+The \texttt{values-forms} argument should be a quoted Lisp expression
+which, when evaluated, returns a list of values to be assessed by the
+subcriterion.
+
+In fact, \texttt{def-form-criterion} and \texttt{def-values-criterion}
+expand to method definitions which are used in \texttt{continue-check}.
+
+\subsection{Defining criteria for a values-returning form}
+\label{sec:def-form-criterion}
+As for \texttt{def-values-criterion}, the body of a
+\texttt{def-form-criterion} should specify a quoted Lisp expression
+calculating a test report.  The difference between these forms is that
+while \texttt{def-values-criterion} receives the evaluated values from
+the forms to be tested, \texttt{def-form-criterion} expects a form
+which, when evaluated, will return the list of these values.
+%
+{\ttfamily\begin{tabbing}
+\textrm{Syntax: 
+}(de\=f-form-criterion (na\=me \=subcriteria-lambda-list
+\\ \>\> \> test-forms-formal-parameter
+\\ \>\> \&key \=stack-transformer
+\\ \>\> \> blurb-format
+\\ \>\> \> full-format)
+\\ \> check-forms)
+\end{tabbing}}
+%
+Here, \texttt{test-forms-formal-parameter} abstracts over the name of
+the formal parameter which will later be bound to the
+test-values-form, and must be just a symbol, not a lambda-list.  It
+can be referenced to add this name to the quoted Lisp expression that
+\texttt{check-forms} returns, but should be dereferenced for the
+values themselves only within the quotated computation.
+
+Examples:
+\begin{verbatim}
+(def-form-criterion (:apply (transform criterion) forms)
+  (continue-check criterion
+		  `(multiple-value-list (apply #',transform ,forms))))
+
+(def-form-criterion (:not (subcriterion) exprs-form)
+  (let ((subcheck (gensym)))
+    `(let ((,subcheck ,(continue-check subcriterion exprs-form)))
+       (cond
+        ((check-result-errors ,subcheck)
+         ,subcheck)
+        ((check-result-failures ,subcheck)
+         (check-result :info (check-result-info ,subcheck)))
+        (t
+         (emit-failure :format "Expected failure from ~s"
+                       :args '(,subcriterion)))))))
+\end{verbatim}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual"
+%%% End: 

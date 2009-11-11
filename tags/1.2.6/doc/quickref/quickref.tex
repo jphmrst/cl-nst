@@ -1,0 +1,201 @@
+%% File quickref.tex
+%%
+%% NST by John Maraist, based on RRT by Robert Goldman.
+%%
+%% NST is Copyright (c) 2006-2009 Smart Information Flow Technologies.
+%% RRT is Copyright (c) 2005 Robert Goldman, released under the LGPL,
+%% and the Lisp-specific preamble to that license.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% TeX-PDF-mode: t
+%%% End: 
+
+\documentclass{article}
+\usepackage{times}
+\usepackage{array}
+\usepackage{listings}
+\parskip 0.6em
+\parindent 0pt
+
+\newenvironment{criteria}%
+{\begin{list}{}
+    {\setlength{\labelwidth}{0pt}
+     \setlength{\leftmargin}{2em}
+     \setlength{\rightmargin}{1em}
+     \setlength{\itemindent}{0em}}}%
+  {\end{list}}
+\def\criterion#1#2#3#4{\item[\bfseries #1] #4\par
+  \emph{Syntax:}~~\texttt{#2}\\ \emph{Applicable to:}~~#3}
+\begin{document}
+\thispagestyle{empty}
+\begin{center}
+  \LARGE Getting started with NST\footnote{This document was last
+    updated for NST version 1.2.0.  Written by John Maraist, Smart
+    Information Flow Technologies, 211 N.\ First St.\ Suite 300,
+    Minneapolis, MN 55401; \textsl{jmaraist} at \textsl{sift.info}.}
+\end{center}
+
+\section*{In this document}
+The key elements to getting starting with NST are:
+%
+\\\hspace*{0.5em}--- The syntactic \textbf{forms} for specifying tests
+(below).
+%
+\\\hspace*{0.5em}--- The \textbf{criteria} used in tests
+(p.\,\pageref{sec:criteria}).
+%
+\\\hspace*{0.5em}--- Using NST for \textbf{interactive debugging}
+(p.\,\pageref{sec:interact}).
+%
+\\\hspace*{0.5em}--- Combining NST with \textbf{ASDF} to help automate
+testing (p.\,\pageref{sec:asdf}).
+\end{enumerate}
+
+\section*{Nomenclature}
+\emph{Fixtures} are data structures and values which may be referred
+to by name during testing.  NST provides the ability to use fixtures
+across multiple tests and test groups, and to inject fixtures into the
+runtime namespace for debugging.  Fixtures are defined using the
+\texttt{def-fixture} form.
+
+\emph{Groups} of tests can be associated with fixture sets, stateful
+initiatization, and stateful cleanup.  Test groups are defined using
+the \texttt{def-test-group} form.
+
+Individual tests are declared within test groups using the
+\texttt{def-test} form.
+
+Examples of NST fixtures, groups and tests are available in
+\textsl{self-test/core/simple-mnst.lisp}~.  The figure on the next
+page shows the changes involved in using NST in a system definition.
+
+\section*{Forms}
+The \texttt{def-fixtures} form associates a sequence of names and
+forms.
+\input{../common/fixture-syntax}
+with keyword arguments:
+\begin{itemize}
+
+\item\texttt{uses} gives fixtures assumed to also be used whenever
+  this fixture is used.
+
+\item\texttt{assumes} lists names assumed to be bound --- although not
+  necessarily from the same source at each use of this fixture --- at
+  the point of any use of this fixture.
+
+\item\texttt{documentation} is a documentation string for the fixture
+  set.
+
+\item\texttt{inner} is the list of declarations to be made inside the
+  let-binding of names of any use of this fixture.  Do not include the
+  "declare" keyword here; NST adds these declarations to others,
+  including a special declaration of all bound names.
+
+\item\texttt{outer} is the list of declarations to be made outside the
+  let-binding of names of any use of this fixture.
+
+\item The \texttt{export-...} arguments control export of the fixture
+  and bound names from the current package.
+\end{itemize}
+
+The \texttt{def-test-group} form 
+\input{../common/group-syntax}
+defines a group of the given name, providing one instantiation of the
+bindings of the given fixtures to each test.  Forms given with the
+\texttt{setup} (respectively \texttt{cleanup}) option are run once,
+before (after) any of the individual tests.  Forms given with the
+\texttt{each-setup} (respectively \texttt{each-cleanup}) option are
+run before (after) each individual tests.
+
+The \texttt{def-test} form defines a single named test:
+\input{../common/check-syntax}
+The \texttt{:setup}, \texttt{:cleanup} and \texttt{:fixture} options
+are as above, but apply to only this test (and note that for multiple
+forms for the first two must be wrapped in a \texttt{progn}).  NST's
+built-in criteria are listed below; see the manual for a discussion of
+the forms which define new criteria.
+
+\section*{Criteria}
+\label{sec:criteria}
+Criteria forms have the following structure:
+\begin{verbatim}
+  (CRITERIA-NAME ARG ARG ... ARG)
+\end{verbatim}
+but a no-argument criterion use \texttt{(NAME)} can be abbreviated as
+\texttt{NAME}.  NST's built-in criteria include:
+\def\criteriaGroup#1#2{\par\textbf{#1.}\begin{criteria}}
+\def\secText#1{}
+\def\endcriteriaGroup{\end{criteria}}
+\def\criteriaDoc#1#2#3#4#5#6#7#8{\criterion{#2}{#3}{#5}{#4}}
+\def\noExpl{}
+\def\hasExpl#1{}
+\def\manualOrRef#1#2{#2}
+\input{../common/criteria}
+
+\section*{Interactive debugging}
+\label{sec:interact}
+NST defines a REPL alias \texttt{:nst} under Allegro CL.  The general
+form of commands is:
+\begin{verbatim}
+  :nst COMMAND ARGUMENTS
+\end{verbatim}
+Use \mbox{\texttt{:nst :help}} for a list of commands, and
+\mbox{\texttt{:nst COMMAND :help}} for details about individual
+commands.
+
+\section*{ASDF}
+\label{sec:asdf}
+NST tests can be referenced from ASDF systems, allowing easy
+invocation to unit tests relevant to a system.  The system
+\textsl{self-test/masdfnst.asd} gives an example of its use.  The
+snippet below highlights the difference between non-NST and
+NST-oriented ASDF system declarations.
+\texttt{\small
+\begin{tabbing}
+\\;; Force loading NST's ASDF utilities before processing
+\\;; this file.
+\\{\bfseries (asdf:oos 'asdf:load-op :asdf-nst)}
+\\
+\\(de\=fpackage :masdfnst-asd
+\\   \>(:use :common-lisp :asdf {\bfseries :asdf-nst}))
+\\(in-package :masdfnst-asd)
+\\
+\\(def\=system :masdfnst
+\\    \>;; Use the NST-oriented ASDF system definition.
+\\    \>{\bfseries :class nst-testable}
+\\    
+\\    \>:in-order-to ((test-op (load-op :masdfnst)))
+\\
+\\    \>;; Any one of the six blocks below is reasonable.
+\\    \>;; Use exactly one of :nst-package, :nst-group, or
+\\    \>;; :nst-test; or any combination of the plural
+\\    \>;; versions.
+\\
+\\    \>{\bfseries ;; (1)}
+\\    \>{\bfseries ;; :nst-package :asdf-nst-test}
+\\
+\\    \>{\bfseries ;; (2)}
+\\    \>{\bfseries ;; :nst-group (:asdf-nst-test . core-checks)}
+\\
+\\    \>{\bfseries ;; (3)}
+\\    \>{\bfseries ;; :nst-test (:asdf-nst-test core-checks pass-1)}
+\\
+\\    \>{\bfseries ;; (4)}
+\\    \>{\bfseries ;; :nst-packages (:asdf-nst-test :asdf-nst-test2)}
+\\
+\\    \>{\bfseries ;; (5)}
+\\    \>{\bfseries ;; :nst-packages (:asdf-nst-test)}
+\\    \>{\bfseries ;; :nst-groups ((:asdf-nst-test2 . :g1a))}
+\\    
+\\    \>{\bfseries ;; (6)}
+\\    \>{\bfseries :nst-groups ((:asdf-nst-test2 . :g1))}
+\\    \>{\bfseries :nst-tests (}\={\bfseries (:asdf-nst-test2 :g1a :fix0)}
+\\		\> \>{\bfseries (:asdf-nst-test :core-checks :warn-1))}
+\\    
+\\    \>:components ( ...\ ))
+\end{tabbing}}
+
+
+\end{document}
