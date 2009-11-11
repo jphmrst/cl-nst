@@ -119,15 +119,16 @@ re-applied at subsequent fixture application rather than being recalculated.
 
        (eval-when (:compile-toplevel :load-toplevel :execute)
          (defclass ,name ()
-              ((bound-names :reader bound-names :allocation :class
-                            :initform ',bound-names)
+              ((bound-names :reader bound-names :allocation :class)
                ,@(when cache
                    `((cached-values :initform (make-hash-table :test 'eq)
                                     :accessor cached-values))))
            (:metaclass singleton-class)
            ,@(when documentation `((:documentation ,documentation))))
 
-         (finalize-inheritance (find-class ',name)))
+         (finalize-inheritance (find-class ',name))
+         (setf (slot-value (make-instance ',name) 'bound-names)
+               ',bound-names))
 
        (let ((this-name-use (gethash ',name +name-use+)))
          (unless this-name-use
