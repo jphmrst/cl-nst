@@ -2,12 +2,12 @@
 (in-package :mnst)
 
 (def-test-group failure-catchers ()
-;;;  (def-test group-fixture-error
-;;;      (--nst-group mnst-src::boom-group-fixture
-;;;        (---test-errs mnst-src::boom-test-fixture mnst-src::bf1)
-;;;        (---test-errs mnst-src::boom-test-fixture mnst-src::bf2)
-;;;        (---test-errs mnst-src::boom-test-fixture mnst-src::bf3)
-;;;        (---test-errs mnst-src::boom-test-fixture mnst-src::bf4)))
+  (def-test group-fixture-error
+      (--nst-group mnst-src::boom-group-fixture
+        (---test-errs mnst-src::boom-group-fixture mnst-src::bf1)
+        (---test-errs mnst-src::boom-group-fixture mnst-src::bf2)
+        (---test-errs mnst-src::boom-group-fixture mnst-src::bf3)
+        (---test-errs mnst-src::boom-group-fixture mnst-src::bf4)))
   (def-test test-fixture-error
       (--nst-group mnst-src::boom-test-fixture
         (---test-errs mnst-src::boom-test-fixture mnst-src::bf2))))
