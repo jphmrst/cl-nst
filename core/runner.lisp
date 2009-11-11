@@ -93,7 +93,7 @@
              (handler-bind ((error #'(lambda (,e)
                                        (format-at-verbosity 4
                                            "In the retry handler ~s~%"
-                                         continuation-label)
+                                         ',continuation-label)
                                        (when *debug-on-error*
                                          (cerror ,continuation-label ,e)
                                          (return-from ,inner)))))
