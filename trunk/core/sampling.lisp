@@ -317,15 +317,15 @@
   (:method ((n (eql (find-class 'ratio))))   n)
 
   (:method ((n (eql (find-class 'float))))
-     (coin-flip #-(or sbcl allegro) (find-class 'short-float)
+     (coin-flip #-(or sbcl allegro cmu) (find-class 'short-float)
                 (find-class 'single-float)
                 (find-class 'double-float)
-                #-(or allegro sbcl) (find-class 'long-float)))
+                #-(or allegro sbcl cmu) (find-class 'long-float)))
 
-  #-(or allegro sbcl) (:method ((n (eql (find-class 'short-float)))) n)
+  #-(or allegro sbcl cmu) (:method ((n (eql (find-class 'short-float)))) n)
   (:method ((n (eql (find-class 'single-float)))) n)
   (:method ((n (eql (find-class 'double-float)))) n)
-  #-(or allegro sbcl) (:method ((n (eql (find-class 'long-float)))) n)
+  #-(or allegro sbcl cmu) (:method ((n (eql (find-class 'long-float)))) n)
 
   (:method ((n (eql (find-class 'complex)))) n))
 
