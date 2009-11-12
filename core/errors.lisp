@@ -51,7 +51,7 @@
 
 ;;; -----------------------------------------------------------------
 
-(defclass nst-deprecation-warning-mixin ()
+(define-condition nst-deprecation-warning-mixin ()
      ((old-name :reader old-name :initarg :old-name)
       (replacement :reader replacement :initarg :replacement))
   (:documentation "Mixin of field used in deprecation warnings"))
