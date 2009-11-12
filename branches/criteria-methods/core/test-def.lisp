@@ -162,11 +162,11 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                    ,core-run-body))
 
                ,@(when setup-supp-p
-                   `((defmethod do-group-each-test-setup progn ((obj ,name))
+                   `((defmethod do-test-prefixture-setup progn ((obj ,name))
                        ,setup)))
 
                ,@(when cleanup-supp-p
-                   `((defmethod do-group-each-test-cleanup progn ((obj ,name))
+                   `((defmethod do-test-afterfixture-cleanup progn ((obj ,name))
                        ,cleanup))))
 
              ;; Clear any previous stored results, since we've just

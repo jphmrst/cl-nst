@@ -257,7 +257,7 @@ available from compile-time forward.")
            ((find-package package)
             (push package ran-packages)
             (run-package package) )
-           (t (format t "No such package ~a" package))))
+           (t (format t "No such package ~a~%" package))))
        (report-multiple (nreverse ran-packages) nil nil))))
 
 (def-nst-interactive-command

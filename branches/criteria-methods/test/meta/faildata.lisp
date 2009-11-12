@@ -36,14 +36,15 @@
 
 (def-test-group boom-test-setup ()
   (def-test bts1 :true t)
-  (def-test (bts2 :setup (error "Setup error") :cleanup t)
-      :true t)
+  (def-test (bts2 :setup (error "Setup error") :cleanup t) :true t)
   (def-test bts3 :true t)
   (def-test bts4 :true t))
 
 (def-test-group boom-test-cleanup ()
   (def-test btc1 :true t)
-  (def-test (btc2 :setup t :cleanup (error "Setup error"))
+  (def-test (btc2 :setup t
+                  :cleanup (progn (format t "YYYYYYYYYY~%")
+                                  (error "Setup error")))
       :true t)
   (def-test btc3 :true t)
   (def-test btc4 :true t))

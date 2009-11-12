@@ -1,19 +1,4 @@
 
-:any --- but not all of them
-:seq --- all.  may be the trigger for :permute
-:each
-:proj
-:value-list
-:slots
-:across
-:values
-:permute
-:all
-:warn
-
 Branch https://cvs.sift.info:1022/repos/nst/branches/criteria-methods
-Last merge from trunk->branch: 446
+Last merge from trunk->branch: 460
 Last merge from branch->trunk: 404 (none)
-
-:hide
-:hide 

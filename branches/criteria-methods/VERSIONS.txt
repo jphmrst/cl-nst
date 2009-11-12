@@ -1,9 +1,16 @@
 
-1.2.6 -
+1.2.7 -
+ Ticket 140 - NST was not resetting the list of a fixture set's bound names on a
+              redefinition of the fixture set.
 
-1.2.5 - 
+1.2.6 - public release, November 11, 2009
+ Minor bug fixes and improvements.
+
+1.2.5 - internal release, October 28, 2009
  Ticket 134 - Fixed a bug in the :permute criteria.
  Ticket 123 - Bug in output.
+ Reorganized "meta" tests to better examine and regression-test NST's performance in detail.
+ Allow tests to be defined separately from their group.
  Replaced check-result with emit-success.
  Improved deprecation warnings.
  Several minor tweaks.
