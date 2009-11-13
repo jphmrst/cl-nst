@@ -89,7 +89,7 @@
        (push ,string (check-result-info ,subcheck))
        ,subcheck)))
 
-(def-form-criterion (:err (&key (type 'condition type-supp-p)) expr-form)
+(def-form-criterion (:err (&key (type 'error type-supp-p)) expr-form)
   (let ((x (gensym "x")) (block (gensym "block")))
     `(block ,block
        (format-at-verbosity 4 "    Setting up ~s handler for :err~%" ',type)
