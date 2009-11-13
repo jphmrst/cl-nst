@@ -25,12 +25,13 @@
 ;;; flow of test and group execution.
 
 ;;; ----------------------------------------------------------------------
-;;; Programmatic starters for a test from Lisp.  Other starters such
-;;; as via ASDF and vendor-specific REPL macros call these functions;
-;;; from pure Lisp these are the top-level calls.
+;;; Programmatic starters for a test from Lisp.  Starters such
+;;; as via ASDF and REPL macros call these functions.
 ;;;
 (defun run-package (&optional (package-or-name *package*))
-  "Run all groups in a package."
+  "Run all groups in a package.  Note that this is /not/ an interactive
+function --- certain behaviors provided by e.g. the ASDF extension or
+REPL macros require the dynamic configuration provided by those wrappers."
   (let* ((user-package (find-package package-or-name))
          (group-names (package-groups user-package)))
     (note-artifact-choice (package-name user-package) user-package)
@@ -46,7 +47,9 @@
        (error 'no-nst-groups-in-package :package package-or-name)))))
 
 (defun run-group (group-class)
-  "Run a group by its user-given name."
+  "Run a group by its user-given name.    Note that this is /not/ an interactive
+function --- certain behaviors provided by e.g. the ASDF extension or
+REPL macros require the dynamic configuration provided by those wrappers."
   ;; Print a message at the appropriate level of verbosity.
   (format-at-verbosity 0 "Running group ~s~%" group-class)
 
@@ -68,7 +71,10 @@
     (run-group-tests group-inst (list test-inst))))
 
 (defun run-test (group test)
-  "Run a test standalone by its user-given name (and its group's name)."
+  "Run a test standalone by its user-given name (and its group's name).
+Note that this is /not/ an interactive function --- certain behaviors
+provided by e.g. the ASDF extension or REPL macros require the dynamic
+configuration provided by those wrappers."
   (format-at-verbosity 4 "Called (run-test ~s ~s)~%" group test)
   (let ((group-class (find-class group)))
     (unless group-class (error 'no-such-nst-group :group group))
