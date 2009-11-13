@@ -116,7 +116,8 @@
     (let ((factors (+ 1 (floor (/ 1 (- 1 (* (random 1.0) (random 1.0)))))))
           (result 1))
       (loop for z from 1 to factors do
-        (setf result (* result (arbitrary (find-class 'fixnum)))))
+        (setf result (* result (arbitrary #-clisp (find-class 'fixnum)
+                                          #+clisp 'fixnum))))
       result))
 
 (def-arbitrary-instance-type (ratio :scalar t)
@@ -149,8 +150,8 @@
 
 (def-arbitrary-instance-type (complex :scalar t)
     (let ((typ (coin-flip (find-class 'rational)
-                          (find-class 'single-float)
-                          (find-class 'double-float))))
+                          #-clisp (find-class 'single-float) #+clisp 'single-float
+                          #-clisp (find-class 'double-float) #+clisp 'double-float)))
       (+ (arbitrary typ) (* #C(0 1) (arbitrary typ)))))
 
 (defvar *default-character-range* :ascii)
@@ -310,22 +311,23 @@
      (coin-flip (find-class 'integer) (find-class 'ratio)))
 
   (:method ((n (eql (find-class 'integer))))
-     (coin-flip (find-class 'fixnum) 'bignum))
+     (coin-flip #-clisp (find-class 'fixnum) #+clisp 'fixnum
+                'bignum))
 
-  (:method ((n (eql (find-class 'fixnum))))  n)
+  (:method ((n (eql #-clisp (find-class 'fixnum) #+clisp 'fixnum)))  n)
   (:method ((n (eql 'bignum)))               n)
   (:method ((n (eql (find-class 'ratio))))   n)
 
   (:method ((n (eql (find-class 'float))))
-     (coin-flip #-(or sbcl allegro cmu) (find-class 'short-float)
-                (find-class 'single-float)
-                (find-class 'double-float)
-                #-(or allegro sbcl cmu) (find-class 'long-float)))
+     (coin-flip #-(or sbcl allegro cmu) #-clisp (find-class 'short-float) #+clisp 'short-float
+                #-clisp (find-class 'single-float) #+clisp 'single-float
+                #-clisp (find-class 'double-float) #+clisp 'double-float
+                #-(or allegro sbcl cmu) #-clisp (find-class 'long-float) #+clisp 'long-float))
 
-  #-(or allegro sbcl cmu) (:method ((n (eql (find-class 'short-float)))) n)
-  (:method ((n (eql (find-class 'single-float)))) n)
-  (:method ((n (eql (find-class 'double-float)))) n)
-  #-(or allegro sbcl cmu) (:method ((n (eql (find-class 'long-float)))) n)
+  #-(or allegro sbcl cmu) (:method ((n (eql #-clisp (find-class 'short-float) #+clisp 'short-float))) n)
+  (:method ((n (eql #-clisp (find-class 'single-float) #+clisp 'single-float))) n)
+  (:method ((n (eql #-clisp (find-class 'double-float) #+clisp 'double-float))) n)
+  #-(or allegro sbcl cmu) (:method ((n (eql #-clisp (find-class 'long-float) #+clisp 'long-float))) n)
 
   (:method ((n (eql (find-class 'complex)))) n))
 
