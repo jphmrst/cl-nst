@@ -319,10 +319,12 @@
   (:method ((n (eql (find-class 'ratio))))   n)
 
   (:method ((n (eql (find-class 'float))))
-     (coin-flip #-(or sbcl allegro cmu) #-clisp (find-class 'short-float) #+clisp 'short-float
+     (coin-flip #-(or sbcl allegro cmu clisp) (find-class 'short-float)
+                #+clisp 'short-float
                 #-clisp (find-class 'single-float) #+clisp 'single-float
                 #-clisp (find-class 'double-float) #+clisp 'double-float
-                #-(or allegro sbcl cmu) #-clisp (find-class 'long-float) #+clisp 'long-float))
+                #-(or allegro sbcl cmu clisp) (find-class 'long-float)
+                #+clisp 'long-float))
 
   #-(or allegro sbcl cmu) (:method ((n (eql #-clisp (find-class 'short-float) #+clisp 'short-float))) n)
   (:method ((n (eql #-clisp (find-class 'single-float) #+clisp 'single-float))) n)

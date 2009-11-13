@@ -3,7 +3,7 @@
 
 (defvar *debug-within-metatested* nil)
 
-(nst:def-criterion (--nst-run (args &rest subcriteria) ())
+(def-criterion (--nst-run (args &rest subcriteria) ())
   (let ((results))
     (destructuring-bind (&key packages groups tests) args
       (let ((nst::+results-record+ (make-hash-table :test 'eq))
@@ -12,13 +12,12 @@
               (*debug-within-metatested* nst::*debug-on-error*)
               (t nil))))
         (declare (special nst::+results-record+))
-        (loop for package in packages do (nst:run-package package))
-        (loop for group in groups do (nst:run-group group))
-        (loop for (group test) in tests do (nst:run-test group test))
+        (loop for package in packages do (run-package package))
+        (loop for group in groups do (run-group group))
+        (loop for (group test) in tests do (run-test group test))
         (setf results nst::+results-record+))
       (format t "***** Running subcriteria~%")
-      (let ((nst::*debug-on-error* t))
-        (nst:check-subcriterion-on-value `(:all ,@subcriteria) results)))))
+      (check-subcriterion-on-value `(:all ,@subcriteria) results))))
 
 (def-criterion-alias (--nst-package group-name &rest subcriteria)
   `(--nst-run (:packages (,group-name)) ,@subcriteria))
@@ -27,7 +26,7 @@
 (def-criterion-alias (--nst-test group-name test-name &rest subcriteria)
   `(--nst-run (:tests ((,group-name ,test-name))) ,@subcriteria))
 
-(nst:def-criterion (---on-test (group-name test-name &rest subcriteria)
+(def-criterion (---on-test (group-name test-name &rest subcriteria)
                                (results-hash))
   "Subcriteria get a results report of type nst:check-result"
   (let* ((inst (ensure-test-instance group-name test-name))
@@ -35,7 +34,7 @@
     ;; (format t " Result type ~s~%" (type-of ,result))
     (cond
       (result
-       (nst:check-subcriterion-on-value `(:all ,@subcriteria) result))
+       (check-subcriterion-on-value `(:all ,@subcriteria) result))
       (t (emit-failure :format "No record of test ~s (group ~s)"
                        :args (list test-name group-name))))))
 

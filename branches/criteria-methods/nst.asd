@@ -95,13 +95,14 @@
                                                "permuter" "check" "status"))
 
                            ;; Interaction with NST via the REPL.
-                           (:file "command"
-                                  :depends-on ("globals" "status"))
+                           (:file "command" :depends-on ("globals" "status"))
 
                            ;; Generating JUnit-friendly XML.
-                           (:file "junit"
-                                  :depends-on ("status"))
+                           (:file "junit" :depends-on ("status"))
 
                            ;; Sample-testing predicates.
-                           (:file "sampling"
-                                  :depends-on ("check"))))))
+                           (:file "sampling" :depends-on ("check"))
+
+                           ;; Other packaged APIs.
+                           (:file "interfaces"
+                                  :depends-on ("check" "status"))))))

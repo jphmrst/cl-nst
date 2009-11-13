@@ -41,46 +41,14 @@
     ;; * * * Mirror and document the exported API in the manual. * * *
     ;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-    (:export #:def-fixtures
-             #:def-test-group
-             #:def-test #:def-check     ; def-check will be deprecated
-                                        ; and then dropped
-
-             #:def-criterion #:def-criterion-unevaluated
-             #:def-criterion-alias  #:def-check-alias
-             #:def-values-criterion #:def-value-check
-             #:def-form-criterion   #:def-control-check
-                                        ; def-check-alias,
-                                        ; def-value-check and
-                                        ; def-control-check are
-                                        ; deprecated and will be
-                                        ; dropped.
-
-             ;; Do NOT change this package's exported-symbol list
-             ;; without updating the API in the manual (or filing a
-             ;; ticket for the addition).
-
-             #:continue-check
-                                        ; continue-check will be
-                                        ; deprecated and then dropped
-             #:check-subcriterion-on-value
-             #:check-subcriterion-on-form
-
-             #:emit-failure #:emit-warning #:emit-success
-             #:add-failure #:add-error #:add-info
-             #:check-result             ; check-result is deprecated
-                                        ; and will be dropped.
-
-             ;; Do NOT change this package's exported-symbol list
-             ;; without updating the API in the manual (or filing a
-             ;; ticket for the addition).
-
-             #:run-package #:run-group #:run-test
-             #:report-multiple #:report-package #:report-group #:report-test
+    (:export #:def-fixtures #:def-test-group #:def-test
              #:nst-cmd
 
-             #:nst-junit-dump
-             #:junit-results-by-group
+             ;; Do NOT change this package's exported-symbol list
+             ;; without updating the API in the manual (or filing a
+             ;; ticket for the addition).
+
+             #:nst-junit-dump #:junit-results-by-group
 
              ;; Do NOT change this package's exported-symbol list
              ;; without updating the API in the manual (or filing a
@@ -90,18 +58,13 @@
              #:*default-report-verbosity*
              #:*debug-on-error*
 
-             #:arbitrary
-             #:compound-structure
-             #:def-arbitrary-instance-type
-
              ;; Do NOT change this package's exported-symbol list
              ;; without updating the API in the manual (or filing a
              ;; ticket for the addition).
 
-             ;; If ever we break up the NST package, this name should
-             ;; go into the programmer's API package.
-             #:protect-nst-config
-             #:apply-debug-options)
+             #:arbitrary
+             #:compound-structure
+             #:def-arbitrary-instance-type)
 
     ;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
     ;; * REMEMBER! * REMEMBER! * REMEMBER! * REMEMBER! * REMEMBER! * *
@@ -110,6 +73,8 @@
     ;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
     )
+
+
 
 (defun nst::make-package-documentation ()
   "Write documentation for this package, using system package-doc."
