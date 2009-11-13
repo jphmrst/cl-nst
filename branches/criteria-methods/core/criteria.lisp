@@ -85,7 +85,7 @@
     (push string (check-result-info subcheck))
     subcheck))
 
-(def-criterion-unevaluated (:err (&key (type 'condition)) expr-form)
+(def-criterion-unevaluated (:err (&key (type 'error)) expr-form)
   (block err-criterion
     (format-at-verbosity 4 "    Setting up ~s handler for :err~%" type)
     (handler-bind

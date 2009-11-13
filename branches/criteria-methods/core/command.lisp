@@ -231,10 +231,10 @@ available from compile-time forward.")
             :args (&optional (val t))
             :long-help "Activate NST debugging by activating *default-debug-config* before each test operation.")
   (cond
-    ((and *nst-debug* val) (format t "NST debugging is on.~%"))
-    (val                   (format t "Turned NST debugging on.~%"))
-    (*nst-debug*           (format t "Turned NST debugging off.~%"))
-    (t                     (format t "NST debugging is off.~%")))
+    ((and *nst-debug* val) (format t "NST debugging is already active.~%"))
+    (val          (format t "Activating NST debugging.~%"))
+    (*nst-debug*  (format t "Deactivated NST debugging.~%"))
+    (t            (format t "NST debugging is already deactivated.~%")))
   (setf *nst-debug* val))
 
 (def-nst-interactive-command
