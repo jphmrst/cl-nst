@@ -1,0 +1,23 @@
+
+\section{Output to JUnit}
+\label{sec:junit}
+NST reports can be formatted as XML for use with JUnit, although the
+API for this feature is underdeveloped.  The
+\texttt{junit-results-by-group} function aligns test groups with Java
+classes, and individual tests with \texttt{@Test} methods.
+\begin{verbatim}
+  (junit-results-by-group :verbose VERBOSE
+                          :dir DIR :file FILE
+                          :stream STREAM
+                          :if-dir-does-not-exist BOOL
+                          :if-file-exists BOOL)
+\end{verbatim}
+Either \texttt{:dir} and \texttt{:file} options, or the
+\texttt{:stream} option, but not both, should be used to specify the
+target for XML output; if none of the three options are given, the
+function will write to \texttt{*standard-output*}.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual"
+%%% End: 
