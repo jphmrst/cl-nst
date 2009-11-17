@@ -26,8 +26,10 @@ When a name corresponds to several different types of entities, or to
 different entities in different packages, it is necessary to use a
 more specific instruction:
 \begin{itemize}
-\item\texttt{:nst :run-package {\itshape package-name}}\index{run-package@\texttt{:run-package}}
-\par Run all tests defined in groups under the given package.
+\item\texttt{:nst :run-package {\itshape name} {\itshape name} \ldots\ {\itshape name}}\index{run-package@\texttt{:run-package}}
+  \par Run all tests defined in groups in the named packages.  If no
+  packages are given, then the current value of \texttt{*package*} is
+  used.
 \item\texttt{:nst :run-group {\itshape group-name}}\index{run-group@\texttt{:run-group}}
   \par Run all tests in the given group.  Where appropriate, the name
   should be package-prefixied.
