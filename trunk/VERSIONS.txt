@@ -1,5 +1,5 @@
 
-1.2.7 -
+1.2.7 - public release, November 15, 2009
  Ticket 4 - Handling of cleanup group forms, and both setup- and
             cleanup forms attached to individual tests.
  Ticket 140 - NST was not resetting the list of a fixture set's bound
