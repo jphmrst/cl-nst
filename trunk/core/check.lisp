@@ -106,7 +106,7 @@ a single form, possibly something wrapped in progn or multiple-value-bind."
            (format-at-verbosity 3 "Checking (~s ~s)~%" ',criterion ',forms)
            (let ((result
                   (block ,checker-block
-                    (handler-bind
+                    (handler-bind-interruptable
                         ((error
                           #'(lambda (e)
                               (declare (special *current-group* *current-test*))

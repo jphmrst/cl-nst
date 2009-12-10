@@ -93,20 +93,19 @@
   (let ((x (gensym "x")) (block (gensym "block")))
     `(block ,block
        (format-at-verbosity 4 "    Setting up ~s handler for :err~%" ',type)
-       (handler-bind ((,type #'(lambda (,x)
-                                 (declare (ignorable ,x))
-                                 (format-at-verbosity 4
-                                     "Caught ~s as expected by :err criterion~%"
-                                   ,x)
-                                 (return-from ,block (emit-success))))
-                      ,@(when (and type-supp-p (not (eq type 'error)))
-                          `((error
-                             #'(lambda (,x)
-                                 (format-at-verbosity 4
-                                     "Caught ~s but :err expected ~s~%"
-                                   ,x ',type)
-                                 (unless *debug-on-error*
-                                   (return-from ,block (emit-error ,x))))))))
+       (handler-bind-interruptable
+           ((,type #'(lambda (,x)
+                       (declare (ignorable ,x))
+                       (format-at-verbosity 4
+                           "Caught ~s as expected by :err criterion~%" ,x)
+                       (return-from ,block (emit-success))))
+               ,@(when (and type-supp-p (not (eq type 'error)))
+                   `((error
+                      #'(lambda (,x)
+                          (format-at-verbosity 4
+                              "Caught ~s but :err expected ~s~%" ,x ',type)
+                          (unless *debug-on-error*
+                            (return-from ,block (emit-error ,x))))))))
          ,expr-form)
        (emit-failure :format "~@<No expected error:~{~_ ~s~}~:>"
                      :args '(,(cond
@@ -233,12 +232,12 @@
         (*error-checking* t))
     (declare (special *error-checking*))
     `(block ,x
-       (handler-bind ((error #'(lambda (,x)
-                                 (declare (ignorable ,x))
-                                 (format-at-verbosity 4
-                                     "Caught ~s as expected by :check-err~%"
-                                   ,x)
-                                 (return-from ,x (emit-success)))))
+       (handler-bind-interruptable
+           ((error #'(lambda (,x)
+                       (declare (ignorable ,x))
+                       (format-at-verbosity 4
+                           "Caught ~s as expected by :check-err~%" ,x)
+                       (return-from ,x (emit-success)))))
          ,(continue-check criterion forms))
        (emit-failure :format "~@<No expected error for check ~s on:~
                                  ~{~_ ~s~}~:>"

@@ -424,18 +424,19 @@
               (when ,where
                 (incf ,qualifying-sample-var)
                 (block verify-once
-                  (handler-bind ((error
-                                  #'(lambda (e)
-                                      (format-at-verbosity 4
-                                          "Caught ~s in :sample criterion~%"
-                                        e)
-                                      (add-error
-                                       ,result
-                                       :format ,(format nil
-                                                    "~~@<Error ~~s~~:@_for case:~{~~:@_~s ~~s~}~~:>"
-                                                  names-only)
-                                       :args (list e (list ,@names-only)))
-                                      (return-from verify-once))))
+                  (handler-bind-interruptable
+                      ((error
+                        #'(lambda (e)
+                            (format-at-verbosity 4
+                                "Caught ~s in :sample criterion~%"
+                              e)
+                            (add-error
+                                ,result
+                              :format ,(format nil
+                                           "~~@<Error ~~s~~:@_for case:~{~~:@_~s ~~s~}~~:>"
+                                         names-only)
+                              :args (list e (list ,@names-only)))
+                            (return-from verify-once))))
                     (let ((this-result ,verify))
                       (unless this-result
                         (add-failure
