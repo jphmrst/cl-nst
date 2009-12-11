@@ -92,19 +92,20 @@ configuration provided by those wrappers."
 ;;; --------------------------------------------------------------
 
 (defmacro with-retry ((continuation-label) &body forms)
-  (let ((inner (gensym)) (outer (gensym)) (e (gensym)))
+  (let ((inner (gensym)) (outer (gensym))
     `(block ,outer
          (loop do
            (block ,inner
-             (handler-bind-interruptable ((error #'(lambda (,e)
-                                       (format-at-verbosity 4
-                                           "In the retry handler ~s~%"
-                                         ',continuation-label)
-                                       (when *debug-on-error*
-                                         (cerror ,continuation-label ,e)
-                                         (return-from ,inner)))))
-               (return-from ,outer
-                 (progn ,@forms))))))))
+             (handler-bind-interruptable
+              ((error #'(lambda (e)
+                          (format-at-verbosity 4
+                                               "In the retry handler ~s~%"
+                                               ',continuation-label)
+                          (when *debug-on-error*
+                            (cerror ,continuation-label e)
+                            (return-from ,inner)))))
+              (return-from ,outer
+                (progn ,@forms)))))))))
 
 (defun run-group-tests (group-obj test-objs)
   "Programmatic entry point for running all tests in a group."
