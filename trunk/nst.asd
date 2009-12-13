@@ -65,7 +65,7 @@
                            (:file "pick"  :depends-on ("artifacts"))
 
                            ;;
-                           (:file "interrupt"  :depends-on ())
+                           (:file "interrupt"  :depends-on ("package"))
 
                            ;; Main control flow of test and group
                            ;; execution.
