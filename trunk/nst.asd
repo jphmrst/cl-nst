@@ -42,8 +42,7 @@
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :nst-test)))
-    :depends-on ((:version :closer-mop "0.55")
-                 #+(or allegro ecl sbcl cmucl) :trivial-backtrace)
+    :depends-on ((:version :closer-mop "0.55"))
 
     :components ((:module "core" :components
                           (;; The NST package, plus internal packages
@@ -65,13 +64,8 @@
                            ;;
                            (:file "pick"  :depends-on ("artifacts"))
 
-                           ;; Dealing with how keyboard interrupts are
-                           ;; modeled on different systems.
+                           ;;
                            (:file "interrupt"  :depends-on ("package"))
-
-                           ;; Dealing with how backtrace information
-                           ;; is available on different systems.
-                           (:file "backtrace"  :depends-on ("package"))
 
                            ;; Main control flow of test and group
                            ;; execution.
