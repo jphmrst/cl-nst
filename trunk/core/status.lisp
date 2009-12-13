@@ -20,91 +20,12 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
-#+allegro
-(defmacro make-backtrace-lines ()
-  `(block backtrace-maker
-     (let ((raw (with-output-to-string (stream)
-                  (let ((top-level:*zoom-print-circle* nil)
-                        (*print-right-margin* 1000000))
-                    (declare (special top-level:*zoom-print-circle*
-                                      *print-right-margin*))
-                    (top-level.debug:zoom stream :function nil :verbose nil
-                                          :moderate t :specials nil
-                                          :length 5 :level nil)))))
-
-       (handler-bind ((error #'(lambda (cnd)
-                                 (declare (ignorable cnd))
-                                 (format-at-verbosity 3
-                                     "Caught error formatting backtrace~%")
-                                 (return-from backtrace-maker
-                                   (list "Caught error while formatting backtrace, returning raw lines"
-                                         raw)))))
-         (let ((lines (loop for spot = (position #\Newline raw)
-                          while spot
-                          collect (string-left-trim " ->" (subseq raw 0 spot))
-                          do (setf raw (subseq raw (+ 1 spot))))))
-           (unless (search ,(if (string= "zz"
-                                         (symbol-name 'zz))
-                              "emit-error "
-                              "EMIT-ERROR ") (car lines))  (pop lines))
-           (unless (search ,(if (string= "zz"
-                                         (symbol-name 'zz))
-                              "emit-error "
-                              "EMIT-ERROR ") (car lines))  (pop lines))
-
-           (let ((orig-lines (loop for line in lines collect line)))
-
-             (handler-bind
-                 ((error #'(lambda (cnd)
-                             (declare (ignorable cnd))
-                             (format-at-verbosity 3
-                                 "Caught error ~s identifying backtrace core~%"
-                               cnd)
-                             (return-from backtrace-maker
-                               (list* "Caught error while identifying backtrace core, returning raw lines"
-                                      lines)))))
-               (loop while (and lines
-                                (not (search ,(if (string= "zz"
-                                                           (symbol-name 'zz))
-                                                "emit-error "
-                                                "EMIT-ERROR ")
-                                             (car lines))))
-                   do (pop lines))
-               (cond
-                ;; We found the "emit-error" line, and it's not at the
-                ;; top of the list of lines.
-                (lines (pop lines))
-
-                ;; There is no "emit-error" line, so restore the
-                ;; original list of lines.
-                (t (setf lines orig-lines)))
-               (if (search ,(if (string= "zz" (symbol-name 'zz))
-                              ":internal"
-                              ":INTERNAL") (car lines)) (pop lines))
-               (loop while (search ,(if (string= "zz" (symbol-name 'zz))
-                                      "core-run-test"
-                                      "CORE-RUN-TEST")
-                                   (car lines))
-                   do (pop lines))
-               (let ((first
-                      (position-if #'(lambda (x)
-                                       (search ,(if (string= "zz"
-                                                             (symbol-name 'zz))
-                                                    "core-run-test"
-                                                    "CORE-RUN-TEST") x))
-                                         lines)))
-                 (setf lines (subseq lines 0 first)))
-               lines)))))))
-
 (defun emit-error (e &rest format-args &aux format args)
   (declare (special *nst-context* *nst-stack*))
   (cond
     (format-args (setf format (car format) args (cdr args)))
     (t (setf format "~w" args (list e))))
   (let ((other-args nil))
-    #+(and allegro (not macosx))
-    (setf other-args
-          (list* :zoom (make-backtrace-lines) other-args))
     (make-check-result ;; :erring 1
                        :errors (list (apply #'make-error-check-note
                                             :context *nst-context*
@@ -409,7 +330,7 @@ structure, permitting the use of apply."
 
 (defstruct (error-check-note (:include check-note))
   "A note issued in regards to a thrown error."
-  error #+allegro zoom)
+  error)
 
 (set-pprint-dispatch 'error-check-note
   #'(lambda (s cn)
@@ -419,16 +340,13 @@ structure, permitting the use of apply."
                        (args check-note-args)
                        (error error-check-note-args)) cn
         (declare (ignorable context stack))
-        (let (#+allegro (show-zoom (or (eq *nst-report-driver* :test)
-                                       (eq *nst-report-driver* :details)
-                                       (> *nst-verbosity* 2))))
+        (let ((bt-lines (get-backtrace-string-lines error)))
+          (format t "~%~%~w~%~%" (type-of bt-lines))
           (format s "~@<~w~:[~2*~;~:@_~?~]~
                         ~:@_~:[nil context~;~:*in context: ~@<~{~a~^~:@_~}~:>~]~
                         ~:@_~:[nil values~;~:*values: ~w~]~
-                        ~:[~*~;~@[~:@_at ~@<~{~a~^ ~:@_while ~}~:>~]~]~:>"
-            error format format args context stack
-            #-allegro nil #-allegro nil
-            #+allegro show-zoom #+allegro (error-check-note-zoom cn))))))
+                        ~@[~:@_backtrace: ~@<~{~a~^~:@_~}~:>~]~:>"
+            error format format args context stack bt-lines)))))
 
 ;;; Functions on result and status reports.
 ;;;
