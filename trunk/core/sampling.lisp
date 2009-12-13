@@ -116,8 +116,8 @@
     (let ((factors (+ 1 (floor (/ 1 (- 1 (* (random 1.0) (random 1.0)))))))
           (result 1))
       (loop for z from 1 to factors do
-        (setf result (* result (arbitrary #-clisp (find-class 'fixnum)
-                                          #+clisp 'fixnum))))
+        (setf result (* result (arbitrary #-(or clisp ecl) (find-class 'fixnum)
+                                          #+(or clisp ecl) 'fixnum))))
       result))
 
 (def-arbitrary-instance-type (ratio :scalar t)
@@ -150,8 +150,8 @@
 
 (def-arbitrary-instance-type (complex :scalar t)
     (let ((typ (coin-flip (find-class 'rational)
-                          #-clisp (find-class 'single-float) #+clisp 'single-float
-                          #-clisp (find-class 'double-float) #+clisp 'double-float)))
+                          #-(or clisp ecl) (find-class 'single-float) #+(or clisp ecl) 'single-float
+                          #-(or clisp ecl) (find-class 'double-float) #+(or clisp ecl) 'double-float)))
       (+ (arbitrary typ) (* #C(0 1) (arbitrary typ)))))
 
 (defvar *default-character-range* :ascii)
@@ -311,23 +311,24 @@
      (coin-flip (find-class 'integer) (find-class 'ratio)))
 
   (:method ((n (eql (find-class 'integer))))
-     (coin-flip #-clisp (find-class 'fixnum) #+clisp 'fixnum
+     (coin-flip #-(or clisp ecl) (find-class 'fixnum) #+(or clisp ecl) 'fixnum
                 'bignum))
 
-  (:method ((n (eql #-clisp (find-class 'fixnum) #+clisp 'fixnum)))  n)
+  (:method ((n (eql #-(or clisp ecl) (find-class 'fixnum)
+                    #+(or clisp ecl) 'fixnum)))  n)
   (:method ((n (eql 'bignum)))               n)
   (:method ((n (eql (find-class 'ratio))))   n)
 
   (:method ((n (eql (find-class 'float))))
-     (coin-flip #-(or sbcl allegro cmu) #-clisp (find-class 'short-float) #+clisp 'short-float
-                #-clisp (find-class 'single-float) #+clisp 'single-float
-                #-clisp (find-class 'double-float) #+clisp 'double-float
-                #-(or allegro sbcl cmu) #-clisp (find-class 'long-float) #+clisp 'long-float))
+     (coin-flip #-(or sbcl allegro cmu) #-(or clisp ecl) (find-class 'short-float) #+(or clisp ecl) 'short-float
+                #-(or clisp ecl) (find-class 'single-float) #+(or clisp ecl) 'single-float
+                #-(or clisp ecl) (find-class 'double-float) #+(or clisp ecl) 'double-float
+                #-(or allegro sbcl cmu) #-(or clisp ecl) (find-class 'long-float) #+(or clisp ecl) 'long-float))
 
-  #-(or allegro sbcl cmu) (:method ((n (eql #-clisp (find-class 'short-float) #+clisp 'short-float))) n)
-  (:method ((n (eql #-clisp (find-class 'single-float) #+clisp 'single-float))) n)
-  (:method ((n (eql #-clisp (find-class 'double-float) #+clisp 'double-float))) n)
-  #-(or allegro sbcl cmu) (:method ((n (eql #-clisp (find-class 'long-float) #+clisp 'long-float))) n)
+  #-(or allegro sbcl cmu) (:method ((n (eql #-(or clisp ecl) (find-class 'short-float) #+(or clisp ecl) 'short-float))) n)
+  (:method ((n (eql #-(or clisp ecl) (find-class 'single-float) #+(or clisp ecl) 'single-float))) n)
+  (:method ((n (eql #-(or clisp ecl) (find-class 'double-float) #+(or clisp ecl) 'double-float))) n)
+  #-(or allegro sbcl cmu) (:method ((n (eql #-(or clisp ecl) (find-class 'long-float) #+(or clisp ecl) 'long-float))) n)
 
   (:method ((n (eql (find-class 'complex)))) n))
 
