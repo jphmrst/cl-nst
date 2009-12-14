@@ -38,4 +38,5 @@
            #:check-subcriterion-on-value #:check-subcriterion-on-form
            #:emit-failure #:emit-warning #:emit-success
            #:add-failure #:add-error #:add-info))
+  (:nicknames :nst-criteria :nst-cr)
   (:documentation "Functions for defining new criteria."))

@@ -380,10 +380,19 @@ structure, permitting the use of apply."
       (with-accessors ((criterion context-layer-criterion)
                        (criterion-args context-layer-criterion-args)
                        (given-stack context-layer-given-stack)) cl
-        (format s
-            #-sbcl "checki~@<ng (~s~@<~{~:_ ~s~}~:>) ~_on (~{~a~^ ~})~:>"
-            #+sbcl "checking (~s~{~:_ ~s~}) on (~{~a~^ ~})"
-          criterion criterion-args given-stack))))
+        (cond
+         ((eq (car given-stack) 'list)
+          (format s
+              #-sbcl "checki~@<ng (~s~@<~{~:_ ~s~}~:>) ~_on~{ ~a~}~:>"
+              #+sbcl "checking (~s~{~:_ ~s~}) on~{ ~a~}"
+              criterion criterion-args (cdr given-stack)))
+
+         (t
+          (format s
+              #-sbcl "ch~@<ecking (~s~@<~{~:_ ~s~}~:>) ~
+                        ~:_on ~:_the ~:_result ~:_of ~:_evaluating ~:_~a~:>"
+              #+sbcl "checking (~s~{~:_ ~s~}) on the result of evaluating ~a"
+              criterion criterion-args given-stack))))))
 
 
 (defstruct check-note

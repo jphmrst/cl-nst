@@ -72,3 +72,14 @@
   (def-test fail-for-no-cands-1 (:permute (:seq (:eq 'a))) '())
   (def-test fail-for-no-cands-2 (:permute (:seq (:eq 'a))) '())
   )
+
+;; A test which fails in one obscure corner of its criterion, so that
+;; the failure report has a bit of a stack to it.
+(def-test-group deeper-fail-report ()
+  (def-test placehold-0 :pass '())
+  (def-test deep-fail-1 (:seq :pass
+                              (:all :pass (:eql 3) (:symbol b)))
+    '(a b))
+  (def-test placehold-1 :pass 'a)
+  )
+
