@@ -88,7 +88,7 @@
 (def-criterion-unevaluated (:err (&key (type 'error)) expr-form)
   (block err-criterion
     (format-at-verbosity 4 "    Setting up ~s handler for :err~%" type)
-    (handler-bind
+    (handler-bind-interruptable
         ((condition #'(lambda (e)
                         (cond
                          ((typep e type)
@@ -183,10 +183,11 @@
 
 (def-criterion-unevaluated (:check-err (criterion) forms)
   (block check-err-block
-    (handler-bind ((error #'(lambda (e)
-                              (format-at-verbosity 4
-                                  "Caught ~s as expected by :check-err~%" e)
-                              (return-from check-err-block (emit-success)))))
+    (handler-bind-interruptable
+     ((error #'(lambda (e)
+                 (format-at-verbosity 4
+                     "Caught ~s as expected by :check-err~%" e)
+                 (return-from check-err-block (emit-success)))))
       (check-subcriterion-on-form criterion forms))
     (emit-failure :format "~@<No expected error for check ~s on:~
                                  ~{~_ ~s~}~:>"

@@ -82,7 +82,7 @@
   (def-test forms-eql-1 :forms-eql (+ 1 2) 3)
   (def-test forms-equal-1 :forms-equal (mapcar #'1+ '(1 10 100)) '(2 11 101))
   (def-test err-1 :err (error "Catch this error"))
-  (def-test err-2 (:err :type division-by-zero) (/ 5 0))
+  #-ecl (def-test err-2 (:err :type division-by-zero) (/ 5 0))
   (def-test any-1 (:any (:eql 0) (:eql 1) (:eql 2)) 1)
   (def-test any-2 (:not (:any (:eql 0) (:eql 1) (:eql 2))) 3)
   (def-test any-3 (:any (:err) (:eql 1) (:eql 2)) 1)

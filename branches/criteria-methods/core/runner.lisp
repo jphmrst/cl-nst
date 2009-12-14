@@ -25,12 +25,13 @@
 ;;; flow of test and group execution.
 
 ;;; ----------------------------------------------------------------------
-;;; Programmatic starters for a test from Lisp.  Other starters such
-;;; as via ASDF and vendor-specific REPL macros call these functions;
-;;; from pure Lisp these are the top-level calls.
+;;; Programmatic starters for a test from Lisp.  Starters such
+;;; as via ASDF and REPL macros call these functions.
 ;;;
 (defun run-package (&optional (package-or-name *package*))
-  "Run all groups in a package."
+  "Run all groups in a package.  Note that this is /not/ an interactive
+function --- certain behaviors provided by e.g. the ASDF extension or
+REPL macros require the dynamic configuration provided by those wrappers."
   (let* ((user-package (find-package package-or-name))
          (group-names (package-groups user-package)))
     (note-artifact-choice (package-name user-package) user-package)
@@ -46,7 +47,9 @@
        (error 'no-nst-groups-in-package :package package-or-name)))))
 
 (defun run-group (group-class)
-  "Run a group by its user-given name."
+  "Run a group by its user-given name.    Note that this is /not/ an interactive
+function --- certain behaviors provided by e.g. the ASDF extension or
+REPL macros require the dynamic configuration provided by those wrappers."
   ;; Print a message at the appropriate level of verbosity.
   (format-at-verbosity 0 "Running group ~s~%" group-class)
 
@@ -68,7 +71,10 @@
     (run-group-tests group-inst (list test-inst))))
 
 (defun run-test (group test)
-  "Run a test standalone by its user-given name (and its group's name)."
+  "Run a test standalone by its user-given name (and its group's name).
+Note that this is /not/ an interactive function --- certain behaviors
+provided by e.g. the ASDF extension or REPL macros require the dynamic
+configuration provided by those wrappers."
   (format-at-verbosity 4 "Called (run-test ~s ~s)~%" group test)
   (let ((group-class (find-class group)))
     (unless group-class (error 'no-such-nst-group :group group))
@@ -86,25 +92,26 @@
 ;;; --------------------------------------------------------------
 
 (defmacro with-retry ((continuation-label) &body forms)
-  (let ((inner (gensym)) (outer (gensym)) (e (gensym)))
+  (let ((inner (gensym)) (outer (gensym)))
     `(block ,outer
-         (loop do
-           (block ,inner
-             (handler-bind ((error #'(lambda (,e)
-                                       (format-at-verbosity 4
-                                           "In the retry handler ~s~%"
-                                         ',continuation-label)
-                                       (when *debug-on-error*
-                                         (cerror ,continuation-label ,e)
-                                         (return-from ,inner)))))
-               (return-from ,outer
-                 (progn ,@forms))))))))
+       (loop do
+         (block ,inner
+           (handler-bind-interruptable
+            ((error #'(lambda (e)
+                        (format-at-verbosity 4
+                                             "In the retry handler ~s~%"
+                                             ',continuation-label)
+                        (when *debug-on-error*
+                          (cerror ,continuation-label e)
+                          (return-from ,inner)))))
+            (return-from ,outer
+              (progn ,@forms))))))))
 
 (defun run-group-tests (group-obj test-objs)
   "Programmatic entry point for running all tests in a group."
   (format-at-verbosity 4 "Called (run-group-tests ~s ~s)~%" group-obj test-objs)
   (with-retry ("Try performing group setup again.")
-    (handler-bind
+    (handler-bind-interruptable
         ((error #'(lambda (e)
                     (format-at-verbosity 4
                         "In the setup handler for run-group-tests ~s ~s~%"
@@ -128,7 +135,7 @@
       ((format nil "Restart testing group ~s (reapplying group fixtures)"
          (group-name group-obj)))
     (block group-fixture-assignment
-      (handler-bind
+      (handler-bind-interruptable
           ((error #'(lambda (e)
                       (format-at-verbosity 4
                           "In the test handler for run-group-tests ~s ~s~%"
@@ -149,7 +156,7 @@
   (format-at-verbosity 4
       "Passed test execution in (run-group-tests ~s ~s)~%" group-obj test-objs)
   (with-retry ("Try performing group cleanup again.")
-    (handler-bind
+    (handler-bind-interruptable
         ((error #'(lambda (e)
                     (format-at-verbosity 4
                         "In the cleanup handler for run-group-tests ~s ~s~%"
@@ -190,7 +197,7 @@ for the group application class.")
      (format-at-verbosity 4 "Called (do-group-fixture-assignment ~s ~s)~%"
        group-obj test-objs)
      (with-retry ("Try performing postfixture group setup again.")
-       (handler-bind
+       (handler-bind-interruptable
            ((error
              #'(lambda (e)
                  (format-at-verbosity 4
@@ -220,7 +227,7 @@ for the group application class.")
                (block this-test
                  (format-at-verbosity 3 "    Instance ~s~%" test-inst)
                  (with-retry ("Try each-test setup for this group again.")
-                   (handler-bind
+                   (handler-bind-interruptable
                        ((error
                          #'(lambda (e)
                              (format-at-verbosity 4
@@ -245,7 +252,7 @@ for the group application class.")
                      (block test-inner
                        (with-retry ((format nil "Try setting up test ~s again."
                                       test-inst))
-                         (handler-bind
+                         (handler-bind-interruptable
                              ((error
                                #'(lambda (e)
                                    (format-at-verbosity 4
@@ -268,7 +275,7 @@ for the group application class.")
                            (with-retry ("Restart this test ~
                                                 (reapplying test fixtures).")
                              (block test-fixture-assignment
-                               (handler-bind
+                               (handler-bind-interruptable
                                    ((error
                                      #'(lambda (e)
                                          (format-at-verbosity 4
@@ -293,7 +300,7 @@ for the group application class.")
                                            nil))))
                                  (do-test-fixture-assignment test-inst))))
                          (with-retry ("Try test cleanup again.")
-                           (handler-bind
+                           (handler-bind-interruptable
                                ((error
                                  #'(lambda (e)
                                      (format-at-verbosity 4
@@ -313,7 +320,7 @@ for the group application class.")
                                      (return-from test-inner))))
                              (do-test-afterfixture-cleanup test-inst)))))
                    (with-retry ("Try each-test cleanup again.")
-                     (handler-bind
+                     (handler-bind-interruptable
                          ((error
                            #'(lambda (e)
                                (format-at-verbosity 4
@@ -338,7 +345,7 @@ for the group application class.")
                "    Exiting run loop for ~s~%" group-obj))
 
        (with-retry ("Try performing group with-fixtures cleanup again.")
-         (handler-bind
+         (handler-bind-interruptable
              ((error #'(lambda (e)
                          (format-at-verbosity 4
                              "In the group fixtures cleanup handler for ~
@@ -421,7 +428,7 @@ for the test application class.")
   (:method (test-obj)
      (format-at-verbosity 4 "Called (do-test-fixture-assignment ~s)~%"
        test-obj)
-     (handler-bind
+     (handler-bind-interruptable
          ((error
            #'(lambda (e)
                (format-at-verbosity 4
@@ -438,7 +445,7 @@ for the test application class.")
                (return-from do-test-fixture-assignment nil))))
        (do-test-postfixture-setup test-obj))
      (unwind-protect (core-run-test test-obj)
-       (handler-bind
+       (handler-bind-interruptable
            ((error #'(lambda (e)
                        (format-at-verbosity 4
                            "In the cleanup handler for ~

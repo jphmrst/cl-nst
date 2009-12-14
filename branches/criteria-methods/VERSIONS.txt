@@ -1,9 +1,10 @@
 
-1.2.7 -
- Ticket 4 - Handling of cleanup group forms, and both setup- and cleanup forms
-            attached to individual tests.
- Ticket 140 - NST was not resetting the list of a fixture set's bound names on a
-              redefinition of the fixture set.
+1.2.7 - public release, November 15, 2009
+ Ticket 4 - Handling of cleanup group forms, and both setup- and
+            cleanup forms attached to individual tests.
+ Ticket 140 - NST was not resetting the list of a fixture set's bound
+              names on a redefinition of the fixture set.
+ Adjusting some type usage in the sample generator for portability.
 
 1.2.6 - public release, November 11, 2009
  Minor bug fixes and improvements.
@@ -11,7 +12,8 @@
 1.2.5 - internal release, October 28, 2009
  Ticket 134 - Fixed a bug in the :permute criteria.
  Ticket 123 - Bug in output.
- Reorganized "meta" tests to better examine and regression-test NST's performance in detail.
+ Reorganized "meta" tests to better examine and regression-test NST's
+   performance in detail.
  Allow tests to be defined separately from their group.
  Replaced check-result with emit-success.
  Improved deprecation warnings.
@@ -31,8 +33,8 @@
  Ticket 104 - recompilation of a test now removes the record of its
               pass/failure.
  Ticket 113 - about halfway implemented.
- Ticket 119 - partial fix: affected tests do now show up as erring, although the
-              message is cryptic.
+ Ticket 119 - partial fix: affected tests do now show up as erring,
+              although the message is cryptic.
  Start of NST API documentation in manual.
 
 1.2.1 - internal release, September 2, 2009

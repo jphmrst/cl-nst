@@ -250,6 +250,8 @@ available from compile-time forward.")
     (:run-package :short-help "Run all NST tests stored in the given packages."
                   :args (&rest packages)
                   :repeatable t)
+    (unless packages
+      (setf packages (list *package*)))
     (apply-default-debug-options
      (let (ran-packages)
        (loop for package in packages do

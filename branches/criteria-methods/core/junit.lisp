@@ -103,11 +103,19 @@ argument should be a string of just spaces."))
       (cond
         (errors
          (format s
-             ">~:{~%~a  ~@<<error message=\"~a raised an error: ~a\" type=~s><![CDATA[~
-                         ~:@_  Lisp backtrace (within NST context):~
-                         ~:@_<br>~:[expression top-level~
-                                  ~;<table border=\"1\">~@<~:*~{<tr><td nowrap=\"nowrap\">~a</td></tr>~^~:@_~}~:></table>~]~
-                         ~:@_]]></error>~:>~}~%"
+;;;             ">~:{~%~a  ~@<<error message=\"~a raised an error: ~a\" type=~s><![CDATA[~
+;;;                         ~:@_  Lisp backtrace (within NST context):~
+;;;                         ~:@_<br>~:[expression top-level~
+;;;                                  ~;<table border=\"1\">~@<~:*~{<tr><td nowrap=\"nowrap\">~a</td></tr>~^~:@_~}~:></table>~]~
+;;;                         ~:@_]]></error>~:>~}~%"
+           ">~:{~%~a  ~@<<error message=\"~a raised an error: ~a\" type=~s><![CDATA[~
+ Lisp backtrace (within NST context): ~
+ ~:[~
+      expression top-level~
+  ~;~
+      ~@<~:*~{~a~%~}~:>~
+  ~]~
+  ]]></error>~:>~}~%"
            (loop for error-note in errors
                  collect (with-accessors ((error error-check-note-error))
                              error-note

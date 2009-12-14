@@ -42,8 +42,7 @@
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :nst-test)))
-    :depends-on (:closer-mop
-                 ;; (:version :closer-mop "0.55")
+    :depends-on ( :closer-mop ;; (:version :closer-mop "0.55")
                  )
 
     :components ((:module "core" :components
@@ -66,16 +65,20 @@
                            ;;
                            (:file "pick"  :depends-on ("artifacts"))
 
+                           ;;
+                           (:file "interrupt"  :depends-on ("package"))
+
                            ;; Main control flow of test and group
                            ;; execution.
-                           (:file "runner"  :depends-on ("artifacts"))
+                           (:file "runner"  :depends-on ("interrupt"
+                                                         "artifacts"))
 
                            ;; The def-group macro.
                            (:file "group" :depends-on ("pick"))
 
                            ;; Definition and expansion of check
                            ;; criteria.
-                           (:file "check" :depends-on ("pick"))
+                           (:file "check" :depends-on ("pick" "interrupt"))
 
                            ;; The def-check macro.
                            (:file "test-def" :depends-on ("check"))
@@ -93,7 +96,7 @@
 
                            ;; Standard criteria declarations.
                            (:file "criteria"
-                                  :depends-on ("errors"
+                                  :depends-on ("errors" "interrupt"
                                                "permuter" "check" "status"))
 
                            ;; Interaction with NST via the REPL.
