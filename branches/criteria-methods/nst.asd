@@ -42,7 +42,9 @@
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :nst-test)))
-    :depends-on ((:version :closer-mop "0.55"))
+    :depends-on (:closer-mop
+                 ;; (:version :closer-mop "0.55")
+                 )
 
     :components ((:module "core" :components
                           (;; The NST package, plus internal packages
