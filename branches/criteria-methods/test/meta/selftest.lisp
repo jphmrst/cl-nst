@@ -62,3 +62,13 @@
       (---test-fails mnst-src::permute-nil-g mnst-src::fail-for-no-cands-1)
       (---test-fails mnst-src::permute-nil-g mnst-src::fail-for-no-cands-2)))
 
+
+(def-test-group caching-fixtures-1 ())
+(def-test (cfix1 :group caching-fixtures-1
+                 :setup (setf nst-meta-sources::*nst-fc1* 0
+                              nst-meta-sources::*nst-fc2* 0))
+    (--nst-group (nst-meta-sources::fixtures-cache-all
+                  nst-meta-sources::fixtures-cache-all)
+      (:forms-eql nst-meta-sources::*nst-fc1* 1)
+      (:forms-eql nst-meta-sources::*nst-fc2* 1)))
+
