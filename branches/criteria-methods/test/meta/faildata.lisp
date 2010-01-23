@@ -43,7 +43,7 @@
 (def-test-group boom-test-cleanup ()
   (def-test btc1 :true t)
   (def-test (btc2 :setup t
-                  :cleanup (progn (format t "YYYYYYYYYY~%")
+                  :cleanup (progn ;; (format t "YYYYYYYYYY~%")
                                   (error "Setup error")))
       :true t)
   (def-test btc3 :true t)
