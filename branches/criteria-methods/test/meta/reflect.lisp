@@ -16,13 +16,18 @@
         (loop for group in groups do (run-group group))
         (loop for (group test) in tests do (run-test group test))
         (setf results nst::+results-record+))
-      (format t "***** Running subcriteria~%")
+      ;; (format t "***** Running subcriteria~%")
       (check-subcriterion-on-value `(:all ,@subcriteria) results))))
 
 (def-criterion-alias (--nst-package group-name &rest subcriteria)
   `(--nst-run (:packages (,group-name)) ,@subcriteria))
 (def-criterion-alias (--nst-group group-name &rest subcriteria)
-  `(--nst-run (:groups (,group-name)) ,@subcriteria))
+  (cond
+    ((listp group-name)
+     `(--nst-run (:groups ,group-name) ,@subcriteria))
+    ((symbolp group-name)
+     `(--nst-run (:groups (,group-name)) ,@subcriteria))
+    (t (error "Expected a symbol or list; got ~s" group-name))))
 (def-criterion-alias (--nst-test group-name test-name &rest subcriteria)
   `(--nst-run (:tests ((,group-name ,test-name))) ,@subcriteria))
 
