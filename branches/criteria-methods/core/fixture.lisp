@@ -26,7 +26,7 @@
                         (&key uses assumes outer inner documentation cache
                               export-names
                               (export-bound-names nil
-                                                  export-bound-names-supp-p)
+                               export-bound-names-supp-p)
                               (export-fixture-name
                                nil export-fixture-name-supp-p))
                         &body bindings)
@@ -84,129 +84,169 @@ re-applied at subsequent fixture application rather than being recalculated.
     (unless export-fixture-name-supp-p
       (setf export-fixture-name t)))
 
-  (let ((bound-names (loop for binding in bindings collect (car binding)))
-        (bindings-with-tracking
-         (loop for (var-name form) in bindings
-               collect
-               (let ((block (gensym "block")))
-                 `(,var-name
-                   ,(let ((calc
-                           `(block ,block
-                              (setf *binding-variable* ',var-name)
-                              (with-retry
-                                  (,(format nil
-                                        "Try binding ~s for fixture ~s again."
-                                      var-name name))
-                                (return-from ,block ,form)))))
-                      (cond
-                        (cache
-                         `(let ((cache (cached-values (make-instance ',name))))
-                            (multiple-value-bind (cached found)
-                              (gethash ',var-name cache)
-                            (cond
-                              (found cached)
-                              (t (let ((res ,calc))
-                                   (setf (gethash ',var-name cache) res)
-                                   res))))))
-                        (t calc)))))))
-        (g-param (gensym))
-        (t-param (gensym)))
+  (let ((g-param (gensym)) (t-param (gensym)))
 
-    `(progn
-       #+allegro (excl:record-source-file ',name :type :nst-fixture-set)
-       #+allegro (loop for name in ',bound-names do
-         (excl:record-source-file name :type :nst-fixture))
+    (macrolet ((binding-options-check (binding with-opts without-opts)
+                 `(cond
+                   ((symbolp (car ,binding)) (funcall #',without-opts ,binding))
+                   ((listp (car ,binding)) (funcall #',with-opts ,binding))
+                   (t (error "Ill-formed fixture binding ~s" ,binding))))
+               (decode-option (options keyword default)
+                 `(destructuring-bind (&key (,keyword ,default) &allow-other-keys)
+                      ,options
+                    ,keyword)))
 
-       (eval-when (:compile-toplevel :load-toplevel :execute)
-         (defclass ,name ()
-              ((bound-names :reader bound-names :allocation :class)
-               ,@(when cache
-                   `((cached-values :initform (make-hash-table :test 'eq)
-                                    :accessor cached-values))))
-           (:metaclass singleton-class)
-           ,@(when documentation `((:documentation ,documentation))))
+      ;; Iterate through the bindings, building various lists.
+      (loop for binding in bindings
 
-         (finalize-inheritance (find-class ',name))
-         (setf (slot-value (make-instance ',name) 'bound-names)
-               ',bound-names))
+            ;; Pull out the components of this binding.
+          for var-name = (binding-options-check binding second first)
+          for form = (binding-options-check binding third second)
+          for options = (binding-options-check binding first
+                                               (lambda (x)
+                                                 (declare (ignore x)) nil))
 
-       (let ((this-name-use (gethash ',name +name-use+)))
-         (unless this-name-use
-           (setf this-name-use (make-name-use)
-                 (gethash ',name +name-use+) this-name-use))
-         (setf (name-use-fixture this-name-use) (make-instance ',name)))
+            ;; Decode options for this binding.
+          for cache-this = (decode-option options cache nil)
 
-       (defmethod do-group-fixture-assignment :around ((,g-param ,name)
-                                                       ,t-param)
-         (declare (ignorable ,t-param)
-                  (special ,@(loop for used-fixture in uses
-                                 append (bound-names used-fixture))
-                           ,@assumes))
-         (let* ,bindings-with-tracking
-           (declare (special ,@bound-names))
-           (setf *binding-variable* nil)
-           (call-next-method)))
+            ;; First thing to collect is just the bound names
+            ;; themselves.  We'll use these in e.g. declarations.
+          collect var-name into bound-names
 
-       (defmethod do-test-fixture-assignment :around ((,t-param ,name))
-         (declare (special ,@(loop for used-fixture in uses
-                                 append (bound-names used-fixture))
-                           ,@assumes))
-         (let* ,bindings-with-tracking
-           (declare (special ,@bound-names))
-           (setf *binding-variable* nil)
-           (call-next-method)))
+            ;; Next thing is the tuples we can stick into a let-block
+            ;; or setf to calculate the actual binding value.
+          collect
+            (let ((block (gensym "block")))
+              `(,var-name
+                ,(let ((calc
+                        `(block ,block
+                           (setf *binding-variable* ',var-name)
+                           (with-retry
+                               (,(format nil
+                                     "Try binding ~s for fixture ~s again."
+                                   var-name name))
+                             (return-from ,block ,form)))))
+                   (cond
+                    ((or cache cache-this)
+                     `(let ((cache (cached-values (make-instance ',name))))
+                        (multiple-value-bind (cached found)
+                            (gethash ',var-name cache)
+                          (cond
+                           (found cached)
+                           (t (let ((res ,calc))
+                                (setf (gethash ',var-name cache) res)
+                                res))))))
+                    (t calc)))))
+          into bindings-with-tracking
 
-       ;; Function for expanding names into the current namespace.
-       (defmethod open-fixture ((f ,name) &optional (in-package *package*))
-         ,@(when documentation `(,documentation))
-         (declare (special ,@(loop for used-fixture in uses
-                                   append (bound-names used-fixture))
-                           ,@(loop for var-form in bindings
-                                   collect (car var-form))
-                           ,@assumes
-                           *open-via-repl*))
-         (unless (packagep in-package)
-           (setf in-package (find-package in-package)))
+            ;; Finally check whether any of the individual bindings .
+          collect cache-this into cache-any
 
-         ,@(loop for (var form) in bindings
-                 append
-                 `((format-at-verbosity 3
-                       ,(format nil " - Calculating ~a~~%" var))
-                   (setf ,(cond (var `(symbol-value ',var)) (t (gensym)))
-                         ,form)))
+          finally
+            (setf cache-any (apply #'and cache-any))
+            (return-from def-fixtures
+              `(progn
+                 #+allegro
+                 (excl:record-source-file ',name :type :nst-fixture-set)
+                 #+allegro
+                 (loop for name in ',bound-names do
+                   (excl:record-source-file name :type :nst-fixture))
 
-         (import ',(loop for var-form in bindings
-                         if (car var-form) collect (car var-form))
-                 in-package)
+                 (eval-when (:compile-toplevel :load-toplevel :execute)
+                   (defclass ,name ()
+                     ((bound-names :reader bound-names :allocation :class)
+                      ,@(when (or cache cache-any)
+                          `((cached-values :initform (make-hash-table :test 'eq)
+                                           :accessor cached-values))))
+                     (:metaclass singleton-class)
+                     ,@(when documentation `((:documentation ,documentation))))
 
-         ',name)
+                   (finalize-inheritance (find-class ',name))
+                   (setf (slot-value (make-instance ',name) 'bound-names)
+                     ',bound-names))
 
-       (defmethod trace-fixture ((f ,name))
-         (format t "Fixture ~s~% - Bindings:~%" ',name)
-         ,@(loop for (var form) in bindings
-               collect `(format t "   (~s ~s)~%" ',var ',form))
-         (format t " - Other fixtures: ~@<~{~s~^ ~_~}~:>~%" ',uses)
-         (format t " - Names expected: ~@<~{~s~^ ~_~}~:>~%" ',assumes)
-         (format t " - Outer bindings: ~@<~{~s~^ ~_~}~:>~%" ',outer)
-         (format t " - Inner bindings: ~@<~{~s~^ ~_~}~:>~%" ',inner)
-         (format t " - Documentation string: ~s~%" ,documentation)
+                 (let ((this-name-use (gethash ',name +name-use+)))
+                   (unless this-name-use
+                     (setf this-name-use (make-name-use)
+                           (gethash ',name +name-use+) this-name-use))
+                   (setf (name-use-fixture this-name-use)
+                     (make-instance ',name)))
 
-         ',name)
+                 (defmethod do-group-fixture-assignment
+                     :around ((,g-param ,name) ,t-param)
+                   (declare (ignorable ,t-param)
+                            (special ,@(loop for used-fixture in uses
+                                           append (bound-names used-fixture))
+                                     ,@assumes))
+                   (let* ,bindings-with-tracking
+                     (declare (special ,@bound-names))
+                     (setf *binding-variable* nil)
+                     (call-next-method)))
 
-       ,@(when (or export-bound-names export-fixture-name)
-           `((eval-when (:compile-toplevel :load-toplevel :execute)
-               ,@(loop for bnd in bindings
-                     collect
-                       (let ((id (car bnd)))
-                         `(export ',id
-                                  ,(intern (package-name (symbol-package id))
-                                           (find-package :keyword)))))
-               ,@(when export-fixture-name
-                   `((export ',name
-                             ,(intern (package-name (symbol-package name))
-                                      (find-package :keyword))))))))
+                 (defmethod do-test-fixture-assignment
+                     :around ((,t-param ,name))
+                   (declare (special ,@(loop for used-fixture in uses
+                                           append (bound-names used-fixture))
+                                     ,@assumes))
+                   (let* ,bindings-with-tracking
+                     (declare (special ,@bound-names))
+                     (setf *binding-variable* nil)
+                     (call-next-method)))
 
-       ',name)))
+                 ;; Function for expanding names into the current namespace.
+                 (defmethod open-fixture ((f ,name)
+                                          &optional (in-package *package*))
+                   ,@(when documentation `(,documentation))
+                   (declare (special ,@(loop for used-fixture in uses
+                                           append (bound-names used-fixture))
+                                     ,@(loop for var-form in bindings
+                                           collect (car var-form))
+                                     ,@assumes
+                                     *open-via-repl*))
+                   (unless (packagep in-package)
+                     (setf in-package (find-package in-package)))
+
+                   ,@(loop for (var form) in bindings
+                         append
+                           `((format-at-verbosity 3
+                                 ,(format nil " - Calculating ~a~~%" var))
+                             (setf ,(cond
+                                     (var `(symbol-value ',var))
+                                     (t (gensym)))
+                               ,form)))
+
+                   (import ',(loop for var-form in bindings
+                                 if (car var-form) collect (car var-form))
+                           in-package)
+
+                   ',name)
+
+                 (defmethod trace-fixture ((f ,name))
+                   (format t "Fixture ~s~% - Bindings:~%" ',name)
+                   ,@(loop for (var form) in bindings
+                         collect `(format t "   (~s ~s)~%" ',var ',form))
+                   (format t " - Other fixtures: ~@<~{~s~^ ~_~}~:>~%" ',uses)
+                   (format t " - Names expected: ~@<~{~s~^ ~_~}~:>~%" ',assumes)
+                   (format t " - Outer bindings: ~@<~{~s~^ ~_~}~:>~%" ',outer)
+                   (format t " - Inner bindings: ~@<~{~s~^ ~_~}~:>~%" ',inner)
+                   (format t " - Documentation string: ~s~%" ,documentation)
+
+                   ',name)
+
+                 ,@(when (or export-bound-names export-fixture-name)
+                     `((eval-when (:compile-toplevel :load-toplevel :execute)
+                         ,@(loop for bnd in bindings
+                               collect
+                                 (let ((id (car bnd)))
+                                   `(export ',id
+                                            ,(intern (package-name (symbol-package id))
+                                                     (find-package :keyword)))))
+                         ,@(when export-fixture-name
+                             `((export ',name
+                                       ,(intern (package-name (symbol-package name))
+                                                (find-package :keyword))))))))
+
+                 ',name))))))
 
 (defun process-fixture-list (fixture-list)
   "Trivial, for now, because anonymous fixtures are offline."
