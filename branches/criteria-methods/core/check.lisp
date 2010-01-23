@@ -87,10 +87,11 @@ first element is that symbol and whose remaining elements are options."
 (defun build-continue-check-expr (criterion form)
   `(apply-criterion ',(car criterion) ',(cdr criterion) ',form))
 
-#+allegro (excl::define-simple-parser def-criterion caadr :nst-criterion)
+;; #+allegro (excl::define-simple-parser def-criterion caadr :nst-criterion)
 (defmacro def-criterion ((name args-formals values-formals) &body forms)
   (let ((fp (gensym "values-form")) (ap (gensym "args")))
     `(progn
+       #+allegro (excl:record-source-file ',name :type :nst-criterion)
        (defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)
          (declare (optimize (debug 3)))
          ;; (format t "Matching ~s~%  to ~s~%" ',ap ',args-formals)
@@ -100,17 +101,19 @@ first element is that symbol and whose remaining elements are options."
              ;; (format t "  done~%")
              ,@forms))))))
 
-#+allegro (excl::define-simple-parser def-criterion-unevaluated
-              caadr :nst-criterion)
+;; #+allegro (excl::define-simple-parser def-criterion-unevaluated
+;;              caadr :nst-criterion)
 (defmacro def-criterion-unevaluated ((name args-formals forms-formals &key
                                            (ignore-forms nil))
                                      &body forms)
   (let ((ap (gensym "args")))
-    `(defmethod apply-criterion ((top (eql ',name)) ,ap ,forms-formals)
-       (declare (optimize (debug 3))
-                ,@(when ignore-forms `((ignore ,forms-formals))))
-       (destructuring-bind ,args-formals ,ap
-         ,@forms))))
+    `(progn
+       #+allegro (excl:record-source-file ',name :type :nst-criterion)
+       (defmethod apply-criterion ((top (eql ',name)) ,ap ,forms-formals)
+         (declare (optimize (debug 3))
+                  ,@(when ignore-forms `((ignore ,forms-formals))))
+         (destructuring-bind ,args-formals ,ap
+           ,@forms)))))
 
 #+allegro (excl::define-simple-parser def-values-criterion caadr :nst-criterion)
 (defmacro def-values-criterion ((name args-formals forms-formals &key
