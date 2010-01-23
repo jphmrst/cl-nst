@@ -35,9 +35,12 @@
                  ;; NST.
                  (:file "reflect")
 
+                 ;; Source groups and tests about fixture caching.
+                 (:file "caching")
+
                  ;; NST tests expected to produce errors, to be run
                  ;; reflectively to confirm the expected failure
-                 ;; states
+                 ;; states.
                  (:file "faildata")
 
                  ;; NST tests on NST runs.
