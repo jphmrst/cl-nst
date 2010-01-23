@@ -67,3 +67,10 @@
 (def-criterion-alias (---warning-records subcriterion)
   `(:apply (lambda (x) (check-result-warnings x)) ,subcriterion))
 
+(def-criterion (---form-true (bool) (result))
+    (declare (ignorable result))
+  (let ((result (eval bool)))
+    (if result
+      (emit-success)
+      (emit-failure :format "Expected form evaluating to non-nil, got: ~s"
+                    :args (list bool)))))

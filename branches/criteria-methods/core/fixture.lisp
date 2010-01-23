@@ -84,7 +84,7 @@ re-applied at subsequent fixture application rather than being recalculated.
     (unless export-fixture-name-supp-p
       (setf export-fixture-name t)))
 
-  (let ((g-param (gensym)) (t-param (gensym)))
+  (let ((g-param (gensym)) (t-param (gensym)) (cache-default cache))
 
     (macrolet ((binding-options-check (binding with-opts without-opts)
                  `(cond
@@ -107,7 +107,7 @@ re-applied at subsequent fixture application rather than being recalculated.
                                                  (declare (ignore x)) nil))
 
             ;; Decode options for this binding.
-          for cache-this = (decode-option options cache nil)
+          for cache-this = (decode-option options cache cache-default)
 
             ;; Full tuples
           collect (list var-name form options) into full-tuples
@@ -130,14 +130,14 @@ re-applied at subsequent fixture application rather than being recalculated.
                                    var-name name))
                              (return-from ,block ,form)))))
                    (cond
-                    ((or cache cache-this)
-                     `(let ((cache (cached-values (make-instance ',name))))
+                    (cache-this
+                     `(let ((the-cache (cached-values (make-instance ',name))))
                         (multiple-value-bind (cached found)
-                            (gethash ',var-name cache)
+                            (gethash ',var-name the-cache)
                           (cond
                            (found cached)
                            (t (let ((res ,calc))
-                                (setf (gethash ',var-name cache) res)
+                                (setf (gethash ',var-name the-cache) res)
                                 res))))))
                     (t calc)))))
           into bindings-with-tracking
@@ -146,7 +146,11 @@ re-applied at subsequent fixture application rather than being recalculated.
           collect cache-this into cache-any
 
           finally
-            (setf cache-any (apply #'and cache-any))
+            (setf cache-any (block make-cache-any
+                              (loop for b in cache-any do
+                                (when b
+                                  (return-from make-cache-any t)))
+                              nil))
             (return-from def-fixtures
               `(progn
                  #+allegro
@@ -158,7 +162,7 @@ re-applied at subsequent fixture application rather than being recalculated.
                  (eval-when (:compile-toplevel :load-toplevel :execute)
                    (defclass ,name ()
                      ((bound-names :reader bound-names :allocation :class)
-                      ,@(when (or cache cache-any)
+                      ,@(when cache-any
                           `((cached-values :initform (make-hash-table :test 'eq)
                                            :accessor cached-values))))
                      (:metaclass singleton-class)
@@ -166,7 +170,10 @@ re-applied at subsequent fixture application rather than being recalculated.
 
                    (finalize-inheritance (find-class ',name))
                    (setf (slot-value (make-instance ',name) 'bound-names)
-                     ',bound-names))
+                         ',bound-names)
+
+                   ,@(when cache-any
+                       `((clrhash (cached-values (make-instance ',name))))))
 
                  (let ((this-name-use (gethash ',name +name-use+)))
                    (unless this-name-use
@@ -241,11 +248,12 @@ re-applied at subsequent fixture application rather than being recalculated.
 
                  ,@(when (or export-bound-names export-fixture-name)
                      `((eval-when (:compile-toplevel :load-toplevel :execute)
-                         ,@(loop for (id form opts) in full-tuples
-                               collect
-                                 `(export ',id
-                                          ,(intern (package-name (symbol-package id))
-                                                   (find-package :keyword))))
+                         ,@(loop for tuple in full-tuples
+                                 collect
+                                 (let ((id tuple))
+                                   `(export ',id
+                                            ,(intern (package-name (symbol-package id))
+                                                     (find-package :keyword)))))
                          ,@(when export-fixture-name
                              `((export ',name
                                        ,(intern (package-name (symbol-package name))

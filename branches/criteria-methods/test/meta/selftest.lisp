@@ -65,35 +65,34 @@
 
 (def-test-group caching-fixtures-1 ())
 
-(def-test (cfix1 :group caching-fixtures-1
-                 :setup (setf nst-meta-sources::*nst-fc1* 0
-                              nst-meta-sources::*nst-fc2* 0))
-    (--nst-group (nst-meta-sources::fixtures-cache-all
-                  nst-meta-sources::fixtures-cache-all)
-      (:forms-eql nst-meta-sources::*nst-fc1* 1)
-      (:forms-eql nst-meta-sources::*nst-fc2* 1)))
-
 (def-test (cfix0 :group caching-fixtures-1
                  :setup (setf nst-meta-sources::*nst-fc1* 0
                               nst-meta-sources::*nst-fc2* 0))
-    (--nst-group (nst-meta-sources::fixtures-cache-none
-                  nst-meta-sources::fixtures-cache-none)
-      (:forms-eql nst-meta-sources::*nst-fc1* 2)
-      (:forms-eql nst-meta-sources::*nst-fc2* 2)))
+    (--nst-group (nst-meta-sources::group-fixtures-cache-none
+                  nst-meta-sources::group-fixtures-cache-none)
+      (---form-true (eql nst-meta-sources::*nst-fc1* 2))
+      (---form-true (eql nst-meta-sources::*nst-fc2* 2))))
+
+(def-test (cfix1 :group caching-fixtures-1
+                 :setup (setf nst-meta-sources::*nst-fc1* 0
+                              nst-meta-sources::*nst-fc2* 0))
+    (--nst-group (nst-meta-sources::group-fixtures-cache-all
+                  nst-meta-sources::group-fixtures-cache-all)
+      (---form-true (eql nst-meta-sources::*nst-fc1* 1))
+      (---form-true (eql nst-meta-sources::*nst-fc2* 1))))
 
 (def-test (cfix2 :group caching-fixtures-1
                  :setup (setf nst-meta-sources::*nst-fc1* 0
                               nst-meta-sources::*nst-fc2* 0))
-    (--nst-group (nst-meta-sources::fixtures-cache-one
-                  nst-meta-sources::fixtures-cache-one)
-      (:forms-eql nst-meta-sources::*nst-fc1* 1)
-      (:forms-eql nst-meta-sources::*nst-fc2* 2)))
+    (--nst-group (nst-meta-sources::group-fixtures-cache-one
+                  nst-meta-sources::group-fixtures-cache-one)
+      (---form-true (eql nst-meta-sources::*nst-fc1* 1))
+      (---form-true (eql nst-meta-sources::*nst-fc2* 2))))
 
 (def-test (cfix3 :group caching-fixtures-1
                  :setup (setf nst-meta-sources::*nst-fc1* 0
                               nst-meta-sources::*nst-fc2* 0))
-    (--nst-group (nst-meta-sources::fixtures-cache-override-t
-                  nst-meta-sources::fixtures-cache-override-t)
-      (:forms-eql nst-meta-sources::*nst-fc1* 2)
-      (:forms-eql nst-meta-sources::*nst-fc2* 1)))
-
+    (--nst-group (nst-meta-sources::group-fixtures-cache-override-t
+                  nst-meta-sources::group-fixtures-cache-override-t)
+      (---form-true (eql nst-meta-sources::*nst-fc1* 2))
+      (---form-true (eql nst-meta-sources::*nst-fc2* 1))))

@@ -28,14 +28,32 @@
   (a (progn (incf *nst-fc1*) 0))
   (b (progn (incf *nst-fc2*) 0)))
 
+(nst:def-test-group group-fixtures-cache-all (fixtures-cache-all)
+  (def-test z-fixtures-cache-all-a (:eql 0) a)
+  (def-test z-fixtures-cache-all-b (:eql 0) b))
+
 (nst:def-fixtures fixtures-cache-one ()
-  ((:cache t) a (progn (incf *nst-fc1*) 0))
+  ((:cache t)
+   a (progn (incf *nst-fc1*) 0))
   (b (progn (incf *nst-fc2*) 0)))
 
+(nst:def-test-group group-fixtures-cache-one (fixtures-cache-one)
+  (def-test z-fixtures-cache-one-a (:eql 0) a)
+  (def-test z-fixtures-cache-one-b (:eql 0) b))
+
 (nst:def-fixtures fixtures-cache-override-t (:cache t)
-  ((:cache nil) a (progn (incf *nst-fc1*) 0))
+  ((:cache nil)
+   a (progn (incf *nst-fc1*) 0))
   (b (progn (incf *nst-fc2*) 0)))
+
+(nst:def-test-group group-fixtures-cache-override-t (fixtures-cache-override-t)
+  (def-test z-fixtures-cache-override-t-a (:eql 0) a)
+  (def-test z-fixtures-cache-override-t-b (:eql 0) b))
 
 (nst:def-fixtures fixtures-cache-none ()
   (a (progn (incf *nst-fc1*) 0))
   (b (progn (incf *nst-fc2*) 0)))
+
+(nst:def-test-group group-fixtures-cache-none (fixtures-cache-none)
+  (def-test z-fixtures-cache-none-a (:eql 0) a)
+  (def-test z-fixtures-cache-none-b (:eql 0) b))
