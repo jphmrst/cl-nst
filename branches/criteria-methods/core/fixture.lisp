@@ -109,6 +109,9 @@ re-applied at subsequent fixture application rather than being recalculated.
             ;; Decode options for this binding.
           for cache-this = (decode-option options cache nil)
 
+            ;; Full tuples
+          collect (list var-name form options) into full-tuples
+
             ;; First thing to collect is just the bound names
             ;; themselves.  We'll use these in e.g. declarations.
           collect var-name into bound-names
@@ -199,32 +202,35 @@ re-applied at subsequent fixture application rather than being recalculated.
                    ,@(when documentation `(,documentation))
                    (declare (special ,@(loop for used-fixture in uses
                                            append (bound-names used-fixture))
-                                     ,@(loop for var-form in bindings
-                                           collect (car var-form))
+                                     ,@bound-names
                                      ,@assumes
                                      *open-via-repl*))
                    (unless (packagep in-package)
                      (setf in-package (find-package in-package)))
 
-                   ,@(loop for (var form) in bindings
+                   ,@(loop for (var form options) in full-tuples
                          append
                            `((format-at-verbosity 3
-                                 ,(format nil " - Calculating ~a~~%" var))
+                                 ,(format nil " - Calculating ~a ~a~~%"
+                                    var options))
                              (setf ,(cond
                                      (var `(symbol-value ',var))
                                      (t (gensym)))
                                ,form)))
 
-                   (import ',(loop for var-form in bindings
-                                 if (car var-form) collect (car var-form))
-                           in-package)
+                   (import ',bound-names in-package)
 
                    ',name)
 
                  (defmethod trace-fixture ((f ,name))
                    (format t "Fixture ~s~% - Bindings:~%" ',name)
-                   ,@(loop for (var form) in bindings
-                         collect `(format t "   (~s ~s)~%" ',var ',form))
+                   ,@(loop for (var form options) in full-tuples
+                           collect
+                           (cond
+                             (options
+                              `(format t "   (~s ~s ~s)~%"
+                                 ',options ',var ',form))
+                             (t `(format t "   (~s ~s)~%" ',var ',form))))
                    (format t " - Other fixtures: ~@<~{~s~^ ~_~}~:>~%" ',uses)
                    (format t " - Names expected: ~@<~{~s~^ ~_~}~:>~%" ',assumes)
                    (format t " - Outer bindings: ~@<~{~s~^ ~_~}~:>~%" ',outer)
@@ -235,12 +241,11 @@ re-applied at subsequent fixture application rather than being recalculated.
 
                  ,@(when (or export-bound-names export-fixture-name)
                      `((eval-when (:compile-toplevel :load-toplevel :execute)
-                         ,@(loop for bnd in bindings
+                         ,@(loop for (id form opts) in full-tuples
                                collect
-                                 (let ((id (car bnd)))
-                                   `(export ',id
-                                            ,(intern (package-name (symbol-package id))
-                                                     (find-package :keyword)))))
+                                 `(export ',id
+                                          ,(intern (package-name (symbol-package id))
+                                                   (find-package :keyword))))
                          ,@(when export-fixture-name
                              `((export ',name
                                        ,(intern (package-name (symbol-package name))

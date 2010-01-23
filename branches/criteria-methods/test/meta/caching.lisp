@@ -27,3 +27,15 @@
 (nst:def-fixtures fixtures-cache-all (:cache t)
   (a (progn (incf *nst-fc1*) 0))
   (b (progn (incf *nst-fc2*) 0)))
+
+(nst:def-fixtures fixtures-cache-one ()
+  ((:cache t) a (progn (incf *nst-fc1*) 0))
+  (b (progn (incf *nst-fc2*) 0)))
+
+(nst:def-fixtures fixtures-cache-override-t (:cache t)
+  ((:cache nil) a (progn (incf *nst-fc1*) 0))
+  (b (progn (incf *nst-fc2*) 0)))
+
+(nst:def-fixtures fixtures-cache-none ()
+  (a (progn (incf *nst-fc1*) 0))
+  (b (progn (incf *nst-fc2*) 0)))
