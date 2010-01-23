@@ -172,21 +172,17 @@ default the current package."))
             ((and tests-p (not fixture) (not group))
              (case (hash-table-count tests)
                (1
-                (loop for group being the hash-keys of tests
-                      using (hash-value tst)
-                      do
-                   (format stream "~a (package ~a) is a test in group ~a"
-                     (test-name-lookup tst)
-                     (package-name (symbol-package (test-name-lookup tst)))
-                     group)))
+                (loop for tst being the hash-values of tests do
+                  (format stream "~a (package ~a) is a test in group ~a"
+                    (test-name-lookup tst)
+                    (package-name (symbol-package (test-name-lookup tst)))
+                    (group-name tst))))
                (otherwise
-                (loop for group being the hash-keys of tests
-                      using (hash-value tst)
-                      do
-                   (format stream "~a (package ~a) is a test in group ~a~%"
-                     (test-name-lookup tst)
-                     (package-name (symbol-package (test-name-lookup tst)))
-                     group)))))
+                (loop for tst being the hash-values of tests do
+                  (format stream "~a (package ~a) is a test in group ~a~%"
+                    (test-name-lookup tst)
+                    (package-name (symbol-package (test-name-lookup tst)))
+                    (group-name tst))))))
 
             (t
              (format stream "MULTI")))))))
