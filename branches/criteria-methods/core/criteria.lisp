@@ -35,31 +35,31 @@
 (def-criterion (:true () (bool))
   (if bool
       (emit-success)
-      (emit-failure :format "Expected non-null form, got: ~s"
+      (emit-failure :format "Expected non-null, got: ~s"
                     :args (list bool))))
 
-(def-criterion (:eq (eq-form) (result))
-  (if (eq (eval eq-form) result)
+(def-criterion (:eq (target) (actual))
+  (if (eq (eval target) actual)
       (emit-success)
       (emit-failure :format "Not eq to value of ~s:~_Value ~s"
-                    :args `('eq-form ,result))))
+                    :args `('target ,actual))))
 
 (def-criterion-alias (:symbol name) `(:eq ',name))
 
-(def-criterion (:eql (eql-form) (check-form))
-  (if (eql (eval eql-form) check-form)
+(def-criterion (:eql (target) (actual))
+  (if (eql (eval target) actual)
       (emit-success)
-      (emit-failure :format "Not eql to value of ~s" :args (list eql-form))))
+      (emit-failure :format "Not eql to value of ~s" :args (list target))))
 
-(def-criterion (:equal (eql-form) (check-form))
-  (if (equal (eval eql-form) check-form)
+(def-criterion (:equal (target) (actual))
+  (if (equal (eval target) actual)
      (emit-success)
-     (emit-failure :format "Not equal to value of ~s" :args (list eql-form))))
+     (emit-failure :format "Not equal to value of ~s" :args (list target))))
 
-(def-criterion (:equalp (eql-form) (check-form))
-  (if (equalp (eval eql-form) check-form)
+(def-criterion (:equalp (target) (actual))
+  (if (equalp (eval target) actual)
       (emit-success)
-      (emit-failure :format "Not equalp to value of ~s" :args (list eql-form))))
+      (emit-failure :format "Not equalp to value of ~s" :args (list target))))
 
 (def-criterion-alias (:forms-eq)    `(:predicate eq))
 (def-criterion-alias (:forms-eql)   `(:predicate eql))
@@ -144,15 +144,16 @@
 (def-criterion-unevaluated (:all (&rest subcriteria) expr-list-form)
   (let ((*nst-context-evaluable* t))
     (declare (special *nst-context-evaluable*))
-    (let (warnings failures errors info)
-      (loop for subcriterion in subcriteria do
-        (let ((subresult (check-subcriterion-on-form subcriterion expr-list-form)))
-          (setf warnings (nconc warnings (check-result-warnings subresult))
-                failures (nconc failures (check-result-failures subresult))
-                errors (nconc errors (check-result-errors subresult))
-                info (nconc errors (check-result-info subresult)))))
-      (new-check-result :warnings warnings :failures failures
-                        :errors errors :info info))))
+    (loop for subcriterion in subcriteria
+          for subresult
+            = (check-subcriterion-on-form subcriterion expr-list-form)
+          append (check-result-warnings subresult) into warnings
+          append (check-result-failures subresult) into failures
+          append (check-result-errors subresult) into errors
+          append (check-result-info subresult) into info
+          finally (return (new-check-result :warnings warnings
+                                            :failures failures
+                                            :errors errors :info info)))))
 
 (def-criterion-unevaluated (:any (&rest criteria) expr-list-form)
   (let ((*nst-context-evaluable* t) (info nil))
