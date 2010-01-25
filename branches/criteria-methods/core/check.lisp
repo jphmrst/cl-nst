@@ -119,6 +119,7 @@ first element is that symbol and whose remaining elements are options."
 (defmacro def-values-criterion ((name args-formals forms-formals &key
                                       (declare nil decl-supp-p))
                                 &body forms)
+  (warn 'style-warning "def-values-criterion is deprecated from 1.3.0.")
   (let ((ap (gensym "args")) (fp (gensym "form")))
     `(defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)
        (destructuring-bind ,args-formals ,ap
@@ -129,6 +130,8 @@ first element is that symbol and whose remaining elements are options."
 
 #+allegro (excl::define-simple-parser def-form-criterion caadr :nst-criterion)
 (defmacro def-form-criterion ((name args-formals form-formal) &rest forms)
+  (warn
+   "def-form-criterion is deprecated from 1.3.0, AND PROBABLY WILL NOT WORK.")
   (let ((ap (gensym "args")))
     `(defmethod apply-criterion ((top (eql ',name)) ,ap ,form-formal)
        (destructuring-bind ,args-formals ,ap
