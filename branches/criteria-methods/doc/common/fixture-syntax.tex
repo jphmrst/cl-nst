@@ -5,11 +5,12 @@
            [ :outer OUTER ]
            [ :inner INNER ]
            [ :documentation DOCUMENTATION ]
+           [ :cache FLAG ]
            [ :export-names FLAG ]
            [ :export-fixture-name FLAG ]
            [ :export-bound-names FLAG ])
-    (NAME FORM)
-    (NAME FORM)
+    ([ ([ :cache FLAG ]) ] NAME FORM)
+    ([ ([ :cache FLAG ]) ] NAME FORM)
     ...
-    (NAME FORM))
+    ([ ([ :cache FLAG ]) ] NAME FORM))
 \end{verbatim}
