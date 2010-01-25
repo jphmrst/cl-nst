@@ -1,4 +1,17 @@
 
+1.3.0 - public release
+ Ticket 110 - The major fix in this release.  The implementation of
+              criteria has been completely rewritten via method
+              dispatch rather than macro expansion.  The
+              def-form-criterion macro is invalidated; the
+              def-values-criterion is deprecated.
+ Added optional caching of fixtures.
+
+1.2.8 - 
+ The package argument to :nst :run-package is now optional, with
+      *package* as default.
+ Bug fix for Mac OSX: suppress backtrace collection.
+
 1.2.7 - public release, November 15, 2009
  Ticket 4 - Handling of cleanup group forms, and both setup- and
             cleanup forms attached to individual tests.
