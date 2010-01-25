@@ -20,7 +20,7 @@ package \texttt{nst-criteria-api}.
 \label{sec:def-criterion-alias}
 The simplest mechanism for defining a new criterion involves simply
 defining one criterion to rewrite as another using
-\texttt{def-criterion-alias}:
+\texttt{def-criterion-alias}:\index{def-criterion-alias@\texttt{def-criterion-alias}}
 %
 {\ttfamily\begin{tabbing}
 \textrm{Syntax: 
@@ -33,8 +33,8 @@ returns an S-expression quoting the new criterion which the rewrite
 should produce.  The \texttt{args} are passed as far Lisp macros: they
 are not evaluated and are most typically comma-inserted into a
 backquoted result.  For example:
-\\ \texttt{(def-test-alias (:forms-eq) `(:predicate eq))}
-\\ \texttt{(def-test-alias (:symbol name) `(:eq ',name))}
+\\ \texttt{(def-criterion-alias (:forms-eq) `(:predicate eq))}
+\\ \texttt{(def-criterion-alias (:symbol name) `(:eq ',name))}
 
 \subsection{Reporting forms}
 \label{sec:criteria-forms-report}
@@ -43,19 +43,21 @@ criterion into Lisp.  For both of these mechanisms, this Lisp code is
 expected to return a test report.  NST provides three functions for
 building test reports:
 \begin{itemize}
-\item\texttt{(emit-success)}\par This function indicates a successful
-  test result.
-
-  Note that some older examples show \texttt{(make-check-result)} or
-  \texttt{(check-result)}.  The former is an internal function and
+\item\texttt{(emit-success)}%
+  \index{emit-success@\texttt{emit-success}}
+  \par This function indicates a successful test result.
+  \par Note that some older examples show \texttt{(make-check-result)}
+  or \texttt{(check-result)}.  The former is an internal function and
   should not be used from outside the core NST files.  The latter is
   deprecated.
-\item\texttt{(emit-failure [ :format format-string [ :args args ] ] )}
+\item\texttt{(emit-failure [ :format format-string [ :args args ] ] )}%
+  \index{emit-failure@\texttt{emit-failure}}
   \par This function returns a report of test failure.  The
   \texttt{format-string} and \texttt{args} are as to the Common Lisp
   function \texttt{format}.
-\item\texttt{(emit-warning [ :format format-string [ :args args ] ] )}
-  \par Line \texttt{emit-failure}, but provides supplimentary
+\item\texttt{(emit-warning [ :format format-string [ :args args ] ] )}%
+  \index{emit-warning@\texttt{emit-warning}}
+  \par Like \texttt{emit-failure}, but provides supplimentary
   information as a warning.
 \end{itemize}
 
@@ -68,7 +70,8 @@ building test reports:
 \\ \> FORM
 \\ \> ~$\vdots$
 \\ \> FORM)
-\end{tabbing}}
+\end{tabbing}}%
+\index{def-criterion@\texttt{def-criterion}}
 
 Examples:
 \begin{verbatim}
@@ -139,7 +142,8 @@ Examples:
 Since the arguments to the criterion itself (as opposed to the tested
 forms) are passed unevaluated as for macro arguments, they can contain
 \emph{subcriteria} which can be incorporated into the main criterion's
-assessment.
+assessment.%
+  \index{check-subcriterion-on-value@\texttt{check-subcriterion-on-value}}
 
 {\ttfamily\begin{tabbing}
 \textrm{Syntax: }(check-subcriterion-on-value CRITERION EXPR)
@@ -166,7 +170,8 @@ assessment.
 \\ \> FORM
 \\ \> ~$\vdots$
 \\ \> FORM)
-\end{tabbing}}
+\end{tabbing}}%
+  \index{def-criterion-unevaluated@\texttt{def-criterion-unevaluated}}
 % As for \texttt{def-values-criterion}, the body of a
 % \texttt{def-form-criterion} should specify a quoted Lisp expression
 % calculating a test report.  The difference between these forms is that
@@ -214,7 +219,8 @@ assessment.
 \label{sec:subcriteria-form}
 {\ttfamily\begin{tabbing}
 \textrm{Syntax: }(check-subcriterion-on-form CRITERION FORM)
-\end{tabbing}}
+\end{tabbing}}%
+  \index{check-subcriterion-on-form@\texttt{check-subcriterion-on-form}}
 
 \subsection{Older criteria-defining macros}
 \label{sec:def-values-criterion}
@@ -228,7 +234,9 @@ work as before.  \emph{However, code using \texttt{def-form-
 In NST 1.3 criteria are translated into method definitions, whereas in
 earlier versions criteria guided the macro expansion of tests.
 Unfortunately, the nature of \texttt{def-form-criterion} declarations
-eludes translation into the new scheme.
+eludes translation into the new scheme.%
+  \index{def-values-criterion@\texttt{def-values-criterion}}%
+  \index{def-form-criterion@\texttt{def-form-criterion}}
 
 %%% Local Variables: 
 %%% mode: latex
