@@ -371,13 +371,20 @@
 (defun pick-from-sequence (seq)
   (elt seq (random (length seq))))
 
-(def-form-criterion (:sample (&key (domains nil) (where t) (values nil)
-                                   (verify nil verify-supp-p)
-                                   (sample-size 100)
-                                   (qualifying-sample nil
-                                                      qualifying-sample-supp-p)
-                                   (max-tries nil max-tries-supp-p))
-                             expr-list-form)
+(def-criterion-unevaluated (:sample (&key (values nil
+                                                  values-supp-p) ; deprecated
+                                          (domains nil)
+                                          (where t)
+                                          (verify nil verify-supp-p)
+                                          (sample-size 100)
+                                          (qualifying-sample
+                                           nil qualifying-sample-supp-p)
+                                          (max-tries nil max-tries-supp-p))
+                                    expr-list-form
+                                    :ignore-forms t)
+  (declare (ignore values))
+  (when values-supp-p
+    (warn "The :values parameter to the :sample criterion is deprecated, ignored, and will be removed in a future release."))
 
   (unless verify-supp-p
     (error "criterion :sample requires :verify argument"))
@@ -385,93 +392,106 @@
   (when (not max-tries-supp-p)
     (setf max-tries (* 3 sample-size)))
 
-  (let* ((sample-num-var (gensym "sample-num-"))
-         (qualifying-sample-var (gensym "qualifying-"))
-         (total-samples-run-var (gensym "total-run-"))
-         (result (gensym))
+  #|(format t "[A]~%")|#
+  (let ((names-only (loop for d in domains
+                          collect (cond ((symbolp d) d) (t (car d)))))
+        (qualified 0)
+        (total-samples-run 0)
+        (result (emit-success)))
+    #|(format t "[B]~%")|#
 
-         (names-only (loop for d in domains
-                           collect (cond ((symbolp d) d) (t (car d)))))
+    (loop for sample-num from 0
+          while (and (cond
+                       (max-tries-supp-p (< sample-num max-tries))
+                       (t t))
 
-         (test-while-expr (cond
+                     (cond
+                      ;; If there's a minimum qualifying sample, try
+                      ;; at least the sample size, until we have at
+                      ;; least the minimum number of qualifying tries.
+                      ;; We'll check for when the user has explicitly
+                      ;; waived the maximum number of tries below.
+                      (qualifying-sample-supp-p
+                       (or (< sample-num sample-size)
+                            (< qualified qualifying-sample)))
 
-                            ;; If there's a minimum qualifying sample,
-                            ;; try at least the sample size, until we
-                            ;; have at least the minimum number of
-                            ;; qualifying tries.  We'll check for when
-                            ;; the user has explicitly waived the
-                            ;; maximum number of tries below.
-                            (qualifying-sample-supp-p
-                             `(or (< ,sample-num-var ,sample-size)
-                                  (< ,qualifying-sample-var
-                                     ,qualifying-sample)))
+                      ;; Otherwise the "safety" of an early exit is
+                      ;; off, and we keep running until we have an
+                      ;; acceptably large sample
+                      (t (< sample-num sample-size))))
+          do
+       #|(format t "[C]~%")|#
+       (let ((this-sample (generate-sample domains)))
+         #|(format t "Sample ~d: ~@<~{~S~^~_~}~:>~%" sample-num
+                 (loop for name being the hash-keys of this-sample
+                       using (hash-value val) collect (list name val)))|#
+         (flet ((bind-and-eval (expr)
+                  "Evaluate an expression in the context of the name-values
+                    generated for this-sample."
+                  #|(format t "core expr: ~w~%" expr)|#
+                  (let ((full-expr `(let ,(loop for name
+                                              being the hash-keys of this-sample
+                                              using (hash-value value)
+                                              collect `(,name ',value))
+                                      ,expr)))
+                    #|(format t "full expr is: ~w~%" full-expr)|#
+                    (eval full-expr))))
+           (when (bind-and-eval where)
+             (incf qualified)
+             (block verify-once
+               (handler-bind-interruptable
+                ((error
+                  #'(lambda (e)
+                      (format-at-verbosity 4
+                          "Caught ~s in :sample criterion~%"
+                        e)
+                      (add-error result
+                        :format (format nil
+                                    "~~@<Error ~~s~~:@_for case:~{~~:@_~s ~~s~}~~:>"
+                                  names-only)
+                        ;; ******************************
+                        ;; "names-only" below is wrong
+                        ;; ******************************
+                        :args (list e names-only))
+                      (return-from verify-once))))
 
+                (let ((this-result (bind-and-eval verify)))
+                  (unless this-result
+                    (add-failure result
+                      :format (format nil
+                                  "~~@<Failed for case:~{~~:@_~s ~~s~}~~:>"
+                                ;; ******************************
+                                ;; "names-only" below is wrong
+                                ;; ******************************
+                                names-only)
+                      :args (list names-only))))
 
-                            ;; Otherwise the "safety" of an early exit
-                            ;; is off, and we keep running until we
-                            ;; have an acceptably large sample
-                            (t `(< ,qualifying-sample-var ,sample-size)))))
+                ))))))
 
-    ;; If there's a maximum sample size given (and there is a default,
-    ;; so we check the value itself so avoid the case where it's been
-    ;; nulled-out), then we impose an additional condition that we
-    ;; haven't exceeded that number.
-    (when max-tries
-      (setf test-while-expr
-            `(and ,test-while-expr (< ,sample-num-var ,max-tries))))
+    (add-info result
+      (format nil "Tested ~d cases of ~d generated: ~
+                   ~d failure~:*~p, ~d error~:*~p"
+        qualified total-samples-run
+             (length (check-result-failures result))
+             (length (check-result-errors result))))
 
-    `(multiple-value-bind ,values ,expr-list-form
-       (let ((,qualifying-sample-var 0)
-             (,result (emit-success))
-             ,total-samples-run-var)
+    result))
 
-         (loop for ,sample-num-var from 0
-               while ,test-while-expr
-               do
-            (let ,(loop for domain-spec in domains
-                         collect
-                           (cond
-                            ((symbolp domain-spec)
-                             `(,domain-spec (arbitrary t)))
+(defun generate-sample (domains)
+  (let ((result (make-hash-table :test 'eq)))
+    (loop for spec in domains do
+      (cond
+       ((symbolp spec)
+        (setf (gethash spec result) (arbitrary t))
+        #|(format t " - ~s <-- ~s~%" spec (gethash spec result))|#)
 
-                            ((listp domain-spec)
-                             (destructuring-bind (name &optional (spec t))
-                                 domain-spec
-                               `(,name (arbitrary ',spec))))
+       ((listp spec)
+        (destructuring-bind (spec-name &optional (spec-type t)) spec
+          (setf (gethash spec-name result) (arbitrary spec-type))
+          #|(format t " - ~s ~s <-- ~s~%"
+            spec-type spec-name (gethash spec-name result))|#))
 
-                            (t (error "Expected (NAME DOMAIN-SPEC) but got ~s"
-                                      domain-spec))))
-              (when ,where
-                (incf ,qualifying-sample-var)
-                (block verify-once
-                  (handler-bind-interruptable
-                      ((error
-                        #'(lambda (e)
-                            (format-at-verbosity 4
-                                "Caught ~s in :sample criterion~%"
-                              e)
-                            (add-error
-                                ,result
-                              :format ,(format nil
-                                           "~~@<Error ~~s~~:@_for case:~{~~:@_~s ~~s~}~~:>"
-                                         names-only)
-                              :args (list e (list ,@names-only)))
-                            (return-from verify-once))))
-                    (let ((this-result ,verify))
-                      (unless this-result
-                        (add-failure
-                         ,result
-                         :format ,(format nil
-                                      "~~@<Failed for case:~{~~:@_~s ~~s~}~~:>"
-                                    names-only)
-                         :args (list ,@names-only))))))))
-               finally (setf ,total-samples-run-var ,sample-num-var))
+       (t (error "Expected (NAME SPEC) but got ~s" spec))))
 
-         (add-info ,result
-                   (format nil "Tested ~d cases of ~d generated: ~
-                                ~d failure~:*~p, ~d error~:*~p"
-                             ,qualifying-sample-var ,total-samples-run-var
-                             (length (check-result-failures ,result))
-                             (length (check-result-errors ,result))))
+    result))
 
-         ,result))))
