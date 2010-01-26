@@ -124,6 +124,18 @@
     'asdfgh (error "this should be caught"))
   (def-test proj-1 (:proj (0 2) :forms-eq) 'a 3 (car '(a b)))
   (def-test (two-fixtures-2 :fixtures (f1 f1a)) :forms-eq d e)
+  (def-test sample-1
+      (:sample :sample-size 10
+               :domains ((x (list :elem symbol)))
+               :verify (equal x (reverse (reverse x)))))
+  (def-test sample-2
+      (:sample :domains ((x real))
+               :where (> x 1)
+               :verify (< (sqrt x) x)
+               :sample-size 10
+               :max-tries 12))
+
+
   )
 
 (defparameter for-setup 0

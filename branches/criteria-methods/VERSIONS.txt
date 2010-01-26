@@ -1,11 +1,12 @@
 
 1.3.0 - public release
  Ticket 110 - The major fix in this release.  The implementation of
-              criteria has been completely rewritten via method
+              criteria has been completely rewritten to use method
               dispatch rather than macro expansion.  The
               def-form-criterion macro is invalidated; the
               def-values-criterion is deprecated.
  Added optional caching of fixtures.
+ Added the `:nst apply` command to the runtime system.
 
 1.2.8 - 
  The package argument to :nst :run-package is now optional, with
