@@ -110,4 +110,4 @@
 
                            ;; Other packaged APIs.
                            (:file "interfaces"
-                                  :depends-on ("check" "status"))))))
+                                  :depends-on ("check" "runner" "status"))))))
