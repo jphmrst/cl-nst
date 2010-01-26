@@ -103,15 +103,15 @@ first element is that symbol and whose remaining elements are options."
 
 ;; #+allegro (excl::define-simple-parser def-criterion-unevaluated
 ;;              caadr :nst-criterion)
-(defmacro def-criterion-unevaluated ((name args-formals forms-formals &key
+(defmacro def-criterion-unevaluated ((name args-formals forms-formal &key
                                            (ignore-forms nil))
                                      &body forms)
   (let ((ap (gensym "args")))
     `(progn
        #+allegro (excl:record-source-file ',name :type :nst-criterion)
-       (defmethod apply-criterion ((top (eql ',name)) ,ap ,forms-formals)
+       (defmethod apply-criterion ((top (eql ',name)) ,ap ,forms-formal)
          (declare (optimize (debug 3))
-                  ,@(when ignore-forms `((ignore ,forms-formals))))
+                  ,@(when ignore-forms `((ignore ,forms-formal))))
          (destructuring-bind ,args-formals ,ap
            ,@forms)))))
 
