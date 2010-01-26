@@ -21,6 +21,9 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
+(defclass standard-fixture () ()
+  (:documentation "Common superclass of all fixtures."))
+
 #+allegro (excl::define-simple-parser def-fixtures second :nst-fixture-set)
 (defmacro def-fixtures (name
                         (&key uses assumes outer inner documentation cache
@@ -160,7 +163,7 @@ re-applied at subsequent fixture application rather than being recalculated.
                    (excl:record-source-file name :type :nst-fixture))
 
                  (eval-when (:compile-toplevel :load-toplevel :execute)
-                   (defclass ,name ()
+                   (defclass ,name (standard-fixture)
                      ((bound-names :reader bound-names :allocation :class)
                       ,@(when cache-any
                           `((cached-values :initform (make-hash-table :test 'eq)
@@ -181,6 +184,10 @@ re-applied at subsequent fixture application rather than being recalculated.
                            (gethash ',name +name-use+) this-name-use))
                    (setf (name-use-fixture this-name-use)
                      (make-instance ',name)))
+
+                 ,(when cache-any
+                    `(defmethod flush-fixture-cache ((f ,name))
+                       (clrhash (cached-values f))))
 
                  (defmethod do-group-fixture-assignment
                      :around ((,g-param ,name) ,t-param)
@@ -260,6 +267,10 @@ re-applied at subsequent fixture application rather than being recalculated.
                                                 (find-package :keyword))))))))
 
                  ',name))))))
+
+(defgeneric flush-fixture-cache (f)
+  (:method ((f symbol)) (flush-fixture-cache (make-instance f)))
+  (:method ((f standard-fixture)) nil))
 
 (defun process-fixture-list (fixture-list)
   "Trivial, for now, because anonymous fixtures are offline."
