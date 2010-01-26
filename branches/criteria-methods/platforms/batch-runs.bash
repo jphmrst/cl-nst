@@ -50,3 +50,13 @@ grep TOTAL logs/sbcl-trunk.log | tail -1
 # echo > logs/cmucl-trunk.log
 # cmucl -batch < trunk-asdfind.lisp 2>> logs/cmucl-trunk.log >> logs/cmucl-trunk.log
 # grep TOTAL logs/cmucl-trunk.log | tail -1
+
+echo Testing the branch on Allegro
+echo > logs/allegro-branch.log
+mlisp < branch-asdfind.lisp 2>> logs/allegro-branch.log >> logs/allegro-branch.log
+grep TOTAL logs/allegro-branch.log | tail -1
+
+echo Testing the trunk on Allegro
+echo > logs/allegro-trunk.log
+mlisp < trunk-asdfind.lisp 2>> logs/allegro-trunk.log >> logs/allegro-trunk.log
+grep TOTAL logs/allegro-trunk.log | tail -1

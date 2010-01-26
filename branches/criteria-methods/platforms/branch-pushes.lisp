@@ -6,4 +6,4 @@
 (push #p"/home/jm/Lib/Lisp/nst-criteria-methods/test/manual/" asdf:*central-registry*)
 (push #p"/home/jm/Lib/Lisp/nst-criteria-methods/test/meta/" asdf:*central-registry*)
 (push #p"/home/jm/Lib/Lisp/nst-criteria-methods/test/util/" asdf:*central-registry*)
-(asdf:oos 'asdf:test-op :nst)
+(asdf:oos 'asdf:test-op :nst :force t)
