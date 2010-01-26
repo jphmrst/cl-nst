@@ -32,10 +32,21 @@ more specific instruction:
   used.
 \item\texttt{:nst :run-group {\itshape group-name}}\index{run-group@\texttt{:run-group}}
   \par Run all tests in the given group.  Where appropriate, the name
-  should be package-prefixied.
+  should be package-prefixed.
 \item\texttt{:nst :run-test {\itshape group-name} {\itshape test-name}}\index{run-test@\texttt{:run-test}}
   \par Run the named test.  Where appropriate, the names should be
-  package-prefixied.
+  package-prefixed.
+\end{itemize}
+One further command for running a test is useful when writing and
+debugging the tests themselves:
+\begin{itemize}
+\item\texttt{:nst :apply {\itshape criterion} {\itshape form} {\itshape form} $\cdots$ {\itshape form}}\index{apply@\texttt{:apply}}
+  \par Test the {\itshape form}s against the given {\itshape
+    criterion}.  The test proceeds just as if the criterion and forms
+  were given in a \texttt{def-test} and that test run.  Of course, any
+  fixtures expected in one of the {\itshape form}s would not
+  necessarily be present in the runtime environment; fixtures may need
+  to be \texttt{open}ed.
 \end{itemize}
 
 There are two commands for (re)printing the results of tests:
