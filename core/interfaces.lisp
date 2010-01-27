@@ -33,10 +33,3 @@
            #:protect-nst-config #:apply-debug-options
            #:report-multiple #:report-package #:report-group #:report-test))
   (:documentation "API-level control of test execution and reporting."))
-(def-bundle-package :nst-criteria-api
-    ((:nst #:def-criterion #:def-criterion-unevaluated #:def-criterion-alias
-           #:check-subcriterion-on-value #:check-subcriterion-on-form
-           #:emit-failure #:emit-warning #:emit-success
-           #:add-failure #:add-error #:add-info))
-  (:nicknames :nst-criteria :nst-cr)
-  (:documentation "Functions for defining new criteria."))
