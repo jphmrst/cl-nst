@@ -1,0 +1,6 @@
+
+\def\tightlist{\ifnum \@itemdepth >3 \@toodeep\else \advance\@itemdepth \@ne
+\edef\@itemitem{labelitem\romannumeral\the\@itemdepth}%
+\list{\csname\@itemitem\endcsname}{\setlength{\topsep}{0in}\setlength{\parsep}{0in}\setlength{\partopsep}{0in}\setlength{\partopsep}{0in}\setlength{\itemsep}{0in}\setlength{\parsep}{0in}\setlength{\leftmargin}{1.5em}\setlength{\rightmargin}{0in}\setlength{\itemindent}{0in}\def\makelabel##1{\hss\llap{##1}}}\fi}
+
+\let\endtightlist =\endlist
