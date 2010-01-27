@@ -64,7 +64,19 @@
 
              #:arbitrary
              #:compound-structure
-             #:def-arbitrary-instance-type)
+             #:def-arbitrary-instance-type
+
+             ;; Do NOT change this package's exported-symbol list
+             ;; without updating the API in the manual (or filing a
+             ;; ticket for the addition).
+
+             #:def-criterion #:def-criterion-unevaluated #:def-criterion-alias
+             #:check-subcriterion-on-value #:check-subcriterion-on-form
+             #:emit-failure #:emit-warning #:emit-success
+             #:add-failure #:add-error #:add-info
+             ;; Deprecated:
+             #:def-form-criterion #:def-values-criterion
+             )
 
     ;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
     ;; * REMEMBER! * REMEMBER! * REMEMBER! * REMEMBER! * REMEMBER! * *
