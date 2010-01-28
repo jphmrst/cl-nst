@@ -7,6 +7,8 @@
               def-values-criterion is deprecated.
  Added optional caching of fixtures.
  Added the `:nst apply` command to the runtime system.
+ Correct handling of negative numbers in sampling of real numbers.
+ Ticket 151 - The criteria definers now all allow docstrings.
 
 1.2.8 - 
  The package argument to :nst :run-package is now optional, with
