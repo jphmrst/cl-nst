@@ -62,10 +62,17 @@
 
 (defparameter zzz 0)
 
+(nst:def-criterion-alias (-positive-odd)
+  "Check whether a number is both positive and odd."
+  `(:all (:predicate (lambda (x) (> x 0)))
+         (:apply (lambda (x) (mod x 2)) (:eql 1))))
+
 (def-test-group eql-g ()
   (def-test (eql-1) (:eql 3) (+ 2 1)))
 
 (def-test-group core-checks ()
+  (def-test oddpos-1 -positive-odd 3)
+  (def-test oddpos-2 (:not -positive-odd) 4)
   (def-test pass-1 :pass 'a)
   (def-test fail-1 (:not :fail) 'a)
   (def-test warn-1 (:warn) 3 (+ 1 3))
@@ -134,8 +141,6 @@
                :verify (< (sqrt x) x)
                :sample-size 10
                :max-tries 12))
-
-
   )
 
 (defparameter for-setup 0
