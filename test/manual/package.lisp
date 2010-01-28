@@ -21,4 +21,4 @@
 
 (defpackage :nst-manual
     (:documentation "Manually-run tests and utilities for NST")
-    (:use :common-lisp :nst :nst-cr :nst-test-utils))
+    (:use :common-lisp :nst :nst-test-utils))
