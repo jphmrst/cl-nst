@@ -89,31 +89,45 @@ first element is that symbol and whose remaining elements are options."
 
 ;; #+allegro (excl::define-simple-parser def-criterion caadr :nst-criterion)
 (defmacro def-criterion ((name args-formals values-formals) &body forms)
-  (let ((fp (gensym "values-form")) (ap (gensym "args")))
+  (let ((fp (gensym "values-form"))
+        (ap (gensym "args"))
+        (docstring nil))
+    (when (stringp (car forms))
+      (setf docstring (pop forms)))
     `(progn
        #+allegro (excl:record-source-file ',name :type :nst-criterion)
        (defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)
          (declare (optimize (debug 3)))
+         ,@(when docstring (list docstring))
          ;; (format t "Matching ~s~%  to ~s~%" ',ap ',args-formals)
          (destructuring-bind ,args-formals ,ap
-           ;; (format t "  done~%Evaluating ~s~%  to match to ~s~%" ,fp ',values-formals)
+           ;; (format t "  done~%Evaluating ~s~%  to match to ~s~%"
+           ;;   ,fp ',values-formals)
            (destructuring-bind ,values-formals (eval ,fp)
              ;; (format t "  done~%")
-             ,@forms))))))
+             ,@forms)))
+       ,@(when docstring
+           `((setf (documentation ',name :nst-criterion) ,docstring))))))
 
 ;; #+allegro (excl::define-simple-parser def-criterion-unevaluated
 ;;              caadr :nst-criterion)
 (defmacro def-criterion-unevaluated ((name args-formals forms-formal &key
                                            (ignore-forms nil))
                                      &body forms)
-  (let ((ap (gensym "args")))
+  (let ((ap (gensym "args"))
+        (docstring nil))
+    (when (stringp (car forms))
+      (setf docstring (pop forms)))
     `(progn
        #+allegro (excl:record-source-file ',name :type :nst-criterion)
        (defmethod apply-criterion ((top (eql ',name)) ,ap ,forms-formal)
          (declare (optimize (debug 3))
                   ,@(when ignore-forms `((ignore ,forms-formal))))
+         ,@(when docstring (list docstring))
          (destructuring-bind ,args-formals ,ap
-           ,@forms)))))
+           ,@forms))
+       ,@(when docstring
+           `((setf (documentation ',name :nst-criterion) ,docstring))))))
 
 #+allegro (excl::define-simple-parser def-values-criterion caadr :nst-criterion)
 (defmacro def-values-criterion ((name args-formals forms-formals &key
@@ -121,12 +135,13 @@ first element is that symbol and whose remaining elements are options."
                                 &body forms)
   (warn 'style-warning "def-values-criterion is deprecated from 1.3.0.")
   (let ((ap (gensym "args")) (fp (gensym "form")))
-    `(defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)
-       (destructuring-bind ,args-formals ,ap
-         (destructuring-bind ,forms-formals (eval ,fp)
-           (declare (special ,@(extract-parameters forms-formals)))
-           ,@(when decl-supp-p `((declare ,@declare)))
-           (eval (progn ,@forms)))))))
+    `(progn
+       (defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)
+         (destructuring-bind ,args-formals ,ap
+           (destructuring-bind ,forms-formals (eval ,fp)
+             (declare (special ,@(extract-parameters forms-formals)))
+             ,@(when decl-supp-p `((declare ,@declare)))
+             (eval (progn ,@forms))))))))
 
 #+allegro (excl::define-simple-parser def-form-criterion caadr :nst-criterion)
 (defmacro def-form-criterion ((name args-formals form-formal) &rest forms)
@@ -146,12 +161,18 @@ first element is that symbol and whose remaining elements are options."
          (t (setf ,name-var (car ,res) ,formals-var (cdr ,res))))
        ,@forms)))
 
-(defmacro def-criterion-alias ((name . args-formals) form)
+(defmacro def-criterion-alias ((name . args-formals) docstring-or-form
+                               &optional (form nil form-supp-p))
   (let ((vsf (gensym "values-form"))
         (new-name (gensym "new-name")) (new-args (gensym "new-args")))
-    `(def-criterion-unevaluated (,name ,args-formals ,vsf)
+    (unless form-supp-p (setf form docstring-or-form docstring-or-form nil))
+    `(progn
+       (def-criterion-unevaluated (,name ,args-formals ,vsf)
+         ,@(when docstring-or-form (list docstring-or-form))
          (with-criterion-name-args (,new-name ,new-args) ,form
-           (apply-criterion ,new-name ,new-args ,vsf)))))
+           (apply-criterion ,new-name ,new-args ,vsf)))
+       ,@(when docstring-or-form `((setf (documentation ',name :nst-criterion)
+                                         ,docstring-or-form))))))
 
 (defvar *error-checking* nil
   "Criteria such as :check-err set this variable to t (and declare it special)
