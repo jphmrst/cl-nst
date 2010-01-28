@@ -124,3 +124,6 @@
 
 (def-test-group apply-erring-fixtures-t ()
   (def-test (err-by-fix-t :fixtures (erring-fixture)) :true t))
+
+(def-test-group imported-test-name ()
+  (def-test not :true t))
