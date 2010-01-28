@@ -130,23 +130,23 @@
 (def-arbitrary-instance-type (short-float :scalar t)
     (coin-flip (random #-(or allegro sbcl) most-positive-short-float
                        #+(or allegro sbcl) most-positive-single-float)
-               (- (random (- #-(or allegro sbcl) least-negative-short-float
-                             #+(or allegro sbcl) least-negative-single-float)))))
+               (- (random (- #-(or allegro sbcl) most-negative-short-float
+                             #+(or allegro sbcl) most-negative-single-float)))))
 
 (def-arbitrary-instance-type (single-float :scalar t)
      (coin-flip (random most-positive-single-float)
-                (- (random (- least-negative-single-float)))))
+                (- (random (- most-negative-single-float)))))
 
 (def-arbitrary-instance-type (double-float :scalar t)
     (coin-flip (random most-positive-double-float)
-                (- (random (- least-negative-double-float)))))
+                (- (random (- most-negative-double-float)))))
 
 (def-arbitrary-instance-type (long-float :scalar t)
     (coin-flip
      (random #-(or allegro sbcl) most-positive-long-float
              #+(or allegro sbcl) most-positive-double-float)
-     (- (random (- #-(or allegro sbcl) least-negative-long-float
-                   #+(or allegro sbcl) least-negative-double-float)))))
+     (- (random (- #-(or allegro sbcl) most-negative-long-float
+                   #+(or allegro sbcl) most-negative-double-float)))))
 
 (def-arbitrary-instance-type (complex :scalar t)
     (let ((typ (coin-flip (find-class 'rational)
