@@ -495,16 +495,31 @@ encoded as :before and :after methods.")
     (let ((*nst-group-name* (group-name test))
           (*nst-check-user-name* (check-user-name test))
           (*nst-check-internal-name* (check-group-name test))
-          (start-time))
+          (start-time)
+          (caught-warnings))
       (declare (special *nst-group-name* *nst-check-user-name*))
       (format-at-verbosity 1 " - Executing test ~s~%" *nst-check-user-name*)
       (setf start-time (get-internal-real-time))
-      (let ((result (call-next-method))
+      (let ((result (handler-bind ((warning
+                                    #'(lambda (w)
+                                        (push w caught-warnings)
+                                        (muffle-warning w))))
+                        (call-next-method)))
             (end-time (get-internal-real-time)))
         (setf (result-stats-elapsed-time result)
               (- end-time start-time)
               (gethash (check-group-name test) +results-record+)
               result)
+        (when caught-warnings
+          (setf (check-result-warnings result)
+                (nconc (check-result-warnings result)
+                       (loop for w in caught-warnings
+                             collect (make-check-note
+                                          :context *nst-context*
+                                          :stack *nst-stack*
+                                          :format "Lisp warning: ~
+                                               ~:@_~/nst::format-for-warning/"
+                                          :args (list w))))))
         (format-at-verbosity 1 "   ~s~%" result)
         result))))
 

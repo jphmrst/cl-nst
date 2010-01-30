@@ -412,10 +412,10 @@ structure, permitting the use of apply."
         (declare (ignorable context stack))
         (format s
             #-sbcl "~@<~:[~2*~;~?~:@_~]~
-                      in context: ~@<~{~a~^~:@_~}~:>~
+                      ~:[at top level~;~:*in context: ~@<~{~a~^~:@_~}~:>~]~
                       ~@[~:@_stack: ~w~]~:>"
             #+sbcl "~:[~2*~;~?~:@_~]~
-                      in context: ~{~a~^~:@_~}~
+                      ~:[at top level~;~:*in context: ~{~a~^~:@_~}~]~
                       ~@[~:@_stack: ~w~]"
           format format args
           context
@@ -438,7 +438,8 @@ structure, permitting the use of apply."
                                        (eq *nst-report-driver* :details)
                                        (> *nst-verbosity* 2))))
           (format s "~@<~w~:[~2*~;~:@_~?~]~
-                        ~:@_~:[nil context~;~:*in context: ~@<~{~a~^~:@_~}~:>~]~
+                        ~:@_~:[at top level~
+                             ~;~:*in context: ~@<~{~a~^~:@_~}~:>~]~
                         ~:@_~:[nil values~;~:*values: ~w~]~
                         ~:[~*~;~@[~:@_at ~@<~{~a~^ ~:@_while ~}~:>~]~]~:>"
             error format format args context stack
@@ -844,3 +845,18 @@ six-value summary of the results:
   "For use within user-defined check criteria: add an info note to a result."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
   (push item (check-result-info result)))
+
+(defgeneric format-for-warning (stream item colon at-sign &rest params)
+  (:documentation "Hook allowing us to sometimes do better than the usual
+pretty-printer for warnings.")
+  (:method (stream item colon at-sign &rest params)
+           (declare (ignorable colon at-sign params))
+           (format stream "~w" item))
+  #+allegro
+  (:method (stream (item simple-warning) colon at-sign &rest params)
+     (declare (ignorable colon at-sign params))
+     (cond
+      ((slot-boundp item 'excl::format-control)
+       (apply #'format stream (slot-value item 'excl::format-control)
+              (slot-value item 'excl::format-arguments)))
+      (t (call-next-method)))))
