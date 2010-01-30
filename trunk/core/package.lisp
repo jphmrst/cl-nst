@@ -76,6 +76,8 @@
              #:add-failure #:add-error #:add-info
              ;; Deprecated:
              #:def-form-criterion #:def-values-criterion
+
+             #:with-fixtures
              )
 
     ;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
