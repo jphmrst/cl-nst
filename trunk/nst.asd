@@ -71,7 +71,8 @@
                            ;; Main control flow of test and group
                            ;; execution.
                            (:file "runner"  :depends-on ("interrupt"
-                                                         "artifacts"))
+                                                         "artifacts"
+                                                         "status"))
 
                            ;; The def-group macro.
                            (:file "group" :depends-on ("pick"))
