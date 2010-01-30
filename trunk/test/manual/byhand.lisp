@@ -127,3 +127,11 @@
 
 (def-test-group imported-test-name ()
   (def-test not :true t))
+
+(def-test-group lisp-warn ()
+  (def-test zz :true
+    (progn
+      (warn "This is a Lisp warning")
+      (warn "This is another Lisp warning")
+      t)))
+
