@@ -200,6 +200,9 @@ re-applied at subsequent fixture application rather than being recalculated.
                      (setf *binding-variable* nil)
                      (call-next-method)))
 
+                 (defmethod get-fixture-bindings ((f ,name))
+                   ',bindings)
+
                  (defmethod do-test-fixture-assignment
                      :around ((,t-param ,name))
                    (declare (special ,@(loop for used-fixture in uses
@@ -268,6 +271,10 @@ re-applied at subsequent fixture application rather than being recalculated.
 
                  ',name))))))
 
+(defgeneric get-fixture-bindings (fixture)
+  (:documentation "Internal function: pull the symbolic fixture bindings")
+  (:method ((f symbol)) (get-fixture-bindings (make-instance f))))
+
 (defgeneric flush-fixture-cache (f)
   (:method ((f symbol)) (flush-fixture-cache (make-instance f)))
   (:method ((f standard-fixture)) nil))
@@ -291,3 +298,8 @@ re-applied at subsequent fixture application rather than being recalculated.
         (error "Expected a fixture name or anonymous fixture; found ~s" f))))
 
     (values fixture-names nil)))
+
+(defmacro with-fixtures ((&rest fixtures) &body forms)
+  `(let ,(loop for fixture in fixtures
+               append (get-fixture-bindings fixture))
+     ,@forms))

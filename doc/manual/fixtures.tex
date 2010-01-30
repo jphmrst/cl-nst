@@ -53,6 +53,18 @@ Examples of fixture definitions:
     ((:cache nil) h (factorial 5)))
 \end{verbatim}
 
+The \texttt{with-fixtures} macro faciliates debugging and other
+non-NST uses of fixtures sets:
+\begin{verbatim}
+  (with-fixtures (FIXTURE ... FIXTURE)
+    FORM
+    ...
+    FORM)
+\end{verbatim}
+This macro evaluates the forms in a namespace expanded with the
+bindings provided by the fixtures.
+
+
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: "manual"
