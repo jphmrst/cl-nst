@@ -12,6 +12,7 @@
  Ticket 149 - Lisp warnings are now caught, and translated into
               NST warnings.
  Ticket 60 - Added a with-fixtures macro.
+ Ticket 12 - Ctrl-C under SBCL interrupts tests, no longer swallowed.
 
 1.2.8 - 
  The package argument to :nst :run-package is now optional, with
