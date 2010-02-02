@@ -45,6 +45,18 @@
       :echo ())
   (def-test ts3 :echo ()))
 
+(def-fixtures fix4 () (x 3) (y 'a))
+(def-test-group gr-ft (fix4)
+  (:fixtures-setup
+   (format t "  In fixture-setup (boundp x) <-- ~a~%" (boundp 'x)))
+  (:fixtures-cleanup
+   (format t "  In fixture-cleanup (boundp y) <-- ~a~%" (boundp 'y)))
+  (:setup   (format t "    In setup x <-- ~a~%" x))
+  (:cleanup (format t "    In cleanup y <-- ~a~%" y))
+  (:each-setup   (format t "          each-setup x bound: ~s~%" (boundp 'x)))
+  (:each-cleanup (format t "          each-cleanup x bound: ~s~%" (boundp 'y)))
+  (def-test ft-ts-1 (:eql 3) x))
+
 (def-test-group failures ()
   (def-test f-1 (:seq (:symbol a) (:eql 3) (:eq 'b)) '(a 2 b))
   (def-test f-2 (:seq (:symbol a) (:eql 3) (:eq 'b)) (error "boom"))

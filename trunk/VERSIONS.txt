@@ -13,6 +13,8 @@
               NST warnings.
  Ticket 60 - Added a with-fixtures macro.
  Ticket 12 - Ctrl-C under SBCL interrupts tests, no longer swallowed.
+ Ticket 101 - Separate group setup/cleanup routines within and without
+              group fixture bindings
 
 1.2.8 - 
  The package argument to :nst :run-package is now optional, with

@@ -105,7 +105,7 @@ group-specific activities.")
 
 (defgeneric bound-names (fixture-or-group)
   (:documentation "The names defined by each fixture.  Will be given
-an eql-method by the macros which expand tests and groups."))
+a methods by the macro which expands fixtures."))
 (add-class-name-static-method bound-names)
 
 (defgeneric open-fixture (fixture-name &optional package)

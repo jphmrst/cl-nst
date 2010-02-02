@@ -279,25 +279,29 @@ re-applied at subsequent fixture application rather than being recalculated.
   (:method ((f symbol)) (flush-fixture-cache (make-instance f)))
   (:method ((f standard-fixture)) nil))
 
-(defun process-fixture-list (fixture-list)
+(defun process-fixture-list (fixture-set-list)
   "Trivial, for now, because anonymous fixtures are offline."
-  (let ((fixture-names nil))
-    (loop for f in fixture-list do
-      (cond
-       ;; A named fixture
-       ((symbolp f)
-        (setf fixture-names (nconc fixture-names (list f))))
-       ;; Miscellaneous garbage 1
-       ((not (listp f))
-        (error "Expected a fixture name or anonymous fixture; found ~s" f))
-       ;; Anonymous fixture
-       ((eq (car f) :fixture)
-        (error "Have not yet re-implemented anonymous fixtures."))
-       ;; Miscellaneous garbage 2
-       (t
-        (error "Expected a fixture name or anonymous fixture; found ~s" f))))
-
-    (values fixture-names nil)))
+  (loop for f in fixture-set-list
+      for this-fixture-set-name
+        = (cond
+           ((symbolp f) f)              ; A named fixture
+           ((not (listp f))             ; Miscellaneous garbage 1
+            (error "Expected a fixture name or anonymous fixture; found ~s"
+                   f))
+           ((eq (car f) :fixture)       ; Anonymous fixture
+            (error "Have not yet re-implemented anonymous fixtures."))
+           (t                           ; Miscellaneous garbage 2
+            (error "Expected a fixture name or anonymous fixture; found ~s"
+                   f)))
+      for this-fixture-names
+        = (cond
+           ((symbolp f) (bound-names f))           ; A named fixture
+           ((and (listp f) (eq (car f) :fixture))  ; Anonymous fixture
+            (error "Have not yet re-implemented anonymous fixtures.")))
+      collect this-fixture-set-name into fixture-set-names
+      append this-fixture-names into fixture-names
+      finally (return-from process-fixture-list
+                (values fixture-set-names nil fixture-names))))
 
 (defmacro with-fixtures ((&rest fixtures) &body forms)
   `(let ,(loop for fixture in fixtures
