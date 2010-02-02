@@ -1,4 +1,7 @@
 
+1.3.1 -
+
+
 1.3.0 - public release
  Ticket 110 - The major fix in this release.  The implementation of
               criteria has been completely rewritten to use method
@@ -16,7 +19,7 @@
  Ticket 101 - Separate group setup/cleanup routines within and without
               group fixture bindings
 
-1.2.8 - 
+1.2.8 - public release
  The package argument to :nst :run-package is now optional, with
       *package* as default.
  Bug fix for Mac OSX: suppress backtrace collection.
