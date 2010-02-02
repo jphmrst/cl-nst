@@ -96,8 +96,10 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
 
       ;; Expand the fixtures into the definitions we'll actually
       ;; use.
-      (multiple-value-bind (fixture-class-names anon-fixture-forms)
+      (multiple-value-bind (fixture-class-names anon-fixture-forms
+                                                fixture-names)
           (process-fixture-list fixtures)
+        (declare (ignorable fixture-names))
 
         (let* ((*nst-context* nil)
                (fixture-names-special

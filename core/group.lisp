@@ -34,17 +34,25 @@
   (let ((checks nil)
         (setup nil) (setup-supp-p nil)
         (cleanup nil) (cleanup-supp-p nil)
+        (fixtures-setup nil) (fixtures-setup-supp-p nil)
+        (fixtures-cleanup nil) (fixtures-cleanup-supp-p nil)
         (each-setup nil) (each-setup-supp-p nil)
         (each-cleanup nil) (each-cleanup-supp-p nil))
     (loop for form in forms do
       (case (car form)
         (:setup (setf setup (cdr form) setup-supp-p t))
         (:cleanup (setf cleanup (cdr form) cleanup-supp-p t))
+        (:fixtures-setup (setf fixtures-setup (cdr form)
+                               fixtures-setup-supp-p t))
+        (:fixtures-cleanup (setf fixtures-cleanup (cdr form)
+                                 fixtures-cleanup-supp-p t))
         (:each-setup (setf each-setup (cdr form) each-setup-supp-p t))
         (:each-cleanup (setf each-cleanup (cdr form) each-cleanup-supp-p t))
         (otherwise (push form checks))))
     (values (nreverse checks)
             setup setup-supp-p cleanup cleanup-supp-p
+            fixtures-setup fixtures-setup-supp-p
+            fixtures-cleanup fixtures-cleanup-supp-p
             each-setup each-setup-supp-p each-cleanup each-cleanup-supp-p)))
 
 #+allegro (excl::define-simple-parser def-test-group second :nst-group)
@@ -68,6 +76,8 @@ forms - zero or more test forms, given by def-check."
     ;; definitions.
     (multiple-value-bind (check-forms setup setup-supp-p
                                       cleanup cleanup-supp-p
+                                      fixtures-setup fixtures-setup-supp-p
+                                      fixtures-cleanup fixtures-cleanup-supp-p
                                       each-setup each-setup-supp-p
                                       each-cleanup each-cleanup-supp-p)
         (separate-group-subforms forms)
@@ -80,7 +90,8 @@ forms - zero or more test forms, given by def-check."
              (test-names (loop for form in check-forms
                              append (pull-test-name-list form))))
 
-        (multiple-value-bind (fixture-class-names anon-fixture-forms)
+        (multiple-value-bind (fixture-class-names anon-fixture-forms
+                                                  fixture-names)
             (process-fixture-list given-fixtures)
 
           ;; Expand the test forms in this environment which include
@@ -150,14 +161,26 @@ forms - zero or more test forms, given by def-check."
                  ;; Fixture processing.
                  ,@anon-fixture-forms
 
+                 ,@(when fixtures-setup-supp-p
+                     `((defmethod do-group-prefixture-setup
+                           progn ((obj ,group-name))
+                         ,@fixtures-setup)))
+
+                 ,@(when fixtures-cleanup-supp-p
+                     `((defmethod do-group-afterfixture-cleanup
+                           progn ((obj ,group-name))
+                         ,@fixtures-cleanup)))
+
                  ,@(when setup-supp-p
                      `((defmethod do-group-postfixture-setup
                            progn ((obj ,group-name))
+                         (declare (special ,@fixture-names))
                          ,@setup)))
 
                  ,@(when cleanup-supp-p
                      `((defmethod do-group-withfixture-cleanup
                            progn ((obj ,group-name))
+                         (declare (special ,@fixture-names))
                          ,@cleanup)))
 
                  (when ,each-setup-supp-p
