@@ -208,6 +208,3 @@ all further errors themselves.")
   (warn 'nst-soft-deprecation
         :old-name 'def-check-alias :replacement 'def-criterion-alias)
   `(def-criterion-alias ,@args))
-
-(defvar +storage-name-to-test-package+
-    (make-hash-table :test 'eq))
