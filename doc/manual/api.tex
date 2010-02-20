@@ -43,8 +43,19 @@ deprecated.
 
 \texttt{check-result}\secpageref{sec:criteria-forms-report} ---
 deprecated.
+             
+\subsection{NST control and JUnit XML output}
+\texttt{nst-cmd}
+
+\texttt{nst-junit-dump}\secpageref{sec:junit}.
+
+\texttt{junit-results-by-group}\secpageref{sec:junit}.
 
 \subsection{Programmatic control of testing and output}
+Note that these functions are exported from the package
+\texttt{:nst-control-api} --- they are not intended for regular use in
+NST tests.
+
 \texttt{run-package}
 
 \texttt{run-group}
@@ -58,12 +69,10 @@ deprecated.
 \texttt{report-group}
 
 \texttt{report-test}
-             
-\texttt{nst-cmd}
 
-\texttt{nst-junit-dump}\secpageref{sec:junit}.
+\texttt{protect-nst-config}
 
-\texttt{junit-results-by-group}\secpageref{sec:junit}.
+\texttt{apply-debug-options}
 
 \subsection{User settings}
 \texttt{*nst-output-stream*}
