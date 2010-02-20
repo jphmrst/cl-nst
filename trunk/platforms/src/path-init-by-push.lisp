@@ -6,4 +6,3 @@
 (push #p"/home/jm/Lib/Lisp/nst/test/manual/" asdf:*central-registry*)
 (push #p"/home/jm/Lib/Lisp/nst/test/meta/" asdf:*central-registry*)
 (push #p"/home/jm/Lib/Lisp/nst/test/util/" asdf:*central-registry*)
-(asdf:oos 'asdf:test-op :nst)
