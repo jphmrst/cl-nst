@@ -566,23 +566,28 @@ six-value summary of the results:
 (defun group-report (group)
   "Top-level function for reporting the results of a group."
   (let ((result (make-group-result)))
-    (with-accessors ((name group-result-group-name)
-                     (checks group-result-check-results)) result
-      (setf name group)
+    (with-accessors ((the-check-results group-result-check-results)
+                     (the-group-name group-result-group-name)
+                     (total-elapsed-time result-stats-elapsed-time)
+                     (total-tests        result-stats-tests)
+                     (total-passing      result-stats-passing)
+                     (total-erring       result-stats-erring)
+                     (total-failing      result-stats-failing)
+                     (total-warning      result-stats-warning)) result
+      (setf the-group-name group)
       (loop for test in (test-names group)
             for report = (test-report group test)
             do
-         (setf (gethash test checks) report)
+         (setf (gethash test the-check-results) report)
          (cond
            (report
-            (incf (result-stats-elapsed-time result)
-                  (result-stats-elapsed-time report))
-            (incf (result-stats-tests result)   (result-stats-tests report))
-            (incf (result-stats-passing result) (result-stats-passing report))
-            (incf (result-stats-erring result)  (result-stats-erring report))
-            (incf (result-stats-failing result) (result-stats-failing report))
-            (incf (result-stats-warning result) (result-stats-warning report)))
-           (t (incf (result-stats-tests result))))))
+            (incf total-elapsed-time (result-stats-elapsed-time report))
+            (incf total-tests        (result-stats-tests report))
+            (incf total-passing      (result-stats-passing report))
+            (incf total-erring       (result-stats-erring report))
+            (incf total-failing      (result-stats-failing report))
+            (incf total-warning      (result-stats-warning report)))
+           (t (incf total-tests)))))
     result))
 
 (defun test-report (group test)
@@ -639,10 +644,11 @@ six-value summary of the results:
 
 (defun all-package-report ()
   (let ((package-hash (make-hash-table :test 'eq)))
-    (loop for package-name being the hash-values
-          of +storage-name-to-test-package+
-          do
-       (setf (gethash package-name package-hash) t))
+    (loop for test-report being the hash-values of +results-record+ do
+      (when test-report
+        (setf (gethash (symbol-package (check-result-group-name test-report))
+                       package-hash)
+              t)))
     (multiple-report (loop for package-name being the hash-keys of package-hash
                            collect (find-package package-name))
                      nil nil)))
@@ -792,7 +798,7 @@ six-value summary of the results:
     (format stream " - *nst-info-shows-expected*: ~s~%"
       *nst-info-shows-expected*)
     (format stream "Stored test results:~%")
-    (format stream "~w" report)))
+    (format stream "  ~w" report)))
 
 ;;;
 ;;; Generating status data within checks.
