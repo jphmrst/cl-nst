@@ -84,7 +84,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
 
       ;; If we aren't reusing a name, make up a new one.
       (unless name
-        (setf name (gensym (concatenate 'string
+        (setf name (gentemp (concatenate 'string
                              (package-name (symbol-package
                                             *group-class-name*))
                              "-"
@@ -92,7 +92,8 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                              "-"
                              (package-name (symbol-package test-name))
                              "--"
-                             (symbol-name test-name)))))
+                             (symbol-name test-name))
+                            *package*)))
 
       ;; Expand the fixtures into the definitions we'll actually
       ;; use.
