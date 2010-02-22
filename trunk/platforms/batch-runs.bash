@@ -19,7 +19,7 @@ mkdir -p logs
 # Clear out CLISP FASLs
 rm -rf /home/jm/Lib/Lisp/fasl/clisp/*/*
 
-echo Testing the trunk on CLISP
+echo Testing the trunk \(with everything recompiled\) on CLISP
 echo > logs/clisp-trunk.log
 clisp -i inputs/clisp/init.lisp inputs/clisp/nst-tests.lisp \
     2>> logs/clisp-trunk.log >> logs/clisp-trunk.log
@@ -41,7 +41,7 @@ echo Files in $NSTJUNITDIR directory: expected 15, have \
 rm -rf /home/jm/Lib/Lisp/fasl/misc/ccl-*/*
 
 echo ------------------------------------------------------------
-echo Testing the trunk on Clozure
+echo Testing the trunk \(with everything recompiled\) on Clozure
 echo > logs/clozure-trunk.log
 ~/Lib/Lisp/clozure/ccl/lx86cl --batch < inputs/clozure/nst-tests.lisp \
     2>> logs/clozure-trunk.log >> logs/clozure-trunk.log
@@ -62,7 +62,7 @@ echo Files in $NSTJUNITDIR directory: expected 15, have \
 rm -rf /home/jm/Lib/Lisp/fasl/sbcl/*/*
 
 echo ------------------------------------------------------------
-echo Testing the trunk on SBCL
+echo Testing the trunk \(with everything recompiled\) on SBCL
 echo > logs/sbcl-trunk.log
 sbcl < inputs/sbcl/nst-tests.lisp \
     2>> logs/sbcl-trunk.log >> logs/sbcl-trunk.log
@@ -91,7 +91,7 @@ echo Files in $NSTJUNITDIR directory: expected 15, have \
 rm -rf /home/jm/Lib/Lisp/fasl/allegro/*/*
 
 echo ------------------------------------------------------------
-echo Testing the trunk on Allegro 8.2 mlisp
+echo Testing the trunk \(with everything recompiled\) on Allegro 8.2 mlisp
 echo > logs/allegro82-mlisp-trunk.log
 mlisp < inputs/acl/nst-tests.lisp \
     2>> logs/allegro82-mlisp-trunk.log >> logs/allegro82-mlisp-trunk.log
@@ -110,7 +110,7 @@ echo Files in $NSTJUNITDIR directory: expected 15, have \
 
 
 echo ------------------------------------------------------------
-echo Testing the trunk on Allegro 8.2 alisp
+echo Testing the trunk \(with everything recompiled\) on Allegro 8.2 alisp
 echo > logs/allegro82-alisp-trunk.log
 alisp < inputs/acl/nst-tests.lisp \
     2>> logs/allegro82-alisp-trunk.log >> logs/allegro82-alisp-trunk.log
@@ -129,7 +129,7 @@ echo Files in $NSTJUNITDIR directory: expected 15, have \
 
 
 echo ------------------------------------------------------------
-echo Testing the trunk on Allegro 8.1 mlisp
+echo Testing the trunk \(with everything recompiled\) on Allegro 8.1 mlisp
 echo > logs/allegro81-mlisp-trunk.log
 mlisp < inputs/acl/nst-tests.lisp \
     2>> logs/allegro81-mlisp-trunk.log >> logs/allegro81-mlisp-trunk.log
@@ -148,7 +148,7 @@ echo Files in $NSTJUNITDIR directory: expected 15, have \
 
 
 echo ------------------------------------------------------------
-echo Testing the trunk on Allegro 8.1 alisp
+echo Testing the trunk \(with everything recompiled\) on Allegro 8.1 alisp
 echo > logs/allegro81-alisp-trunk.log
 alisp < inputs/acl/nst-tests.lisp \
     2>> logs/allegro81-alisp-trunk.log >> logs/allegro81-alisp-trunk.log
