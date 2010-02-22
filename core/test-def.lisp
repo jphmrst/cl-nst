@@ -93,7 +93,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                              (package-name (symbol-package test-name))
                              "--"
                              (symbol-name test-name))
-                            *package*)))
+                            :nst-test-class-package)))
 
       ;; Expand the fixtures into the definitions we'll actually
       ;; use.
@@ -209,6 +209,9 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                      (nconc (test-list gproto) (list ',name)))
                (setf (gethash ',test-name (test-name-lookup gproto))
                      (make-instance ',name)))))))))
+
+(defpackage nst-test-class-package
+    (:documentation "Internal package for NST tests' class names."))
 
 (defmacro def-check (&rest args)
   (warn 'nst-soft-deprecation :old-name 'def-check :replacement 'def-test)
