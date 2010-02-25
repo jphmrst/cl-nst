@@ -67,8 +67,7 @@
 (defvar yyy 10)
 (def-test-group changers ()
   (def-test zzz-10 (:eql 10) zzz)
-  (def-test yyy-10 (:eql 10) yyy)
-  )
+  (def-test yyy-10 (:eql 10) yyy))
 
 (def-test-group show-setup ()
   (:setup   (format t "  S group~%"))
