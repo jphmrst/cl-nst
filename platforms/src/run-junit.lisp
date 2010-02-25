@@ -1,7 +1,9 @@
-(asdf:operate 'asdf:load-op :nst-simple-tests)
+(asdf:operate 'asdf:load-op :nst-manual-tests)
 
 (let ((*print-readably* nil))
-  (nst-control-api:run-package :nst-simple-tests))
+  (nst-control-api:run-group 'nst-manual::failures)
+  (nst-control-api:run-group 'nst-manual::some-magic)
+  (nst-control-api:run-group 'nst-manual::core-checks-sub))
 
 
 (let ((logdir

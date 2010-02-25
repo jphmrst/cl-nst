@@ -39,7 +39,7 @@ rm -f clisp-junit/*
 export NSTJUNITDIR=clisp-junit/
 clisp -i inputs/clisp/init.lisp inputs/clisp/junit.lisp \
     2>> clisp-junit/junit.log >> clisp-junit/junit.log
-echo Files in $NSTJUNITDIR directory: expected 15, have \
+echo Files in $NSTJUNITDIR directory: expected 4, have \
     `ls -1 $NSTJUNITDIR | wc -l`
 
 
@@ -68,7 +68,7 @@ rm -f clozure-junit/*
 export NSTJUNITDIR=clozure-junit/
 ~/Lib/Lisp/clozure/ccl/lx86cl --batch < inputs/clozure/junit.lisp \
     2>> clozure-junit/junit.log >> clozure-junit/junit.log
-echo Files in $NSTJUNITDIR directory: expected 15, have \
+echo Files in $NSTJUNITDIR directory: expected 4, have \
     `ls -1 $NSTJUNITDIR | wc -l`
 
 
@@ -96,7 +96,7 @@ rm -f sbcl-junit/*
 export NSTJUNITDIR=sbcl-junit/
 sbcl < inputs/sbcl/junit.lisp \
     2>> sbcl-junit/junit.log >> sbcl-junit/junit.log
-echo Files in $NSTJUNITDIR directory: expected 15, have \
+echo Files in $NSTJUNITDIR directory: expected 4, have \
     `ls -1 $NSTJUNITDIR | wc -l`
 
 
@@ -132,7 +132,7 @@ rm -f acl82-mlisp-junit/*
 export NSTJUNITDIR=acl82-mlisp-junit/
 mlisp < inputs/acl/junit.lisp \
     2>> acl82-mlisp-junit/junit.log >> acl82-mlisp-junit/junit.log
-echo Files in $NSTJUNITDIR directory: expected 15, have \
+echo Files in $NSTJUNITDIR directory: expected 4, have \
     `ls -1 $NSTJUNITDIR | wc -l`
 
 
@@ -158,7 +158,7 @@ rm -f acl82-alisp-junit/*
 export NSTJUNITDIR=acl82-alisp-junit/
 alisp < inputs/acl/junit.lisp \
     2>> acl82-alisp-junit/junit.log >> acl82-alisp-junit/junit.log
-echo Files in $NSTJUNITDIR directory: expected 15, have \
+echo Files in $NSTJUNITDIR directory: expected 4, have \
     `ls -1 $NSTJUNITDIR | wc -l`
 
 
@@ -184,7 +184,7 @@ rm -f acl81-mlisp-junit/*
 export NSTJUNITDIR=acl81-mlisp-junit/
 /usr/local/allegro/acl81/mlisp < inputs/acl/junit.lisp \
     2>> acl81-mlisp-junit/junit.log >> acl81-mlisp-junit/junit.log
-echo Files in $NSTJUNITDIR directory: expected 15, have \
+echo Files in $NSTJUNITDIR directory: expected 4, have \
     `ls -1 $NSTJUNITDIR | wc -l`
 
 
@@ -210,5 +210,5 @@ rm -f acl81-alisp-junit/*
 export NSTJUNITDIR=acl81-alisp-junit/
 /usr/local/allegro/acl81/alisp < inputs/acl/junit.lisp \
     2>> acl81-alisp-junit/junit.log >> acl81-alisp-junit/junit.log
-echo Files in $NSTJUNITDIR directory: expected 15, have \
+echo Files in $NSTJUNITDIR directory: expected 4, have \
     `ls -1 $NSTJUNITDIR | wc -l`
