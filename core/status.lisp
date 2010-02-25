@@ -326,13 +326,13 @@ structure, permitting the use of apply."
            ;;
            ((and (eql 1 total-items) errors)
             (format s "~@<Check ~a ~:[(group ~a) ~;~*~]raised an error~
-                            ~:[~2*~;:~{~:@_ . ~w~}~{~:@_ . ~a~}~]~:>"
+                            ~:[~2*~;:~{~:@_ . ~a~}~{~:@_ . ~a~}~]~:>"
               check-name *nst-group-shown* group-name
               drill-down errors info))
 
            ((and (eql 1 total-items) warnings)
             (format s "~@<Check ~a ~:[(group ~a) ~;~*~]passed with warning~p~
-                            ~:[~2*~;:~{~:@_ - ~w~}~{~:@_ - ~a~}~]~:>"
+                            ~:[~2*~;:~{~:@_ - ~a~}~{~:@_ - ~a~}~]~:>"
               check-name *nst-group-shown* group-name
               warnings drill-down warnings info))
 
@@ -346,7 +346,7 @@ structure, permitting the use of apply."
            ;;
            ((eq *nst-report-driver* :test)
             (format s "~@<Check ~a ~:[(group ~a) ~;~*~]~:[failed~;passed~]~
-                         ~:[~;: ~@{~:[~2*~;~:@_~a~{~:@_ - ~w~}~]~}~]~:>"
+                         ~:[~;: ~@{~:[~2*~;~:@_~a~{~:@_ - ~a~}~]~}~]~:>"
               check-name *nst-group-shown* group-name succeeded
               (or errors failures warnings info)
               errors "Errors:" errors
@@ -359,7 +359,7 @@ structure, permitting the use of apply."
            ;;
            (t (format s "Check ~a ~:[(group ~a) ~;~*~]~
                                  ~:[failed~*~;passed~:[~; with warnings~]~]~
-                           ~:[~;: ~@<~@{~:[~2*~;~a~:@_~{ - ~w~^~:@_~}~]~}~:>~]"
+                           ~:[~;: ~@<~@{~:[~2*~;~a~:@_~{ - ~a~^~:@_~}~]~}~:>~]"
                 check-name *nst-group-shown* group-name succeeded warnings
                 (or errors failures warnings)
                 errors "Errors:" errors  failures "Failures:" failures
@@ -437,7 +437,7 @@ structure, permitting the use of apply."
         (let (#+allegro (show-zoom (or (eq *nst-report-driver* :test)
                                        (eq *nst-report-driver* :details)
                                        (> *nst-verbosity* 2))))
-          (format s "~@<~w~:[~2*~;~:@_~?~]~
+          (format s "~@<~a~:[~2*~;~:@_~?~]~
                         ~:@_~:[at top level~
                              ~;~:*in context: ~@<~{~a~^~:@_~}~:>~]~
                         ~:@_~:[nil values~;~:*values: ~w~]~
