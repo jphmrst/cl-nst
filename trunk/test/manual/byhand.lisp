@@ -60,6 +60,7 @@
 (def-test-group failures ()
   (def-test f-1 (:seq (:symbol a) (:eql 3) (:eq 'b)) '(a 2 b))
   (def-test f-2 (:seq (:symbol a) (:eql 3) (:eq 'b)) (error "boom"))
+  (def-test f-3 (:eql "I am a \"shrimp po-boy\"") 10)
   (def-test nofail (:seq (:symbol a) (:eql 3) (:eq 'b)) '(a 3 b))
   )
 

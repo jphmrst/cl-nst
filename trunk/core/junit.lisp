@@ -126,17 +126,19 @@ argument should be a string of just spaces."))
                                  #+allegro (error-check-note-zoom error-note)
                                  #-allegro nil))))
          (format s "~a</testcase>~%" padding))
-        (failures (with-accessors ((context check-note-context)
-                                   (stack check-note-stack)
-                                   (format check-note-format)
-                                   (args check-note-args))
-                      (car failures)
-                    (format s
-                        ">~%~a  <failure message=\"~?\" type=\"lisp.nst.criterion.~a\"><![CDATA[~%"
-                      padding format args
-                      (context-layer-criterion (car context)))
-                    (format s "~a    ~@<~{~a~^~:@_~}~:>~%"
-                      padding context))
+        (failures
+         (with-accessors ((context check-note-context)
+                          (stack check-note-stack)
+                          (format check-note-format)
+                          (args check-note-args))
+                         (car failures)
+           (let ((msg (format nil "~?" format args)))
+             (format s
+                 ">~%~a  <failure message=\"~a\" type=\"lisp.nst.criterion.~a\"><![CDATA[~%"
+               padding (string-escaped msg)
+               (context-layer-criterion (car context)))
+             (format s "~a    ~@<~{~a~^~:@_~}~:>~%"
+               padding context)))
                   (format s "~a  ]]></failure>~%" padding)
                   (format s "~a</testcase>~%" padding))
        (t (format s " />~%"))))))
@@ -240,3 +242,77 @@ argument should be a string of just spaces."))
     (when verbose
       (format t "Making XML for group ~s~%" (group-result-group-name report)))
     (apply #'junit-group-result report args)))
+
+;;; The following three definitions are Copyright (c) 2003, Miles Egan
+;;; All rights reserved.
+
+;;; Redistribution and use [of these three definitions] in source and
+;;; binary forms, with or without modification, are permitted provided
+;;; that the following conditions are met:
+;;;
+;;;     * Redistributions of source code must retain the above copyright
+;;;       notice, this list of conditions and the following disclaimer.
+;;;
+;;;     * Redistributions in binary form must reproduce the above
+;;;       copyright notice, this list of conditions and the following
+;;;       disclaimer in the documentation and/or other materials provided
+;;;       with the distribution.
+;;;
+;;;     * The name of the author may not be used to endorse or promote
+;;;       products derived from this software without specific prior
+;;;       written permission.
+;;;
+;;; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+;;; CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+;;; INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+;;; MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+;;; DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
+;;; BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+;;; EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+;;; TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+;;; DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+;;; ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+;;; TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
+;;; THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+;;; SUCH DAMAGE.
+
+
+(defvar *entities*
+  #(("lt;" #\<)
+    ("gt;" #\>)
+    ("amp;" #\&)
+    ("apos;" #\')
+    ("quot;" #\")))
+
+(defvar *char-escapes*
+  (let ((table (make-array 256 :element-type 'string :initial-element "")))
+    (declare (type vector *entities*))
+    (loop
+     for code from 0 to 255
+     for char = (code-char code)
+     for entity = (first (find char *entities* :test #'char= :key #'second))
+     do (setf (svref table code)
+              (cond
+                (entity
+                 (concatenate 'string "&" entity))
+                ((and (or (< code 32) (> code 126))
+                      (not (= code 10))
+                      (not (= code 9)))
+                 (format nil "&#x~x;" code))
+                (t
+                 (format nil "~x" char))))
+     finally (return table))
+    table))
+
+(defun string-escaped (string)
+  (with-output-to-string (stream)
+    "Writes string to stream with all character entities escaped."
+    #-allegro (coerce string 'simple-base-string)
+    (when (eq stream t) (setf stream *standard-output*))
+    (loop for char across string
+          for esc = (svref *char-escapes* (char-code char))
+          do (write-sequence esc stream))))
+
+;;; The above three definitions are Copyright (c) 2003, Miles Egan
+;;; All rights reserved.
+;;; See conditions and disclaimer above.
