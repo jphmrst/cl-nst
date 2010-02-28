@@ -1,39 +1,23 @@
 
 \section{Issues, bugs and enhancements}\index{bugs}\index{enhancements}
+Tickets for NST bugs and wishes are on NST's trac:
+\begin{center}
+  \texttt{https://svn.sift.info:3333/trac/nst/}
+\end{center}
+
 \begin{enumerate}
-\item There are still, sometimes, warnings from the use of fixture
-  names in other fixtures.
-\item We are not yet catching errors arising from
-  \texttt{:cleanup}\index{cleanup@\texttt{:cleanup}} blocks.
-\item Clobbering of test/group names should be caught by the macros,
-  not by the lower-level expansions arising from those methods.
-\item The def-test form \texttt{:perf} might be extended to provide
+\item The criterion \texttt{:perf} might be extended to provide
   (implementation-dependent) checks on memory limits as well as time
   limits.
 \item Some sort of timeout mechanism --- perhaps
   implementation-dependent --- could be helpful for measuring
   correctness via termination in more complicated algorithms.
-\item The JUnit implementation should be more tightly integrated with
-  ASDF, allowing automatic generation of XML at each test.
-\item NST uses Allegro CL-specific features to capture backtraces from
-  errors in NST tests.  However, due to a bug in the Allegro for
-  Macintosh, this feature is not safe on that platform.  Therefore, by
-  default this feature is disabled on MacOS.  Users can re-enable
-  backtrace capture by adding \texttt{:nst-unsafe-allegro-backtraces}
-  to the \texttt{*features*} global user
-  variable.\index{@nst-unsafe-allegro-backtraces\texttt{:nst-unsafe-allegro-backtraces}}\index{features@\texttt{*features*}}
-
-  The bug arises in situations where the \texttt{:err} criterion
-  expects to find one type of error, but in fact an error of a
-  different type is thrown.  NST will hang and must be manually
-  interrupted.  We have reported this issue to
-  Franz.\index{err@\texttt{:err}}
 \end{enumerate}
 
 \subsection{Removed features}
 \label{temp-removed}
-Some features of the NST 0.9 have not yet been reimplemented in NST
-1.0.  Tell John if one is urgent for you.
+Some features of the NST 0.9 have not yet been reimplemented.  Tell
+John if one is urgent for you.
 
 \subsubsection{Test group documentation}
 The \texttt{def-test-group} form should allow group

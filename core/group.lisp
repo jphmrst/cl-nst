@@ -37,7 +37,8 @@
         (fixtures-setup nil) (fixtures-setup-supp-p nil)
         (fixtures-cleanup nil) (fixtures-cleanup-supp-p nil)
         (each-setup nil) (each-setup-supp-p nil)
-        (each-cleanup nil) (each-cleanup-supp-p nil))
+        (each-cleanup nil) (each-cleanup-supp-p nil)
+        (docstring nil) (docstring-supp-p nil))
     (loop for form in forms do
       (case (car form)
         (:setup (setf setup (cdr form) setup-supp-p t))
@@ -48,12 +49,14 @@
                                  fixtures-cleanup-supp-p t))
         (:each-setup (setf each-setup (cdr form) each-setup-supp-p t))
         (:each-cleanup (setf each-cleanup (cdr form) each-cleanup-supp-p t))
+        (:documentation (setf docstring (cadr form) docstring-supp-p t))
         (otherwise (push form checks))))
     (values (nreverse checks)
             setup setup-supp-p cleanup cleanup-supp-p
             fixtures-setup fixtures-setup-supp-p
             fixtures-cleanup fixtures-cleanup-supp-p
-            each-setup each-setup-supp-p each-cleanup each-cleanup-supp-p)))
+            each-setup each-setup-supp-p each-cleanup each-cleanup-supp-p
+            docstring docstring-supp-p)))
 
 #+allegro (excl::define-simple-parser def-test-group second :nst-group)
 (defmacro def-test-group (group-name given-fixtures &body forms)
@@ -79,7 +82,8 @@ forms - zero or more test forms, given by def-check."
                                       fixtures-setup fixtures-setup-supp-p
                                       fixtures-cleanup fixtures-cleanup-supp-p
                                       each-setup each-setup-supp-p
-                                      each-cleanup each-cleanup-supp-p)
+                                      each-cleanup each-cleanup-supp-p
+                                      docstring docstring-supp-p)
         (separate-group-subforms forms)
 
       (let* ((group-orig-pkg (symbol-package group-name))
@@ -135,7 +139,12 @@ forms - zero or more test forms, given by def-check."
                        (test-name-lookup :allocation :class
                                          :reader test-name-lookup
                                          :initform (make-hash-table :test 'eq)))
-                   (:metaclass singleton-class))
+                   (:metaclass singleton-class)
+                   ,@(when docstring-supp-p `((:documentation ,docstring))))
+                 ,@(when docstring-supp-p
+                     `((setf (documentation ',group-name :nst-group) ,docstring)
+                       (setf (documentation ',group-name :nst-test-group)
+                             ,docstring)))
 
                  (finalize-inheritance (find-class ',group-name))
                  (eval-when (:load-toplevel :execute)
