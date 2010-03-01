@@ -20,6 +20,12 @@ parentheses.  Likewise, any criterion consisting of a single symbol,
 e.g.\ \texttt{(:pass)}, may be abbreviated as just the symbol without
 the parentheses, e.g.\ \texttt{:pass}.
 
+The \texttt{:documentation} form provides a documentation string in
+the standard Lisp sense.  Since documentation strings are stored
+against names, and since the same name can be used for several tests
+(so long as they are all in different packages), documentation strings
+on tests may not be particularly useful.
+
 The \texttt{def-check} form is a deprecated synonym for
 \texttt{def-test}.
 
