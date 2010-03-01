@@ -22,14 +22,13 @@
 (in-package :sift.nst)
 
 (defun decode-defcheck-name-and-args (name-or-name-and-args)
-  "This function unpacks the information inside the first form of a def-check
+  "This function unpacks the information inside the first form of a def-test
 block, which can be either a single symbol naming the test, or a list whose
 first element is that symbol and whose remaining elements are options."
 
   (cond
    ((symbolp name-or-name-and-args)
-    (return-from decode-defcheck-name-and-args
-      (values name-or-name-and-args nil nil nil nil nil nil nil nil)))
+    (values name-or-name-and-args nil nil nil nil nil nil nil nil))
    ((listp name-or-name-and-args)
     (destructuring-bind (name &key (setup nil setup-supp-p)
                                    (cleanup nil cleanup-supp-p)
@@ -37,15 +36,16 @@ first element is that symbol and whose remaining elements are options."
                                    (group nil group-supp-p)
                                    (documentation nil documentation-supp-p))
         name-or-name-and-args
-      (return-from decode-defcheck-name-and-args
-        (values name
+      (when (and fixtures (symbolp fixtures))
+        (setf fixtures (list fixtures)))
+      (values name
                 setup setup-supp-p
                 cleanup cleanup-supp-p
                 fixtures fixtures-supp-p
                 group group-supp-p
-                documentation documentation-supp-p))))
+                documentation documentation-supp-p)))
    (t
-    (error "~@<Expected symbol or list for def-check argument~_ ~s~:>"
+    (error "~@<Expected symbol or list for def-test argument~_ ~s~:>"
            name-or-name-and-args))))
 
 (defmacro def-test (name-or-name-and-args criterion &rest forms)

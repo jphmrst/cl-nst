@@ -21,31 +21,6 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
-(defun decode-defcheck-name-and-args (name-or-name-and-args)
-  "This function unpacks the information inside the first form of a def-test
-block, which can be either a single symbol naming the test, or a list whose
-first element is that symbol and whose remaining elements are options."
-
-  (cond
-   ((symbolp name-or-name-and-args)
-    (values name-or-name-and-args nil nil nil nil nil nil nil nil))
-   ((listp name-or-name-and-args)
-    (destructuring-bind (name &key (setup nil setup-supp-p)
-                                   (cleanup nil cleanup-supp-p)
-                                   (fixtures nil fixtures-supp-p)
-                                   (group nil group-supp-p))
-        name-or-name-and-args
-      (when (and fixtures (symbolp fixtures))
-        (setf fixtures (list fixtures)))
-      (values name
-                setup setup-supp-p
-                cleanup cleanup-supp-p
-                fixtures fixtures-supp-p
-                group group-supp-p)))
-   (t
-    (error "~@<Expected symbol or list for def-test argument~_ ~s~:>"
-           name-or-name-and-args))))
-
 (defgeneric apply-criterion (top args form))
 
 (defmethod apply-criterion :around (top args form)
