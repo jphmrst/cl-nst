@@ -21,22 +21,51 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
+(defun decode-defcheck-name-and-args (name-or-name-and-args)
+  "This function unpacks the information inside the first form of a def-check
+block, which can be either a single symbol naming the test, or a list whose
+first element is that symbol and whose remaining elements are options."
+
+  (cond
+   ((symbolp name-or-name-and-args)
+    (return-from decode-defcheck-name-and-args
+      (values name-or-name-and-args nil nil nil nil nil nil nil nil)))
+   ((listp name-or-name-and-args)
+    (destructuring-bind (name &key (setup nil setup-supp-p)
+                                   (cleanup nil cleanup-supp-p)
+                                   (fixtures nil fixtures-supp-p)
+                                   (group nil group-supp-p)
+                                   (documentation nil documentation-supp-p))
+        name-or-name-and-args
+      (return-from decode-defcheck-name-and-args
+        (values name
+                setup setup-supp-p
+                cleanup cleanup-supp-p
+                fixtures fixtures-supp-p
+                group group-supp-p
+                documentation documentation-supp-p))))
+   (t
+    (error "~@<Expected symbol or list for def-check argument~_ ~s~:>"
+           name-or-name-and-args))))
+
 (defmacro def-test (name-or-name-and-args criterion &rest forms)
   "Define a single unit test.
 
-\(def-check NAME-OR-NAME-AND-OPTIONS
+\(def-test NAME-OR-NAME-AND-OPTIONS
      CRITERION
    FORM ... FORM)
 
 NAME-OR-NAME-AND-OPTIONS ::= name | NAME-AND-OPTIONS
 
 NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
-                            [ :setup FORM ] [ :cleanup FORM ] )"
+                            [ :setup FORM ] [ :cleanup FORM ]
+                            [ :documentation STRING ] )"
 
   ;; Decode the name-or-name-and-args, pulling out the individual
   ;; components, and indicating which are given in this test.
   (multiple-value-bind (test-name setup setup-supp-p cleanup cleanup-supp-p
-                                  fixtures fixtures-supp-p group group-supp-p)
+                                  fixtures fixtures-supp-p group group-supp-p
+                                  docstring docstring-supp-p)
       (decode-defcheck-name-and-args name-or-name-and-args)
     (declare (ignore fixtures-supp-p))
     (when (and group-supp-p
@@ -128,7 +157,10 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
              ,@anon-fixture-forms
 
              (defclass ,name (,@fixture-class-names) ()
-                       (:metaclass singleton-class))
+               (:metaclass singleton-class)
+               ,@(when docstring-supp-p `((:documentation ,docstring))))
+             ,@(when docstring-supp-p
+                 `((setf (documentation ',test-name :nst-test) ,docstring)))
 
              (finalize-inheritance (find-class ',name))
 

@@ -3,7 +3,10 @@
 
 (def-test-group failure-catchers ()
   (:documentation "These tests validate NST's ability to catch errors."))
-(def-test (group-fixture-error :group failure-catchers)
+(def-test (group-fixture-error
+           :group failure-catchers
+           :documentation
+           "This test checks error counting on the group mnst-src::boom-group-fixture.")
     (--nst-group mnst-src::boom-group-fixture
       (---test-errs mnst-src::boom-group-fixture mnst-src::bf1)
       (---test-errs mnst-src::boom-group-fixture mnst-src::bf2)
