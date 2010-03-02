@@ -164,15 +164,6 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
 
              (finalize-inheritance (find-class ',name))
 
-             (eval-when (:load-toplevel :execute)
-               (let ((this-name-use (gethash ',test-name +name-use+)))
-                 (unless this-name-use
-                   (setf this-name-use (make-name-use)
-                         (gethash ',test-name +name-use+) this-name-use))
-                 (let ((tests-by-group (name-use-tests this-name-use)))
-                   (setf (gethash ',test-name tests-by-group)
-                         (make-instance ',name)))))
-
              (handler-bind (#+sbcl (style-warning
                                     #'(lambda (c)
                                         (declare (ignore c))
@@ -203,6 +194,8 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                ,@(when cleanup-supp-p
                    `((defmethod do-test-afterfixture-cleanup progn ((obj ,name))
                        ,cleanup))))
+
+             (record-name-use :test ',test-name (make-instance ',name))
 
              ;; Clear any previous stored results, since we've just
              ;; (re-)defined this check.

@@ -72,7 +72,9 @@ forms - zero or more test forms, given by def-check."
 
   ;; Establish a binding of the group name to a special variable for
   ;; use in the expansion of the test-defining forms.
-  (let ((*the-group* group-name))
+  (let ((*the-group* group-name)
+        (package-finder (intern (symbol-name group-name)
+                                (find-package :nst-name-use-in-packages))))
     (declare (special *the-group*))
 
     ;; Separate the test-defining forms from the group and test setup
@@ -147,13 +149,8 @@ forms - zero or more test forms, given by def-check."
                              ,docstring)))
 
                  (finalize-inheritance (find-class ',group-name))
-                 (eval-when (:load-toplevel :execute)
-                   (let ((this-name-use (gethash ',group-name +name-use+)))
-                     (unless this-name-use
-                       (setf this-name-use (make-name-use)
-                             (gethash ',group-name +name-use+) this-name-use))
-                     (setf (name-use-group this-name-use)
-                           (make-instance ',group-name))))
+                 (record-name-use :group
+                                  ',group-name (make-instance ',group-name))
 
                  #|(let ((proto (class-prototype (find-class ',group-name))))
                      (setf (slot-value proto 'anon-fixture-forms)
