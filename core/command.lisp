@@ -375,12 +375,12 @@ The last form shows all interesting results."
 
 (def-nst-interactive-command
     (:whatis :short-help "Query what NST artifacts a name denotes" :args (name))
-    (let ((usage (gethash name +name-use+)))
+    (let ((usage (get-name-use name)))
       (cond
         ((null usage) (format t "The symbol ~s is not known to NST" name))
-        ((typep usage 'name-use) (pprint usage))
-        (t (error "The name use record for ~s is a ~s instead of name-use"
-                  name (type-of usage))))
+        ((null (cdr usage)) (format t "~a~%" (car usage)))
+        (t (format t "There are ~d uses of ~s:~%~{ - ~a~%~}"
+             (length usage) name usage)))
       nil))
 
 (def-nst-interactive-command

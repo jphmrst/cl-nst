@@ -178,12 +178,7 @@ re-applied at subsequent fixture application rather than being recalculated.
                    ,@(when cache-any
                        `((clrhash (cached-values (make-instance ',name))))))
 
-                 (let ((this-name-use (gethash ',name +name-use+)))
-                   (unless this-name-use
-                     (setf this-name-use (make-name-use)
-                           (gethash ',name +name-use+) this-name-use))
-                   (setf (name-use-fixture this-name-use)
-                     (make-instance ',name)))
+                 (record-name-use :fixture ',name (make-instance ',name))
 
                  ,(when cache-any
                     `(defmethod flush-fixture-cache ((f ,name))

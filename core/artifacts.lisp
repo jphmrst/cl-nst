@@ -139,11 +139,52 @@ default the current package."))
 ;;; Tracking what an artifact is by name.
 ;;;
 (defvar +name-use+ (make-hash-table :test 'eq)
-  "Known uses of names.")
+  "Known uses of names of a particular package.")
+(defvar +name-packages+ (make-hash-table :test 'eq)
+  "Known occurances of names in different packages.")
+
+(defun get-name-use (name)
+  (let ((all-names (gethash (intern (symbol-name name)
+                                    (find-package :nst-name-use-in-packages))
+                            +name-packages+)))
+    (loop for name being the hash-keys of all-names
+          collect (gethash name +name-use+))))
 
 (defstruct name-use
   "Record for tracking the artifacts which NST associates with a name."
   fixture group (tests (make-hash-table :test 'eq)))
+
+(defun get-name-use-record (name)
+  "Internal function for use within record-name-use --- this is not the function
+you want to use to read +name-use+."
+  (let ((this-name-use (gethash name +name-use+)))
+    (unless this-name-use
+      (setf this-name-use (make-name-use)
+            (gethash name +name-use+) this-name-use))
+    this-name-use))
+(defgeneric record-name-use (category name item)
+  (:method :around (category name item)
+     (declare (ignorable category item))
+     (eval-when (:load-toplevel :execute)
+       (call-next-method)
+       (let* ((package-finder (intern (symbol-name name)
+                                      (find-package :nst-name-use-in-packages)))
+              (this-name-package-use (gethash package-finder +name-packages+)))
+         (unless this-name-package-use
+           (setf this-name-package-use (make-hash-table :test 'eq)
+                 (gethash package-finder
+                          +name-packages+) this-name-package-use))
+         (setf (gethash name this-name-package-use) t))))
+  (:method ((category (eql :fixture)) name item)
+     (let ((this-name-use (get-name-use-record name)))
+       (setf (name-use-fixture this-name-use) item)))
+  (:method ((category (eql :group)) name item)
+     (let ((this-name-use (get-name-use-record name)))
+       (setf (name-use-group this-name-use) item)))
+  (:method ((category (eql :test)) name item)
+     (let ((this-name-use (get-name-use-record name)))
+       (let ((tests-by-group (name-use-tests this-name-use)))
+         (setf (gethash (group-name item) tests-by-group) item)))))
 
 (set-pprint-dispatch 'name-use
   #'(lambda (stream usage)
