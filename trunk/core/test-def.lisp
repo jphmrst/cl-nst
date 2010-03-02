@@ -159,6 +159,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
              (defclass ,name (,@fixture-class-names) ()
                (:metaclass singleton-class)
                ,@(when docstring-supp-p `((:documentation ,docstring))))
+             #-sbcl
              ,@(when docstring-supp-p
                  `((setf (documentation ',test-name :nst-test) ,docstring)))
 

@@ -143,6 +143,7 @@ forms - zero or more test forms, given by def-check."
                                          :initform (make-hash-table :test 'eq)))
                    (:metaclass singleton-class)
                    ,@(when docstring-supp-p `((:documentation ,docstring))))
+                 #-sbcl
                  ,@(when docstring-supp-p
                      `((setf (documentation ',group-name :nst-group) ,docstring)
                        (setf (documentation ',group-name :nst-test-group)
