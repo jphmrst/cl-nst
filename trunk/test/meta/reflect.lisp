@@ -10,6 +10,10 @@
             (nst::*debug-on-error*
              (cond
               (*debug-within-metatested* nst::*debug-on-error*)
+              (t nil)))
+            (nst::*debug-on-fail*
+             (cond
+              (*debug-within-metatested* nst::*debug-on-fail*)
               (t nil))))
         (declare (special nst::+results-record+))
         (loop for package in packages do (run-package package))

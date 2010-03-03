@@ -795,6 +795,7 @@ six-value summary of the results:
       *default-report-verbosity*)
     (format stream " - *nst-output-stream*: ~s~%" *nst-output-stream*)
     (format stream " - *debug-on-error*: ~s~%" *debug-on-error*)
+    (format stream " - *debug-on-fail*: ~s~%" *debug-on-fail*)
     (format stream " - *nst-info-shows-expected*: ~s~%"
       *nst-info-shows-expected*)
     (format stream "Stored test results:~%")

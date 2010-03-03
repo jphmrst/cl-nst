@@ -49,6 +49,12 @@
   (def-test btc3 :true t)
   (def-test btc4 :true t))
 
+(def-test-group fail-tests ()
+  (def-test ft1 :true t)
+  (def-test ft2 :true nil)
+  (def-test ft3 :true (null t))
+  (def-test ft4 :true t))
+
 (def-test-group miss-difftyped-err ()
   (def-test err-3 (:err :type division-by-zero) (error "Miss this"))
   ;; (def-test err-4 (:eql 1) (div-five-by 0))

@@ -92,8 +92,16 @@ There are currently three properties which can be manipulated by
   When this property has a non-nil value, NST will exit into the
   debugger when it catches an error.
 
+\item\texttt{:debug-on-fail}\index{debug-on-fail@\texttt{:debug-on-fail}}~~
+  When this property has a non-nil value, NST will exit into the
+  debugger whenever a test fails.  This test is useful for inspecting
+  the environment in which a test is run.  Note that both
+  \texttt{:debug-on-error} and \texttt{:debug-on-fail} apply in the
+  case of an error; if the latter is set but the former is not, then
+  the debugger will be entered after an erring test completes.
+
   The \texttt{:debug} command is a short-cut for setting this
-  property.\index{debug@\texttt{:debug}}
+  two properties.\index{debug@\texttt{:debug}}
 
 \item\texttt{:backtraces}\index{backtraces@\texttt{:backtraces}}~~
   When this property has a non-nil value, NST attempts to capture

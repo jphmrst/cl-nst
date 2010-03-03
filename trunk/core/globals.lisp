@@ -64,7 +64,10 @@
   "User variable determining how verbose NST's output to the REPL should be.  Internally, this variable takes an integer value: 0 and below are silent, 1 is the default, 2 and 3 are more verbose, and 4 is for full tracing.  The command-line interpreter assigns keywords to these values, from most terse to most verbose: :silent, nil, :quiet, :default, t, :verbose, :vverbose (:quiet and :default are the same, and are the initial setting).")
 
 (defvar *debug-on-error* nil
-  "User variable: if non-null, will break into the Lisp REPL debugger upon encountering an unexpected error.  If t, will record the error and continue with other tests.")
+  "User variable: if non-nil, will break into the Lisp REPL debugger upon encountering an unexpected error.  If nil, will record the error and continue with other tests.")
+
+(defvar *debug-on-fail* nil
+  "User variable: if non-nil, will break into the Lisp REPL debugger upon encountering a test which fails.  If nil, will record the failure and continue with other tests.  This variable is useful inspecting the dynamic environment under which a test was evaluated.")
 
 (defvar *generate-backtraces*
     (cond
@@ -98,7 +101,7 @@
   "User variable: apply customizable debugging settings.")
 
 (defvar *default-debug-config*
-    '(:nst-set ((:debug-on-error t) (:verbose :trace)))
+    '(:nst-set ((:debug-on-error t) (:debug-on-fail t) (:verbose :trace)))
   "User variable: the default setting applied by default.  Should be a list of
 alternating keyword/forms matching:
  - nst-set - list of lists, each with arguments to :nst :set
@@ -148,8 +151,8 @@ current criterion.")
               (when (boundp the-sym)
                 (save-symbol-value the-sym))))
           (loop for the-sym in '(*nst-verbosity* *default-report-verbosity*
-                                 *debug-on-error* *nst-info-shows-expected*
-                                 *nst-output-stream*)
+                                 *debug-on-error* *debug-on-fail*
+                                 *nst-info-shows-expected* *nst-output-stream*)
                 do
              (when (boundp the-sym)  (save-symbol-value the-sym))))
        (t nil)))
@@ -171,8 +174,9 @@ current criterion.")
 (defmacro apply-debug-options (forms-spec protect-vars &body forms)
   (let ((protects (gensym)))
     `(let ((*debug-on-error* (or *debug-on-error* *nst-debug*))
+           (*debug-on-fail* (or *debug-on-fail* *nst-debug*))
            (,protects (assemble-protected-option-values ',protect-vars)))
-       (declare (special *debug-on-error*))
+       (declare (special *debug-on-error* *debug-on-fail*))
        (run-debug-options ',forms-spec)
        (prog1 (progn ,@forms)
          (restore-protected-option-values ,protects)))))
