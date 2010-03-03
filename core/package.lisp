@@ -57,6 +57,7 @@
              #:*nst-output-stream*
              #:*default-report-verbosity*
              #:*debug-on-error*
+             #:*debug-on-fail*
 
              ;; Do NOT change this package's exported-symbol list
              ;; without updating the API in the manual (or filing a

@@ -185,9 +185,13 @@ available from compile-time forward.")
      (unless (member ,name +nst-repl-properties+)
        (push ,name +nst-repl-properties+))))
 
+(defun flag-filter (x) (if x t nil))
 (def-nst-property :debug-on-error *debug-on-error*
   :doc "When non-nil, break into the debugger when NST encounters an error."
-  :filter (lambda (x) (if x t nil)))
+  :filter flag-filter)
+(def-nst-property :debug-on-fail *debug-on-fail*
+  :doc "When non-nil, break into the debugger when NST encounters an error."
+  :filter flag-filter)
 (def-nst-property :verbose *nst-verbosity*
   :doc "Valid settings: :silent (aka nil), :quiet (aka :default), :verbose, ~
         (aka t), :vverbose"
