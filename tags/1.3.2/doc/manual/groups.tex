@@ -1,0 +1,46 @@
+
+\section{Test groups}
+\label{sec:groups}
+Groups of tests\index{group}\index{test group|see{group}} can be
+associated with fixture sets, stateful initiatization, and stateful
+cleanup.  The syntax of a test group declaration
+is:\index{def-test-group@\texttt{def-test-group}}
+\input{../common/group-syntax}
+%
+\texttt{NAME} is the name of this test group.  The \texttt{FIXTURE}s
+are to be applied to the tests in this group.
+
+The \texttt{:setup} forms\index{setup@\texttt{:setup}} are run after
+inclusion of names from fixture sets, but before any tests from the
+group.  Individual tests should make no assumptions as to whether the
+setup is unique to that test, or whether it is shared among several
+tests of that group.  
+
+The \texttt{:cleanup} forms\index{cleanup@\texttt{:cleanup}} are
+normally run after the setup completes; however the cleanup form will
+not be run if the setup form raises an error.  When the user asks the
+runtime system to enter the debugger on an error, the cleanup form
+will not run unless the user explicitly enabled a resumption of the
+test routine from the debugger.  The cleanup form will be run in other
+circumstances, including at a user-requested break in testing at
+either failure or error.
+
+The
+\texttt{:fixtures-setup}\index{fixtures-setup@\texttt{:fixtures-setup}}
+(respectively
+\texttt{:fixtures-cleanup})\index{fixtures-cleanup@\texttt{:fixtures-cleanup}}
+form is run before fixtures are bound (after their bindings are
+released).  These forms are useful, for example, to initialize a
+database connection from which the fixture values are drawn.
+
+The \texttt{:each-setup}\index{each-cleanup@\texttt{:each-cleanup}}
+and \texttt{:each-cleanup}\index{each-cleanup@\texttt{:each-cleanup}}
+forms are run before each test, rather than once for the group.
+
+The \texttt{:documentation}\index{documentation@\texttt{:documentation}}
+form sets the docstring for the class.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual"
+%%% End: 
