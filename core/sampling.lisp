@@ -329,7 +329,7 @@
                 #-(or clisp ecl) (find-class 'double-float)
                 #+(or clisp ecl) 'double-float
 
-                #-(or allegro sbcl cmu clisp ecl) (find-class 'long-float)
+                #-(or allegro sbcl cmu clisp ecl lispworks) (find-class 'long-float)
                 #+(or clisp ecl) 'long-float))
 
   #-(or allegro sbcl cmu)
@@ -344,7 +344,7 @@
                     #+(or clisp ecl) 'double-float)))
      n)
 
-  #-(or allegro sbcl cmu)
+  #-(or allegro sbcl cmu lispworks)
   (:method ((n (eql #-(or clisp ecl) (find-class 'long-float)
                     #+(or clisp ecl) 'long-float)))
      n)

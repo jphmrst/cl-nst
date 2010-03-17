@@ -7,9 +7,11 @@
 
 
 (let ((logdir
-       (merge-pathnames (#+allegro sys:getenv #+sbcl sb-ext:posix-getenv
+       (merge-pathnames (#+allegro sys:getenv
+                                   #+sbcl sb-ext:posix-getenv
                                    #+(or clisp clozure) getenv
-                                   #-(or allegro sbcl clisp clozure) error
+                                   #+lispworks lispworks:environment-variable
+                                   #-(or allegro sbcl clisp clozure lispworks) error
                          "NSTJUNITDIR")
                         (make-pathname :directory (pathname-directory "./")))))
   (format t "~a~%" logdir)
