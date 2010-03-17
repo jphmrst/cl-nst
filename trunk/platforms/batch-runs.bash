@@ -16,6 +16,41 @@ mkdir -p logs
 # ------------------------------------------------------------
 
 
+# Clear out Lispworks FASLs
+rm -rf ../*/lispworks-5.1.1-linux-i386 \
+    ../*/*/lispworks-5.1.1-linux-i386  \
+    ../*/*.ufasl ../*/*/*.ufasl
+echo Testing the trunk \(with everything recompiled\) on LispWorks
+echo > logs/lispworks-fresh.log
+/usr/local/lib/LispWorksPersonal/lispworks-personal-5-1-1-x86-linux \
+    < inputs/lispworks/nst-tests.lisp \
+    2>> logs/lispworks-fresh.log >> logs/lispworks-fresh.log
+grep TOTAL logs/lispworks-fresh.log | tail -1
+
+echo ------------------------------------------------------------
+echo Testing the trunk \(without recompiling\) on LispWorks
+echo > logs/lispworks-fresh.log
+/usr/local/lib/LispWorksPersonal/lispworks-personal-5-1-1-x86-linux \
+    < inputs/lispworks/nst-tests.lisp \
+    2>> logs/lispworks-fresh.log >> logs/lispworks-fresh.log
+grep TOTAL logs/lispworks-fresh.log | tail -1
+
+echo ------------------------------------------------------------
+echo Testing JUnit writing on LispWorks
+mkdir -p lispworks-junit
+rm -f lispworks-junit/*
+export NSTJUNITDIR=lispworks-junit/
+/usr/local/lib/LispWorksPersonal/lispworks-personal-5-1-1-x86-linux \
+    < inputs/lispworks/junit.lisp \
+    2>> lispworks-junit/junit.log >> lispworks-junit/junit.log
+echo Files in $NSTJUNITDIR directory: expected 4, have \
+    `ls -1 $NSTJUNITDIR | wc -l`
+rm -rf ../*/lispworks-5.1.1-linux-i386 \
+    ../*/*/lispworks-5.1.1-linux-i386  \
+    ../*/*.ufasl ../*/*/*.ufasl
+
+
+
 # Clear out CLISP FASLs
 rm -rf /home/jm/Lib/Lisp/fasl/clisp/*/*
 
@@ -41,7 +76,6 @@ clisp -i inputs/clisp/init.lisp inputs/clisp/junit.lisp \
     2>> clisp-junit/junit.log >> clisp-junit/junit.log
 echo Files in $NSTJUNITDIR directory: expected 4, have \
     `ls -1 $NSTJUNITDIR | wc -l`
-
 
 
 # Clear out Clozure FASLs
