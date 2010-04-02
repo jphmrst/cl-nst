@@ -112,3 +112,10 @@
                   nst-meta-sources::group-fixtures-cache-override-t)
       (---form-true (eql nst-meta-sources::*nst-fc1* 2))
       (---form-true (eql nst-meta-sources::*nst-fc2* 1))))
+
+(def-test-group nil-use-fixtures ())
+
+(def-test (nil-fix :group nil-use-fixtures
+                   :setup (setf nst-meta-sources::zzz 0))
+    (--nst-group nst-meta-sources::use-fixture-with-nil
+      (---form-true (eql nst-meta-sources::zzz 10))))

@@ -194,13 +194,19 @@ you want to use to read +name-use+."
         (let ((tests-p (> (hash-table-count tests) 0)))
           (cond
             ((and fixture (not group) (not tests-p))
-             (format stream
-                 "~@<~a (package ~a) is a fixture~
-                 ~:@_ - ~@<binds names~{ ~a~^,~:_~}~:>~
+             (let ((the-names (loop for name in (bound-names fixture)
+                                    if (symbol-package name)
+                                      collect name)))
+               (format stream
+                   "~@<~a (package ~a) is a fixture~
+                 ~:@_ - ~@<binds ~:[~2*no accessible names~
+                                  ~;name~p~{ ~a~^,~:_~}~]~:>~
                  ~:>"
-               (type-of fixture)
-               (package-name (symbol-package (type-of fixture)))
-               (bound-names fixture)))
+                 (type-of fixture)
+                 (package-name (symbol-package (type-of fixture)))
+                 the-names
+                 (length the-names)
+                 the-names)))
 
             ((and group (not fixture) (not tests-p))
              (format stream
