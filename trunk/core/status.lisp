@@ -627,20 +627,21 @@ six-value summary of the results:
   stats-dest)
 
 (defun finish-multiple-report (result)
-  (with-accessors ((package-reports multi-results-package-reports)
-                   (group-reports multi-results-group-reports)
-                   (test-reports multi-results-test-reports)) result
-    (loop for report-set in (list package-reports group-reports test-reports)
+  (when result
+    (with-accessors ((package-reports multi-results-package-reports)
+                     (group-reports multi-results-group-reports)
+                     (test-reports multi-results-test-reports)) result
+      (loop for report-set in (list package-reports group-reports test-reports)
           do
-       (loop for report in report-set do
-         (incf (result-stats-elapsed-time result)
-               (result-stats-elapsed-time report))
-         (incf (result-stats-tests result)   (result-stats-tests report))
-         (incf (result-stats-passing result) (result-stats-passing report))
-         (incf (result-stats-erring result)  (result-stats-erring report))
-         (incf (result-stats-failing result) (result-stats-failing report))
-         (incf (result-stats-warning result) (result-stats-warning report))))
-    result))
+            (loop for report in report-set do
+                  (incf (result-stats-elapsed-time result)
+                        (result-stats-elapsed-time report))
+                  (incf (result-stats-tests result)   (result-stats-tests report))
+                  (incf (result-stats-passing result) (result-stats-passing report))
+                  (incf (result-stats-erring result)  (result-stats-erring report))
+                  (incf (result-stats-failing result) (result-stats-failing report))
+                  (incf (result-stats-warning result) (result-stats-warning report))))
+      result)))
 
 (defun all-package-report ()
   (let ((package-hash (make-hash-table :test 'eq)))

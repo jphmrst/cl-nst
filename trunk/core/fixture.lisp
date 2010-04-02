@@ -102,8 +102,12 @@ re-applied at subsequent fixture application rather than being recalculated.
       ;; Iterate through the bindings, building various lists.
       (loop for binding in bindings
 
-            ;; Pull out the components of this binding.
-          for var-name = (binding-options-check binding second first)
+          ;; Pull out the components of this binding.
+          for var-name = (let ((given (binding-options-check binding
+                                                             second first)))
+                           (cond ((null given) (gensym))
+                                 (t            given)))
+
           for form = (binding-options-check binding third second)
           for options = (binding-options-check binding first
                                                (lambda (x)

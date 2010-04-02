@@ -89,3 +89,13 @@
   (def-test placehold-1 :pass 'a)
   )
 
+(defparameter zzz 0)
+
+(def-fixtures fixture-with-nil ()
+  (c 3)
+  (nil (setf zzz 10))
+  (d 'asdfg))
+
+(def-test-group use-fixture-with-nil (fixture-with-nil)
+  (def-test tN1 :true (boundp 'c))
+  (def-test tN2 (:eq 'asdfg) d))

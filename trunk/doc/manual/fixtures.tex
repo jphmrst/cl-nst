@@ -53,6 +53,12 @@ Examples of fixture definitions:
     ((:cache nil) h (factorial 5)))
 \end{verbatim}
 
+To cause a side-effect among the evaluation of a fixture's name
+definitions, \texttt{nil} can be provided as a fixture name.  In uses
+of the fixture, NST will replace \texttt{nil} with a non-interned
+symbol; in documentation string such as for \texttt{:whatis}, any
+\texttt{nil}s are omitted.
+
 The \texttt{with-fixtures} macro faciliates debugging and other
 non-NST uses of fixtures sets:
 \begin{verbatim}

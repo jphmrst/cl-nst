@@ -1,11 +1,13 @@
 
 1.3.3 - 
-
+ LispWorks compatibility.
+ Ticket 28 - nil can now be used as a fixture name, to provide
+             side-effects in sequence with fixture bindings.         
 
 1.3.2 - public release, March 16, 2010
  Improvements/debugging to error reporting.
- Ticket 159 - Quote attribute value string contents in JUnit XML output.
  def-test and def-test-group now accept docstrings.
+ Ticket 159 - Quote attribute value string contents in JUnit XML output.
  Ticket 113 - The last task for :whatis --- this command now reports on
               NST-relevant name in all packages, not just *package*.
  Ticket 41 - Restored the :debug-on-fail mode.
