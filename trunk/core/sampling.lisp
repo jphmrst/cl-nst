@@ -38,6 +38,7 @@
 (defvar *max-compound-structure-depth* 4)
 
 (defmacro compound-structure (&body forms)
+  "Annotation macro for sampling over structured data."
   `(let ((*current-compound-structure-depth*
           (+ 1 *current-compound-structure-depth*)))
      ,@forms))
@@ -65,6 +66,21 @@
      (arbitrary (pick-from-sequence (arbitrary-generable-types)))))
 
 (defmacro def-arbitrary-instance-type (type-expr &body technique)
+  "Register a type for instance generation for invariant-testing.
+
+\(defmacro def-arbitrary-instance-type (SPEC-NAME :key PARAMS :scalar SCALAR)
+  FORM
+  FORM
+  ...
+  FORM)
+
+PARAMS is a formal parameter definition used to pass subcomponent types.
+
+SCALAR should be set to non-null if this SPEC-NAME corresponds to scalar
+objects.
+
+The FORMs construct and return (as if through progn) the arbtrary instance."
+
   (let (type-spec self keyargs scalar-p)
     (cond
      ((symbolp type-expr)

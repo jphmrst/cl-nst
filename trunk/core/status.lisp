@@ -807,7 +807,7 @@ six-value summary of the results:
 ;;;
 
 (defun emit-warning (&key format args)
-  "For use within user-defined check criteria: emit a warning."
+  "For use within user-defined NST criteria: emit a warning."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
   (new-check-result :warnings (list (make-check-note :context *nst-context*
                                                      :stack *nst-stack*
@@ -815,7 +815,7 @@ six-value summary of the results:
                                                      :args args))))
 
 (defun emit-failure (&key format args info)
-  "For use within user-defined check criteria: explain a failure."
+  "For use within user-defined NST criteria: explain a failure."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
   (new-check-result :failures (list (make-check-note :context *nst-context*
                                                      :stack *nst-stack*
@@ -823,11 +823,12 @@ six-value summary of the results:
                     :info info))
 
 (defun emit-success (&rest args)
+  "For use within user-defined NST criteria: note that a test was successful."
   (calibrate-check-result
    (apply #'make-check-result args)))
 
 (defun add-failure (result &key format args)
-  "For use within user-defined check criteria: add a failure to a result."
+  "For use within user-defined NST criteria: add a failure to a result."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
 
   (push (make-check-note :context *nst-context* :stack *nst-stack*
@@ -835,7 +836,7 @@ six-value summary of the results:
         (check-result-failures result)))
 
 (defun add-error (result &key format args)
-  "For use within user-defined check criteria: add an error to a result."
+  "For use within user-defined NST criteria: add an error to a result."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
 
   (push (make-check-note :context *nst-context* :stack *nst-stack*
@@ -850,7 +851,7 @@ six-value summary of the results:
     (add-error report :format format :args args)))
 
 (defun add-info (result item)
-  "For use within user-defined check criteria: add an info note to a result."
+  "For use within user-defined NST criteria: add an info note to a result."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
   (push item (check-result-info result)))
 
