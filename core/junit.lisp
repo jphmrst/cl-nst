@@ -161,6 +161,7 @@ argument should be a string of just spaces."))
   (junit-xml-snippet (all-groups-report) stream))
 
 (defmethod nst-junit-dump ((filename string))
+  "Write the results of this session's NST testing in JUnit XML format."
   (with-open-file (stream filename :if-exists :supersede
                           :if-does-not-exist :create)
     (nst-junit-dump stream)))
@@ -238,6 +239,7 @@ argument should be a string of just spaces."))
     (unless stream-supp-p (close the-stream))))
 
 (defun junit-results-by-group (&rest args &key verbose &allow-other-keys)
+  "Write the NST test results in JUnit XML format, organized by group."
   (loop for report in (multi-results-group-reports (all-groups-report)) do
     (when verbose
       (format t "Making XML for group ~s~%" (group-result-group-name report)))

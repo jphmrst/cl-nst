@@ -53,8 +53,10 @@
   `(apply-criterion ',(car criterion) ',(cdr criterion) ',form))
 
 (defun check-subcriterion-on-value (criterion expr)
+  "Verify that a value adheres to a criterion."
   (check-subcriterion-on-form criterion `(list ',expr)))
 (defun check-subcriterion-on-form (criterion form)
+  "Verify that an unevaluated form adheres to a criterion."
   (unless (listp criterion)
     (setf criterion (list criterion)))
   (apply-criterion (car criterion) (cdr criterion) form))
@@ -64,6 +66,16 @@
 
 ;; #+allegro (excl::define-simple-parser def-criterion caadr :nst-criterion)
 (defmacro def-criterion ((name args-formals values-formals) &body forms)
+  "Define a new criterion for use in NST tests.
+
+  \(def-criterion \(NAME CRITERION-LAMBDA-LIST
+                       VALUES-LAMBDA-LIST)
+    [ DOCUMENTATION ]
+    FORM
+    FORM
+    ...
+    FORM)"
+
   (let ((fp (gensym "values-form"))
         (ap (gensym "args"))
         (docstring nil))
@@ -89,6 +101,16 @@
 (defmacro def-criterion-unevaluated ((name args-formals forms-formal &key
                                            (ignore-forms nil))
                                      &body forms)
+  "Define a new criterion for use in NST tests.
+
+  \(def-criterion-unevaluated \(NAME CRITERION-LAMBDA-LIST
+                                   FORMS-ARG)
+    [ DOCUMENTATION ]
+    FORM
+    FORM
+    ...
+    FORM)"
+
   (let ((ap (gensym "args"))
         (docstring nil))
     (when (stringp (car forms))
@@ -108,6 +130,7 @@
 (defmacro def-values-criterion ((name args-formals forms-formals &key
                                       (declare nil decl-supp-p))
                                 &body forms)
+  "DEPRECATED: use def-criterion instead."
   (warn 'style-warning "def-values-criterion is deprecated from 1.3.0.")
   (let ((ap (gensym "args")) (fp (gensym "form")))
     `(progn
@@ -120,6 +143,7 @@
 
 #+allegro (excl::define-simple-parser def-form-criterion caadr :nst-criterion)
 (defmacro def-form-criterion ((name args-formals form-formal) &rest forms)
+  "DEPRECATED: use def-criterion-unevaluated instead."
   (warn
    "def-form-criterion is deprecated from 1.3.0, AND PROBABLY WILL NOT WORK.")
   (let ((ap (gensym "args")))
@@ -138,6 +162,11 @@
 
 (defmacro def-criterion-alias ((name . args-formals) docstring-or-form
                                &optional (form nil form-supp-p))
+  "Define one criterion in terms of another.
+
+  \(def-criterion-alias \(name &rest args)
+    [ DOCUMENTATION ]
+    EXPANSION)"
   (let ((vsf (gensym "values-form"))
         (new-name (gensym "new-name")) (new-args (gensym "new-args")))
     (unless form-supp-p (setf form docstring-or-form docstring-or-form nil))

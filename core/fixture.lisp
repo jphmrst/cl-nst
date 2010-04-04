@@ -303,6 +303,7 @@ re-applied at subsequent fixture application rather than being recalculated.
                 (values fixture-set-names nil fixture-names))))
 
 (defmacro with-fixtures ((&rest fixtures) &body forms)
+  "Evaluate forms in an environment which provides fixture bindings."
   `(let ,(loop for fixture in fixtures
                append (get-fixture-bindings fixture))
      ,@forms))
