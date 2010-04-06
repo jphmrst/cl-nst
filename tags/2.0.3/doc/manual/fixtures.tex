@@ -1,0 +1,77 @@
+\section{Fixtures}
+\label{fixtures}
+Fixtures\index{fixtures} are data structures and values which may be
+referred to by name during testing.  NST provides the ability to use
+fixtures across multiple tests and test groups, and to inject fixtures
+into the runtime namespace for debugging.
+A set of fixtures is defined using the \texttt{def-fixtures}
+macro:\index{def-fixtures@\texttt{def-fixtures}}
+\input{../common/fixture-syntax}
+%
+\texttt{FIXTURE-NAME} is the name to be associated with this set of
+fixtures.  \texttt{USES} is a list of the names of other fixture sets
+which this declaration assumes to be available.  This declaration is
+optional, but will supress some warnings.  \texttt{OUTER} and
+\texttt{INNER} are lists of declarations to be included in a
+\texttt{declare} statement respectively outside and inside of the
+\texttt{let}-binding in which the \texttt{BINDINGS} are applied.
+\texttt{DOCUMENTATION} describes the fixture set.
+
+When a fixture is attached to a test or test group, each \texttt{NAME}
+defined in that fixture becomes available in the body of that test or
+group as if \texttt{let*}-bound to the corresponding \texttt{FORM}.  A
+fixture in one set may refer back to other fixtures in the same set
+(again \emph{\`a la} \texttt{let*}) but forward references are not
+allowed.
+
+The names of a fixture and the names it binds can be exported from the
+package where the fixture is defined using the
+\texttt{export-bound-names} and \texttt{export-fixture-name}
+arguments.  The default value of both is \texttt{nil} unless a
+non-\texttt{nil} value is provided for \texttt{export-names}.
+
+The \texttt{cache} option, if non-nil, directs NST to evaluate a
+fixture's form one single time, and re-use the resulting value on
+subsequent applications of the fixture.  Note that if this value is
+mutated by the test cases, test behavior may become unpredictable!
+However this option can considerably improve performance when
+constant-valued fixtures are applied repeatedly.  Caching may be set
+on or off (the default is off) for the entire fixture set, and the
+setting may vary for individual fixtures.
+
+Examples of fixture definitions:
+\begin{verbatim}
+  (def-fixtures f1 ()
+    (c 3)
+    (d 'asdfg))
+  (def-fixtures f2 (:uses (f1))
+    (d 4)
+    (e 'asdfg)
+    (f c))
+  (def-fixtures f3 ()
+    ((:cache t)   g (ackermann 1 2))
+    ((:cache nil) h (factorial 5)))
+\end{verbatim}
+
+To cause a side-effect among the evaluation of a fixture's name
+definitions, \texttt{nil} can be provided as a fixture name.  In uses
+of the fixture, NST will replace \texttt{nil} with a non-interned
+symbol; in documentation string such as for \texttt{:whatis}, any
+\texttt{nil}s are omitted.
+
+The \texttt{with-fixtures} macro faciliates debugging and other
+non-NST uses of fixtures sets:
+\begin{verbatim}
+  (with-fixtures (FIXTURE ... FIXTURE)
+    FORM
+    ...
+    FORM)
+\end{verbatim}
+This macro evaluates the forms in a namespace expanded with the
+bindings provided by the fixtures.
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual"
+%%% End: 

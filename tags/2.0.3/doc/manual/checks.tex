@@ -1,0 +1,54 @@
+
+\section{Tests and test criteria}
+\label{sec:deftest}
+Individual unit tests are encoded with the \texttt{def-test} form:
+\input{../common/check-syntax}
+%
+The \texttt{SETUP}, \texttt{CLEANUP} and \texttt{FIXTURES} are just as
+for test groups, but apply only to the one test.  The
+\texttt{CRITERION} is a list or symbol specifying the properties which
+should hold for the \texttt{FORM}s.
+
+When a test is not enclosed within a group body, a group name must be
+provided by the \texttt{GROUP} option.  When a test is enclosed within
+a group body, the \texttt{GROUP} option is not required, but if
+provided it must agree with the group name.
+
+When there are no \texttt{SETUP}, \texttt{CLEANUP} or
+\texttt{FIXTURES} arguments, the \texttt{NAME} may be given without
+parentheses.  Likewise, any criterion consisting of a single symbol,
+e.g.\ \texttt{(:pass)}, may be abbreviated as just the symbol without
+the parentheses, e.g.\ \texttt{:pass}.
+
+The \texttt{:documentation} form provides a documentation string in
+the standard Lisp sense.  Since documentation strings are stored
+against names, and since the same name can be used for several tests
+(so long as they are all in different packages), documentation strings
+on tests may not be particularly useful.
+
+The \texttt{def-check} form is a deprecated synonym for
+\texttt{def-test}.
+
+\def\criteriaGroup#1#2{\subsection{#1} #2}
+\def\secText#1{#1}
+\def\endcriteriaGroup{}
+\def\manualOrRef#1#2{#1}
+\def\criteriaDoc#1#2#3#4#5#6#7#8{%
+\subsubsection{The \texttt{#2} criterion} 
+#4\index{#1@\texttt{#2}}
+\\ Syntax: \texttt{#3}
+#7{#8}#6}
+\def\noEx#1{}
+\def\singleEx#1{\\Example: \texttt{#1}}
+\def\multiEx#1{#1}
+\def\passExample#1{\\Passing example: \texttt{#1}}
+\def\failExample#1{\\Failing example: \texttt{#1}}
+\def\tabbingEx#1{\\Example: \begin{tabbing}#1\end{tabbing}}
+\def\noExpl{}
+\def\hasExpl#1{\par#1}
+\input{../common/criteria}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual"
+%%% End: 
