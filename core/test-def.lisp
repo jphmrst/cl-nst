@@ -174,7 +174,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                                         ;; warnings through this
                                         ;; handler.
                                         ;;
-                                        ;; (format t "++++++++++ ++++++++++~%")
+                                        (format t "++++++++++ ++++++++++~%")
                                         ;;
                                         (muffle-warning))))
                (defmethod group-name ((obj ,name)) ',*group-class-name*)

@@ -28,7 +28,7 @@
   (if (null pf)
       nil
       (with-slots (next-firsts) (car pf)
-	(null next-firsts))))
+        (null next-firsts))))
 
 (defclass permuter ()
      ((next-permutation :type (or null cons))
@@ -44,7 +44,7 @@
 (defmethod initialize-instance :after ((p permuter) &key src &allow-other-keys)
   (with-slots (next-permutation perm-stack has-next degenerate) p
     (setf  next-permutation nil  perm-stack nil  has-next t
-	   degenerate (null src)))
+           degenerate (null src)))
   (when src (tighten-stack p src)))
 
 (defmethod print-object ((p permuter) stream)
@@ -62,7 +62,7 @@
                                   ~:>~
                          ~:>~
                      ~]"
-	    has-next next-permutation perm-stack)))
+            has-next next-permutation perm-stack)))
 (defmethod fmt-permuter (stream (pf permuter-frame) c s)
   (declare (ignorable c) (ignorable s))
   (with-slots (next-firsts prev-firsts) pf
@@ -71,19 +71,19 @@
 (defun next-permutation (p)
   (with-slots (next-permutation perm-stack has-next degenerate) p
     (if degenerate
-	(progn (setf has-next nil)
-	       next-permutation)
-	(let ((result next-permutation))
-	  (unless has-next
-	    (error "Asked an empty permutation generator for another\
+        (progn (setf has-next nil)
+               next-permutation)
+        (let ((result next-permutation))
+          (unless has-next
+            (error "Asked an empty permutation generator for another\
  permutation"))
-	  (relax-stack p)
-	  (let ((whittled (whittle-relaxed-stack p)))
-	    (if whittled
-		(progn 
-		  (setf has-next nil))
-		(tighten-stack p (get-unassigned p))))
-	  result))))
+          (relax-stack p)
+          (let ((whittled (whittle-relaxed-stack p)))
+            (if whittled
+                (progn
+                  (setf has-next nil))
+                (tighten-stack p (get-unassigned p))))
+          result))))
 
 (defun relax-stack (p)
   (with-slots (next-permutation perm-stack has-next) p
@@ -91,35 +91,35 @@
       (error
        "Asked an empty permutation generator for another permutation"))
     (let ((reclaimed (pop next-permutation)))
-	(with-slots (prev-firsts) (car perm-stack)
-	  (push reclaimed prev-firsts)))))
+        (with-slots (prev-firsts) (car perm-stack)
+          (push reclaimed prev-firsts)))))
 
 (defun whittle-relaxed-stack (p)
   (block main
     (with-slots (next-permutation perm-stack has-next) p
       (block bleh
-	(loop do
-	  (unless (and perm-stack
-		       (with-slots (next-firsts) (car perm-stack)
-			 (null next-firsts)))
-	    (return-from bleh))
-	  (pop perm-stack)
-	  (when (null perm-stack)
-	    (return-from main t))
-	  (relax-stack p)))
+        (loop do
+          (unless (and perm-stack
+                       (with-slots (next-firsts) (car perm-stack)
+                         (null next-firsts)))
+            (return-from bleh))
+          (pop perm-stack)
+          (when (null perm-stack)
+            (return-from main t))
+          (relax-stack p)))
       (with-slots (next-firsts) (car perm-stack)
-	(let ((new-prefix (pop next-firsts)))
-	  (push new-prefix next-permutation)))
+        (let ((new-prefix (pop next-firsts)))
+          (push new-prefix next-permutation)))
       nil)))
 
 (defun tighten-stack (p slottable)
   (with-slots (next-permutation perm-stack has-next) p
     (loop for sublist on slottable do
       (unless (null sublist)
-	(destructuring-bind (head &rest tail) sublist
-	  (push head next-permutation)
-	  (push (make-instance 'permuter-frame :next tail)
-		perm-stack))))))
+        (destructuring-bind (head &rest tail) sublist
+          (push head next-permutation)
+          (push (make-instance 'permuter-frame :next tail)
+                perm-stack))))))
 
 ;;;(defmacro while-permutations (x permutations &rest forms)
 ;;;  `(loop while (has-next ,permutations) do

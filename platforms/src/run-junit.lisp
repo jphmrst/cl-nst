@@ -11,7 +11,8 @@
                                    #+sbcl sb-ext:posix-getenv
                                    #+(or clisp clozure) getenv
                                    #+lispworks lispworks:environment-variable
-                                   #-(or allegro sbcl clisp clozure lispworks) error
+                                   #+scl zzz
+                                   #-(or allegro sbcl clisp clozure lispworks scl) error
                          "NSTJUNITDIR")
                         (make-pathname :directory (pathname-directory "./")))))
   (format t "~a~%" logdir)
