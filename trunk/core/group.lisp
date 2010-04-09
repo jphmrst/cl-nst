@@ -73,8 +73,9 @@ forms - zero or more test forms, given by def-check."
   ;; Establish a binding of the group name to a special variable for
   ;; use in the expansion of the test-defining forms.
   (let ((*the-group* group-name)
-        (package-finder (intern (symbol-name group-name)
-                                (find-package :nst-name-use-in-packages))))
+        ;; (package-finder (intern (symbol-name group-name)
+        ;;                        (find-package :nst-name-use-in-packages)))
+        )
     (declare (special *the-group*))
 
     ;; Separate the test-defining forms from the group and test setup

@@ -310,7 +310,6 @@ argument should be a string of just spaces."))
   (with-output-to-string (stream)
     "Writes string to stream with all character entities escaped."
     #-allegro (coerce string 'simple-base-string)
-    (when (eq stream t) (setf stream *standard-output*))
     (loop for char across string
           for esc = (svref *char-escapes* (char-code char))
           do (write-sequence esc stream))))

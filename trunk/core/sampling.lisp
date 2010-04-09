@@ -336,8 +336,8 @@ The FORMs construct and return (as if through progn) the arbtrary instance."
   (:method ((n (eql (find-class 'ratio))))   n)
 
   (:method ((n (eql (find-class 'float))))
-     (coin-flip #-(or sbcl allegro cmu clisp ecl) (find-class 'short-float)
-                #+(or clisp ecl) 'short-float
+     (coin-flip #-(or sbcl allegro cmu clisp ecl scl) (find-class 'short-float)
+                #+(or clisp ecl scl) 'short-float
 
                 #-(or clisp ecl) (find-class 'single-float)
                 #+(or clisp ecl) 'single-float
@@ -349,8 +349,8 @@ The FORMs construct and return (as if through progn) the arbtrary instance."
                 #+(or clisp ecl) 'long-float))
 
   #-(or allegro sbcl cmu)
-  (:method ((n (eql #-(or clisp ecl) (find-class 'short-float)
-                    #+(or clisp ecl) 'short-float)))
+  (:method ((n (eql #-(or clisp ecl scl) (find-class 'short-float)
+                    #+(or clisp ecl scl) 'short-float)))
      n)
 
   (:method ((n (eql #-(or clisp ecl) (find-class 'single-float)

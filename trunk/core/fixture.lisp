@@ -294,8 +294,8 @@ re-applied at subsequent fixture application rather than being recalculated.
                    f)))
       for this-fixture-names
         = (cond
-           ((symbolp f) (bound-names f))           ; A named fixture
-           ((and (listp f) (eq (car f) :fixture))  ; Anonymous fixture
+           ((symbolp f) (bound-names f))               ; A named fixture
+           (t ; (and (listp f) (eq (car f) :fixture))  ; Anonymous fixture
             (error "Have not yet re-implemented anonymous fixtures.")))
       collect this-fixture-set-name into fixture-set-names
       append this-fixture-names into fixture-names
