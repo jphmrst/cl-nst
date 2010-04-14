@@ -224,7 +224,7 @@ re-applied at subsequent fixture application rather than being recalculated.
                    (unless (packagep in-package)
                      (setf in-package (find-package in-package)))
 
-                   ,@(loop for (var form options) in full-tuples
+                   ,@(loop for (var form) in bindings-with-tracking
                          append
                            `((format-at-verbosity 3
                                  ,(format nil " - Calculating ~a ~a~~%"
