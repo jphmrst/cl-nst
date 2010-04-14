@@ -383,15 +383,15 @@ structure, permitting the use of apply."
         (cond
          ((eq (car given-stack) 'list)
           (format s
-              #-sbcl "checki~@<ng (~s~@<~{~:_ ~s~}~:>) ~_on~{ ~a~}~:>"
-              #+sbcl "checking (~s~{~:_ ~s~}) on~{ ~a~}"
+              #-(or sbcl scl) "checki~@<ng (~s~@<~{~:_ ~s~}~:>) ~_on~{ ~a~}~:>"
+              #+(or sbcl scl) "checking (~s~{~:_ ~s~}) on~{ ~a~}"
               criterion criterion-args (cdr given-stack)))
 
          (t
           (format s
-              #-sbcl "ch~@<ecking (~s~@<~{~:_ ~s~}~:>) ~
+              #-(or sbcl scl) "ch~@<ecking (~s~@<~{~:_ ~s~}~:>) ~
                         ~:_on ~:_the ~:_result ~:_of ~:_evaluating ~:_~a~:>"
-              #+sbcl "checking (~s~{~:_ ~s~}) on the result of evaluating ~a"
+              #+(or sbcl scl) "checking (~s~{~:_ ~s~}) on the result of evaluating ~a"
               criterion criterion-args given-stack))))))
 
 
@@ -411,10 +411,10 @@ structure, permitting the use of apply."
                        (args check-note-args)) cn
         (declare (ignorable context stack))
         (format s
-            #-sbcl "~@<~:[~2*~;~?~:@_~]~
+            #-(or sbcl scl) "~@<~:[~2*~;~?~:@_~]~
                       ~:[at top level~;~:*in context: ~@<~{~a~^~:@_~}~:>~]~
                       ~@[~:@_stack: ~w~]~:>"
-            #+sbcl "~:[~2*~;~?~:@_~]~
+            #+(or sbcl scl) "~:[~2*~;~?~:@_~]~
                       ~:[at top level~;~:*in context: ~{~a~^~:@_~}~]~
                       ~@[~:@_stack: ~w~]"
           format format args
