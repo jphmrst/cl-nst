@@ -259,7 +259,13 @@ re-applied at subsequent fixture application rather than being recalculated.
                      `((eval-when (:compile-toplevel :load-toplevel :execute)
                          ,@(loop for tuple in full-tuples
                                  collect
-                                 (let ((id tuple))
+                                 (let* ((tuple-first  (first tuple))
+                                        (tuple-second (second tuple))
+                                        (id (cond
+                                              ((symbolp tuple-first)
+                                               tuple-first)
+                                              (t
+                                               tuple-second))))
                                    `(export ',id
                                             ,(intern (package-name (symbol-package id))
                                                      (find-package :keyword)))))
