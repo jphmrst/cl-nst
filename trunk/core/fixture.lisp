@@ -234,7 +234,7 @@ re-applied at subsequent fixture application rather than being recalculated.
                                      (t (gensym)))
                                ,form)))
 
-                   (import ',bound-names in-package)
+                   ;;(import ',bound-names in-package)
 
                    ',name)
 
