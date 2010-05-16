@@ -11,7 +11,7 @@
 \usepackage{makeidx}
 \usepackage{tightlist}
 \usepackage[pdftex]{hyperref}
-\title{NST 1.3.2 users' manual}
+\title{NST 2.0 User Manual}
 \setcounter{tocdepth}{2}
 \makeindex
 \parskip 0.6em
@@ -22,16 +22,18 @@
 \thispagestyle{empty}
 \parskip -0.5em
 
-\noindent This document is the manual and users' guide to the NST test
-framework.  NST is a unit test system for Common Lisp which provides
-support for test fixture data, stateful setup and cleanup of tests,
-grouping of tests, and (we think!) a useful runtime interface.
-Suggestions and comments are welcome; a list of known bugs and
-infelicities concludes this document.  The files in the NST
-distribution's \texttt{self-test} directory, especially
-\texttt{self-test/core/builtin-checks.lisp}, holds the NST tests for
-NST and contain many examples (some of which we have adapted for this
-manual).
+\noindent This document is the manual and users' guide to the
+2.0.$x$\footnote{The 1.3.x series was renamed to 2.0.x, since uses of
+  certain low-level criteria definers became non-backward compatible.}
+series of the NST test framework.  NST is a unit test system for
+Common Lisp which provides support for test fixture data, stateful
+setup and cleanup of tests, grouping of tests, and (we think!) a
+useful runtime interface.  Suggestions and comments are welcome; a
+list of known bugs and infelicities concludes this document.  The
+files in the NST distribution's \texttt{self-test} directory,
+especially \texttt{self-test/core/builtin-checks.lisp}, holds the NST
+tests for NST and contain many examples (some of which we have adapted
+for this manual).
 
 \tableofcontents
 \parskip 0.6em
