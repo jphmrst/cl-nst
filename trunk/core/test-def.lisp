@@ -156,7 +156,22 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
              #+allegro (excl:record-source-file ',test-name :type :nst-test)
              ,@anon-fixture-forms
 
-             (defclass ,name (,@fixture-class-names) ()
+             (defclass ,name (,@fixture-class-names)
+               ((%group-name
+                :allocation :class
+                :reader group-name
+                :initform ',*group-class-name*
+                )
+                (%check-user-name
+                 :allocation :class
+                 :reader check-user-name
+                 :initform ',test-name
+                 )
+                (%check-group-name
+                 :allocation :class
+                 :reader check-group-name
+                 :initform ',name
+                ))
                (:metaclass singleton-class)
                ,@(when docstring-supp-p `((:documentation ,docstring))))
              #-sbcl
@@ -167,7 +182,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
 
              (handler-bind (#+sbcl (style-warning
                                     #'(lambda (c)
-                                        (declare (ignore c))
+                                        ;; (declare (ignore c))
                                         ;;
                                         ;; Uncomment to prove that
                                         ;; SBCL does /not/ pass
@@ -176,11 +191,8 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                                         ;;
                                         (format t "++++++++++ ++++++++++~%")
                                         ;;
-                                        (muffle-warning))))
-               (defmethod group-name ((obj ,name)) ',*group-class-name*)
-               (defmethod check-user-name ((obj ,name)) ',test-name)
-               (defmethod check-group-name ((obj ,name)) ',name)
-
+                                        (muffle-warning c))))
+                             
                (defmethod core-run-test ((obj ,name))
                  (declare (optimize (debug 3)) #| ,fixture-names-special |# )
                  (let ((*current-group* ',*group-class-name*)
