@@ -306,7 +306,7 @@ available from compile-time forward.")
 
               (t
                (format t " - :nst :run-test ~s ~s~%"
-                 (group-name interp) (check-user-name interp))))))
+                 (group-name interp) (test-name-lookup interp))))))
 
           (t (let ((interp (car interps)))
                (cond

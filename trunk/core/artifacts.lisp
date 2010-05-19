@@ -68,7 +68,8 @@ group-specific activities.")
    "Map from groups to the private names of the group's fixtures."))
 (add-class-name-static-method group-fixture-classes)
 
-(defgeneric test-name-lookup (group))
+(defgeneric test-name-lookup (group)
+  (:method ((s symbol)) s))
 
 (defgeneric test-fixture-classes (name))
 (add-class-name-static-method test-fixture-classes)
@@ -81,9 +82,9 @@ group-specific activities.")
     (when group-hash
       (loop for g being the hash-keys of group-hash collect g))))
 
-(defgeneric check-user-name (check-instance)
-  (:documentation "Map from a check instance back to its user symbolic name.")
-  (:method ((s symbol)) s))
+;;;(defgeneric check-user-name (check-instance)
+;;;  (:documentation "Map from a check instance back to its user symbolic name.")
+;;;  (:method ((s symbol)) s))
 
 (defgeneric check-group-name (check-instance)
   (:documentation "Map from a check instance back to its internal name."))

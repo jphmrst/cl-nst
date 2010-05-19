@@ -116,7 +116,7 @@
 
 (defun emit-config-error (error test-obj msg)
   (let ((*nst-group-name* (group-name test-obj))
-        (*nst-check-user-name* (check-user-name test-obj)))
+        (*nst-check-user-name* (test-name-lookup test-obj)))
     (declare (special *nst-group-name* *nst-check-user-name*))
     (emit-error error :format (format nil msg))))
 
@@ -845,7 +845,7 @@ six-value summary of the results:
 
 (defun add-test-config-error (test-obj format &rest args)
   (let ((*nst-group-name* (group-name test-obj))
-        (*nst-check-user-name* (check-user-name test-obj))
+        (*nst-check-user-name* (test-name-lookup test-obj))
         (report (gethash (check-group-name test-obj) +results-record+)))
     (declare (special *nst-group-name* *nst-check-user-name*))
     (add-error report :format format :args args)))
