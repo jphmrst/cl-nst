@@ -48,11 +48,34 @@ first element is that symbol and whose remaining elements are options."
     (error "~@<Expected symbol or list for def-test argument~_ ~s~:>"
            name-or-name-and-args))))
 
+;;; -----------------------------------------------------------------
+
 (defclass nst-test-record () ()
   (:documentation "Common superclass of NST test records."))
 
 (defmethod test-record-p ((r nst-test-record))
   t)
+
+(defmethod core-run-test ((obj nst-test-record))
+  (declare (optimize (debug 3)))
+  (let ((*current-group* (group-name obj))
+        (*current-test*  (test-name-lookup obj))
+        (forms (test-forms obj))
+        (fixture-names-special (special-fixture-names obj))
+        (criterion (test-criterion obj)))
+    (declare (special *current-group* *current-test*))
+
+    (cond
+      ((eql 1 (length forms))
+       (check-subcriterion-on-form criterion
+                                   `(common-lisp:multiple-value-list
+                                     (locally (declare ,fixture-names-special)
+                                       ,(car forms)))))
+      (t (check-subcriterion-on-form criterion
+                                     `(locally (declare ,fixture-names-special)
+                                        (list ,@forms)))))))
+
+;;; -----------------------------------------------------------------
 
 (defmacro def-test (name-or-name-and-args criterion &rest forms)
   "Define a single unit test.
@@ -176,7 +199,16 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                                      :initform ',test-name)
                   (%check-group-name :allocation :class
                                      :reader check-group-name
-                                     :initform ',name))
+                                     :initform ',name)
+                  (%test-forms :allocation :class
+                               :reader test-forms
+                               :initform ',forms)
+                  (%special-fixture-names :allocation :class
+                                          :reader special-fixture-names
+                                          :initform ',fixture-names-special)
+                  (%criterion :allocation :class
+                              :reader test-criterion
+                              :initform ',criterion))
                  (:metaclass singleton-class)
                  ,@(when docstring-supp-p `((:documentation ,docstring))))
                #-sbcl
@@ -197,13 +229,6 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                                           ;; (format t "++++++++++ ++++++++++~%")
                                         ;;
                                           (muffle-warning c))))
-
-                 (defmethod core-run-test ((obj ,name))
-                   (declare (optimize (debug 3)) #| ,fixture-names-special |# )
-                   (let ((*current-group* ',*group-class-name*)
-                         (*current-test*  ',test-name))
-                     (declare (special *current-group* *current-test*))
-                     ,core-run-body))
 
                  ,@(when setup-supp-p
                      `((defmethod do-test-prefixture-setup progn ((obj ,name))
