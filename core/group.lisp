@@ -70,6 +70,11 @@ used with the tests in this group.
 
 forms - zero or more test forms, given by def-check."
 
+  (handler-bind (#+sbcl (style-warning
+                         #'(lambda (c)
+                             (format t "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<~%")
+                             (muffle-warning c))))
+
   ;; Establish a binding of the group name to a special variable for
   ;; use in the expansion of the test-defining forms.
   (let ((*the-group* group-name)
@@ -231,4 +236,4 @@ forms - zero or more test forms, given by def-check."
                  ;; name in NST.
                  (note-executable ',group-name (make-instance ',group-name))
 
-                 ',group-name))))))))
+                 ',group-name)))))))))
