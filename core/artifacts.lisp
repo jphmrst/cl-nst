@@ -89,6 +89,27 @@ group-specific activities.")
 (defgeneric check-group-name (check-instance)
   (:documentation "Map from a check instance back to its internal name."))
 
+(defgeneric test-forms (test-record)
+  (:method (o)
+     (declare (ignore o))
+     (error "Called %s on an object which is not a subclass of ~s"
+            'test-forms 'nst-test-record))
+  (:documentation "The unevaluated forms to be used as input to a test."))
+
+(defgeneric special-fixture-names (test-record)
+  (:method (o)
+     (declare (ignore o))
+     (error "Called %s on an object which is not a subclass of ~s"
+            'special-fixture-names 'nst-test-record))
+  (:documentation "The unevaluated forms to be used as input to a test."))
+
+(defgeneric test-criterion (test-record)
+  (:method (o)
+     (declare (ignore o))
+     (error "Called %s on an object which is not a subclass of ~s"
+            'test-criterion 'nst-test-record))
+  (:documentation "The unevaluated forms to be used as input to a test."))
+
 (defun ensure-group-instance (group)
   (cond
     ((symbolp group) (make-instance group))
