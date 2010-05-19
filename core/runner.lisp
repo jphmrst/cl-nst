@@ -67,7 +67,7 @@ REPL macros require the dynamic configuration provided by those wrappers."
 (defun run-test-inst (test-inst)
   (format-at-verbosity 4 "Called (run-test-inst ~s)~%" test-inst)
   (let ((group-inst (make-instance (group-name test-inst))))
-    (note-artifact-choice (check-user-name test-inst) test-inst)
+    (note-artifact-choice (test-name-lookup test-inst) test-inst)
     (run-group-tests group-inst (list test-inst))))
 
 (defun run-test (group test)
@@ -82,7 +82,7 @@ configuration provided by those wrappers."
       (let* ((test-lookups (test-name-lookup group-inst))
              (test-inst (gethash test test-lookups)))
         (unless test-inst (error 'no-such-nst-test :group group :test test))
-        (note-artifact-choice (check-user-name test-inst) test-inst)
+        (note-artifact-choice (test-name-lookup test-inst) test-inst)
 
         ;; Print a message at the appropriate level of verbosity.
         (format-at-verbosity 0 "Running test ~s (group ~s)~%" test group)
@@ -560,7 +560,7 @@ encoded as :before and :after methods.")
     "Capture the result of the test."
     (format-at-verbosity 4 "Called (core-run-test ~s) common :around~%" test)
     (let ((*nst-group-name* (group-name test))
-          (*nst-check-user-name* (check-user-name test))
+          (*nst-check-user-name* (test-name-lookup test))
           (*nst-check-internal-name* (check-group-name test))
           (start-time)
           (caught-warnings))

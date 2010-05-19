@@ -168,21 +168,15 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                ,@anon-fixture-forms
 
                (defclass ,name (,@fixture-class-names nst-test-record)
-                 ((%group-name
-                   :allocation :class
-                   :reader group-name
-                   :initform ',*group-class-name*
-                   )
-                  (%check-user-name
-                   :allocation :class
-                   :reader check-user-name
-                   :initform ',test-name
-                   )
-                  (%check-group-name
-                   :allocation :class
-                   :reader check-group-name
-                   :initform ',name
-                   ))
+                 ((%group-name :allocation :class
+                               :reader group-name
+                               :initform ',*group-class-name*)
+                  (%test-name-lookup :allocation :class
+                                     :reader test-name-lookup
+                                     :initform ',test-name)
+                  (%check-group-name :allocation :class
+                                     :reader check-group-name
+                                     :initform ',name))
                  (:metaclass singleton-class)
                  ,@(when docstring-supp-p `((:documentation ,docstring))))
                #-sbcl
@@ -244,10 +238,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                             test-name
                             *group-class-name*))))
 
-               ;; Pass the test record predicate.
-               ;; (defmethod test-record-p ((obj ,name)) t)
-
-               (defmethod test-name-lookup ((ts ,name)) ',test-name)
+               ;; (defmethod test-name-lookup ((ts ,name)) ',test-name)
 
                ;; Store the new artifact against the uses of its
                ;; name in NST.
