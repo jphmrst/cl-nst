@@ -70,6 +70,8 @@
 (def-test-group eql-g ()
   (def-test (eql-1) (:eql 3) (+ 2 1)))
 
+(defparameter its-a-list '(a s d f))
+
 (def-test-group core-checks ()
   (def-test oddpos-1 -positive-odd 3)
   (def-test oddpos-2 (:not -positive-odd) 4)
@@ -83,6 +85,7 @@
   (def-test symbol-1 (:symbol ert) 'ert)
   (def-test symbol-2-fails (:not (:symbol ert)) 'erx)
   (def-test apply-1 (:apply length (:predicate numberp)) '(a s d f))
+  (def-test apply-2 (:apply length (:predicate numberp)) its-a-list)
   (def-test pred-1 (:predicate numberp) 3)
   (def-test pred-2 (:predicate eql) (+ 1 2) 3)
   (def-test forms-eq-1 :forms-eq (car '(a b c)) (cadr '(c a b)))
