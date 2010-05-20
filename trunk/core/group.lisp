@@ -225,68 +225,14 @@ forms - zero or more test forms, given by def-check."
                      (setf (slot-value proto 'anon-fixture-forms)
                            ',anon-fixture-forms))|#
 
-                 ;; Retrieve a group name from its instance.  This
-                 ;; is increasingly trivial and should probably be
-                 ;; dropped.
-                 ;; (defmethod group-name ((g ,group-name)) ',group-name)
-
-                 ;; (defmethod group-fixture-class-names ((g ,group-name))
-                 ;;  ',fixture-class-names)
-
                  ;; Fixture processing.
                  ,@anon-fixture-forms
-
-;;;                 ,@(when fixtures-setup-supp-p
-;;;                     `((defmethod do-group-prefixture-setup
-;;;                           progn ((obj ,group-name))
-;;;                         ,@fixtures-setup)))
-
-;;;                 ,@(when fixtures-cleanup-supp-p
-;;;                     `((defmethod do-group-afterfixture-cleanup
-;;;                           progn ((obj ,group-name))
-;;;                         ,@fixtures-cleanup)))
-
-;;;                 ,@(when setup-supp-p
-;;;                     `((defmethod do-group-postfixture-setup
-;;;                           progn ((obj ,group-name))
-;;;                         (declare (special ,@fixture-names))
-;;;                         ,@setup)))
-;;;
-;;;                 ,@(when cleanup-supp-p
-;;;                     `((defmethod do-group-withfixture-cleanup
-;;;                           progn ((obj ,group-name))
-;;;                         (declare (special ,@fixture-names))
-;;;                         ,@cleanup)))
-
-;;;                 ,@(when each-setup-supp-p
-;;;                     `((defmethod do-group-each-test-setup
-;;;                           progn ((obj ,group-name))
-;;;                         ,@each-setup)))
-;;;
-;;;                 ,@(when each-cleanup-supp-p
-;;;                     `((defmethod do-group-each-test-cleanup
-;;;                           progn ((obj ,group-name))
-;;;                         ,@each-cleanup)))
-
-;;;                 (defmethod test-names ((group ,group-name))
-;;;                   (loop for tt in (test-list group)
-;;;                         collect (test-name-lookup (make-instance tt))))
-
-                 ;; Pass the group record predicate.
-;;;                 (defmethod group-record-p ((obj ,group-name)) t)
 
                  (set-pprint-dispatch ',group-name
                    #'(lambda (stream object)
                        (declare (ignorable object))
                        (format stream
                            ,(format nil "Group ~s" group-name))))
-
-;;;                 (defmethod trace-group ((g ,group-name))
-;;;                   (format t "Group ~s:~%" ',group-name)
-;;;                   (format t " - Fixtures: ~@<~{~s~^ ~:_~}~:>~%"
-;;;                     ',given-fixtures)
-;;;                   (format t " - Defines tests: ~@<~{~s~^ ~:_~}~:>~%"
-;;;                     ',test-names))
 
                  ;; Clear the list of tests when redefining the group.
                  (let ((actual (make-instance ',group-name)))
