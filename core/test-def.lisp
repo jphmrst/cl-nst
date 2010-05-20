@@ -133,7 +133,8 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
             using (hash-key id)
             do
               (when (and (eq test-name (check-result-check-name report))
-                         (eq *group-class-name* (check-result-group-name report)))
+                         (eq *group-class-name*
+                             (check-result-group-name report)))
                 (push id purge-ids)))
 
         ;; If we find one, reuse the symbol.
@@ -226,7 +227,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                                           ;; warnings through this
                                           ;; handler.
                                           ;;
-                                          ;; (format t "++++++++++ ++++++++++~%")
+                                          ;; (format t "++++++++++ ++++++++~%")
                                         ;;
                                           (muffle-warning c))))
 
@@ -235,7 +236,8 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                          ,setup)))
 
                  ,@(when cleanup-supp-p
-                     `((defmethod do-test-afterfixture-cleanup progn ((obj ,name))
+                     `((defmethod do-test-afterfixture-cleanup progn
+                         ((obj ,name))
                          ,cleanup))))
 
                (record-name-use :test ',test-name (make-instance ',name))
@@ -250,7 +252,8 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                (defmethod trace-test ((gr ,*group-class-name*)
                                       (ts ,name))
                  (format t "Test ~s (group ~s)~%" gr ts)
-                 (format t " - Given name and args: ~s~%" ',name-or-name-and-args)
+                 (format t " - Given name and args: ~s~%"
+                   ',name-or-name-and-args)
                  (format t " - Given criterion: ~s~%" ',criterion)
                  (format t " - Given forms: ~@<~{~s~^ ~:_~}~:>~%" ',forms))
 
