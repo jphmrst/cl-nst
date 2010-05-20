@@ -113,7 +113,8 @@ forms - zero or more test forms, given by def-check."
                        (*group-fixture-classes* fixture-class-names))
                    (declare (special *group-class-name*
                                      *group-fixture-classes*))
-                   (mapcar #'macroexpand check-forms))))
+                   (mapcar #'macroexpand check-forms)))
+                (x (gensym)))
 
             ;; As with the other NST forms, all execution is at load
             ;; time (or less usually, when typed into the REPL
@@ -146,7 +147,16 @@ forms - zero or more test forms, given by def-check."
                                   :initform nil)
                        (test-name-lookup :allocation :class
                                          :reader test-name-lookup
-                                         :initform (make-hash-table :test 'eq)))
+                                         :initform (make-hash-table :test 'eq))
+                       (%group-name :allocation :class
+                                    :reader group-name
+                                    :initform ',group-name)
+                       (%fixture-classes :allocation :class
+                                         :reader group-fixture-class-names
+                                         :initform ',fixture-class-names)
+                       (%fixtures-setup-thunk
+                        :allocation :class :reader fixtures-setup-thunk
+                        :initform #'(lambda () ,@fixtures-setup)))
                    (:metaclass singleton-class)
                    ,@(when docstring-supp-p `((:documentation ,docstring))))
                  #-sbcl
@@ -166,10 +176,10 @@ forms - zero or more test forms, given by def-check."
                  ;; Retrieve a group name from its instance.  This
                  ;; is increasingly trivial and should probably be
                  ;; dropped.
-                 (defmethod group-name ((g ,group-name)) ',group-name)
+                 ;; (defmethod group-name ((g ,group-name)) ',group-name)
 
-                 (defmethod group-fixture-class-names ((g ,group-name))
-                   ',fixture-class-names)
+                 ;; (defmethod group-fixture-class-names ((g ,group-name))
+                 ;;  ',fixture-class-names)
 
                  ;; Fixture processing.
                  ,@anon-fixture-forms
@@ -196,14 +206,15 @@ forms - zero or more test forms, given by def-check."
                          (declare (special ,@fixture-names))
                          ,@cleanup)))
 
-                 (when ,each-setup-supp-p
-                   (defmethod do-group-each-test-setup progn ((obj ,group-name))
-                     ,@each-setup))
+                 ,@(when ,each-setup-supp-p
+                     `((defmethod do-group-each-test-setup
+                           progn ((obj ,group-name))
+                         ,@each-setup)))
 
-                 (when ,each-cleanup-supp-p
-                   (defmethod do-group-each-test-cleanup
-                       progn ((obj ,group-name))
-                     ,@each-cleanup))
+                 ,@(when ,each-cleanup-supp-p
+                     `((defmethod do-group-each-test-cleanup
+                           progn ((obj ,group-name))
+                         ,@each-cleanup)))
 
                  (defmethod test-names ((group ,group-name))
                    (loop for tt in (test-list group)
