@@ -256,7 +256,6 @@ you want to use to read +name-use+."
             (t
              (format stream "MULTI")))))))
 
-
 ;;;
 ;;; Recording of results.  We use a hash table here --- unlike the
 ;;; method-based recording of test symbols, we're not worried about
