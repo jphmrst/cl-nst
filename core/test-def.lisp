@@ -228,7 +228,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                                           ;; handler.
                                           ;;
                                           ;; (format t "++++++++++ ++++++++~%")
-                                        ;;
+                                          ;;
                                           (muffle-warning c))))
 
                  ,@(when setup-supp-p
@@ -248,14 +248,14 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                  (remhash ',suite-class-name
                           (symbol-value '+results-record+)))|#
 
-               ;; Provide debugging information about this test.
-               (defmethod trace-test ((gr ,*group-class-name*)
-                                      (ts ,name))
-                 (format t "Test ~s (group ~s)~%" gr ts)
-                 (format t " - Given name and args: ~s~%"
-                   ',name-or-name-and-args)
-                 (format t " - Given criterion: ~s~%" ',criterion)
-                 (format t " - Given forms: ~@<~{~s~^ ~:_~}~:>~%" ',forms))
+;;;               ;; Provide debugging information about this test.
+;;;               (defmethod trace-test ((gr ,*group-class-name*)
+;;;                                      (ts ,name))
+;;;                 (format t "Test ~s (group ~s)~%" gr ts)
+;;;                 (format t " - Given name and args: ~s~%"
+;;;                   ',name-or-name-and-args)
+;;;                 (format t " - Given criterion: ~s~%" ',criterion)
+;;;                 (format t " - Given forms: ~@<~{~s~^ ~:_~}~:>~%" ',forms))
 
                ;; Pretty printer.
                (set-pprint-dispatch ',name
