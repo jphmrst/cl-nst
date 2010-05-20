@@ -191,25 +191,39 @@ configuration provided by those wrappers."
                    (return-from run-group-tests nil))))
        (do-group-afterfixture-cleanup group-obj)))))
 
-(defgeneric do-group-prefixture-setup (group-obj)
-  (:documentation
-   "Pre-fixture group application setup specs add a method to this function.")
-  (:method-combination progn)
-  (:method progn (group-obj)
-    (declare (ignorable group-obj))
-    (format-at-verbosity 4
-        "Called (do-group-prefixture-setup ~s) :progn primary method~%"
-      group-obj)))
+;;;(defgeneric do-group-prefixture-setup (group-obj)
+;;;  (:documentation
+;;;   "Pre-fixture group application setup specs add a method to this function.")
+;;;  (:method-combination progn)
+;;;  (:method progn (group-obj)
+;;;    (declare (ignorable group-obj))
+;;;    (format-at-verbosity 4
+;;;        "Called (do-group-prefixture-setup ~s) :progn primary method~%"
+;;;      group-obj)))
 
-(defgeneric do-group-afterfixture-cleanup (group-obj)
-  (:documentation
-   "After-group fixture cleanup specs add a method to this function.")
-  (:method-combination progn)
-  (:method progn (group-obj)
-    (declare (ignorable group-obj))
-    (format-at-verbosity 4
-        "Called (do-group-afterfixture-setup ~s) :progn primary method~%"
-      group-obj)))
+(defgeneric group-fixtures-setup-thunk (record))
+(defun do-group-prefixture-setup (record)
+  (unless (typep record 'nst-group-record)
+    (error "Called ~s with an argument not of type ~s"
+           'do-group-prefixture-setup 'nst-group-record))
+  (funcall (group-fixtures-setup-thunk record)))
+
+;;;(defgeneric do-group-afterfixture-cleanup (group-obj)
+;;;  (:documentation
+;;;   "After-group fixture cleanup specs add a method to this function.")
+;;;  (:method-combination progn)
+;;;  (:method progn (group-obj)
+;;;    (declare (ignorable group-obj))
+;;;    (format-at-verbosity 4
+;;;        "Called (do-group-afterfixture-setup ~s) :progn primary method~%"
+;;;      group-obj)))
+
+(defgeneric group-fixtures-cleanup-thunk (record))
+(defun do-group-afterfixture-cleanup (record)
+  (unless (typep record 'nst-group-record)
+    (error "Called ~s with an argument not of type ~s"
+           'do-group-afterfixture-cleanup 'nst-group-record))
+  (funcall (group-fixtures-cleanup-thunk record)))
 
 (defgeneric do-group-fixture-assignment (group-obj test-objs)
   (:documentation
@@ -417,45 +431,73 @@ for the group application class.")
                         (return-from do-group-fixture-assignment))))
             (do-group-withfixture-cleanup group-obj)))))))
 
-(defgeneric do-group-postfixture-setup (group-obj)
-  (:documentation "Fixture setup specs add a method to this function
-for the group application class.")
-  (:method-combination progn)
-  (:method progn (group-obj)
-     (declare (ignorable group-obj))
-     (format-at-verbosity 4
-         "Called (do-group-postfixture-setup ~s) :progn primary method~%"
-       group-obj)))
+;;;(defgeneric do-group-postfixture-setup (group-obj)
+;;;  (:documentation "Fixture setup specs add a method to this function
+;;;for the group application class.")
+;;;  (:method-combination progn)
+;;;  (:method progn (group-obj)
+;;;     (declare (ignorable group-obj))
+;;;     (format-at-verbosity 4
+;;;         "Called (do-group-postfixture-setup ~s) :progn primary method~%"
+;;;       group-obj)))
 
-(defgeneric do-group-withfixture-cleanup (group-obj)
-  (:documentation "With-fixtures cleanup specs add a method to this function
-for the group application class.")
-  (:method-combination progn)
-  (:method progn (group-obj)
-     (declare (ignorable group-obj))
-     (format-at-verbosity 4
-         "Called (do-group-withfixture-cleanup ~s) :progn primary method~%"
-       group-obj)))
+(defgeneric group-withfixtures-setup-thunk (record))
+(defun do-group-postfixture-setup (record)
+  (unless (typep record 'nst-group-record)
+    (error "Called ~s with an argument not of type ~s"
+           'do-group-postfixture-setup 'nst-group-record))
+  (funcall (group-withfixtures-setup-thunk record)))
 
-(defgeneric do-group-each-test-setup (group-obj)
-  (:documentation
-   "Group each-test setup specs add a method to this function.")
-  (:method-combination progn)
-  (:method progn (group-obj)
-     (declare (ignorable group-obj))
-     (format-at-verbosity 4
-         "Called (do-group-each-test-setup ~s) :progn primary method~%"
-       group-obj)))
+;;;(defgeneric do-group-withfixture-cleanup (group-obj)
+;;;  (:documentation "With-fixtures cleanup specs add a method to this function
+;;;for the group application class.")
+;;;  (:method-combination progn)
+;;;  (:method progn (group-obj)
+;;;     (declare (ignorable group-obj))
+;;;     (format-at-verbosity 4
+;;;         "Called (do-group-withfixture-cleanup ~s) :progn primary method~%"
+;;;       group-obj)))
 
-(defgeneric do-group-each-test-cleanup (group-obj)
-  (:documentation
-   "Group each-test cleanup specs add a method to this function.")
-  (:method-combination progn)
-  (:method progn (group-obj)
-     (declare (ignorable group-obj))
-     (format-at-verbosity 4
-         "Called (do-group-each-test-cleanup ~s) :progn primary method~%"
-       group-obj)))
+(defgeneric group-withfixtures-cleanup-thunk (record))
+(defun do-group-withfixture-cleanup (record)
+  (unless (typep record 'nst-group-record)
+    (error "Called ~s with an argument not of type ~s"
+           'do-group-withfixture-cleanup 'nst-group-record))
+  (funcall (group-withfixtures-cleanup-thunk record)))
+
+;;;(defgeneric do-group-each-test-setup (group-obj)
+;;;  (:documentation
+;;;   "Group each-test setup specs add a method to this function.")
+;;;  (:method-combination progn)
+;;;  (:method progn (group-obj)
+;;;     (declare (ignorable group-obj))
+;;;     (format-at-verbosity 4
+;;;         "Called (do-group-each-test-setup ~s) :progn primary method~%"
+;;;       group-obj)))
+
+(defgeneric group-eachtest-setup-thunk (record))
+(defun do-group-each-test-setup (record)
+  (unless (typep record 'nst-group-record)
+    (error "Called ~s with an argument not of type ~s"
+           'do-group-each-test-setup 'nst-group-record))
+  (funcall (group-eachtest-setup-thunk record)))
+
+;;;(defgeneric do-group-each-test-cleanup (group-obj)
+;;;  (:documentation
+;;;   "Group each-test cleanup specs add a method to this function.")
+;;;  (:method-combination progn)
+;;;  (:method progn (group-obj)
+;;;     (declare (ignorable group-obj))
+;;;     (format-at-verbosity 4
+;;;         "Called (do-group-each-test-cleanup ~s) :progn primary method~%"
+;;;       group-obj)))
+
+(defgeneric group-eachtest-cleanup-thunk (record))
+(defun do-group-each-test-cleanup (record)
+  (unless (typep record 'nst-group-record)
+    (error "Called ~s with an argument not of type ~s"
+           'do-group-each-test-cleanup 'nst-group-record))
+  (funcall (group-eachtest-cleanup-thunk record)))
 
 (defgeneric do-test-prefixture-setup (test-obj)
   (:documentation

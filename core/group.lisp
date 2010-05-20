@@ -58,6 +58,20 @@
             each-setup each-setup-supp-p each-cleanup each-cleanup-supp-p
             docstring docstring-supp-p)))
 
+(defclass nst-group-record () ()
+  (:documentation "Superclass of NST group definitions."))
+
+(defmethod test-names ((group nst-group-record))
+  (loop for tt in (test-list group)
+      collect (test-name-lookup (make-instance tt))))
+
+(defmethod group-record-p ((obj nst-group-record)) t)
+
+(defmethod trace-group ((g nst-group-record))
+  (format t "Group ~s:~%" (group-name g))
+  (format t " - Fixtures: ~@<~{~s~^ ~:_~}~:>~%" (group-given-fixtures g))
+  (format t " - Defines tests: ~@<~{~s~^ ~:_~}~:>~%" (test-names g)))
+
 #+allegro (excl::define-simple-parser def-test-group second :nst-group)
 (defmacro def-test-group (group-name given-fixtures &body forms)
   "Define a group of tests associated with certain fixtures,
@@ -138,7 +152,7 @@ forms - zero or more test forms, given by def-check."
                                       +package-groups+) package-hash))
                      (setf (gethash ',group-name package-hash) t)))
 
-                 (defclass ,group-name (,@fixture-class-names)
+                 (defclass ,group-name (,@fixture-class-names nst-group-record)
                       ((anon-fixture-forms :allocation :class
                                            :reader anon-fixture-forms
                                            :initform ',anon-fixture-forms)
@@ -151,12 +165,50 @@ forms - zero or more test forms, given by def-check."
                        (%group-name :allocation :class
                                     :reader group-name
                                     :initform ',group-name)
+                       (%given-fixtures :allocation :class
+                                        :reader group-given-fixtures
+                                        :initform ',given-fixtures)
                        (%fixture-classes :allocation :class
                                          :reader group-fixture-class-names
                                          :initform ',fixture-class-names)
                        (%fixtures-setup-thunk
-                        :allocation :class :reader fixtures-setup-thunk
-                        :initform #'(lambda () ,@fixtures-setup)))
+                        :allocation :class :reader group-fixtures-setup-thunk
+                        :initform #'(lambda ()
+                                      ,@(when fixtures-setup-supp-p
+                                          fixtures-setup)))
+                       (%fixtures-cleanup-thunk
+                        :allocation :class :reader group-fixtures-cleanup-thunk
+                        :initform #'(lambda ()
+                                      ,@(when fixtures-cleanup-supp-p
+                                          fixtures-cleanup)))
+                       (%withfixtures-setup-thunk
+                        :allocation :class
+                        :reader group-withfixtures-setup-thunk
+                        :initform #'(lambda ()
+                                      (declare (special ,@fixture-names))
+                                      ,@(when setup-supp-p
+                                          setup)))
+                       (%withfixtures-cleanup-thunk
+                        :allocation :class
+                        :reader group-withfixtures-cleanup-thunk
+                        :initform #'(lambda ()
+                                      (declare (special ,@fixture-names))
+                                      ,@(when cleanup-supp-p
+                                          cleanup)))
+                       (%eachtest-setup-thunk
+                        :allocation :class
+                        :reader group-eachtest-setup-thunk
+                        :initform #'(lambda ()
+                                      (declare (special ,@fixture-names))
+                                      ,@(when each-setup-supp-p
+                                          each-setup)))
+                       (%eachtest-cleanup-thunk
+                        :allocation :class
+                        :reader group-eachtest-cleanup-thunk
+                        :initform #'(lambda ()
+                                      (declare (special ,@fixture-names))
+                                      ,@(when each-cleanup-supp-p
+                                          each-cleanup))))
                    (:metaclass singleton-class)
                    ,@(when docstring-supp-p `((:documentation ,docstring))))
                  #-sbcl
@@ -184,44 +236,44 @@ forms - zero or more test forms, given by def-check."
                  ;; Fixture processing.
                  ,@anon-fixture-forms
 
-                 ,@(when fixtures-setup-supp-p
-                     `((defmethod do-group-prefixture-setup
-                           progn ((obj ,group-name))
-                         ,@fixtures-setup)))
+;;;                 ,@(when fixtures-setup-supp-p
+;;;                     `((defmethod do-group-prefixture-setup
+;;;                           progn ((obj ,group-name))
+;;;                         ,@fixtures-setup)))
 
-                 ,@(when fixtures-cleanup-supp-p
-                     `((defmethod do-group-afterfixture-cleanup
-                           progn ((obj ,group-name))
-                         ,@fixtures-cleanup)))
+;;;                 ,@(when fixtures-cleanup-supp-p
+;;;                     `((defmethod do-group-afterfixture-cleanup
+;;;                           progn ((obj ,group-name))
+;;;                         ,@fixtures-cleanup)))
 
-                 ,@(when setup-supp-p
-                     `((defmethod do-group-postfixture-setup
-                           progn ((obj ,group-name))
-                         (declare (special ,@fixture-names))
-                         ,@setup)))
+;;;                 ,@(when setup-supp-p
+;;;                     `((defmethod do-group-postfixture-setup
+;;;                           progn ((obj ,group-name))
+;;;                         (declare (special ,@fixture-names))
+;;;                         ,@setup)))
+;;;
+;;;                 ,@(when cleanup-supp-p
+;;;                     `((defmethod do-group-withfixture-cleanup
+;;;                           progn ((obj ,group-name))
+;;;                         (declare (special ,@fixture-names))
+;;;                         ,@cleanup)))
 
-                 ,@(when cleanup-supp-p
-                     `((defmethod do-group-withfixture-cleanup
-                           progn ((obj ,group-name))
-                         (declare (special ,@fixture-names))
-                         ,@cleanup)))
+;;;                 ,@(when each-setup-supp-p
+;;;                     `((defmethod do-group-each-test-setup
+;;;                           progn ((obj ,group-name))
+;;;                         ,@each-setup)))
+;;;
+;;;                 ,@(when each-cleanup-supp-p
+;;;                     `((defmethod do-group-each-test-cleanup
+;;;                           progn ((obj ,group-name))
+;;;                         ,@each-cleanup)))
 
-                 ,@(when ,each-setup-supp-p
-                     `((defmethod do-group-each-test-setup
-                           progn ((obj ,group-name))
-                         ,@each-setup)))
-
-                 ,@(when ,each-cleanup-supp-p
-                     `((defmethod do-group-each-test-cleanup
-                           progn ((obj ,group-name))
-                         ,@each-cleanup)))
-
-                 (defmethod test-names ((group ,group-name))
-                   (loop for tt in (test-list group)
-                         collect (test-name-lookup (make-instance tt))))
+;;;                 (defmethod test-names ((group ,group-name))
+;;;                   (loop for tt in (test-list group)
+;;;                         collect (test-name-lookup (make-instance tt))))
 
                  ;; Pass the group record predicate.
-                 (defmethod group-record-p ((obj ,group-name)) t)
+;;;                 (defmethod group-record-p ((obj ,group-name)) t)
 
                  (set-pprint-dispatch ',group-name
                    #'(lambda (stream object)
@@ -229,12 +281,12 @@ forms - zero or more test forms, given by def-check."
                        (format stream
                            ,(format nil "Group ~s" group-name))))
 
-                 (defmethod trace-group ((g ,group-name))
-                   (format t "Group ~s:~%" ',group-name)
-                   (format t " - Fixtures: ~@<~{~s~^ ~:_~}~:>~%"
-                     ',given-fixtures)
-                   (format t " - Defines tests: ~@<~{~s~^ ~:_~}~:>~%"
-                     ',test-names))
+;;;                 (defmethod trace-group ((g ,group-name))
+;;;                   (format t "Group ~s:~%" ',group-name)
+;;;                   (format t " - Fixtures: ~@<~{~s~^ ~:_~}~:>~%"
+;;;                     ',given-fixtures)
+;;;                   (format t " - Defines tests: ~@<~{~s~^ ~:_~}~:>~%"
+;;;                     ',test-names))
 
                  ;; Clear the list of tests when redefining the group.
                  (let ((actual (make-instance ',group-name)))
