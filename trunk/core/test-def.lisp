@@ -75,6 +75,14 @@ first element is that symbol and whose remaining elements are options."
                                      `(locally (declare ,fixture-names-special)
                                         (list ,@forms)))))))
 
+(defgeneric prefixture-setup-thunk (nst-test-record))
+(defmethod do-test-prefixture-setup progn ((obj nst-test-record))
+  (funcall (prefixture-setup-thunk obj)))
+
+(defgeneric postfixture-cleanup-thunk (nst-test-record))
+(defmethod do-test-afterfixture-cleanup progn ((obj nst-test-record))
+  (funcall (postfixture-cleanup-thunk obj)))
+
 ;;; -----------------------------------------------------------------
 
 (defmacro def-test (name-or-name-and-args criterion &rest forms)
@@ -209,7 +217,17 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                                           :initform ',fixture-names-special)
                   (%criterion :allocation :class
                               :reader test-criterion
-                              :initform ',criterion))
+                              :initform ',criterion)
+                  (%prefixture-setup :allocation :class
+                                     :reader prefixture-setup-thunk
+                                     :initform #'(lambda ()
+                                                   ,(when setup-supp-p
+                                                      setup)))
+                  (%postfixture-cleanup :allocation :class
+                                        :reader postfixture-cleanup-thunk
+                                        :initform #'(lambda ()
+                                                      ,(when cleanup-supp-p
+                                                         cleanup))))
                  (:metaclass singleton-class)
                  ,@(when docstring-supp-p `((:documentation ,docstring))))
                #-sbcl
@@ -217,28 +235,6 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                    `((setf (documentation ',test-name :nst-test) ,docstring)))
 
                (finalize-inheritance (find-class ',name))
-
-               (handler-bind (#+sbcl (style-warning
-                                      #'(lambda (c)
-                                          ;; (declare (ignore c))
-                                          ;;
-                                          ;; Uncomment to prove that
-                                          ;; SBCL does /not/ pass
-                                          ;; warnings through this
-                                          ;; handler.
-                                          ;;
-                                          ;; (format t "++++++++++ ++++++++~%")
-                                          ;;
-                                          (muffle-warning c))))
-
-                 ,@(when setup-supp-p
-                     `((defmethod do-test-prefixture-setup progn ((obj ,name))
-                         ,setup)))
-
-                 ,@(when cleanup-supp-p
-                     `((defmethod do-test-afterfixture-cleanup progn
-                         ((obj ,name))
-                         ,cleanup))))
 
                (record-name-use :test ',test-name (make-instance ',name))
 
