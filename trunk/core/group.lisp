@@ -108,14 +108,10 @@ forms - zero or more test forms, given by def-check."
                                       docstring docstring-supp-p)
         (separate-group-subforms forms)
 
-      (let* ((group-orig-pkg (symbol-package group-name))
+      (let ((group-orig-pkg (symbol-package group-name))
              ;; Get the package where the public group name symbol
              ;; lives.
-
-             ;; Separate access to the names of the tests.
-             (test-names (loop for form in check-forms
-                             append (pull-test-name-list form))))
-
+            )
         (multiple-value-bind (fixture-class-names anon-fixture-forms
                                                   fixture-names)
             (process-fixture-list given-fixtures)
@@ -127,8 +123,7 @@ forms - zero or more test forms, given by def-check."
                        (*group-fixture-classes* fixture-class-names))
                    (declare (special *group-class-name*
                                      *group-fixture-classes*))
-                   (mapcar #'macroexpand check-forms)))
-                (x (gensym)))
+                   (mapcar #'macroexpand check-forms))))
 
             ;; As with the other NST forms, all execution is at load
             ;; time (or less usually, when typed into the REPL
