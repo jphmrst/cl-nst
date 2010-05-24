@@ -68,6 +68,14 @@ group-specific activities.")
    "Map from groups to the private names of the group's fixtures."))
 (add-class-name-static-method group-fixture-classes)
 
+;;; two declarations that I could not adequately document, because
+;;; I don't know their return types.
+(defgeneric group-given-fixtures (test-group)
+  (:documentation "For documentation purposes --- returns a list
+of names of fixtures that are used by TEST-GROUP."))
+
+(defgeneric test-list (test-group))
+
 (defgeneric test-name-lookup (group)
   (:method ((s symbol)) s))
 
@@ -284,3 +292,4 @@ you want to use to read +name-use+."
   "Internal debugging function: dump the results hash."
   (loop for ts being the hash-keys of +results-record+ using (hash-value rs) do
     (format t "~s -> ~s~%" ts rs)))
+
