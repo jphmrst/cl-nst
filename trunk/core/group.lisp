@@ -148,63 +148,97 @@ forms - zero or more test forms, given by def-check."
                      (setf (gethash ',group-name package-hash) t)))
 
                  (defclass ,group-name (,@fixture-class-names nst-group-record)
-                      ((anon-fixture-forms :allocation :class
-                                           :reader anon-fixture-forms
-                                           :initform ',anon-fixture-forms)
-                       (test-list :allocation :class
-                                  :accessor test-list
-                                  :initform nil)
-                       (test-name-lookup :allocation :class
-                                         :reader test-name-lookup
-                                         :initform (make-hash-table :test 'eq))
-                       (%group-name :allocation :class
-                                    :reader group-name
-                                    :initform ',group-name)
-                       (%given-fixtures :allocation :class
-                                        :reader group-given-fixtures
-                                        :initform ',given-fixtures)
-                       (%fixture-classes :allocation :class
-                                         :reader group-fixture-class-names
-                                         :initform ',fixture-class-names)
+                      ((anon-fixture-forms
+                        :initarg %anon-fixture-forms
+                        :reader anon-fixture-forms
+                        :initform ',anon-fixture-forms)
+                       (test-list
+                        :accessor test-list
+                        :initarg %test-list
+                        :initform nil)
+                       (test-name-lookup
+                        :initarg %test-name-lookup
+                        :reader test-name-lookup
+                        :initform (make-hash-table :test 'eq))
+                       (%group-name
+                        :initarg %group-name
+                        :reader group-name
+                        :initform ',group-name)
+                       (%given-fixtures
+                        :initarg %given-fixtures
+                        :reader group-given-fixtures
+                        :initform ',given-fixtures)
+                       (%fixture-classes
+                        :initarg %fixture-classes
+                        :reader group-fixture-class-names
+                        :initform ',fixture-class-names)
                        (%fixtures-setup-thunk
-                        :allocation :class :reader group-fixtures-setup-thunk
+                        :initarg %fixtures-setup-thunk
+                        :reader group-fixtures-setup-thunk
                         :initform #'(lambda ()
                                       ,@(when fixtures-setup-supp-p
                                           fixtures-setup)))
                        (%fixtures-cleanup-thunk
-                        :allocation :class :reader group-fixtures-cleanup-thunk
+                        :initarg %fixtures-cleanup-thunk
+                        :reader group-fixtures-cleanup-thunk
                         :initform #'(lambda ()
                                       ,@(when fixtures-cleanup-supp-p
                                           fixtures-cleanup)))
                        (%withfixtures-setup-thunk
-                        :allocation :class
+                        :initarg %withfixtures-setup-thunk
                         :reader group-withfixtures-setup-thunk
                         :initform #'(lambda ()
                                       (declare (special ,@fixture-names))
                                       ,@(when setup-supp-p
                                           setup)))
                        (%withfixtures-cleanup-thunk
-                        :allocation :class
+                        :initarg %withfixtures-cleanup-thunk
                         :reader group-withfixtures-cleanup-thunk
                         :initform #'(lambda ()
                                       (declare (special ,@fixture-names))
                                       ,@(when cleanup-supp-p
                                           cleanup)))
                        (%eachtest-setup-thunk
-                        :allocation :class
+                        :initarg %eachtest-setup-thunk
                         :reader group-eachtest-setup-thunk
                         :initform #'(lambda ()
                                       (declare (special ,@fixture-names))
                                       ,@(when each-setup-supp-p
                                           each-setup)))
                        (%eachtest-cleanup-thunk
-                        :allocation :class
+                        :initarg %eachtest-cleanup-thunk
                         :reader group-eachtest-cleanup-thunk
                         :initform #'(lambda ()
                                       (declare (special ,@fixture-names))
                                       ,@(when each-cleanup-supp-p
                                           each-cleanup))))
                    (:metaclass singleton-class)
+                   (:default-initargs %anon-fixture-forms ',anon-fixture-forms
+                     %test-list nil %test-name-lookup (make-hash-table :test 'eq)
+                     %group-name ',group-name %given-fixtures ',given-fixtures
+                     %fixture-classes ',fixture-class-names
+                     %fixtures-setup-thunk #'(lambda ()
+                                               ,@(when fixtures-setup-supp-p
+                                                   fixtures-setup))
+                     %fixtures-cleanup-thunk #'(lambda ()
+                                                 ,@(when fixtures-cleanup-supp-p
+                                                     fixtures-cleanup))
+                     %withfixtures-setup-thunk #'(lambda ()
+                                                   (declare (special ,@fixture-names))
+                                                   ,@(when setup-supp-p
+                                                       setup))
+                     %withfixtures-cleanup-thunk #'(lambda ()
+                                                     (declare (special ,@fixture-names))
+                                                     ,@(when cleanup-supp-p
+                                                         cleanup))
+                     %eachtest-setup-thunk #'(lambda ()
+                                               (declare (special ,@fixture-names))
+                                               ,@(when each-setup-supp-p
+                                                   each-setup))
+                     %eachtest-cleanup-thunk #'(lambda ()
+                                                 (declare (special ,@fixture-names))
+                                                 ,@(when each-cleanup-supp-p
+                                                     each-cleanup)))
                    ,@(when docstring-supp-p `((:documentation ,docstring))))
                  #-sbcl
                  ,@(when docstring-supp-p
@@ -241,3 +275,16 @@ forms - zero or more test forms, given by def-check."
                  (note-executable ',group-name (make-instance ',group-name))
 
                  ',group-name)))))))))
+
+(defmethod update-instance-for-redefined-class :around ((instance nst-group-record)
+                                                       added-slots
+                                                       deleted-slots
+                                                       plist
+                                                       &rest initargs)
+  "When we redefine the group record, we need to reset the slots."
+  (apply #'call-next-method
+         instance
+         added-slots
+         deleted-slots
+         plist
+         (append initargs (class-default-initargs (class-of instance)))))
