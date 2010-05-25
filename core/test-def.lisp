@@ -53,19 +53,6 @@ first element is that symbol and whose remaining elements are options."
 (defclass nst-test-record () ()
   (:documentation "Common superclass of NST test records."))
 
-(defmethod update-instance-for-redefined-class :around ((instance nst-test-record)
-                                                       added-slots
-                                                       deleted-slots
-                                                       plist
-                                                       &rest initargs)
-  "When we redefine the group record, we need to reset the slots."
-  (apply #'call-next-method
-         instance
-         added-slots
-         deleted-slots
-         plist
-         (append initargs (class-default-initargs (class-of instance)))))
-
 (defmethod test-record-p ((r nst-test-record))
   t)
 
@@ -87,14 +74,6 @@ first element is that symbol and whose remaining elements are options."
       (t (check-subcriterion-on-form criterion
                                      `(locally (declare ,fixture-names-special)
                                         (list ,@forms)))))))
-
-(defgeneric prefixture-setup-thunk (nst-test-record))
-(defmethod do-test-prefixture-setup progn ((obj nst-test-record))
-  (funcall (prefixture-setup-thunk obj)))
-
-(defgeneric postfixture-cleanup-thunk (nst-test-record))
-(defmethod do-test-afterfixture-cleanup progn ((obj nst-test-record))
-  (funcall (postfixture-cleanup-thunk obj)))
 
 ;;; -----------------------------------------------------------------
 
@@ -154,8 +133,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
             using (hash-key id)
             do
               (when (and (eq test-name (check-result-check-name report))
-                         (eq *group-class-name*
-                             (check-result-group-name report)))
+                         (eq *group-class-name* (check-result-group-name report)))
                 (push id purge-ids)))
 
         ;; If we find one, reuse the symbol.
@@ -187,12 +165,25 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
             (process-fixture-list fixtures)
           (declare (ignorable fixture-names))
 
-          (let ((*nst-context* nil)
-                (fixture-names-special
+          (let* ((*nst-context* nil)
+                 (fixture-names-special
                   `(special ,@(loop for fx in fixture-class-names
                                   append (bound-names fx))
                             ,@(loop for fx in *group-fixture-classes*
-                                  append (bound-names fx)))))
+                                  append (bound-names fx))))
+                 (core-run-body
+                  (cond ((eql 1 (length forms))
+                         (continue-check criterion
+                           `(common-lisp:multiple-value-list
+                             (locally
+                                 (declare ,fixture-names-special)
+                               ,(car forms)))))
+                        (t (continue-check criterion
+                             `(locally
+                                  (declare ,fixture-names-special)
+                                (list ,@forms)))))))
+                                        ; The expansion of the actual
+                                        ; test form.
             (declare (special *nst-context*))
 
             `(block ,test-name
@@ -200,54 +191,52 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                ,@anon-fixture-forms
 
                (defclass ,name (,@fixture-class-names nst-test-record)
-                 ((%group-name :reader group-name
-                               :initarg %group-name
+                 ((%group-name :allocation :class
+                               :reader group-name
                                :initform ',*group-class-name*)
-                  (%test-name-lookup :reader test-name-lookup
-                                     :initarg %test-name-lookup
+                  (%test-name-lookup :allocation :class
+                                     :reader test-name-lookup
                                      :initform ',test-name)
-                  (%check-group-name :reader check-group-name
-                                     :initarg %check-group-name
+                  (%check-group-name :allocation :class
+                                     :reader check-group-name
                                      :initform ',name)
-                  (%test-forms :reader test-forms
-                               :initarg %test-forms
+                  (%test-forms :allocation :class
+                               :reader test-forms
                                :initform ',forms)
-                  (%special-fixture-names :reader special-fixture-names
-                                          :initarg %special-fixture-names
+                  (%special-fixture-names :allocation :class
+                                          :reader special-fixture-names
                                           :initform ',fixture-names-special)
-                  (%criterion :reader test-criterion
-                              :initarg %criterion
-                              :initform ',criterion)
-                  (%prefixture-setup :reader prefixture-setup-thunk
-                                     :initarg %prefixture-setup
-                                     :initform #'(lambda ()
-                                                   ,(when setup-supp-p
-                                                      setup)))
-                  (%postfixture-cleanup :reader postfixture-cleanup-thunk
-                                        :initarg %postfixture-cleanup
-                                        :initform #'(lambda ()
-                                                      ,(when cleanup-supp-p
-                                                         cleanup))))
+                  (%criterion :allocation :class
+                              :reader test-criterion
+                              :initform ',criterion))
                  (:metaclass singleton-class)
-                 (:default-initargs
-                     %group-name ',*group-class-name*
-                   %test-name-lookup ',test-name
-                   %check-group-name ',name
-                   %test-forms ',forms
-                   %special-fixture-names ',fixture-names-special
-                   %criterion ',criterion
-                   %prefixture-setup  #'(lambda ()
-                                          ,(when setup-supp-p
-                                             setup))
-                   %postfixture-cleanup #'(lambda ()
-                                            ,(when cleanup-supp-p
-                                               cleanup)))
                  ,@(when docstring-supp-p `((:documentation ,docstring))))
                #-sbcl
                ,@(when docstring-supp-p
                    `((setf (documentation ',test-name :nst-test) ,docstring)))
 
                (finalize-inheritance (find-class ',name))
+
+               (handler-bind (#+sbcl (style-warning
+                                      #'(lambda (c)
+                                          ;; (declare (ignore c))
+                                          ;;
+                                          ;; Uncomment to prove that
+                                          ;; SBCL does /not/ pass
+                                          ;; warnings through this
+                                          ;; handler.
+                                          ;;
+                                          ;; (format t "++++++++++ ++++++++++~%")
+                                        ;;
+                                          (muffle-warning c))))
+
+                 ,@(when setup-supp-p
+                     `((defmethod do-test-prefixture-setup progn ((obj ,name))
+                         ,setup)))
+
+                 ,@(when cleanup-supp-p
+                     `((defmethod do-test-afterfixture-cleanup progn ((obj ,name))
+                         ,cleanup))))
 
                (record-name-use :test ',test-name (make-instance ',name))
 
@@ -257,14 +246,13 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                  (remhash ',suite-class-name
                           (symbol-value '+results-record+)))|#
 
-;;;               ;; Provide debugging information about this test.
-;;;               (defmethod trace-test ((gr ,*group-class-name*)
-;;;                                      (ts ,name))
-;;;                 (format t "Test ~s (group ~s)~%" gr ts)
-;;;                 (format t " - Given name and args: ~s~%"
-;;;                   ',name-or-name-and-args)
-;;;                 (format t " - Given criterion: ~s~%" ',criterion)
-;;;                 (format t " - Given forms: ~@<~{~s~^ ~:_~}~:>~%" ',forms))
+               ;; Provide debugging information about this test.
+               (defmethod trace-test ((gr ,*group-class-name*)
+                                      (ts ,name))
+                 (format t "Test ~s (group ~s)~%" gr ts)
+                 (format t " - Given name and args: ~s~%" ',name-or-name-and-args)
+                 (format t " - Given criterion: ~s~%" ',criterion)
+                 (format t " - Given forms: ~@<~{~s~^ ~:_~}~:>~%" ',forms))
 
                ;; Pretty printer.
                (set-pprint-dispatch ',name
