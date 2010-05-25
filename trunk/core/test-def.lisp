@@ -53,6 +53,19 @@ first element is that symbol and whose remaining elements are options."
 (defclass nst-test-record () ()
   (:documentation "Common superclass of NST test records."))
 
+(defmethod update-instance-for-redefined-class :around ((instance nst-test-record)
+                                                       added-slots
+                                                       deleted-slots
+                                                       plist
+                                                       &rest initargs)
+  "When we redefine the group record, we need to reset the slots."
+  (apply #'call-next-method
+         instance
+         added-slots
+         deleted-slots
+         plist
+         (append initargs (class-default-initargs (class-of instance)))))
+
 (defmethod test-record-p ((r nst-test-record))
   t)
 
@@ -174,25 +187,12 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
             (process-fixture-list fixtures)
           (declare (ignorable fixture-names))
 
-          (let* ((*nst-context* nil)
-                 (fixture-names-special
+          (let ((*nst-context* nil)
+                (fixture-names-special
                   `(special ,@(loop for fx in fixture-class-names
                                   append (bound-names fx))
                             ,@(loop for fx in *group-fixture-classes*
-                                  append (bound-names fx))))
-                 (core-run-body
-                  (cond ((eql 1 (length forms))
-                         (continue-check criterion
-                           `(common-lisp:multiple-value-list
-                             (locally
-                                 (declare ,fixture-names-special)
-                               ,(car forms)))))
-                        (t (continue-check criterion
-                             `(locally
-                                  (declare ,fixture-names-special)
-                                (list ,@forms)))))))
-                                        ; The expansion of the actual
-                                        ; test form.
+                                  append (bound-names fx)))))
             (declare (special *nst-context*))
 
             `(block ,test-name
@@ -200,35 +200,48 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                ,@anon-fixture-forms
 
                (defclass ,name (,@fixture-class-names nst-test-record)
-                 ((%group-name :allocation :class
-                               :reader group-name
+                 ((%group-name :reader group-name
+                               :initarg %group-name
                                :initform ',*group-class-name*)
-                  (%test-name-lookup :allocation :class
-                                     :reader test-name-lookup
+                  (%test-name-lookup :reader test-name-lookup
+                                     :initarg %test-name-lookup
                                      :initform ',test-name)
-                  (%check-group-name :allocation :class
-                                     :reader check-group-name
+                  (%check-group-name :reader check-group-name
+                                     :initarg %check-group-name
                                      :initform ',name)
-                  (%test-forms :allocation :class
-                               :reader test-forms
+                  (%test-forms :reader test-forms
+                               :initarg %test-forms
                                :initform ',forms)
-                  (%special-fixture-names :allocation :class
-                                          :reader special-fixture-names
+                  (%special-fixture-names :reader special-fixture-names
+                                          :initarg %special-fixture-names
                                           :initform ',fixture-names-special)
-                  (%criterion :allocation :class
-                              :reader test-criterion
+                  (%criterion :reader test-criterion
+                              :initarg %criterion
                               :initform ',criterion)
-                  (%prefixture-setup :allocation :class
-                                     :reader prefixture-setup-thunk
+                  (%prefixture-setup :reader prefixture-setup-thunk
+                                     :initarg %prefixture-setup
                                      :initform #'(lambda ()
                                                    ,(when setup-supp-p
                                                       setup)))
-                  (%postfixture-cleanup :allocation :class
-                                        :reader postfixture-cleanup-thunk
+                  (%postfixture-cleanup :reader postfixture-cleanup-thunk
+                                        :initarg %postfixture-cleanup
                                         :initform #'(lambda ()
                                                       ,(when cleanup-supp-p
                                                          cleanup))))
                  (:metaclass singleton-class)
+                 (:default-initargs
+                     %group-name ',*group-class-name*
+                   %test-name-lookup ',test-name
+                   %check-group-name ',name
+                   %test-forms ',forms
+                   %special-fixture-names ',fixture-names-special
+                   %criterion ',criterion
+                   %prefixture-setup  #'(lambda ()
+                                          ,(when setup-supp-p
+                                             setup))
+                   %postfixture-cleanup #'(lambda ()
+                                            ,(when cleanup-supp-p
+                                               cleanup)))
                  ,@(when docstring-supp-p `((:documentation ,docstring))))
                #-sbcl
                ,@(when docstring-supp-p
