@@ -23,7 +23,7 @@
 (in-package :defdoc-asd)
 
 (defsystem :defdoc
-    :description "The NST unit/regression testing system"
+    :description "Structured document specifiers"
                                         ; In the svn repository, the
                                         ; version number is what we're
                                         ; working on now.
@@ -37,22 +37,19 @@
                                         ; number) should be
                                         ; incremented immediately
                                         ; after a version is shipped.
-    :version "1.3.3"
+    :version "0.0.0"
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :defdoc-test)))
-    :depends-on ( :closer-mop ;; (:version :closer-mop "0.55")
-                 )
+    :depends-on ( :closer-mop )
+    :components (;; The DEFDOC package, plus internal packages
+                 ;; and documentation generation.
+                 (:file "package")
 
-    :components ((:module "core" :components
-                          (;; The DEFDOC package, plus internal packages
-                           ;; and documentation generation.
-                           (:file "package")
+                 ;; Helper functions.
+                 (:file "specs"  :depends-on ("package"))
 
-                           ;; Helper functions.
-                           (:file "specs"  :depends-on ("package"))
+                 ;; Error declarations.
+                 (:file "macro"  :depends-on ("package" "specs"))
 
-                           ;; Error declarations.
-                           (:file "macros"  :depends-on ("package" "specs"))
-
-                          ))))
+                 ))

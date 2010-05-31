@@ -1,3 +1,4 @@
+(in-package :defdoc)
 
 (defun deconstruct-spec (name-or-spec)
   (cond

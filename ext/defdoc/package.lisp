@@ -20,7 +20,7 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :common-lisp-user)
 
-(defpackage :def-doc
+(defpackage :defdoc
     (:documentation "Structured documentation definition")
     (:nicknames :ddoc)
 ;;;    (:use :closer-common-lisp)
@@ -34,11 +34,11 @@
 ;;;                  #:generic-function-methods #:method-specializers
 ;;;                  #:eql-specializer-object)
 
-    (:export #:def-doc))
+    (:export #:defdoc))
 
-(defun nst::make-package-documentation ()
+(defun defdoc::make-package-documentation ()
   "Write documentation for this package, using system package-doc."
   (asdf:oos 'asdf:load-op 'package-doc)
   (funcall (symbol-function (intern (symbol-name 'package-doc)
                                     (find-package :package-doc)))
-           (find-package :def-doc)))
+           (find-package :defdoc)))
