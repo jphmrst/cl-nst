@@ -44,4 +44,7 @@
                  (:file "faildata")
 
                  ;; NST tests on NST runs.
-                 (:file "selftest")))
+                 (:file "selftest")
+
+                 ;; Testing redefining tests.
+                 (:file "redefs")))
