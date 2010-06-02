@@ -62,6 +62,10 @@
      ((group-name-src :reader group-name-src :initarg :group-name-src))
   (:documentation "Metaclasses of the group record class."))
 
+(defmethod validate-superclass ((class nst-group-record-meta)
+                                (superclass standard-class))
+  t)
+
 (defclass nst-group-record ()
      ((%group-name :reader group-name :initarg :group-name))
   (:documentation "Superclass of NST group definitions."))
