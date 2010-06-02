@@ -66,6 +66,10 @@ first element is that symbol and whose remaining elements are options."
                             :initarg :postfixture-cleanup-src))
   (:documentation "Metaclasses of the test record class."))
 
+(defmethod validate-superclass ((class nst-test-record-meta)
+                                (superclass standard-class))
+  t)
+
 (defclass nst-test-record ()
      ((%group-name :reader group-name)
       (%test-name-lookup :reader test-name-lookup)
