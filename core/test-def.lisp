@@ -50,8 +50,60 @@ first element is that symbol and whose remaining elements are options."
 
 ;;; -----------------------------------------------------------------
 
-(defclass nst-test-record () ()
+(defclass nst-test-record-meta (singleton-class)
+  ((group-name-src :reader group-name-src :initarg :group-name-src)
+   (test-name-lookup-src :reader test-name-lookup-src
+                         :initarg :test-name-lookup-src)
+   (check-group-name-src :reader check-group-name-src
+                         :initarg :check-group-name-src)
+   (test-forms-src :reader test-forms-src :initarg :test-forms-src)
+   (special-fixture-names-src :reader special-fixture-names-src
+                              :initarg :special-fixture-names-src)
+   (criterion-src :reader criterion-src :initarg :criterion-src)
+   (prefixture-setup-src :reader prefixture-setup-src
+                         :initarg :prefixture-setup-src)
+   (postfixture-cleanup-src :reader postfixture-cleanup-src
+                            :initarg :postfixture-cleanup-src))
+  (:documentation "Metaclasses of the test record class."))
+
+(defclass nst-test-record ()
+     ((%group-name :reader group-name)
+      (%test-name-lookup :reader test-name-lookup)
+      (%check-group-name :reader check-group-name)
+      (%test-forms :reader test-forms)
+      (%special-fixture-names :reader special-fixture-names)
+      (%criterion :reader test-criterion)
+      (%prefixture-setup :reader prefixture-setup-thunk)
+      (%postfixture-cleanup :reader postfixture-cleanup-thunk))
   (:documentation "Common superclass of NST test records."))
+
+(defmethod make-instance :around ((class nst-test-record-meta)
+                                  &key &allow-other-keys)
+  (let ((result (call-next-method)))
+    (setf (slot-value result '%group-name)
+      (group-name-src class)
+
+      (slot-value result '%test-name-lookup)
+      (test-name-lookup-src class)
+
+      (slot-value result '%check-group-name)
+      (check-group-name-src class)
+
+      (slot-value result '%test-forms)
+      (test-forms-src class)
+
+      (slot-value result '%special-fixture-names)
+      (special-fixture-names-src class)
+
+      (slot-value result '%criterion)
+      (criterion-src class)
+
+      (slot-value result '%prefixture-setup)
+      (symbol-function (prefixture-setup-src class))
+
+      (slot-value result '%postfixture-cleanup)
+      (symbol-function (postfixture-cleanup-src class)))
+    result))
 
 (defmethod test-record-p ((r nst-test-record))
   t)
@@ -74,6 +126,16 @@ first element is that symbol and whose remaining elements are options."
       (t (check-subcriterion-on-form criterion
                                      `(locally (declare ,fixture-names-special)
                                         (list ,@forms)))))))
+
+(defgeneric prefixture-setup-thunk (nst-test-record))
+(defmethod do-test-prefixture-setup progn ((obj nst-test-record))
+  (funcall (prefixture-setup-thunk obj)))
+
+(defgeneric postfixture-cleanup-thunk (nst-test-record))
+(defmethod do-test-afterfixture-cleanup progn ((obj nst-test-record))
+  (funcall (postfixture-cleanup-thunk obj)))
+
+(defun no-effect () nil)
 
 ;;; -----------------------------------------------------------------
 
@@ -121,11 +183,30 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                 (symbol-value '*group-fixture-classes*))
                (t (group-fixture-class-names
                    (make-instance *group-class-name*)))))
-             (name nil)                 ; The internal symbol used to
-                                        ; track the results of this
-                                        ; test.
-             (purge-ids nil))           ; IDs of previous record of
-                                        ; running this test.
+
+             ;; The internal symbol used to track the results of this
+             ;; test.
+             (name nil)
+
+             ;; IDs of previous record of running this test.
+             (purge-ids nil)
+
+             ;; A string we'll use as the basis for generated symbols.
+             (base-name-string
+              (concatenate 'string
+                (package-name (symbol-package *group-class-name*))
+                "-" (symbol-name *group-class-name*)
+                "--" (package-name (symbol-package test-name))
+                "-" (symbol-name test-name)))
+
+             (setup-fn-name (cond
+                              (setup-supp-p (gensym (format nil "~a//setup"
+                                                      base-name-string)))
+                              (t 'no-effect)))
+             (cleanup-fn-name (cond
+                                (cleanup-supp-p (gensym (format nil "~a//setup"
+                                                          base-name-string)))
+                                (t 'no-effect))))
         (declare (special *group-class-name* *group-fixture-classes*))
 
         ;; Find any records of running previous versions of this test.
@@ -133,7 +214,8 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
             using (hash-key id)
             do
               (when (and (eq test-name (check-result-check-name report))
-                         (eq *group-class-name* (check-result-group-name report)))
+                         (eq *group-class-name*
+                             (check-result-group-name report)))
                 (push id purge-ids)))
 
         ;; If we find one, reuse the symbol.
@@ -147,15 +229,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
 
         ;; If we aren't reusing a name, make up a new one.
         (unless name
-          (setf name (gentemp (concatenate 'string
-                                (package-name (symbol-package
-                                               *group-class-name*))
-                                "-"
-                                (symbol-name *group-class-name*)
-                                "-"
-                                (package-name (symbol-package test-name))
-                                "--"
-                                (symbol-name test-name))
+          (setf name (gentemp base-name-string
                               :nst-test-class-package)))
 
         ;; Expand the fixtures into the definitions we'll actually
@@ -190,54 +264,28 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                #+allegro (excl:record-source-file ',test-name :type :nst-test)
                ,@anon-fixture-forms
 
+               ,@(when setup-supp-p
+                   `((defun ,setup-fn-name ()   ,setup)))
+               ,@(when cleanup-supp-p
+                   `((defun ,cleanup-fn-name () ,cleanup)))
+
                (defclass ,name (,@fixture-class-names nst-test-record)
-                 ((%group-name :allocation :class
-                               :reader group-name
-                               :initform ',*group-class-name*)
-                  (%test-name-lookup :allocation :class
-                                     :reader test-name-lookup
-                                     :initform ',test-name)
-                  (%check-group-name :allocation :class
-                                     :reader check-group-name
-                                     :initform ',name)
-                  (%test-forms :allocation :class
-                               :reader test-forms
-                               :initform ',forms)
-                  (%special-fixture-names :allocation :class
-                                          :reader special-fixture-names
-                                          :initform ',fixture-names-special)
-                  (%criterion :allocation :class
-                              :reader test-criterion
-                              :initform ',criterion))
-                 (:metaclass singleton-class)
+                    ()
+                 (:metaclass nst-test-record-meta)
+                 (:group-name-src . ,*group-class-name*)
+                 (:test-name-lookup-src . ,test-name)
+                 (:check-group-name-src . ,name)
+                 (:test-forms-src . ,forms)
+                 (:special-fixture-names-src . ,fixture-names-special)
+                 (:criterion-src . ,criterion)
+                 (:prefixture-setup-src . ,setup-fn-name)
+                 (:postfixture-cleanup-src . ,cleanup-fn-name)
                  ,@(when docstring-supp-p `((:documentation ,docstring))))
                #-sbcl
                ,@(when docstring-supp-p
                    `((setf (documentation ',test-name :nst-test) ,docstring)))
 
                (finalize-inheritance (find-class ',name))
-
-               (handler-bind (#+sbcl (style-warning
-                                      #'(lambda (c)
-                                          ;; (declare (ignore c))
-                                          ;;
-                                          ;; Uncomment to prove that
-                                          ;; SBCL does /not/ pass
-                                          ;; warnings through this
-                                          ;; handler.
-                                          ;;
-                                          ;; (format t "++++++++++ ++++++++++~%")
-                                        ;;
-                                          (muffle-warning c))))
-
-                 ,@(when setup-supp-p
-                     `((defmethod do-test-prefixture-setup progn ((obj ,name))
-                         ,setup)))
-
-                 ,@(when cleanup-supp-p
-                     `((defmethod do-test-afterfixture-cleanup progn ((obj ,name))
-                         ,cleanup))))
-
                (record-name-use :test ',test-name (make-instance ',name))
 
                ;; Clear any previous stored results, since we've just
@@ -246,13 +294,14 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                  (remhash ',suite-class-name
                           (symbol-value '+results-record+)))|#
 
-               ;; Provide debugging information about this test.
-               (defmethod trace-test ((gr ,*group-class-name*)
-                                      (ts ,name))
-                 (format t "Test ~s (group ~s)~%" gr ts)
-                 (format t " - Given name and args: ~s~%" ',name-or-name-and-args)
-                 (format t " - Given criterion: ~s~%" ',criterion)
-                 (format t " - Given forms: ~@<~{~s~^ ~:_~}~:>~%" ',forms))
+;;;               ;; Provide debugging information about this test.
+;;;               (defmethod trace-test ((gr ,*group-class-name*)
+;;;                                      (ts ,name))
+;;;                 (format t "Test ~s (group ~s)~%" gr ts)
+;;;                 (format t " - Given name and args: ~s~%"
+;;;                   ',name-or-name-and-args)
+;;;                 (format t " - Given criterion: ~s~%" ',criterion)
+;;;                 (format t " - Given forms: ~@<~{~s~^ ~:_~}~:>~%" ',forms))
 
                ;; Pretty printer.
                (set-pprint-dispatch ',name
@@ -269,11 +318,17 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                ;; name in NST.
                (note-executable ',test-name (make-instance ',name))
 
-               (let ((gproto (make-instance ',*group-class-name*)))
-                 (setf (test-list gproto)
-                   (nconc (test-list gproto) (list ',name)))
+               (let ((gproto (make-instance ',*group-class-name*))
+                     (tproto (make-instance ',name)))
+;;;                 (format t "~%* * * * * * For ~s/~s~% - ~s~% - ~s~%"
+;;;                   ',*group-class-name* ',name
+;;;                   gproto tproto)
+                 (setf (test-list gproto) (nconc (test-list gproto)
+                                                 (list ',name)))
                  (setf (gethash ',test-name (test-name-lookup gproto))
-                   (make-instance ',name))))))))))
+                       tproto)
+;;;                 (format t " - List is now ~s~%" (test-list gproto))
+                 ))))))))
 
 (defpackage nst-test-class-package
     (:documentation "Internal package for NST tests' class names."))

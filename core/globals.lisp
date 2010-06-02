@@ -57,7 +57,6 @@
       (setf singleton (call-next-method)))
     singleton))
 
-
 ;;;
 ;;;  User-controlled options.
 ;;;
