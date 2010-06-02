@@ -244,18 +244,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                   `(special ,@(loop for fx in fixture-class-names
                                   append (bound-names fx))
                             ,@(loop for fx in *group-fixture-classes*
-                                  append (bound-names fx))))
-                 (core-run-body
-                  (cond ((eql 1 (length forms))
-                         (continue-check criterion
-                           `(common-lisp:multiple-value-list
-                             (locally
-                                 (declare ,fixture-names-special)
-                               ,(car forms)))))
-                        (t (continue-check criterion
-                             `(locally
-                                  (declare ,fixture-names-special)
-                                (list ,@forms)))))))
+                                  append (bound-names fx)))))
                                         ; The expansion of the actual
                                         ; test form.
             (declare (special *nst-context*))
