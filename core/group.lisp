@@ -58,16 +58,19 @@
             each-setup each-setup-supp-p each-cleanup each-cleanup-supp-p
             docstring docstring-supp-p)))
 
-(defclass nst-group-record-meta (singleton-class)
-     ((group-name-src :reader group-name-src :initarg :group-name-src))
-  (:documentation "Metaclasses of the group record class."))
-
-(defmethod validate-superclass ((class nst-group-record-meta)
-                                (superclass standard-class))
-  t)
-
 (defclass nst-group-record ()
-     ((%group-name :reader group-name :initarg :group-name))
+  ((%group-name :reader group-name :initarg :group-name)
+   (anon-fixture-forms :reader anon-fixture-forms)
+   (test-list :accessor test-list)
+   (test-name-lookup :reader test-name-lookup)
+   (%given-fixtures :reader group-given-fixtures)
+   (%fixture-classes :reader group-fixture-class-names)
+   (%fixtures-setup-thunk :reader group-fixtures-setup-thunk)
+   (%fixtures-cleanup-thunk :reader group-fixtures-cleanup-thunk)
+   (%withfixtures-setup-thunk :reader group-withfixtures-setup-thunk)
+   (%withfixtures-cleanup-thunk :reader group-withfixtures-cleanup-thunk)
+   (%eachtest-setup-thunk :reader group-eachtest-setup-thunk)
+   (%eachtest-cleanup-thunk :reader group-eachtest-cleanup-thunk))
   (:documentation "Superclass of NST group definitions."))
 
 (defmethod test-names ((group nst-group-record))
@@ -80,13 +83,6 @@
   (format t "Group ~s:~%" (group-name g))
   (format t " - Fixtures: ~@<~{~s~^ ~:_~}~:>~%" (group-given-fixtures g))
   (format t " - Defines tests: ~@<~{~s~^ ~:_~}~:>~%" (test-names g)))
-
-(defmethod make-instance :around ((class nst-group-record-meta)
-                                  &key &allow-other-keys)
-  (let ((result (call-next-method)))
-    (setf (slot-value result '%group-name)
-          (group-name-src class))
-    result))
 
 #+allegro (excl::define-simple-parser def-test-group second :nst-group)
 (defmacro def-test-group (group-name given-fixtures &body forms)
@@ -123,12 +119,13 @@ forms - zero or more test forms, given by def-check."
                                       docstring docstring-supp-p)
         (separate-group-subforms forms)
 
-      (let ((group-orig-pkg (symbol-package group-name))
-             ;; Get the package where the public group name symbol
-             ;; lives.
-            )
-        (multiple-value-bind (fixture-class-names anon-fixture-forms
-                                                  fixture-names)
+      ;; Get the package where the public group name symbol lives.
+      (let ((group-orig-pkg (symbol-package group-name)))
+
+        ;; Go through the fixtures, extracting names, and preparing
+        ;; anonymous fixture set instances.
+        (multiple-value-bind
+            (fixture-class-names anon-fixture-forms fixture-names)
             (process-fixture-list given-fixtures)
 
           ;; Expand the test forms in this environment which include
@@ -138,7 +135,8 @@ forms - zero or more test forms, given by def-check."
                        (*group-fixture-classes* fixture-class-names))
                    (declare (special *group-class-name*
                                      *group-fixture-classes*))
-                   (mapcar #'macroexpand check-forms))))
+                   (mapcar #'macroexpand check-forms)))
+                (group-object (gensym "group-object")))
 
             ;; As with the other NST forms, all execution is at load
             ;; time (or less usually, when typed into the REPL
@@ -163,94 +161,79 @@ forms - zero or more test forms, given by def-check."
                      (setf (gethash ',group-name package-hash) t)))
 
                  (defclass ,group-name (,@fixture-class-names nst-group-record)
-                      ((anon-fixture-forms :allocation :class
-                                           :reader anon-fixture-forms
-                                           :initform ',anon-fixture-forms)
-                       (test-list :allocation :class
-                                  :accessor test-list
-                                  :initform nil)
-                       (test-name-lookup :allocation :class
-                                         :reader test-name-lookup
-                                         :initform (make-hash-table :test 'eq))
-                       (%given-fixtures :allocation :class
-                                        :reader group-given-fixtures
-                                        :initform ',given-fixtures)
-                       (%fixture-classes :allocation :class
-                                         :reader group-fixture-class-names
-                                         :initform ',fixture-class-names)
-                       (%fixtures-setup-thunk
-                        :allocation :class :reader group-fixtures-setup-thunk
-                        :initform #'(lambda ()
-                                      ,@(when fixtures-setup-supp-p
-                                          fixtures-setup)))
-                       (%fixtures-cleanup-thunk
-                        :allocation :class :reader group-fixtures-cleanup-thunk
-                        :initform #'(lambda ()
-                                      ,@(when fixtures-cleanup-supp-p
-                                          fixtures-cleanup)))
-                       (%withfixtures-setup-thunk
-                        :allocation :class
-                        :reader group-withfixtures-setup-thunk
-                        :initform #'(lambda ()
-                                      (declare (special ,@fixture-names))
-                                      ,@(when setup-supp-p
-                                          setup)))
-                       (%withfixtures-cleanup-thunk
-                        :allocation :class
-                        :reader group-withfixtures-cleanup-thunk
-                        :initform #'(lambda ()
-                                      (declare (special ,@fixture-names))
-                                      ,@(when cleanup-supp-p
-                                          cleanup)))
-                       (%eachtest-setup-thunk
-                        :allocation :class
-                        :reader group-eachtest-setup-thunk
-                        :initform #'(lambda ()
-                                      (declare (special ,@fixture-names))
-                                      ,@(when each-setup-supp-p
-                                          each-setup)))
-                       (%eachtest-cleanup-thunk
-                        :allocation :class
-                        :reader group-eachtest-cleanup-thunk
-                        :initform #'(lambda ()
-                                      (declare (special ,@fixture-names))
-                                      ,@(when each-cleanup-supp-p
-                                          each-cleanup))))
-                   (:metaclass nst-group-record-meta)
-                   (:group-name-src . ,group-name)
-                       ,@(when docstring-supp-p `((:documentation ,docstring))))
+                      ()
+                   (:metaclass singleton-class)
+                   ,@(when docstring-supp-p `((:documentation ,docstring))))
                  #-sbcl
                  ,@(when docstring-supp-p
                      `((setf (documentation ',group-name :nst-group) ,docstring)
                        (setf (documentation ',group-name :nst-test-group)
                              ,docstring)))
 
+                 ;; Complete the group class setup
                  (finalize-inheritance (find-class ',group-name))
-                 (record-name-use :group
-                                  ',group-name (make-instance ',group-name))
-
-                 #|(let ((proto (class-prototype (find-class ',group-name))))
-                     (setf (slot-value proto 'anon-fixture-forms)
-                           ',anon-fixture-forms))|#
-
-                 ;; Fixture processing.
-                 ,@anon-fixture-forms
-
                  (set-pprint-dispatch ',group-name
                    #'(lambda (stream object)
                        (declare (ignorable object))
-                       (format stream
-                           ,(format nil "Group ~s" group-name))))
+                       (format stream ,(format nil "Group ~s" group-name))))
 
-                 ;; Clear the list of tests when redefining the group.
-                 (let ((actual (make-instance ',group-name)))
-                   (setf (test-list actual) nil)
-                   (clrhash (test-name-lookup actual)))
+                 ;; Copnfiguration of the actual group object
+                 ;; instance.
+                 (let ((,group-object (make-instance ',group-name)))
 
-                 ,@expanded-check-forms
+                   ;; Fill in the object's slot values for the given
+                   ;; group definition.
+                   (flet ((set-slot (slot value)
+                            (setf (slot-value ,group-object slot) value)))
+                     (set-slot '%group-name ',group-name)
+                     (set-slot 'anon-fixture-forms ',anon-fixture-forms)
+                     (set-slot 'test-list nil)
+                     (set-slot 'test-name-lookup (make-hash-table :test 'eq))
+                     (set-slot '%given-fixtures ',given-fixtures)
+                     (set-slot '%fixture-classes ',fixture-class-names)
+                     (set-slot '%fixtures-setup-thunk
+                               #'(lambda ()
+                                   ,@(when fixtures-setup-supp-p
+                                       fixtures-setup)))
+                     (set-slot '%fixtures-cleanup-thunk
+                               #'(lambda ()
+                                   ,@(when fixtures-cleanup-supp-p
+                                       fixtures-cleanup)))
+                     (set-slot '%withfixtures-setup-thunk
+                               #'(lambda ()
+                                   (declare (special ,@fixture-names))
+                                   ,@(when setup-supp-p
+                                       setup)))
+                     (set-slot '%withfixtures-cleanup-thunk
+                               #'(lambda ()
+                                   (declare (special ,@fixture-names))
+                                   ,@(when cleanup-supp-p
+                                       cleanup)))
+                     (set-slot '%eachtest-setup-thunk
+                               #'(lambda ()
+                                   (declare (special ,@fixture-names))
+                                   ,@(when each-setup-supp-p
+                                       each-setup)))
+                     (set-slot '%eachtest-cleanup-thunk
+                               #'(lambda ()
+                                   (declare (special ,@fixture-names))
+                                   ,@(when each-cleanup-supp-p
+                                       each-cleanup))))
 
-                 ;; Store the new artifact against the uses of its
-                 ;; name in NST.
-                 (note-executable ',group-name (make-instance ',group-name))
+                   ;; Record name usage.
+                   (record-name-use :group ',group-name ,group-object)
 
-                 ',group-name)))))))))
+                   ;; Fixture processing.
+                   ,@anon-fixture-forms
+
+                   ;; Clear the list of tests when redefining the group.
+                   (setf (test-list ,group-object) nil)
+                   (clrhash (test-name-lookup ,group-object))
+
+                   ,@expanded-check-forms
+
+                   ;; Store the new artifact against the uses of its
+                   ;; name in NST.
+                   (note-executable ',group-name ,group-object)))
+
+               ',group-name))))))))

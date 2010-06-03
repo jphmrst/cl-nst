@@ -50,26 +50,6 @@ first element is that symbol and whose remaining elements are options."
 
 ;;; -----------------------------------------------------------------
 
-(defclass nst-test-record-meta (singleton-class)
-  ((group-name-src :reader group-name-src :initarg :group-name-src)
-   (test-name-lookup-src :reader test-name-lookup-src
-                         :initarg :test-name-lookup-src)
-   (check-group-name-src :reader check-group-name-src
-                         :initarg :check-group-name-src)
-   (test-forms-src :reader test-forms-src :initarg :test-forms-src)
-   (special-fixture-names-src :reader special-fixture-names-src
-                              :initarg :special-fixture-names-src)
-   (criterion-src :reader criterion-src :initarg :criterion-src)
-   (prefixture-setup-src :reader prefixture-setup-src
-                         :initarg :prefixture-setup-src)
-   (postfixture-cleanup-src :reader postfixture-cleanup-src
-                            :initarg :postfixture-cleanup-src))
-  (:documentation "Metaclasses of the test record class."))
-
-(defmethod validate-superclass ((class nst-test-record-meta)
-                                (superclass standard-class))
-  t)
-
 (defclass nst-test-record ()
      ((%group-name :reader group-name)
       (%test-name-lookup :reader test-name-lookup)
@@ -80,34 +60,6 @@ first element is that symbol and whose remaining elements are options."
       (%prefixture-setup :reader prefixture-setup-thunk)
       (%postfixture-cleanup :reader postfixture-cleanup-thunk))
   (:documentation "Common superclass of NST test records."))
-
-(defmethod make-instance :around ((class nst-test-record-meta)
-                                  &key &allow-other-keys)
-  (let ((result (call-next-method)))
-    (setf (slot-value result '%group-name)
-      (group-name-src class)
-
-      (slot-value result '%test-name-lookup)
-      (test-name-lookup-src class)
-
-      (slot-value result '%check-group-name)
-      (check-group-name-src class)
-
-      (slot-value result '%test-forms)
-      (test-forms-src class)
-
-      (slot-value result '%special-fixture-names)
-      (special-fixture-names-src class)
-
-      (slot-value result '%criterion)
-      (criterion-src class)
-
-      (slot-value result '%prefixture-setup)
-      (symbol-function (prefixture-setup-src class))
-
-      (slot-value result '%postfixture-cleanup)
-      (symbol-function (postfixture-cleanup-src class)))
-    result))
 
 (defmethod test-record-p ((r nst-test-record))
   t)
@@ -264,22 +216,14 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
 
                (defclass ,name (,@fixture-class-names nst-test-record)
                     ()
-                 (:metaclass nst-test-record-meta)
-                 (:group-name-src . ,*group-class-name*)
-                 (:test-name-lookup-src . ,test-name)
-                 (:check-group-name-src . ,name)
-                 (:test-forms-src . ,forms)
-                 (:special-fixture-names-src . ,fixture-names-special)
-                 (:criterion-src . ,criterion)
-                 (:prefixture-setup-src . ,setup-fn-name)
-                 (:postfixture-cleanup-src . ,cleanup-fn-name)
+                 (:metaclass singleton-class)
+                 ;; (:metaclass nst-test-record-meta)
                  ,@(when docstring-supp-p `((:documentation ,docstring))))
                #-sbcl
                ,@(when docstring-supp-p
                    `((setf (documentation ',test-name :nst-test) ,docstring)))
 
                (finalize-inheritance (find-class ',name))
-               (record-name-use :test ',test-name (make-instance ',name))
 
                ;; Clear any previous stored results, since we've just
                ;; (re-)defined this check.
@@ -307,19 +251,36 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
 
                ;; (defmethod test-name-lookup ((ts ,name)) ',test-name)
 
-               ;; Store the new artifact against the uses of its
-               ;; name in NST.
-               (note-executable ',test-name (make-instance ',name))
-
                (let ((gproto (make-instance ',*group-class-name*))
                      (tproto (make-instance ',name)))
-;;;                 (format t "~%* * * * * * For ~s/~s~% - ~s~% - ~s~%"
-;;;                   ',*group-class-name* ',name
-;;;                   gproto tproto)
+                 (flet ((set-slot (slot value)
+                          (setf (slot-value tproto slot) value)))
+                   (set-slot '%group-name ',*group-class-name*)
+                   (set-slot '%test-name-lookup ',test-name)
+                   (set-slot '%check-group-name ',name)
+                   (set-slot '%test-forms ',forms)
+                   (set-slot '%special-fixture-names ',fixture-names-special)
+                   (set-slot '%criterion ',criterion)
+                   (set-slot '%prefixture-setup ',setup-fn-name)
+                   (set-slot '%postfixture-cleanup ',cleanup-fn-name)
+                   )
+
+                 ;; Store information about this test in its group.
                  (setf (test-list gproto) (nconc (test-list gproto)
                                                  (list ',name)))
                  (setf (gethash ',test-name (test-name-lookup gproto))
                        tproto)
+
+                 ;; Record the use of these names.
+                 (record-name-use :test ',test-name tproto)
+
+                 ;; Store the new artifact against the uses of its
+                 ;; name in NST.
+                 (note-executable ',test-name tproto)
+
+;;;              (format t "~%* * * * * * For ~s/~s~% - ~s~% - ~s~%"
+;;;                ',*group-class-name* ',name
+;;;                gproto tproto)
 ;;;                 (format t " - List is now ~s~%" (test-list gproto))
                  ))))))))
 
