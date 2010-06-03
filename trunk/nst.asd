@@ -82,7 +82,8 @@
                            (:file "check" :depends-on ("pick" "interrupt"))
 
                            ;; The def-check macro.
-                           (:file "test-def" :depends-on ("check"))
+                           (:file "test-def"
+                                  :depends-on ("check" "group" "runner"))
 
                            ;; The def-fixture macro, and processing
                            ;; anonymous fixture declarations.
