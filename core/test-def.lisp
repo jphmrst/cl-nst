@@ -61,6 +61,13 @@ first element is that symbol and whose remaining elements are options."
       (%postfixture-cleanup :reader postfixture-cleanup-thunk))
   (:documentation "Common superclass of NST test records."))
 
+;; Provide debugging information about this test.
+(defmethod trace-test ((gr nst-group-record) (ts nst-test-record))
+  (format t "Test ~s (group ~s)~%" gr ts)
+  ;; (format t " - Given name and args: ~s~%" (test-forms ts))
+  (format t " - Given criterion: ~s~%" (test-criterion ts))
+  (format t " - Given forms: ~@<~{~s~^ ~:_~}~:>~%" (test-forms ts)))
+
 (defmethod test-record-p ((r nst-test-record))
   t)
 
@@ -83,11 +90,9 @@ first element is that symbol and whose remaining elements are options."
                                      `(locally (declare ,fixture-names-special)
                                         (list ,@forms)))))))
 
-(defgeneric prefixture-setup-thunk (nst-test-record))
 (defmethod do-test-prefixture-setup progn ((obj nst-test-record))
   (funcall (prefixture-setup-thunk obj)))
 
-(defgeneric postfixture-cleanup-thunk (nst-test-record))
 (defmethod do-test-afterfixture-cleanup progn ((obj nst-test-record))
   (funcall (postfixture-cleanup-thunk obj)))
 
@@ -153,16 +158,7 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                 (package-name (symbol-package *group-class-name*))
                 "-" (symbol-name *group-class-name*)
                 "--" (package-name (symbol-package test-name))
-                "-" (symbol-name test-name)))
-
-             (setup-fn-name (cond
-                              (setup-supp-p (gensym (format nil "~a//setup"
-                                                      base-name-string)))
-                              (t 'no-effect)))
-             (cleanup-fn-name (cond
-                                (cleanup-supp-p (gensym (format nil "~a//setup"
-                                                          base-name-string)))
-                                (t 'no-effect))))
+                "-" (symbol-name test-name))))
         (declare (special *group-class-name* *group-fixture-classes*))
 
         ;; Find any records of running previous versions of this test.
@@ -209,11 +205,6 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                #+allegro (excl:record-source-file ',test-name :type :nst-test)
                ,@anon-fixture-forms
 
-               ,@(when setup-supp-p
-                   `((defun ,setup-fn-name ()   ,setup)))
-               ,@(when cleanup-supp-p
-                   `((defun ,cleanup-fn-name () ,cleanup)))
-
                (defclass ,name (,@fixture-class-names nst-test-record)
                     ()
                  (:metaclass singleton-class)
@@ -230,15 +221,6 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                #|(when (boundp '+results-record+)
                  (remhash ',suite-class-name
                           (symbol-value '+results-record+)))|#
-
-;;;               ;; Provide debugging information about this test.
-;;;               (defmethod trace-test ((gr ,*group-class-name*)
-;;;                                      (ts ,name))
-;;;                 (format t "Test ~s (group ~s)~%" gr ts)
-;;;                 (format t " - Given name and args: ~s~%"
-;;;                   ',name-or-name-and-args)
-;;;                 (format t " - Given criterion: ~s~%" ',criterion)
-;;;                 (format t " - Given forms: ~@<~{~s~^ ~:_~}~:>~%" ',forms))
 
                ;; Pretty printer.
                (set-pprint-dispatch ',name
@@ -261,9 +243,14 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                    (set-slot '%test-forms ',forms)
                    (set-slot '%special-fixture-names ',fixture-names-special)
                    (set-slot '%criterion ',criterion)
-                   (set-slot '%prefixture-setup ',setup-fn-name)
-                   (set-slot '%postfixture-cleanup ',cleanup-fn-name)
-                   )
+                   (set-slot '%prefixture-setup
+                             ,(cond
+                                (setup-supp-p `#'(lambda () ,setup))
+                                (t '#'no-effect)))
+                   (set-slot '%postfixture-cleanup
+                             ,(cond
+                                (cleanup-supp-p `#'(lambda () ,cleanup))
+                                (t '#'no-effect))))
 
                  ;; Store information about this test in its group.
                  (setf (test-list gproto) (nconc (test-list gproto)
