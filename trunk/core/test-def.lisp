@@ -96,8 +96,6 @@ first element is that symbol and whose remaining elements are options."
 (defmethod do-test-afterfixture-cleanup progn ((obj nst-test-record))
   (funcall (postfixture-cleanup-thunk obj)))
 
-(defun no-effect () nil)
-
 ;;; -----------------------------------------------------------------
 
 (defmacro def-test (name-or-name-and-args criterion &rest forms)
@@ -112,6 +110,7 @@ NAME-OR-NAME-AND-OPTIONS ::= name | NAME-AND-OPTIONS
 NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                             [ :setup FORM ] [ :cleanup FORM ]
                             [ :documentation STRING ] )"
+  (declare (special *group-object-variable*))
 
   (handler-bind (#+sbcl (style-warning
                          #'(lambda (c)
@@ -158,7 +157,12 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                 (package-name (symbol-package *group-class-name*))
                 "-" (symbol-name *group-class-name*)
                 "--" (package-name (symbol-package test-name))
-                "-" (symbol-name test-name))))
+                "-" (symbol-name test-name)))
+
+             (group-obj-supp-p (boundp '*group-object-variable*))
+             (gproto (if group-obj-supp-p
+                         *group-object-variable*
+                         (gensym "gproto"))))
         (declare (special *group-class-name* *group-fixture-classes*))
 
         ;; Find any records of running previous versions of this test.
@@ -233,7 +237,8 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
 
                ;; (defmethod test-name-lookup ((ts ,name)) ',test-name)
 
-               (let ((gproto (make-instance ',*group-class-name*))
+               (let (,@(unless group-obj-supp-p
+                         `((,gproto (make-instance ',*group-class-name*))))
                      (tproto (make-instance ',name)))
                  (flet ((set-slot (slot value)
                           (setf (slot-value tproto slot) value)))
@@ -253,9 +258,9 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                                 (t '#'no-effect))))
 
                  ;; Store information about this test in its group.
-                 (setf (test-list gproto) (nconc (test-list gproto)
+                 (setf (test-list ,gproto) (nconc (test-list ,gproto)
                                                  (list ',name)))
-                 (setf (gethash ',test-name (test-name-lookup gproto))
+                 (setf (gethash ',test-name (test-name-lookup ,gproto))
                        tproto)
 
                  ;; Record the use of these names.
@@ -267,8 +272,8 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
 
 ;;;              (format t "~%* * * * * * For ~s/~s~% - ~s~% - ~s~%"
 ;;;                ',*group-class-name* ',name
-;;;                gproto tproto)
-;;;                 (format t " - List is now ~s~%" (test-list gproto))
+;;;                ,gproto tproto)
+;;;                 (format t " - List is now ~s~%" (test-list ,gproto))
                  ))))))))
 
 (defpackage nst-test-class-package

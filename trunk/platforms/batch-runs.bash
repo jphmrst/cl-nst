@@ -17,40 +17,38 @@ mkdir -p logs
 
 echo '# sys clock-time kernal-mode-cpu user-mode-cpu %cpu max-resident-set-size-kb context-switches swapouts primary-mem-misses' > time.log
 
-# Clear out Scieneer FASLs
-rm -rf /home/jm/Lib/Lisp/fasl/misc/scl-*/home/jm/Lib/Lisp/nst/
+# Clear out SBCL FASLs
+rm -rf /home/jm/Lib/Lisp/fasl/sbcl/*/*
 
 echo ============================================================
-echo Testing the trunk \(with everything recompiled\) on Scieneer
-echo > logs/scieneer-fresh.log
-/usr/bin/time -a -f 'scieneer-fresh.log %e %S %U %P %M %c %W %F' -o time.log \
-  /opt/scl/bin/scl -lkeys ~/Lib/Lisp/scieneer/lkey.text \
-    < inputs/scieneer/nst-tests.lisp \
-    2>> logs/scieneer-fresh.log >> logs/scieneer-fresh.log
-grep TOTAL logs/scieneer-fresh.log | tail -1
+echo Testing the trunk \(with everything recompiled\) on SBCL
+echo > logs/sbcl-fresh.log
+/usr/bin/time -a -f 'sbcl-fresh.log %e %S %U %P %M %c %W %F' -o time.log \
+  sbcl < inputs/sbcl/nst-tests.lisp \
+    2>> logs/sbcl-fresh.log >> logs/sbcl-fresh.log
+grep TOTAL logs/sbcl-fresh.log | tail -1
 
 echo ------------------------------------------------------------
-echo Testing the trunk \(without recompiling\) on Scieneer
-echo > logs/scieneer-reload.log
-/usr/bin/time -a -f 'scieneer-reload.log %e %S %U %P %M %c %W %F' -o time.log \
-  /opt/scl/bin/scl -lkeys ~/Lib/Lisp/scieneer/lkey.text \
-    < inputs/scieneer/nst-tests.lisp \
-    2>> logs/scieneer-reload.log >> logs/scieneer-reload.log
-grep TOTAL logs/scieneer-reload.log | tail -1
+echo Testing the trunk \(without recompiling\) on SBCL
+echo > logs/sbcl-reload.log
+/usr/bin/time -a -f 'sbcl-reload.log %e %S %U %P %M %c %W %F' -o time.log \
+  sbcl < inputs/sbcl/nst-tests.lisp \
+    2>> logs/sbcl-reload.log >> logs/sbcl-reload.log
+grep TOTAL logs/sbcl-reload.log | tail -1
 
 echo ------------------------------------------------------------
-echo Skipping test of JUnit writing on Scieneer
-### echo Testing JUnit writing on Scieneer
-### mkdir -p scieneer-junit
-### rm -f scieneer-junit/*
-### export NSTJUNITDIR=scieneer-junit/
-### /opt/scl/bin/scl -lkeys ~/Lib/Lisp/scieneer/lkey.text \
-###     < inputs/scieneer/junit.lisp \
-###     2>> scieneer-junit/junit.log >> scieneer-junit/junit.log
-### echo Files in $NSTJUNITDIR directory: expected 4, have \
-###     `ls -1 $NSTJUNITDIR | wc -l`
+echo Testing JUnit writing on SBCL
+mkdir -p sbcl-junit
+rm -f sbcl-junit/*
+export NSTJUNITDIR=sbcl-junit/
+/usr/bin/time -a -f 'sbcl-junit.log %e %S %U %P %M %c %W %F' -o time.log \
+  sbcl < inputs/sbcl/junit.lisp \
+    2>> sbcl-junit/junit.log >> sbcl-junit/junit.log
+echo Files in $NSTJUNITDIR directory: expected 4, have \
+    `ls -1 $NSTJUNITDIR | wc -l`
 
 
+ 
 # Clear out Lispworks FASLs
 rm -rf ../*/lispworks-5.1.1-linux-i386 \
     ../*/*/lispworks-5.1.1-linux-i386  \
@@ -153,38 +151,6 @@ echo Files in $NSTJUNITDIR directory: expected 4, have \
     `ls -1 $NSTJUNITDIR | wc -l`
 
 
-# Clear out SBCL FASLs
-rm -rf /home/jm/Lib/Lisp/fasl/sbcl/*/*
-
-echo ============================================================
-echo Testing the trunk \(with everything recompiled\) on SBCL
-echo > logs/sbcl-fresh.log
-/usr/bin/time -a -f 'sbcl-fresh.log %e %S %U %P %M %c %W %F' -o time.log \
-  sbcl < inputs/sbcl/nst-tests.lisp \
-    2>> logs/sbcl-fresh.log >> logs/sbcl-fresh.log
-grep TOTAL logs/sbcl-fresh.log | tail -1
-
-echo ------------------------------------------------------------
-echo Testing the trunk \(without recompiling\) on SBCL
-echo > logs/sbcl-reload.log
-/usr/bin/time -a -f 'sbcl-reload.log %e %S %U %P %M %c %W %F' -o time.log \
-  sbcl < inputs/sbcl/nst-tests.lisp \
-    2>> logs/sbcl-reload.log >> logs/sbcl-reload.log
-grep TOTAL logs/sbcl-reload.log | tail -1
-
-echo ------------------------------------------------------------
-echo Testing JUnit writing on SBCL
-mkdir -p sbcl-junit
-rm -f sbcl-junit/*
-export NSTJUNITDIR=sbcl-junit/
-/usr/bin/time -a -f 'sbcl-junit.log %e %S %U %P %M %c %W %F' -o time.log \
-  sbcl < inputs/sbcl/junit.lisp \
-    2>> sbcl-junit/junit.log >> sbcl-junit/junit.log
-echo Files in $NSTJUNITDIR directory: expected 4, have \
-    `ls -1 $NSTJUNITDIR | wc -l`
-
-
- 
 # echo Testing the trunk on CMU CL
 # echo > logs/cmucl-fresh.log
 # cmucl -batch < trunk-asdfind.lisp 2>> logs/cmucl-fresh.log >> logs/cmucl-fresh.log
@@ -308,5 +274,43 @@ export NSTJUNITDIR=acl81-alisp-junit/
     2>> acl81-alisp-junit/junit.log >> acl81-alisp-junit/junit.log
 echo Files in $NSTJUNITDIR directory: expected 4, have \
     `ls -1 $NSTJUNITDIR | wc -l`
+
+
+## Known not to currently compile under Scieneer.
+##
+##
+##    # Clear out Scieneer FASLs
+##    rm -rf /home/jm/Lib/Lisp/fasl/misc/scl-*/home/jm/Lib/Lisp/nst/
+##    
+##    echo ============================================================
+##    echo Testing the trunk \(with everything recompiled\) on Scieneer
+##    echo > logs/scieneer-fresh.log
+##    /usr/bin/time -a -f 'scieneer-fresh.log %e %S %U %P %M %c %W %F' -o time.log \
+##      /opt/scl/bin/scl -lkeys ~/Lib/Lisp/scieneer/lkey.text \
+##        < inputs/scieneer/nst-tests.lisp \
+##        2>> logs/scieneer-fresh.log >> logs/scieneer-fresh.log
+##    grep TOTAL logs/scieneer-fresh.log | tail -1
+##    
+##    echo ------------------------------------------------------------
+##    echo Testing the trunk \(without recompiling\) on Scieneer
+##    echo > logs/scieneer-reload.log
+##    /usr/bin/time -a -f 'scieneer-reload.log %e %S %U %P %M %c %W %F' -o time.log \
+##      /opt/scl/bin/scl -lkeys ~/Lib/Lisp/scieneer/lkey.text \
+##        < inputs/scieneer/nst-tests.lisp \
+##        2>> logs/scieneer-reload.log >> logs/scieneer-reload.log
+##    grep TOTAL logs/scieneer-reload.log | tail -1
+##    
+##    echo ------------------------------------------------------------
+##    echo Skipping test of JUnit writing on Scieneer
+##    ### echo Testing JUnit writing on Scieneer
+##    ### mkdir -p scieneer-junit
+##    ### rm -f scieneer-junit/*
+##    ### export NSTJUNITDIR=scieneer-junit/
+##    ### /opt/scl/bin/scl -lkeys ~/Lib/Lisp/scieneer/lkey.text \
+##    ###     < inputs/scieneer/junit.lisp \
+##    ###     2>> scieneer-junit/junit.log >> scieneer-junit/junit.log
+##    ### echo Files in $NSTJUNITDIR directory: expected 4, have \
+##    ###     `ls -1 $NSTJUNITDIR | wc -l`
+
 
 echo ============================================================
