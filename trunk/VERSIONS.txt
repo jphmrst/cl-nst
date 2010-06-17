@@ -1,7 +1,14 @@
 
-2.0.4 - 
+2.1.0 - public release
+ A fairly significant change to the translation of groups and tests.
+  - Will require re-compiling code built against macros from earlier
+    NST versions.
+  - Should expand to considerably fewer method definitions.
+  - Should also clear most of the warnings previously generated under SBCL.
  Fixed a bug in the parsing when the :export-names and related options in
    fixtures are used.
+ Now explicitly depends on sb-aclrepl in SBCL; thanks to Stelian Ionescu for
+   pointing out the implicit dependency in earlier version.
 
 2.0.3 - public release, April 6, 2010
  Renamed the version numbering from 1.3.* to 2.0.*, to allow

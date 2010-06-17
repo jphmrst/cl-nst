@@ -20,6 +20,8 @@
 ;;; License along with NST.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
 
+#+sbcl (require 'sb-aclrepl)
+
 (defpackage :nst-asd (:use :common-lisp :asdf))
 (in-package :nst-asd)
 
@@ -38,7 +40,7 @@
                                         ; number) should be
                                         ; incremented immediately
                                         ; after a version is shipped.
-    :version "2.0.4"
+    :version "2.1.0"
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :nst-test)))
