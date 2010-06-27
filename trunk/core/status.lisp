@@ -860,7 +860,7 @@ six-value summary of the results:
 pretty-printer for warnings.")
   (:method (stream item colon at-sign &rest params)
            (declare (ignorable colon at-sign params))
-           (format stream "~w" item))
+           (format stream "~a" item))
   #+allegro
   (:method (stream (item simple-warning) colon at-sign &rest params)
      (declare (ignorable colon at-sign params))
