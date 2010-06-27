@@ -147,3 +147,6 @@
       (warn "This is another Lisp warning")
       t)))
 
+(def-test-group give-a-fail ()
+  (def-test fff :true nil))
+
