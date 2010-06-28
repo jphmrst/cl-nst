@@ -3,6 +3,15 @@
 
 (defvar *debug-within-metatested* nil)
 
+(def-criterion (--nst-group-has-test (group-name test-name) ())
+    (cond
+      ((and (member test-name (nst::test-list (make-instance group-name)))
+            (gethash test-name (nst::test-name-lookup (make-instance group-name))))
+       (emit-success))
+      (t
+       (emit-failure :format "Expected NST group ~s to have test ~s"
+                     :args (list group-name test-name)))))
+
 (def-criterion (--nst-run (args &rest subcriteria) ())
   (let ((results))
     (destructuring-bind (&key packages groups tests) args
