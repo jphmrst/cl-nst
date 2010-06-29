@@ -374,6 +374,28 @@ The last form shows all interesting results."
       (t (show-nst-property name))))
 
 (def-nst-interactive-command
+    (:undef :short-help "Un-define an NST group or test"
+            :args (group &optional (test nil test-supp-p)))
+    (cond
+      (test-supp-p
+       (let* ((group-obj (make-instance group))
+              (test-obj (gethash test (test-name-lookup group-obj))))
+         (setf (test-list group-obj)
+               (delete (check-group-name test-obj) (test-list group-obj)))
+         (remhash test (test-name-lookup group-obj))))
+
+      (t (let ((package-hash (gethash (symbol-package group) +package-groups+)))
+           (cond
+            ((and package-hash (gethash group package-hash))
+             (remhash group package-hash)
+             (let ((this-name-use (get-name-use-record group)))
+               (setf (name-use-group this-name-use) nil))
+             ;; Undo (note-executable ',group-name ,*group-object-variable*)
+             ;; TO DO
+             )
+            (t (format t "No such group ~s.~%" group)))))))
+
+(def-nst-interactive-command
     (:unset :short-help "Clear an NST property." :args (name))
     (set-nst-property name nil))
 
