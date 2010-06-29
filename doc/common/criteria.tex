@@ -23,21 +23,19 @@
 \begin{criteriaGroup}{Basic criteria}{}
 
 \kwdCriteriaDoc{true}{:true}
-{The test passes if the form evaluates to non-nil.}
+{The form is evaluated at testing time; the criterion requires the result to be non-nil.}
 {A single form.}
 {\noExpl}
 {\noEx}{}
 
 \kwdCriteriaDoc{eq}{(:eq FORM)}
-{Require a form to evaluate to a form which is \texttt{eq} to the
-criterion argument.}
+{The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \texttt{eq}.}
 {A single form.}
 {\noExpl}
 {\singleEx}{(def-test eq1 (:eq 'b) (cadr '(a b c)))}
 
 \kwdCriteriaDoc{symbol}{(:symbol NAME)}
-{Require a form to evaluate to a symbol which is \texttt{eq} to the
-symbol name given as the criterion argument.}
+{The form under test is evaluated at testing time.  The criterion requires that the result be a symbol which is \texttt{eq} to the symbol name given as the criterion argument.}
 {A single form.}
 {\noExpl}
 {\multiEx}
@@ -45,51 +43,46 @@ symbol name given as the criterion argument.}
  \failExample{(def-test sym1x (:symbol a) (cadr '(a b c)))}}
 
 \kwdCriteriaDoc{eql}{(:eql FORM)}
-{Require a form to evaluate to an expression which is \texttt{eql} to
-the criterion argument.}
+{The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \texttt{eql}.}
 {A single form.}
 {\noExpl}
 {\singleEx}{(def-test eql1 (:eql 2) (cadr '(1 2 3)))}
 
 \kwdCriteriaDoc{equal}{(:equal FORM)}
-{Require a form to evaluate to an expression which is \texttt{equal}
-to the criterion argument.}
+{The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \texttt{equal}.}
 {A single form.}
 {\noExpl}
 {\noEx}{}
 
 \kwdCriteriaDoc{equalp}{(:equalp FORM)}
-{Require a form to evaluate to an expression which is \texttt{equalp}
-to the criterion argument.}
+{The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \texttt{equalp}.}
 {A single form.}
 {\noExpl}
 {\noEx}{}
 
 \kwdCriteriaDoc{forms-eq}{:forms-eq}
-{Passes for forms which evaluate to expressions which are
-\texttt{eq}.}
+{The two forms under test are both evaluated at testing time; the criterion requires that the results be \texttt{eq}.}
 {Exactly two forms.}
 {\noExpl}
 {\singleEx}{(def-test eqforms1 :forms-eq (cadr '(a b c)) (caddr '(a c b)))}
 
 \kwdCriteriaDoc{forms-eql}{:forms-eql}
-{Passes for forms which evaluate to expressions which are
-\texttt{eql}.}
+{The two forms under test are both evaluated at testing time; the criterion requires that the results be \texttt{eql}.}
 {Exactly two forms.}
 {\noExpl}
 {\singleEx}{(def-test eqlforms1 :forms-eql (cadr '(a 3 c)) (caddr '(a c 3)))}
 
 \kwdCriteriaDoc{forms-equal}{:forms-equal}
-{Passes for forms which evaluate to expressions which are
-\texttt{equal}.}
+{The two forms under test are both evaluated at testing time; the criterion requires that the results be \texttt{equal}.}
 {Exactly two forms.}
 {\noExpl}
 {\noEx}{}
 
 \kwdCriteriaDoc{predicate}{(:predicate FUNCTION-FORM)}
-{Applies some predicate function to a form, and verifies that the
-result is non-nil.  Note that the predicate is applied to \emph{all}
-of the forms following the criterion.}
+{The criterion argument is a symbol (unquoted) or a lambda expression;
+  at testing time, the forms under test are evaluated and passed to
+  the denoted function.  The criterion expects that the result of the
+  function is non-nil.}
 {Forms matching the input lambda list of the \texttt{FUNCTION-FORM}.}
 {\noExpl}
 {\multiEx}
@@ -97,11 +90,11 @@ of the forms following the criterion.}
  \passExample{(def-test pred2 (:predicate eql) (+ 1 2) 3)}}
 
 \kwdCriteriaDoc{err}{(:err [:type CLASS])}
-{This test passes when the the forms raise an exception of the given
-\texttt{CLASS}, by default \texttt{error}.  If the \textit{CLASS} argument is
-not supplied, this defaults to \texttt{condition}, which means that this test
-may succeed under unexpected circumstances, if the argument is absent.  Note
-that the name of the type should \emph{not} be quoted, unlike other criterion arguments.}
+{At testing time, evaluates the form under test, expecting the
+  evaluation to raise some condition.  If the \textit{CLASS} argument
+  is supplied, the criterion expects the raised condition to be a
+  subclass.  Note that the name of the type should \emph{not} be
+  quoted; it is not evaluated.}
 {Any.}
 {\noExpl}
 {\multiEx}
@@ -109,7 +102,8 @@ that the name of the type should \emph{not} be quoted, unlike other criterion ar
  \passExample{(def-test err2 (:err) (error "this should be caught"))}}
 
 \kwdCriteriaDoc{perf}{(:perf [ :ns | :sec | :min ] TIME)}
-{Passes when the forms evaluate within the given time limit.}
+{Evaluates the forms under test at testing time, and expects the
+  evaluation to complete within the given time limit.}
 {Any.}
 {\noExpl}
 {\singleEx}{(def-test perf1 (:perf :min 2) (ack 3 5))}
@@ -146,9 +140,10 @@ verifies that they all pass.}
 \\ \>\texttt{5)}}
 
 \kwdCriteriaDoc{apply}{(:apply FUNCTION CRITERION)}
-{Evaluates its input forms, and applies the \texttt{FUNCTION} to them.
-Evaluates the subordinate \texttt{CRITERION} with the
-\texttt{FUNCTION}'s multiple result values as input forms.}
+{At testing time, first evaluates the forms under test, applying
+  \texttt{FUNCTION} to them.  The overall criterion passes or fails
+  exactly when the subordinate \texttt{CRITERION} with the
+  application's multiple result values.}
 {Forms matching the input lambda list of the \texttt{FUNCTION}.}
 {\noExpl}
 {\singleEx}{(def-test applycheck (:apply cadr (:eql 10)) '(0 10 20))}
@@ -168,21 +163,21 @@ some later fix, when they \emph{won't} throw an error.}}
 \\ \> \texttt{'asdfgh (error "this should be caught"))}}
 
 \kwdCriteriaDoc{progn}{(:progn FORM FORM ...\ FORM CRITERION)}
-{Evaluates the \texttt{FORM}s in order, and then proceeds with
-evaluation of check forms according to the subordinate criterion.}
+{At testing time, first evaluates the \texttt{FORM}s in order, and
+  then proceeds with evaluation of the forms under test according to
+  the subordinate criterion.}
 {As required by the subordinate criterion.}
 {\noExpl}
 {\singleEx}
 {(def-test form1 (:progn (setf zz 3) (:eql 3)) zz)}
 
 \kwdCriteriaDoc{proj}{(:proj (INDEX INDEX ...\ INDEX) CRITERION)}
-{Rearranges the input forms by selecting a new list according to the
-index numbers into the old list.  Checking of the reorganized forms
-continues according ot the subordinate criterion.}
-{At least as many as to be accessible to the largest
-index.}
+{Rearranges the forms under test by selecting a new list according to
+  the index numbers into the old list.  Checking of the reorganized
+  forms continues according to the subordinate criterion.}
+{At least as many as to be accessible to the largest index.}
 {\hasExpl{Note that containing criteria may have reordered forms and
-value from the original check.}}
+    value from the original check.}}
 {\tabbingEx}
 {\texttt{(d}\=\texttt{ef}\=\texttt{-test proj-1}
 \\ \>\> \texttt{(:proj (0 2) :forms-eq)}
@@ -200,7 +195,7 @@ distinction between \emph{using} a function on the one hand, and
 when using the \texttt{floor} function one often needs only the
 quotient, and it is correspondingly easy to ignore the additional
 argument which gives the remainder.  However, for the implementor of
-\texttt{floor} it is important that both results be predictable and
+\texttt{floor} it is impormtant that both results be predictable and
 verified.\vspace{\parskip}\\\hspace*{\parindent}NST encourages the
 thoughtful, consistent design and correct implementation of functions
 returning multiple values by enforcing that tested forms generating
@@ -218,14 +213,15 @@ values.}
 {\noExpl}{\noEx}{}
 
 \kwdCriteriaDoc{values}{(:values CRITERION CRITERION ...\ CRITERION)}
-{Checks each of the input forms according to the respective
-subordinate criterion.}
+{Checks each of the forms under test according to the respective
+  subordinate criterion.}
 {Exactly as many forms as subordinate criteria.}
 {\noExpl}{\noEx}{}
 
 \kwdCriteriaDoc{drop-values}{(:drop-values CRITERION)}
 {Checks the primary value according to the subordinate criterion,
-ignoring any additional returned values.}
+  ignoring any additional returned values from the evaluation of the
+  form under test.}
 {Any.}
 {\noExpl}{\noEx}{}
 
@@ -234,8 +230,10 @@ ignoring any additional returned values.}
 \begin{criteriaGroup}{Criteria for lists}{}
 
 \kwdCriteriaDoc{each}{(:each CRITERION)}
-{Checks each argument of the list according to the subordinate
-\texttt{CRITERION}, and passes when all of these checks pass.}
+{At testing time, evaluates the form under test, expecting to find a
+  list as a result.  Expects that each argument of the list according
+  to the subordinate \texttt{CRITERION}, and passes when all of these
+  checks pass.}
 {A single form which evaluates to a list.}
 {\noExpl}
 {\singleEx}
@@ -243,8 +241,8 @@ ignoring any additional returned values.}
 
 \kwdCriteriaDoc{seq}{(:values CRITERION CRITERION ...\ CRITERION)}
 {Evaluates its input form, checks each of its elements according to
-the respective subordinate criterion, and passes when all of them
-pass.}
+  the respective subordinate criterion, and passes when all of them
+  pass.}
 {A single form which evaluates to a list with the same number of
 elements as there are subordinate criteria to the
 \texttt{:seq}.}
@@ -258,8 +256,9 @@ otherwise.}}
 }
 
 \kwdCriteriaDoc{permute}{(:permute CRITERION)}
-{Passes when some permutation of the evaluated list will satisfy the
-subordinate criterion.}
+{At testing time, evaluates the form under test, expecting to find a
+  list as a result.  The criterion expects to find that some
+  permutation of this list will satisfy the subordinate criterion.}
 {A single form evaluating to a list.}
 {\noExpl}{\tabbingEx}{
 \textrm{Examples:}\ \=(def-test permute1 (:permute (:each (:eq 'a))) '(a a))
@@ -359,4 +358,5 @@ Lisp \texttt{format} function.}
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: "../manual/manual"
+%%% TeX-PDF-mode: t
 %%% End: 

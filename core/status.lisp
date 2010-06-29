@@ -315,55 +315,82 @@ structure, permitting the use of apply."
                               (> *nst-verbosity* 2)
                               (and (eq *nst-report-driver* :test)
                                    (> *nst-verbosity* 1)))))
+
+          (flet ((headered-items-printer (stream header items)
+                   (when items
+                     (pprint-newline :mandatory s)
+                     (princ header stream)
+                     (loop for item in items do
+                       (pprint-newline :mandatory stream)
+                       (princ " - " stream)
+                       (princ item stream))))
+
+                 (unheadered-items-printer (stream items)
+                   (loop for item in items do
+                     (pprint-newline :mandatory stream)
+                     (princ " . " stream)
+                     (princ item stream))))
+
 ;;;          (format t
 ;;;               "drill-down ~s~%*nst-verbosity* ~s~%*nst-report-driver* ~s~%"
 ;;;             drill-down *nst-verbosity* *nst-report-driver*)
 
-          (cond
-           ;; The first three cases are for when we have only one
-           ;; item to report.  We do this on one line if it fits, and
-           ;; don't bother with bullet points.
-           ;;
-           ((and (eql 1 total-items) errors)
-            (format s "~@<Check ~a ~:[(group ~a) ~;~*~]raised an error~
-                            ~:[~2*~;:~{~:@_ . ~a~}~{~:@_ . ~a~}~]~:>"
-              check-name *nst-group-shown* group-name
-              drill-down errors info))
+            (pprint-logical-block (s '(dummy list))
+              (princ "Check " s)
+              (princ check-name s)
+              (princ " " s)
+              (unless *nst-group-shown*
+                (princ "(group " s)
+                (princ group-name s)
+                (princ ") " s))
 
-           ((and (eql 1 total-items) warnings)
-            (format s "~@<Check ~a ~:[(group ~a) ~;~*~]passed with warning~p~
-                            ~:[~2*~;:~{~:@_ - ~a~}~{~:@_ - ~a~}~]~:>"
-              check-name *nst-group-shown* group-name
-              warnings drill-down warnings info))
+              (cond
+               ;; The first three cases are for when we have only one
+               ;; item to report.  We do this on one line if it fits, and
+               ;; don't bother with bullet points.
+               ;;
+               ((and (eql 1 total-items) errors)
+                (princ "raised an error" s)
+                (when drill-down
+                  (princ ":" s)
+                  (unheadered-items-printer s errors)
+                  (unheadered-items-printer s info)))
 
-           ((and (eql 1 total-items) failures)
-            (format s "~@<Check ~a ~:[(group ~a) ~;~*~]failed~
-                            ~:[~2*~;:~{~:@_ - ~w~}~{~:@_ - ~a~}~]~:>"
-              check-name *nst-group-shown* group-name
-              drill-down failures info))
+               ((and (eql 1 total-items) warnings)
+                (format s "passed with warning~p" warnings)
+                (unheadered-items-printer s warnings)
+                (unheadered-items-printer s info))
 
-           ;; When a query asks about a specific test.
-           ;;
-           ((eq *nst-report-driver* :test)
-            (format s "~@<Check ~a ~:[(group ~a) ~;~*~]~:[failed~;passed~]~
-                         ~:[~;: ~@{~:[~2*~;~:@_~a~{~:@_ - ~a~}~]~}~]~:>"
-              check-name *nst-group-shown* group-name succeeded
-              (or errors failures warnings info)
-              errors "Errors:" errors
-              failures "Failures:" failures
-              warnings "Warnings:" warnings
-              info "Additional information:" info))
+               ((and (eql 1 total-items) failures)
+                (princ "failed" s)
+                (unheadered-items-printer s failures)
+                (unheadered-items-printer s info))
 
-           ;; If we're reporting results for a package or group,
-           ;; suppress the info fields of the report.
-           ;;
-           (t (format s "Check ~a ~:[(group ~a) ~;~*~]~
-                                 ~:[failed~*~;passed~:[~; with warnings~]~]~
-                           ~:[~;: ~@<~@{~:[~2*~;~a~:@_~{ - ~a~^~:@_~}~]~}~:>~]"
-                check-name *nst-group-shown* group-name succeeded warnings
-                (or errors failures warnings)
-                errors "Errors:" errors  failures "Failures:" failures
-                warnings "Warnings:" warnings)))))))
+               ;; When a query asks about a specific test.
+               ;;
+               ((eq *nst-report-driver* :test)
+                (cond
+                 (succeeded (princ "passed" s))
+                 (t (princ "failed" s)))
+                (when (or errors failures warnings info)
+                  (princ ": " s)
+                  (headered-items-printer s "Errors:" errors)
+                  (headered-items-printer s "Failures:" failures)
+                  (headered-items-printer s "Warnings:" warnings)
+                  (headered-items-printer s "Additional information:" info)))
+
+               ;; If we're reporting results for a package or group,
+               ;; suppress the info fields of the report.
+               ;;
+               (t
+                (cond (succeeded (princ "passed" s))
+                      (t (princ "failed" s)))
+                (when warnings (princ " with warnings" s))
+                (when (or errors failures warnings)
+                  (princ ": " s)
+                  (headered-items-printer s "Errors:" errors)
+                  (headered-items-printer s "Failures:" failures)
+                  (headered-items-printer s "Warnings:" warnings))))))))))
 
 
 
@@ -403,6 +430,13 @@ structure, permitting the use of apply."
                 cl:format"
   context stack format args)
 
+(defun apply-formatter (stream formatter args)
+  (cond
+    ((null formatter) nil)
+    ((functionp formatter) (apply formatter stream args) t)
+    ((stringp formatter)   (apply #'format stream formatter args) t)
+    (t (error "Cannot handle formatter %s" formatter))))
+
 (set-pprint-dispatch 'check-note
   #'(lambda (s cn)
       (with-accessors ((context check-note-context)
@@ -410,17 +444,16 @@ structure, permitting the use of apply."
                        (format check-note-format)
                        (args check-note-args)) cn
         (declare (ignorable context stack))
-        (format s
-            #-(or sbcl scl) "~@<~:[~2*~;~?~:@_~]~
-                      ~:[at top level~;~:*in context: ~@<~{~a~^~:@_~}~:>~]~
-                      ~@[~:@_stack: ~w~]~:>"
-            #+(or sbcl scl) "~:[~2*~;~?~:@_~]~
-                      ~:[at top level~;~:*in context: ~{~a~^~:@_~}~]~
-                      ~@[~:@_stack: ~w~]"
-          format format args
-          context
-          stack)
-        )))
+        (pprint-logical-block (s '(dummy list))
+          (when (apply-formatter s format args)
+            (pprint-newline :mandatory s))
+          (cond
+            (context (format s "in context: ~{~a~^~:@_~}" context))
+            (t (princ "at top level" s)))
+          (when stack
+            (pprint-newline :mandatory s)
+            (princ "stack: " s)
+            (princ stack s))))))
 
 (defstruct (error-check-note (:include check-note))
   "A note issued in regards to a thrown error."
@@ -437,14 +470,26 @@ structure, permitting the use of apply."
         (let (#+allegro (show-zoom (or (eq *nst-report-driver* :test)
                                        (eq *nst-report-driver* :details)
                                        (> *nst-verbosity* 2))))
-          (format s "~@<~a~:[~2*~;~:@_~?~]~
-                        ~:@_~:[at top level~
-                             ~;~:*in context: ~@<~{~a~^~:@_~}~:>~]~
-                        ~:@_~:[nil values~;~:*values: ~w~]~
-                        ~:[~*~;~@[~:@_at ~@<~{~a~^ ~:@_while ~}~:>~]~]~:>"
-            error format format args context stack
-            #-allegro nil #-allegro nil
-            #+allegro show-zoom #+allegro (error-check-note-zoom cn))))))
+          (pprint-logical-block (s '(dummy list))
+            (format s "~a" error)
+            (when (apply-formatter s format args)
+              (pprint-newline :mandatory s))
+            (cond
+              (context (format s "in context: ~@<~{~a~^~:@_~}~:>" context))
+              (t (princ "at top level" s)))
+            (pprint-newline :mandatory s)
+            (format s "~:[nil values~;~:*values: ~w~]" stack)
+            #+allegro (when show-zoom
+                        (pprint-newline :mandatory s)
+                        (princ "at " s)
+                        (pprint-logical-block (s (error-check-note-zoom cn))
+                          (loop do
+                            (write (pprint-pop) :stream s
+                                   :escape nil :readably nil :pretty t
+                                   :circle nil)
+                            (pprint-exit-if-list-exhausted)
+                            (pprint-newline :mandatory s)
+                            (princ "while " s)))))))))
 
 ;;; Functions on result and status reports.
 ;;;
