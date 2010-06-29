@@ -64,6 +64,14 @@ The \texttt{:report} command summarizes successes, failures and
 errors; the \texttt{:detail} command gives more detailed information
 about individual tests.
 
+The \texttt{:undef} command cancels the definition of a group or test:
+\begin{quotation}\noindent
+ \texttt{:nst :undef {\itshape group-name}}
+\\ \texttt{:nst :undef {\itshape group-name} {\itshape test-name}}
+\end{quotation}
+Currently, NST does require that the symbols passed to \texttt{:undef}
+be correctly package-qualified.
+
 The \texttt{:clear} command erases NST's internal record of test
 results.
 
