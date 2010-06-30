@@ -1,14 +1,25 @@
 
 \section{Defining test criteria}
-NST provides three mechanisms for defining new criteria.
+The criteria used in test forms decide whether, when and how to use
+the forms under test and the forms and subcriteria provided to each
+test criterion.  Criteria receive their arguments as forms, and may
+examine them as forms with or without evaluation, as the particular
+criterion requires.  NST provides three mechanisms for defining new
+criteria.
 \begin{itemize}
 \item Defining a criterion by specifying how it should be rewritten to
-  another criterion.  This mechanism is the simplest, and is the most
-  limited in the manipulations it can define.
-\item Defining a criterion by specifying how it assesses the values
-  provided to it.
-\item Defining a criterion by specifying how it manipulates the
-  (possibly unevaluated) forms of a \texttt{def-check}.
+  another criterion.  This mechanism is both the simplest and the most
+  limited in the manipulations it can define.  The
+  \texttt{def-criterion-alias} macro provides this mechanism, which we
+  discuss in Section~\ref{sec:def-criterion-alias}.
+\item Defining a criterion with call-by-value semantics for the values
+  under test, specifying how it assesses the results of evaluating the
+  forms under test.  The \texttt{def-criterion} macro provides this
+  mechanism, which we discuss in Section~\ref{sec:def-criterion}.
+\item Defining a criterion receiving the original, unmanipulated forms
+  provided as criterion arguments and forms under test.  The
+  \texttt{def-criterion-unevaluated} macro provides this mechanism,
+  which we discuss in Section~\ref{sec:def-criterion-unevaluated}.
 \end{itemize}
 The first mechanism is essentially a variation of \texttt{defmacro}.
 Under both of the latter two mechanisms, the criteria definition is
@@ -44,22 +55,28 @@ criterion into Lisp.  For both of these mechanisms, this Lisp code is
 expected to return a test report.  NST provides three functions for
 building test reports:
 \begin{itemize}
-\item\texttt{(emit-success)}%
-  \index{emit-success@\texttt{emit-success}}
+\item\texttt{(make-success-report)}%
+  \index{make-success-report@\texttt{make-success-report}}
+  \index{success@\texttt{success}}
   \par This function indicates a successful test result.
-  \par Note that some older examples show \texttt{(make-check-result)}
-  or \texttt{(check-result)}.  The former is an internal function and
-  should not be used from outside the core NST files.  The latter is
-  deprecated.
-\item\texttt{(emit-failure [ :format format-string [ :args args ] ] )}%
-  \index{emit-failure@\texttt{emit-failure}}
+  \par Note that some older examples show
+  \texttt{(make-check-result)}, \texttt{(emit-success)} or
+  \texttt{(check-result)}.  The former is an internal function and
+  should not be used from outside the core NST files.  The latter two
+  are deprecated.
+\item\texttt{(make-failure-report [ :format format-string [ :args args ] ] )}%
+  \index{make-failure-report@\texttt{make-failure-report}}
+  \index{failure@\texttt{failure}}
   \par This function returns a report of test failure.  The
   \texttt{format-string} and \texttt{args} are as to the Common Lisp
-  function \texttt{format}.
-\item\texttt{(emit-warning [ :format format-string [ :args args ] ] )}%
-  \index{emit-warning@\texttt{emit-warning}}
-  \par Like \texttt{emit-failure}, but provides supplimentary
-  information as a warning.
+  function \texttt{format}.  The \texttt{emit-failure} function is an
+  older, deprecated version of this function.
+\item\texttt{(make-warning-report [ :format format-string [ :args args ] ] )}%
+  \index{make-warning-report@\texttt{make-warning-report}}
+  \index{warning@\texttt{warning}}
+  \par Like \texttt{make-failure-report}, but provides supplimentary
+  information as a warning.  The \texttt{emit-warning} function is an
+  older, deprecated version of this function.
 \end{itemize}
 
 \subsection{Defining criteria over evaluated values}
@@ -78,32 +95,27 @@ Examples:
 \begin{verbatim}
 (def-criterion (:true () (bool))
   (if bool
-      (emit-success)
-      (emit-failure :format "Expected non-null, got: ~s"
+      (make-success-report)
+      (make-failure-report :format "Expected non-null, got: ~s"
                     :args (list bool))))
 
 (def-criterion (:eql (target) (actual))
   (if (eql (eval target) actual)
-      (emit-success)
-      (emit-failure :format "Not eql to value of ~s"
+      (make-success-report)
+      (make-failure-report :format "Not eql to value of ~s"
                     :args (list target))))
 \end{verbatim}
-
-% The Lisp body of a \texttt{def-criterion} should evaluate to a
-% quoted Lisp expression calculating a test report.  These criteria
-% definitions are like functions with two sets of formal parameters:
-% \begin{itemize}
-% \item One set correspond to the actual parameters of the criterion
-%   itself.  The values of these parameters are available to the
-%   criterion expansion to guide the construction of the resulting Lisp
-%   expression.
-% \item The other set corresponds to the evaluation of the form under
-%   examination by the \texttt{def-test}.  These values are available
-%   only at run-time, and may appear unquoted within the result
-%   expression, but are not bound during the evaluation which produces
-%   the result expression.
-% \end{itemize}
-% % 
+These criteria definitions are like generic function method
+definitions with two sets of formal parameters:
+\begin{itemize}
+\item The forms provided as the actual parameters of the criterion
+  itself.
+\item The values arising from the evaluation of the forms under test.
+\end{itemize}
+The body of a \texttt{def-criterion} should return a test result
+report contructed by the function described in
+Section~\ref{sec:criteria-forms-report} above.
+ 
 % {\ttfamily\begin{tabbing}
 % \textrm{Syntax: 
 % }(de\=f-values-criterion (na\=me \=subcriteria-lambda-list
@@ -130,12 +142,12 @@ Examples:
 % \begin{verbatim}
 % (def-values-criterion (:pass () (&rest chk))
 %   `(declare (ignorable chk))
-%   `(emit-success))
+%   `(make-success-report))
 % 
 % (def-values-criterion (:eq (eq-form) (check-form))
 %   `(if (eq ,eq-form check-form)
-%      (emit-success)
-%      (emit-failure :format "Not eq to ~s" :args '(,eq-form))))
+%      (make-success-report)
+%      (make-failure-report :format "Not eq to ~s" :args '(,eq-form))))
 % \end{verbatim}
 
 \subsection{Processing subcriteria on values}
@@ -161,8 +173,9 @@ assessment.%
 % In fact, \texttt{def-form-criterion} and \texttt{def-values-criterion}
 % expand to method definitions which are used in \texttt{continue-check}.
 
-\subsection{Defining criteria for a values-returning form}
+\subsection{General criteria definitions}
 \label{sec:def-criterion-unevaluated}
+\index{def-criterion-unevaluated@\texttt{def-criterion-unevaluated}}
 {\ttfamily\begin{tabbing}
 \textrm{Syntax: }(de\=f-criterion-unevaluated (\=name
 \\ \>            \>criterion-args-lambda-list)
@@ -172,30 +185,11 @@ assessment.%
 \\ \> ~$\vdots$
 \\ \> FORM)
 \end{tabbing}}%
-  \index{def-criterion-unevaluated@\texttt{def-criterion-unevaluated}}
-% As for \texttt{def-values-criterion}, the body of a
-% \texttt{def-form-criterion} should specify a quoted Lisp expression
-% calculating a test report.  The difference between these forms is that
-% while \texttt{def-values-criterion} receives the evaluated values from
-% the forms to be tested, \texttt{def-form-criterion} expects a form
-% which, when evaluated, will return the list of these values.
-% %
-% {\ttfamily\begin{tabbing}
-% \textrm{Syntax: 
-% }(de\=f-form-criterion (na\=me \=subcriteria-lambda-list
-% \\ \>\> \> test-forms-formal-parameter
-% \\ \>\> \&key \=stack-transformer
-% \\ \>\> \> blurb-format
-% \\ \>\> \> full-format)
-% \\ \> check-forms)
-% \end{tabbing}}
-% %
-% Here, \texttt{test-forms-formal-parameter} abstracts over the name of
-% the formal parameter which will later be bound to the
-% test-values-form, and must be just a symbol, not a lambda-list.  It
-% can be referenced to add this name to the quoted Lisp expression that
-% \texttt{check-forms} returns, but should be dereferenced for the
-% values themselves only within the quotated computation.
+As under \texttt{def-criterion}, the body of these criteria
+definitions receive the forms provided as the actual parameters of the
+criterion itself, and should return a test result report.  However,
+these criteria receive the unevaluated forms under test, deciding when
+and whether to evaluate them.
 % 
 % Examples:
 % \begin{verbatim}
@@ -212,7 +206,7 @@ assessment.%
 %         ((check-result-failures ,subcheck)
 %          (check-result :info (check-result-info ,subcheck)))
 %         (t
-%          (emit-failure :format "Expected failure from ~s"
+%          (make-failure-report :format "Expected failure from ~s"
 %                        :args '(,subcriterion)))))))
 % \end{verbatim}
 
@@ -227,7 +221,7 @@ assessment.%
 \label{sec:def-values-criterion}
 \label{sec:def-form-criterion}
 The \texttt{def-values-criterion} and \texttt{def-form-criterion}
-macros are deprecated as of NST 1.3.0, and will be removed at some
+macros are deprecated as of NST 1.3.0, and will be make-emoved-report at some
 point.  Code using \texttt{def-values- criterion} should continue to
 work as before.  \emph{However, code using \texttt{def-form-
     criterion} in any but the simplest ways is very likely to fail.}

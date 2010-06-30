@@ -851,7 +851,7 @@ six-value summary of the results:
 ;;; Generating status data within checks.
 ;;;
 
-(defun emit-warning (&key format args)
+(defun make-warning-report (&key format args)
   "For use within user-defined NST criteria: emit a warning."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
   (new-check-result :warnings (list (make-check-note :context *nst-context*
@@ -859,7 +859,11 @@ six-value summary of the results:
                                                      :format format
                                                      :args args))))
 
-(defun emit-failure (&key format args info)
+(defmacro emit-warning (&rest args)
+  "Deprecated; use make-warning-report."
+  `(make-warning-report ,@args))
+
+(defun make-failure-report (&key format args info)
   "For use within user-defined NST criteria: explain a failure."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
   (new-check-result :failures (list (make-check-note :context *nst-context*
@@ -867,10 +871,18 @@ six-value summary of the results:
                                                      :format format :args args))
                     :info info))
 
-(defun emit-success (&rest args)
+(defmacro emit-failure (&rest args)
+  "Deprecated; use make-failure-report."
+  `(make-failure-report ,@args))
+
+(defun make-success-report (&rest args)
   "For use within user-defined NST criteria: note that a test was successful."
   (calibrate-check-result
    (apply #'make-check-result args)))
+
+(defmacro emit-success (&rest args)
+  "Deprecated; use make-success-report."
+  `(make-success-report ,@args))
 
 (defun add-failure (result &key format args)
   "For use within user-defined NST criteria: add a failure to a result."
