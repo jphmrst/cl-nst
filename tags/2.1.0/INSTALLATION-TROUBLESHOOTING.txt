@@ -1,0 +1,49 @@
+-*- org -*-
+
+This file discusses tips on fixing problems obtaining, compiling, loading and running NST.
+
+* Obtaining NST
+  Please do let us know about any broken links, missing pages, or
+  other problems downloading NST.  NST is available via different
+  mechanisms; please do consider alternatives if one fails:
+** Direct download
+   (As of May 2010) NST is distributed from
+   http://nst.maraist.org/download as a gzip'ped source tarball.
+*** ASDF-install
+    The source tarball is signed and listed on cliki.net, so NST is
+    installable by the ASDF-install package.  Of course, if the web
+    site is unavailable, this installation would also fail.
+** Anonymous svn
+   NST development is hosted by SIFT, LLC of Minneapolis.  The NST
+   repository is configured for anonymous read-only access.  The main
+   repository is located at https://svn.sift.info:3333/svn/nst/ , and
+   has the standard svn top-level trunk/tags/branches structure.  To
+   check out main development trunk into a local directory =nst-dev=,
+   use:
+#+BEGIN_EXAMPLE
+svn co https://svn.sift.info:3333/svn/nst/ nst-dev
+#+END_EXAMPLE
+   To export version 1.2.2 into a local directory =old-nst=, use:
+#+BEGIN_EXAMPLE
+svn export https://svn.sift.info:3333/svn/nst/tags/1.2.2 old-nst
+#+END_EXAMPLE
+* Compiling and loading
+** The core NST system
+*** Loading NST's self-tests
+    NST's tests are spread among several directories; use the following code to prepare your ASDF registry to load them in:
+#+BEGIN_EXAMPLE
+(let ((repos-dir "/PATH/TO/YOUR/NST/REPOS/"))
+  (loop for dir in '(""
+                     "test/"
+                     "test/direct/"
+                     "test/manual/"
+                     "test/meta/"
+                     "test/util/"
+                     "test/asdf/masdfnst.asd") do
+    (push (make-pathname :directory (concatenate 'string repos-dir dir))
+          asdf:*central-registry*)))
+(push (make-pathname :directory "/PATH/TO/YOUR/CLOSER-MOP/REPOS/")
+      asdf:*central-registry*)
+#+END_EXAMPLE
+* Test construction
+* Running NST
