@@ -177,8 +177,9 @@ default the current package."))
   (let ((all-names (gethash (intern (symbol-name name)
                                     (find-package :nst-name-use-in-packages))
                             +name-packages+)))
-    (loop for name being the hash-keys of all-names
-          collect (gethash name +name-use+))))
+    (when all-names
+      (loop for name being the hash-keys of all-names
+            collect (gethash name +name-use+)))))
 
 (defstruct name-use
   "Record for tracking the artifacts which NST associates with a name."
