@@ -219,61 +219,61 @@ echo Files in $NSTJUNITDIR directory: expected 4, have \
 
 
 
-echo = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-echo Testing the trunk \(with everything recompiled\) on Allegro 8.1 mlisp
-echo > logs/allegro81-mlisp-fresh.log
-/usr/bin/time -a -f 'allegro81-mlisp-fresh.log %e %S %U %P %M %c %W %F' -o time.log \
-  mlisp < inputs/acl/nst-tests.lisp \
-    2>> logs/allegro81-mlisp-fresh.log >> logs/allegro81-mlisp-fresh.log
-grep TOTAL logs/allegro81-mlisp-fresh.log | tail -1
+##  echo = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+##  echo Testing the trunk \(with everything recompiled\) on Allegro 8.1 mlisp
+##  echo > logs/allegro81-mlisp-fresh.log
+##  /usr/bin/time -a -f 'allegro81-mlisp-fresh.log %e %S %U %P %M %c %W %F' -o time.log \
+##    /usr/local/allegro/acl81/mlisp < inputs/acl/nst-tests.lisp \
+##      2>> logs/allegro81-mlisp-fresh.log >> logs/allegro81-mlisp-fresh.log
+##  grep TOTAL logs/allegro81-mlisp-fresh.log | tail -1
+##  
+##  echo ------------------------------------------------------------
+##  echo Testing the trunk \(without recompiling\) on Allegro 8.1 mlisp
+##  echo > logs/allegro81-mlisp-reload.log
+##  /usr/bin/time -a -f 'allegro81-mlisp-reload.log %e %S %U %P %M %c %W %F' -o time.log \
+##    /usr/local/allegro/acl81/mlisp < inputs/acl/nst-tests.lisp \
+##      2>> logs/allegro81-mlisp-reload.log >> logs/allegro81-mlisp-reload.log
+##  grep TOTAL logs/allegro81-mlisp-reload.log | tail -1
+##  
+##  echo ------------------------------------------------------------
+##  echo Testing JUnit writing on Allegro 8.1 mlisp
+##  mkdir -p acl81-mlisp-junit
+##  rm -f acl81-mlisp-junit/*
+##  export NSTJUNITDIR=acl81-mlisp-junit/
+##  /usr/bin/time -a -f 'acl81-mlisp-junit.log %e %S %U %P %M %c %W %F' -o time.log \
+##    /usr/local/allegro/acl81/mlisp < inputs/acl/junit.lisp \
+##      2>> acl81-mlisp-junit/junit.log >> acl81-mlisp-junit/junit.log
+##  echo Files in $NSTJUNITDIR directory: expected 4, have \
+##      `ls -1 $NSTJUNITDIR | wc -l`
 
-echo ------------------------------------------------------------
-echo Testing the trunk \(without recompiling\) on Allegro 8.1 mlisp
-echo > logs/allegro81-mlisp-reload.log
-/usr/bin/time -a -f 'allegro81-mlisp-reload.log %e %S %U %P %M %c %W %F' -o time.log \
-  mlisp < inputs/acl/nst-tests.lisp \
-    2>> logs/allegro81-mlisp-reload.log >> logs/allegro81-mlisp-reload.log
-grep TOTAL logs/allegro81-mlisp-reload.log | tail -1
-
-echo ------------------------------------------------------------
-echo Testing JUnit writing on Allegro 8.1 mlisp
-mkdir -p acl81-mlisp-junit
-rm -f acl81-mlisp-junit/*
-export NSTJUNITDIR=acl81-mlisp-junit/
-/usr/bin/time -a -f 'acl81-mlisp-junit.log %e %S %U %P %M %c %W %F' -o time.log \
-  /usr/local/allegro/acl81/mlisp < inputs/acl/junit.lisp \
-    2>> acl81-mlisp-junit/junit.log >> acl81-mlisp-junit/junit.log
-echo Files in $NSTJUNITDIR directory: expected 4, have \
-    `ls -1 $NSTJUNITDIR | wc -l`
 
 
-
-echo = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-echo Testing the trunk \(with everything recompiled\) on Allegro 8.1 alisp
-echo > logs/allegro81-alisp-fresh.log
-/usr/bin/time -a -f 'allegro81-alisp-fresh.log %e %S %U %P %M %c %W %F' -o time.log \
-  alisp < inputs/acl/nst-tests.lisp \
-    2>> logs/allegro81-alisp-fresh.log >> logs/allegro81-alisp-fresh.log
-grep TOTAL logs/allegro81-alisp-fresh.log | tail -1
-
-echo ------------------------------------------------------------
-echo Testing the trunk \(without recompiling\) on Allegro 8.1 alisp
-echo > logs/allegro81-alisp-reload.log
-/usr/bin/time -a -f 'allegro81-alisp-reload.log %e %S %U %P %M %c %W %F' -o time.log \
-  alisp < inputs/acl/nst-tests.lisp \
-    2>> logs/allegro81-alisp-reload.log >> logs/allegro81-alisp-reload.log
-grep TOTAL logs/allegro81-alisp-reload.log | tail -1
-
-echo ------------------------------------------------------------
-echo Testing JUnit writing on Allegro 8.1 alisp
-mkdir -p acl81-alisp-junit
-rm -f acl81-alisp-junit/*
-export NSTJUNITDIR=acl81-alisp-junit/
-/usr/bin/time -a -f 'acl81-alisp-junit.log %e %S %U %P %M %c %W %F' -o time.log \
-  /usr/local/allegro/acl81/alisp < inputs/acl/junit.lisp \
-    2>> acl81-alisp-junit/junit.log >> acl81-alisp-junit/junit.log
-echo Files in $NSTJUNITDIR directory: expected 4, have \
-    `ls -1 $NSTJUNITDIR | wc -l`
+##  echo = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+##  echo Testing the trunk \(with everything recompiled\) on Allegro 8.1 alisp
+##  echo > logs/allegro81-alisp-fresh.log
+##  /usr/bin/time -a -f 'allegro81-alisp-fresh.log %e %S %U %P %M %c %W %F' -o time.log \
+##    /usr/local/allegro/acl81/alisp < inputs/acl/nst-tests.lisp \
+##      2>> logs/allegro81-alisp-fresh.log >> logs/allegro81-alisp-fresh.log
+##  grep TOTAL logs/allegro81-alisp-fresh.log | tail -1
+##  
+##  echo ------------------------------------------------------------
+##  echo Testing the trunk \(without recompiling\) on Allegro 8.1 alisp
+##  echo > logs/allegro81-alisp-reload.log
+##  /usr/bin/time -a -f 'allegro81-alisp-reload.log %e %S %U %P %M %c %W %F' -o time.log \
+##    /usr/local/allegro/acl81/alisp < inputs/acl/nst-tests.lisp \
+##      2>> logs/allegro81-alisp-reload.log >> logs/allegro81-alisp-reload.log
+##  grep TOTAL logs/allegro81-alisp-reload.log | tail -1
+##  
+##  echo ------------------------------------------------------------
+##  echo Testing JUnit writing on Allegro 8.1 alisp
+##  mkdir -p acl81-alisp-junit
+##  rm -f acl81-alisp-junit/*
+##  export NSTJUNITDIR=acl81-alisp-junit/
+##  /usr/bin/time -a -f 'acl81-alisp-junit.log %e %S %U %P %M %c %W %F' -o time.log \
+##    /usr/local/allegro/acl81/alisp < inputs/acl/junit.lisp \
+##      2>> acl81-alisp-junit/junit.log >> acl81-alisp-junit/junit.log
+##  echo Files in $NSTJUNITDIR directory: expected 4, have \
+##      `ls -1 $NSTJUNITDIR | wc -l`
 
 
 ## Known not to currently compile under Scieneer.
