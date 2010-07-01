@@ -20,7 +20,9 @@
                 ,@(loop for name in second-tests collect `(def-test ,name (:eql 5) 5))))
        (:all ,@(loop for name in second-tests
                      collect `(--nst-group ,group-name (---test-passes ,group-name ,name)))
-             ))))
+             ,@(loop for name in first-tests
+                     if (not (member name second-tests))
+                     collect `(--nst-no-test-in-group ,group-name ,name))))))
 
 (def-test-group redefs ()
   (def-test redef0 :redef)

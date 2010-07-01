@@ -44,6 +44,11 @@
 (def-criterion-alias (--nst-test group-name test-name &rest subcriteria)
   `(--nst-run (:tests ((,group-name ,test-name))) ,@subcriteria))
 
+(def-criterion-alias (--nst-no-test-in-group group-name test-name)
+  `(:true-form (not (gethash ',test-name
+                             (nst::test-name-lookup
+                              (make-instance ',group-name))))))
+
 (def-criterion (---on-test (group-name test-name &rest subcriteria)
                                (results-hash))
   "Subcriteria get a results report of type nst:check-result"
