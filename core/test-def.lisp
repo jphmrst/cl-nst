@@ -71,31 +71,6 @@ first element is that symbol and whose remaining elements are options."
 (defmethod test-record-p ((r nst-test-record))
   t)
 
-(defmethod core-run-test ((obj nst-test-record))
-  (declare (optimize (debug 3)))
-  (let ((*current-group* (group-name obj))
-        (*current-test*  (test-name-lookup obj))
-        (forms (test-forms obj))
-        (fixture-names-special (special-fixture-names obj))
-        (criterion (test-criterion obj)))
-    (declare (special *current-group* *current-test*))
-
-    (cond
-      ((eql 1 (length forms))
-       (check-subcriterion-on-form criterion
-                                   `(common-lisp:multiple-value-list
-                                     (locally (declare ,fixture-names-special)
-                                       ,(car forms)))))
-      (t (check-subcriterion-on-form criterion
-                                     `(locally (declare ,fixture-names-special)
-                                        (list ,@forms)))))))
-
-(defmethod do-test-prefixture-setup progn ((obj nst-test-record))
-  (funcall (prefixture-setup-thunk obj)))
-
-(defmethod do-test-afterfixture-cleanup progn ((obj nst-test-record))
-  (funcall (postfixture-cleanup-thunk obj)))
-
 ;;; -----------------------------------------------------------------
 
 (defmacro def-test (name-or-name-and-args criterion &rest forms)
