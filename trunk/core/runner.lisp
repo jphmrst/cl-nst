@@ -440,25 +440,41 @@ for the group application class.")
            'do-group-each-test-cleanup 'nst-group-record))
   (funcall (group-eachtest-cleanup-thunk record)))
 
-(defgeneric do-test-prefixture-setup (test-obj)
-  (:documentation
-   "Pre-fixture test application setup specs add a method to this function.")
-  (:method-combination progn)
-  (:method progn (test-obj)
-     (declare (ignorable test-obj))
-     (format-at-verbosity 4
-         "Called (do-test-prefixture-setup ~s) :progn primary method~%"
-       test-obj)))
+;;;(defgeneric do-test-prefixture-setup (test-obj)
+;;;  (:documentation
+;;;   "Pre-fixture test application setup specs add a method to this function.")
+;;;  (:method-combination progn)
+;;;  (:method progn (test-obj)
+;;;     (declare (ignorable test-obj))
+;;;     (format-at-verbosity 4
+;;;         "Called (do-test-prefixture-setup ~s) :progn primary method~%"
+;;;       test-obj)))
+;;;(defmethod do-test-prefixture-setup progn ((obj nst-test-record))
+;;;  (funcall (prefixture-setup-thunk obj)))
+(defun do-test-prefixture-setup (test-obj)
+  "Pre-fixture test application setup"
+  (format-at-verbosity 4
+      "Called (do-test-prefixture-setup ~s) :progn primary method~%"
+    test-obj)
+  (funcall (prefixture-setup-thunk test-obj)))
 
-(defgeneric do-test-afterfixture-cleanup (test-obj)
-  (:documentation
-   "After-test fixture cleanup specs add a method to this function.")
-  (:method-combination progn)
-  (:method progn (test-obj)
-     (declare (ignorable test-obj))
-     (format-at-verbosity 4
-         "Called (do-test-afterfixture-cleanup ~s) :progn primary method~%"
-       test-obj)))
+;;;(defgeneric do-test-afterfixture-cleanup (test-obj)
+;;;  (:documentation
+;;;   "After-test fixture cleanup specs add a method to this function.")
+;;;  (:method-combination progn)
+;;;  (:method progn (test-obj)
+;;;     (declare (ignorable test-obj))
+;;;     (format-at-verbosity 4
+;;;         "Called (do-test-afterfixture-cleanup ~s) :progn primary method~%"
+;;;       test-obj)))
+;;;(defmethod do-test-afterfixture-cleanup progn ((obj nst-test-record))
+;;;  (funcall (postfixture-cleanup-thunk obj)))
+(defun do-test-afterfixture-cleanup (test-obj)
+  "After-test fixture cleanup specs add a method to this function."
+  (format-at-verbosity 4
+      "Called (do-test-afterfixture-cleanup ~s) :progn primary method~%"
+    test-obj)
+  (funcall (postfixture-cleanup-thunk test-obj)))
 
 (defgeneric do-test-fixture-assignment (test-obj)
   (:documentation
@@ -533,48 +549,125 @@ for the test application class.")
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(defgeneric core-run-test (test)
-  (:documentation
-   "Test fixtures provide name-binding :around methods to this generic function
-for individual tests.  Every-test and test-specific setup and cleanup are
-encoded as :before and :after methods.")
+;;;(defgeneric core-run-test (test)
+;;;  (:documentation
+;;;   "Test fixtures provide name-binding :around methods to this generic function
+;;;for individual tests.  Every-test and test-specific setup and cleanup are
+;;;encoded as :before and :after methods.")
+;;;
+;;;  (:method :around (test)
+;;;    "Capture the result of the test."
+;;;    (format-at-verbosity 4 "Called (core-run-test ~s) common :around~%" test)
+;;;    (let ((*nst-group-name* (group-name test))
+;;;          (*nst-check-user-name* (test-name-lookup test))
+;;;          (*nst-check-internal-name* (check-group-name test))
+;;;          (start-time)
+;;;          (caught-warnings))
+;;;      (declare (special *nst-group-name* *nst-check-user-name*))
+;;;      (format-at-verbosity 1 " - Executing test ~s~%" *nst-check-user-name*)
+;;;      (setf start-time (get-internal-real-time))
+;;;      (let ((result (handler-bind ((warning
+;;;                                    #'(lambda (w)
+;;;                                        (push w caught-warnings)
+;;;                                        (muffle-warning w))))
+;;;                        (call-next-method)))
+;;;            (end-time (get-internal-real-time)))
+;;;        (setf (result-stats-elapsed-time result)
+;;;              (- end-time start-time)
+;;;              (gethash (check-group-name test) +results-record+)
+;;;              result)
+;;;        (when caught-warnings
+;;;          (setf (check-result-warnings result)
+;;;                (nconc (check-result-warnings result)
+;;;                       (loop for w in caught-warnings
+;;;                             collect (make-check-note
+;;;                                          :context *nst-context*
+;;;                                          :stack *nst-stack*
+;;;                                          :format "Lisp warning: ~
+;;;                                               ~:@_~/nst::format-for-warning/"
+;;;                                          :args (list w))))))
+;;;        (format-at-verbosity 1 "   ~s~%" result)
+;;;        (when (and *debug-on-fail* (or (check-result-errors result)
+;;;                                       (check-result-failures result)))
+;;;          (format-at-verbosity 4
+;;;              "Detected failure; triggering debug via error~%")
+;;;          (cerror "Cleanup and proceed." 'debug-for-fail))
+;;;        result))))
+;;;(defmethod core-run-test ((obj nst-test-record))
+;;;  (declare (optimize (debug 3)))
+;;;  (let ((*current-group* (group-name obj))
+;;;        (*current-test*  (test-name-lookup obj))
+;;;        (forms (test-forms obj))
+;;;        (fixture-names-special (special-fixture-names obj))
+;;;        (criterion (test-criterion obj)))
+;;;    (declare (special *current-group* *current-test*))
+;;;
+;;;    (cond
+;;;      ((eql 1 (length forms))
+;;;       (check-subcriterion-on-form criterion
+;;;                                   `(common-lisp:multiple-value-list
+;;;                                     (locally (declare ,fixture-names-special)
+;;;                                       ,(car forms)))))
+;;;      (t (check-subcriterion-on-form criterion
+;;;                                     `(locally (declare ,fixture-names-special)
+;;;                                        (list ,@forms)))))))
+(defun core-run-test (test)
+  "Capture the result of the test."
+  (declare (optimize (debug 3)))
+  (format-at-verbosity 4 "Called (core-run-test ~s) common :around~%" test)
+  (let ((*nst-group-name* (group-name test))
+        (*nst-check-user-name* (test-name-lookup test))
+        (*nst-check-internal-name* (check-group-name test))
+        (start-time)
+        (caught-warnings))
+    (declare (special *nst-group-name* *nst-check-user-name*))
+    (format-at-verbosity 1 " - Executing test ~s~%" *nst-check-user-name*)
+    (setf start-time (get-internal-real-time))
+    (let ((result (handler-bind ((warning
+                                  #'(lambda (w)
+                                      (push w caught-warnings)
+                                      (muffle-warning w))))
 
-  (:method :around (test)
-    "Capture the result of the test."
-    (format-at-verbosity 4 "Called (core-run-test ~s) common :around~%" test)
-    (let ((*nst-group-name* (group-name test))
-          (*nst-check-user-name* (test-name-lookup test))
-          (*nst-check-internal-name* (check-group-name test))
-          (start-time)
-          (caught-warnings))
-      (declare (special *nst-group-name* *nst-check-user-name*))
-      (format-at-verbosity 1 " - Executing test ~s~%" *nst-check-user-name*)
-      (setf start-time (get-internal-real-time))
-      (let ((result (handler-bind ((warning
-                                    #'(lambda (w)
-                                        (push w caught-warnings)
-                                        (muffle-warning w))))
-                        (call-next-method)))
-            (end-time (get-internal-real-time)))
-        (setf (result-stats-elapsed-time result)
-              (- end-time start-time)
-              (gethash (check-group-name test) +results-record+)
-              result)
-        (when caught-warnings
-          (setf (check-result-warnings result)
-                (nconc (check-result-warnings result)
-                       (loop for w in caught-warnings
-                             collect (make-check-note
-                                          :context *nst-context*
-                                          :stack *nst-stack*
-                                          :format "Lisp warning: ~
+                    (let ((*current-group* (group-name test))
+                          (*current-test*  (test-name-lookup test))
+                          (forms (test-forms test))
+                          (fixture-names-special (special-fixture-names test))
+                          (criterion (test-criterion test)))
+                      (declare (special *current-group* *current-test*))
+
+                      (cond
+                       ((eql 1 (length forms))
+                        (check-subcriterion-on-form
+                         criterion
+                         `(common-lisp:multiple-value-list
+                           (locally (declare ,fixture-names-special)
+                             ,(car forms)))))
+                       (t (check-subcriterion-on-form
+                           criterion
+                           `(locally (declare ,fixture-names-special)
+                              (list ,@forms))))))))
+          (end-time (get-internal-real-time)))
+      (setf (result-stats-elapsed-time result)
+        (- end-time start-time)
+        (gethash (check-group-name test) +results-record+)
+        result)
+      (when caught-warnings
+        (setf (check-result-warnings result)
+          (nconc (check-result-warnings result)
+                 (loop for w in caught-warnings
+                     collect (make-check-note
+                              :context *nst-context*
+                              :stack *nst-stack*
+                              :format "Lisp warning: ~
                                                ~:@_~/nst::format-for-warning/"
-                                          :args (list w))))))
-        (format-at-verbosity 1 "   ~s~%" result)
-        (when (and *debug-on-fail* (or (check-result-errors result)
-                                       (check-result-failures result)))
-          (format-at-verbosity 4
-              "Detected failure; triggering debug via error~%")
-          (cerror "Cleanup and proceed." 'debug-for-fail))
-        result))))
+                              :args (list w))))))
+      (format-at-verbosity 1 "   ~s~%" result)
+      (when (and *debug-on-fail* (or (check-result-errors result)
+                                     (check-result-failures result)))
+        (format-at-verbosity 4
+            "Detected failure; triggering debug via error~%")
+        (cerror "Cleanup and proceed." 'debug-for-fail))
+      result)))
+
+
 
