@@ -141,7 +141,8 @@ configuration provided by those wrappers."
                  (when *debug-on-error*
                    (cerror exit-tests-label e))
                  (return-from run-group-tests nil))))
-     (do-group-prefixture-setup group-obj))))
+     ;; (do-group-prefixture-setup group-obj)
+     (funcall (group-fixtures-setup-thunk group-obj)))))
   (format-at-verbosity 4
       "Passed setup in (run-group-tests ~s ~s)~%" group-obj test-objs)
   (with-retry
@@ -189,21 +190,22 @@ configuration provided by those wrappers."
                    (when *debug-on-error*
                      (cerror exit-tests-label e))
                    (return-from run-group-tests nil))))
-       (do-group-afterfixture-cleanup group-obj)))))
+       ;; (do-group-afterfixture-cleanup group-obj)
+       (funcall (group-fixtures-cleanup-thunk group-obj))))))
 
 (defgeneric group-fixtures-setup-thunk (record))
-(defun do-group-prefixture-setup (record)
-  (unless (typep record 'nst-group-record)
-    (error "Called ~s with an argument not of type ~s"
-           'do-group-prefixture-setup 'nst-group-record))
-  (funcall (group-fixtures-setup-thunk record)))
+;;;(defun do-group-prefixture-setup (record)
+;;;  (unless (typep record 'nst-group-record)
+;;;    (error "Called ~s with an argument not of type ~s"
+;;;           'do-group-prefixture-setup 'nst-group-record))
+;;;  (funcall (group-fixtures-setup-thunk record)))
 
 (defgeneric group-fixtures-cleanup-thunk (record))
-(defun do-group-afterfixture-cleanup (record)
-  (unless (typep record 'nst-group-record)
-    (error "Called ~s with an argument not of type ~s"
-           'do-group-afterfixture-cleanup 'nst-group-record))
-  (funcall (group-fixtures-cleanup-thunk record)))
+;;;(defun do-group-afterfixture-cleanup (record)
+;;;  (unless (typep record 'nst-group-record)
+;;;    (error "Called ~s with an argument not of type ~s"
+;;;           'do-group-afterfixture-cleanup 'nst-group-record))
+;;;  (funcall (group-fixtures-cleanup-thunk record)))
 
 (defgeneric do-group-fixture-assignment (group-obj test-objs)
   (:documentation
@@ -235,7 +237,8 @@ for the group application class.")
               (when *debug-on-error*
                 (cerror exit-tests-label e))
               (return-from do-group-fixture-assignment nil))))
-        (do-group-postfixture-setup group-obj))))
+        ;; (do-group-postfixture-setup group-obj)
+        (funcall (group-withfixtures-setup-thunk group-obj)))))
 
      (format-at-verbosity 3 "    Starting run loop for ~s~%" group-obj)
 
@@ -273,7 +276,8 @@ for the group application class.")
                              (when *debug-on-error*
                                (cerror exit-tests-label e))
                              (return-from this-test nil))))
-                     (do-group-each-test-setup group-obj))))
+                       ;; (do-group-each-test-setup group-obj)
+                       (funcall (group-eachtest-setup-thunk group-obj)))))
                  (unwind-protect
                      (block test-inner
                        (with-retry ((format nil "Try setting up test ~s again."
@@ -301,7 +305,8 @@ for the group application class.")
                                   (when *debug-on-error*
                                     (cerror exit-tests-label e))
                                   (return-from test-inner nil))))
-                            (do-test-prefixture-setup test-inst))))
+                            ;; (do-test-prefixture-setup test-inst)
+                            (funcall (prefixture-setup-thunk test-inst)))))
                        (unwind-protect
                            (with-retry ("Restart this test ~
                                                 (reapplying test fixtures).")
@@ -359,7 +364,9 @@ for the group application class.")
                                      (when *debug-on-error*
                                        (cerror exit-tests-label e))
                                      (return-from test-inner))))
-                             (do-test-afterfixture-cleanup test-inst))))))
+                               ;; (do-test-afterfixture-cleanup test-inst)
+                               (funcall
+                                (postfixture-cleanup-thunk test-inst)))))))
                    (with-retry ("Try each-test cleanup again.")
                      (let ((exit-tests-label
                             (format nil
@@ -384,7 +391,8 @@ for the group application class.")
                               (when *debug-on-error*
                                 (cerror exit-tests-label e))
                               (return-from this-test))))
-                        (do-group-each-test-cleanup group-obj))))
+                        ;; (do-group-each-test-cleanup group-obj)
+                        (funcall (group-eachtest-cleanup-thunk group-obj)))))
                    (format-at-verbosity 3
                        "      Exiting loop entry ~s~%" test-inst)))))
 
@@ -410,35 +418,36 @@ for the group application class.")
                         (when *debug-on-error*
                           (cerror exit-tests-label e))
                         (return-from do-group-fixture-assignment))))
-            (do-group-withfixture-cleanup group-obj)))))))
+            ;; (do-group-withfixture-cleanup group-obj)
+            (funcall (group-withfixtures-cleanup-thunk group-obj))))))))
 
 (defgeneric group-withfixtures-setup-thunk (record))
-(defun do-group-postfixture-setup (record)
-  (unless (typep record 'nst-group-record)
-    (error "Called ~s with an argument not of type ~s"
-           'do-group-postfixture-setup 'nst-group-record))
-  (funcall (group-withfixtures-setup-thunk record)))
+;;;(defun do-group-postfixture-setup (record)
+;;;  (unless (typep record 'nst-group-record)
+;;;    (error "Called ~s with an argument not of type ~s"
+;;;           'do-group-postfixture-setup 'nst-group-record))
+;;;  (funcall (group-withfixtures-setup-thunk record)))
 
 (defgeneric group-withfixtures-cleanup-thunk (record))
-(defun do-group-withfixture-cleanup (record)
-  (unless (typep record 'nst-group-record)
-    (error "Called ~s with an argument not of type ~s"
-           'do-group-withfixture-cleanup 'nst-group-record))
-  (funcall (group-withfixtures-cleanup-thunk record)))
+;;;(defun do-group-withfixture-cleanup (record)
+;;;  (unless (typep record 'nst-group-record)
+;;;    (error "Called ~s with an argument not of type ~s"
+;;;           'do-group-withfixture-cleanup 'nst-group-record))
+;;;  (funcall (group-withfixtures-cleanup-thunk record)))
 
 (defgeneric group-eachtest-setup-thunk (record))
-(defun do-group-each-test-setup (record)
-  (unless (typep record 'nst-group-record)
-    (error "Called ~s with an argument not of type ~s"
-           'do-group-each-test-setup 'nst-group-record))
-  (funcall (group-eachtest-setup-thunk record)))
+;;;(defun do-group-each-test-setup (record)
+;;;  (unless (typep record 'nst-group-record)
+;;;    (error "Called ~s with an argument not of type ~s"
+;;;           'do-group-each-test-setup 'nst-group-record))
+;;;  (funcall (group-eachtest-setup-thunk record)))
 
 (defgeneric group-eachtest-cleanup-thunk (record))
-(defun do-group-each-test-cleanup (record)
-  (unless (typep record 'nst-group-record)
-    (error "Called ~s with an argument not of type ~s"
-           'do-group-each-test-cleanup 'nst-group-record))
-  (funcall (group-eachtest-cleanup-thunk record)))
+;;;(defun do-group-each-test-cleanup (record)
+;;;  (unless (typep record 'nst-group-record)
+;;;    (error "Called ~s with an argument not of type ~s"
+;;;           'do-group-each-test-cleanup 'nst-group-record))
+;;;  (funcall (group-eachtest-cleanup-thunk record)))
 
 ;;;(defgeneric do-test-prefixture-setup (test-obj)
 ;;;  (:documentation
@@ -451,12 +460,13 @@ for the group application class.")
 ;;;       test-obj)))
 ;;;(defmethod do-test-prefixture-setup progn ((obj nst-test-record))
 ;;;  (funcall (prefixture-setup-thunk obj)))
-(defun do-test-prefixture-setup (test-obj)
-  "Pre-fixture test application setup"
-  (format-at-verbosity 4
-      "Called (do-test-prefixture-setup ~s) :progn primary method~%"
-    test-obj)
-  (funcall (prefixture-setup-thunk test-obj)))
+
+;;;(defun do-test-prefixture-setup (test-obj)
+;;;  "Pre-fixture test application setup"
+;;;  (format-at-verbosity 4
+;;;      "Called (do-test-prefixture-setup ~s) :progn primary method~%"
+;;;    test-obj)
+;;;  (funcall (prefixture-setup-thunk test-obj)))
 
 ;;;(defgeneric do-test-afterfixture-cleanup (test-obj)
 ;;;  (:documentation
@@ -469,12 +479,13 @@ for the group application class.")
 ;;;       test-obj)))
 ;;;(defmethod do-test-afterfixture-cleanup progn ((obj nst-test-record))
 ;;;  (funcall (postfixture-cleanup-thunk obj)))
-(defun do-test-afterfixture-cleanup (test-obj)
-  "After-test fixture cleanup specs add a method to this function."
-  (format-at-verbosity 4
-      "Called (do-test-afterfixture-cleanup ~s) :progn primary method~%"
-    test-obj)
-  (funcall (postfixture-cleanup-thunk test-obj)))
+
+;;;(defun do-test-afterfixture-cleanup (test-obj)
+;;;  "After-test fixture cleanup specs add a method to this function."
+;;;  (format-at-verbosity 4
+;;;      "Called (do-test-afterfixture-cleanup ~s) :progn primary method~%"
+;;;    test-obj)
+;;;  (funcall (postfixture-cleanup-thunk test-obj)))
 
 (defgeneric do-test-fixture-assignment (test-obj)
   (:documentation
@@ -504,7 +515,8 @@ for the test application class.")
               (when *debug-on-error*
                 (cerror exit-tests-label e))
               (return-from do-test-fixture-assignment nil))))
-        (do-test-postfixture-setup test-obj)))
+        ;; (do-test-postfixture-setup test-obj)
+        ))
      (unwind-protect (core-run-test test-obj)
        (let ((exit-tests-label
               (format nil "Continue with other tests in this group (~s)"
@@ -525,27 +537,28 @@ for the test application class.")
                       (when *debug-on-error*
                         (cerror exit-tests-label e))
                       (return-from do-test-fixture-assignment nil))))
-          (do-test-withfixture-cleanup test-obj))))))
+          ;; (do-test-withfixture-cleanup test-obj)
+          )))))
 
-(defgeneric do-test-postfixture-setup (test-obj)
-  (:documentation "With-fixtures cleanup specs add a method to this function
-for the test application class.")
-  (:method-combination progn)
-  (:method progn (test-obj)
-     (declare (ignorable test-obj))
-     (format-at-verbosity 4
-         "Called (do-test-postfixture-setup ~s) :progn primary method~%"
-       test-obj)))
+;;;(defgeneric do-test-postfixture-setup (test-obj)
+;;;  (:documentation "With-fixtures cleanup specs add a method to this function
+;;;for the test application class.")
+;;;  (:method-combination progn)
+;;;  (:method progn (test-obj)
+;;;     (declare (ignorable test-obj))
+;;;     (format-at-verbosity 4
+;;;         "Called (do-test-postfixture-setup ~s) :progn primary method~%"
+;;;       test-obj)))
 
-(defgeneric do-test-withfixture-cleanup (test-obj)
-  (:documentation "Fixture setup specs add a method to this function
-for the test application class.")
-  (:method-combination progn)
-  (:method progn (test-obj)
-     (declare (ignorable test-obj))
-     (format-at-verbosity 4
-         "Called (do-test-withfixture-cleanup ~s) :progn primary method~%"
-       test-obj)))
+;;;(defgeneric do-test-withfixture-cleanup (test-obj)
+;;;  (:documentation "Fixture setup specs add a method to this function
+;;;for the test application class.")
+;;;  (:method-combination progn)
+;;;  (:method progn (test-obj)
+;;;     (declare (ignorable test-obj))
+;;;     (format-at-verbosity 4
+;;;         "Called (do-test-withfixture-cleanup ~s) :progn primary method~%"
+;;;       test-obj)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -604,11 +617,11 @@ for the test application class.")
 ;;;
 ;;;    (cond
 ;;;      ((eql 1 (length forms))
-;;;       (check-subcriterion-on-form criterion
+;;;       (check-criterion-on-form criterion
 ;;;                                   `(common-lisp:multiple-value-list
 ;;;                                     (locally (declare ,fixture-names-special)
 ;;;                                       ,(car forms)))))
-;;;      (t (check-subcriterion-on-form criterion
+;;;      (t (check-criterion-on-form criterion
 ;;;                                     `(locally (declare ,fixture-names-special)
 ;;;                                        (list ,@forms)))))))
 (defun core-run-test (test)
@@ -637,12 +650,12 @@ for the test application class.")
 
                       (cond
                        ((eql 1 (length forms))
-                        (check-subcriterion-on-form
+                        (check-criterion-on-form
                          criterion
                          `(common-lisp:multiple-value-list
                            (locally (declare ,fixture-names-special)
                              ,(car forms)))))
-                       (t (check-subcriterion-on-form
+                       (t (check-criterion-on-form
                            criterion
                            `(locally (declare ,fixture-names-special)
                               (list ,@forms))))))))

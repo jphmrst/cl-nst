@@ -45,17 +45,17 @@
                  (t (list x)))))
 
 ;;; (defmacro continue-check (criterion form)
-;;;   (warn "continue-check is deprecated; use check-subcriterion-on-value or check-subcriterion-on-form within def-criterion or def-criterion-unevaluated")
+;;;   (warn "continue-check is deprecated; use check-criterion-on-value or check-criterion-on-form within def-criterion or def-criterion-unevaluated")
 ;;;   `(continue-check ,criterion ,form))
 (defun continue-check #|continue-check-actual|# (criterion form)
   (unless (listp criterion)
     (setf criterion (list criterion)))
   `(apply-criterion ',(car criterion) ',(cdr criterion) ',form))
 
-(defun check-subcriterion-on-value (criterion expr)
+(defun check-criterion-on-value (criterion expr)
   "Verify that a value adheres to a criterion."
-  (check-subcriterion-on-form criterion `(list ',expr)))
-(defun check-subcriterion-on-form (criterion form)
+  (check-criterion-on-form criterion `(list ',expr)))
+(defun check-criterion-on-form (criterion form)
   "Verify that an unevaluated form adheres to a criterion."
   (unless (listp criterion)
     (setf criterion (list criterion)))

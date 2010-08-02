@@ -72,7 +72,7 @@
              ;; ticket for the addition).
 
              #:def-criterion #:def-criterion-unevaluated #:def-criterion-alias
-             #:check-subcriterion-on-value #:check-subcriterion-on-form
+             #:check-criterion-on-value #:check-criterion-on-form
              #:make-failure-report #:make-warning-report #:make-success-report
              #:add-failure #:add-error #:add-info
              ;; Deprecated:
