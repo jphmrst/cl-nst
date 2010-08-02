@@ -412,7 +412,7 @@ The last form shows all interesting results."
 (def-nst-interactive-command
     (:apply :short-help "Apply a criterion to forms"
             :args (criterion &rest forms))
-    (format t "~w~%" (check-subcriterion-on-form criterion `(list ,@forms))))
+    (format t "~w~%" (check-criterion-on-form criterion `(list ,@forms))))
 
 (defun run-nst-command (&rest args)
   (cond

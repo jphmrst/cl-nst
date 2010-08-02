@@ -87,7 +87,7 @@
   (emit-failure :format "Arguments dumped" :args nil))
 
 (def-criterion-unevaluated (:info (string subcriterion) expr-list-form)
-  (let ((subcheck (check-subcriterion-on-form subcriterion expr-list-form)))
+  (let ((subcheck (check-criterion-on-form subcriterion expr-list-form)))
     (push string (check-result-info subcheck))
     subcheck))
 
@@ -139,7 +139,7 @@
     (error ":perf check requires performance criteria specification"))))
 
 (def-criterion-unevaluated (:not (subcriterion) expr-list-form)
-  (let ((subcheck (check-subcriterion-on-form subcriterion expr-list-form)))
+  (let ((subcheck (check-criterion-on-form subcriterion expr-list-form)))
     (cond
      ((check-result-errors subcheck)   subcheck)
      ((check-result-failures subcheck)
@@ -152,7 +152,7 @@
     (declare (special *nst-context-evaluable*))
     (loop for subcriterion in subcriteria
           for subresult
-            = (check-subcriterion-on-form subcriterion expr-list-form)
+            = (check-criterion-on-form subcriterion expr-list-form)
           append (check-result-warnings subresult) into warnings
           append (check-result-failures subresult) into failures
           append (check-result-errors subresult) into errors
@@ -166,7 +166,7 @@
     (block any-criterion
       (loop for criterion in criteria do
         ;; (format t "Trying ~s on ~s~%" criterion expr-list-form)
-        (let* ((result (check-subcriterion-on-form criterion expr-list-form))
+        (let* ((result (check-criterion-on-form criterion expr-list-form))
                (rf (check-result-failures result))
                (re (check-result-errors result))
                (ri (check-result-info result)))
@@ -185,7 +185,7 @@
                     :args (list criteria) :info info))))
 
 (def-criterion-unevaluated (:apply (transform criterion) exprs-form)
-  (check-subcriterion-on-form criterion
+  (check-criterion-on-form criterion
     `(multiple-value-call #'list (apply #',transform ,exprs-form))))
 
 (def-criterion-unevaluated (:check-err (criterion) forms)
@@ -195,7 +195,7 @@
                  (format-at-verbosity 4
                      "Caught ~s as expected by :check-err~%" e)
                  (return-from check-err-block (emit-success)))))
-      (check-subcriterion-on-form criterion forms))
+      (check-criterion-on-form criterion forms))
     (emit-failure :format "~@<No expected error for check ~s on:~
                                  ~{~_ ~s~}~:>"
                   :args (list criterion
@@ -208,20 +208,20 @@
   (let ((progn-forms (butlast forms-and-criterion))
         (criterion (car (last forms-and-criterion))))
     (loop for form in progn-forms do (eval form))
-    (check-subcriterion-on-form criterion forms)))
+    (check-criterion-on-form criterion forms)))
 
 (def-criterion (:proj (indices criterion) (&rest values))
-  (check-subcriterion-on-form criterion
+  (check-criterion-on-form criterion
     `(list ,@(loop for idx in indices collect `',(nth idx values)))))
 
 (def-criterion-unevaluated (:values (&rest args) form)
-    (check-subcriterion-on-form `(:seq ,@args) `(list ,form)))
+    (check-criterion-on-form `(:seq ,@args) `(list ,form)))
 
 (def-criterion (:each (criterion) (l))
   (block each
     (let ((info nil) (warnings nil))
       (loop for value in l do
-        (let ((result (check-subcriterion-on-form criterion `(list ',value))))
+        (let ((result (check-criterion-on-form criterion `(list ',value))))
           (cond
             ((or (check-result-errors result)
                  (check-result-failures result))
@@ -244,7 +244,7 @@
           (emit-failure :format "Expected list of length ~d, got ~s"
                         :args `(,(length criteria) ,l))))
       (loop for criterion in criteria for item in l do
-        (let ((result (check-subcriterion-on-value criterion item)))
+        (let ((result (check-criterion-on-value criterion item)))
           (cond
             ((or (check-result-errors result) (check-result-failures result))
              (setf (check-result-info result)
@@ -262,7 +262,7 @@
     (let ((perms (make-instance 'permuter :src l)))
       (loop while (has-next perms) do
         (let* ((x (next-permutation perms))
-               (result (check-subcriterion-on-value criterion x)))
+               (result (check-criterion-on-value criterion x)))
           (when (and (null (check-result-errors result))
                      (null (check-result-failures result)))
             (return-from permute-block (emit-success)))))
@@ -277,7 +277,7 @@
           (emit-failure :format "Expected sequence of length ~d"
                         :args `(,(length criteria)))))
       (loop for criterion in criteria for idx from 0 do
-        (let ((result (check-subcriterion-on-value criterion (elt v idx))))
+        (let ((result (check-criterion-on-value criterion (elt v idx))))
           (cond
             ((or (check-result-errors result) (check-result-failures result))
              (setf (check-result-info result)
@@ -295,7 +295,7 @@
     (let ((warnings nil) (info nil))
       (loop for (slot criterion) in clauses do
         (let ((value (slot-value obj slot)))
-          (let ((result (check-subcriterion-on-value criterion value)))
+          (let ((result (check-criterion-on-value criterion value)))
             (cond
               ((or (check-result-errors result) (check-result-failures result))
                (setf (check-result-info result)
