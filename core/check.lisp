@@ -21,7 +21,9 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
-(defgeneric apply-criterion (top args form))
+(defgeneric apply-criterion (top args form)
+  (:documentation
+   "Internal generic function whose methods are the translations of criteria."))
 
 (defmethod apply-criterion :around (top args form)
   (format-at-verbosity 3
@@ -151,15 +153,6 @@
        (destructuring-bind ,args-formals ,ap
          (eval (progn ,@forms))))))
 
-(defmacro with-criterion-name-args ((name-var formals-var) expr
-                                    &body forms)
-  (let ((res (gensym)))
-    `(let ((,res ,expr) ,name-var ,formals-var)
-       (cond
-         ((symbolp ,res) (setf ,name-var ,res ,formals-var nil))
-         (t (setf ,name-var (car ,res) ,formals-var (cdr ,res))))
-       ,@forms)))
-
 (defmacro def-criterion-alias ((name . args-formals) docstring-or-form
                                &optional (form nil form-supp-p))
   "Define one criterion in terms of another.
@@ -167,16 +160,28 @@
   \(def-criterion-alias \(name &rest args)
     [ DOCUMENTATION ]
     EXPANSION)"
-  (let ((vsf (gensym "values-form"))
-        (new-name (gensym "new-name")) (new-args (gensym "new-args")))
-    (unless form-supp-p (setf form docstring-or-form docstring-or-form nil))
-    `(progn
-       (def-criterion-unevaluated (,name ,args-formals ,vsf)
-         ,@(when docstring-or-form (list docstring-or-form))
-         (with-criterion-name-args (,new-name ,new-args) ,form
-           (apply-criterion ,new-name ,new-args ,vsf)))
-       ,@(when docstring-or-form `((setf (documentation ',name :nst-criterion)
-                                         ,docstring-or-form))))))
+  (unless form-supp-p (setf form docstring-or-form docstring-or-form nil))
+  (let* ((vsf (gensym "form"))
+         (expanded (gensym "res"))
+         (new-name (gensym "new-name"))
+         (new-args (gensym "new-args"))
+         (redef `(def-criterion-unevaluated (,name ,args-formals ,vsf)
+                     ,@(when docstring-or-form (list docstring-or-form))
+                     (let* ((,expanded ,form)
+                            (,new-name (cond
+                                         ((symbolp ,expanded) ,expanded)
+                                         (t (car ,expanded))))
+                            (,new-args (cond
+                                         ((symbolp ,expanded) nil)
+                                         (t (cdr ,expanded)))))
+                       (apply-criterion ,new-name ,new-args ,vsf)))))
+    (cond
+      (docstring-or-form `(progn
+                            ,redef
+                            ,@(when docstring-or-form
+                                `((setf (documentation ',name :nst-criterion)
+                                        ,docstring-or-form)))))
+      (t redef))))
 
 (defvar *error-checking* nil
   "Criteria such as :check-err set this variable to t (and declare it special)
