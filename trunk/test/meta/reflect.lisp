@@ -30,7 +30,7 @@
         (loop for (group test) in tests do (run-test group test))
         (setf results nst::+results-record+))
       ;; (format t "***** Running subcriteria~%")
-      (check-subcriterion-on-value `(:all ,@subcriteria) results))))
+      (check-criterion-on-value `(:all ,@subcriteria) results))))
 
 (def-criterion-alias (--nst-package group-name &rest subcriteria)
   `(--nst-run (:packages (,group-name)) ,@subcriteria))
@@ -57,7 +57,7 @@
     ;; (format t " Result type ~s~%" (type-of ,result))
     (cond
       (result
-       (check-subcriterion-on-value `(:all ,@subcriteria) result))
+       (check-criterion-on-value `(:all ,@subcriteria) result))
       (t (emit-failure :format "No record of test ~s (group ~s)"
                        :args (list test-name group-name))))))
 
