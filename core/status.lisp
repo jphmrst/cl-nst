@@ -297,7 +297,7 @@ structure, permitting the use of apply."
 
 (defmacro check-result (&rest args)
   (warn 'nst-soft-deprecation :old-name 'check-result
-        :replacement '(emit-success emit-failure emit-warning))
+        :replacement '(make-success-report emit-failure emit-warning))
   `(new-check-result ,@args))
 
 

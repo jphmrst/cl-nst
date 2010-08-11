@@ -7,10 +7,10 @@
     (cond
       ((and (member test-name (nst::test-list (make-instance group-name)))
             (gethash test-name (nst::test-name-lookup (make-instance group-name))))
-       (emit-success))
+       (make-success-report))
       (t
-       (emit-failure :format "Expected NST group ~s to have test ~s"
-                     :args (list group-name test-name)))))
+       (make-failure-report :format "Expected NST group ~s to have test ~s"
+                            :args (list group-name test-name)))))
 
 (def-criterion (--nst-run (args &rest subcriteria) ())
   (let ((results))
@@ -58,8 +58,8 @@
     (cond
       (result
        (check-criterion-on-value `(:all ,@subcriteria) result))
-      (t (emit-failure :format "No record of test ~s (group ~s)"
-                       :args (list test-name group-name))))))
+      (t (make-failure-report :format "No record of test ~s (group ~s)"
+                              :args (list test-name group-name))))))
 
 (def-criterion-alias (---test-passes group-name test-name)
   `(---on-test ,group-name ,test-name
@@ -89,6 +89,7 @@
     (declare (ignorable result))
   (let ((result (eval bool)))
     (if result
-      (emit-success)
-      (emit-failure :format "Expected form evaluating to non-nil, got: ~s"
-                    :args (list bool)))))
+      (make-success-report)
+      (make-failure-report
+       :format "Expected form evaluating to non-nil, got: ~s"
+       :args (list bool)))))

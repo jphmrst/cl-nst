@@ -413,7 +413,7 @@ The FORMs construct and return (as if through progn) the arbtrary instance."
                           collect (cond ((symbolp d) d) (t (car d)))))
         (qualified 0)
         (total-samples-run 0)
-        (result (emit-success)))
+        (result (make-success-report)))
     #|(format t "[B]~%")|#
 
     (loop for sample-num from 0
