@@ -45,12 +45,12 @@
                           do (setf raw (subseq raw (+ 1 spot))))))
            (unless (search ,(if (string= "zz"
                                          (symbol-name 'zz))
-                              "emit-error "
-                              "EMIT-ERROR ") (car lines))  (pop lines))
+                              "make-error-report "
+                              "MAKE-ERROR-REPORT ") (car lines))  (pop lines))
            (unless (search ,(if (string= "zz"
                                          (symbol-name 'zz))
-                              "emit-error "
-                              "EMIT-ERROR ") (car lines))  (pop lines))
+                              "make-error-report "
+                              "MAKE-ERROR-REPORT ") (car lines))  (pop lines))
 
            (let ((orig-lines (loop for line in lines collect line)))
 
@@ -66,16 +66,16 @@
                (loop while (and lines
                                 (not (search ,(if (string= "zz"
                                                            (symbol-name 'zz))
-                                                "emit-error "
-                                                "EMIT-ERROR ")
+                                                "make-error-report "
+                                                "MAKE-ERROR-REPORT ")
                                              (car lines))))
                    do (pop lines))
                (cond
-                ;; We found the "emit-error" line, and it's not at the
+                ;; We found the "make-error-report" line, and it's not at the
                 ;; top of the list of lines.
                 (lines (pop lines))
 
-                ;; There is no "emit-error" line, so restore the
+                ;; There is no "make-error-report" line, so restore the
                 ;; original list of lines.
                 (t (setf lines orig-lines)))
                (if (search ,(if (string= "zz" (symbol-name 'zz))
@@ -96,7 +96,11 @@
                  (setf lines (subseq lines 0 first)))
                lines)))))))
 
-(defun emit-error (e &rest format-args &aux format args)
+(defmacro emit-error (&rest args)
+  "Deprecated; use make-success-report."
+  `(make-error-report ,@args))
+
+(defun make-error-report (e &rest format-args &aux format args)
   (declare (special *nst-context* *nst-stack*))
   (cond
     (format-args (setf format (car format) args (cdr args)))
@@ -118,12 +122,12 @@
   (let ((*nst-group-name* (group-name test-obj))
         (*nst-check-user-name* (test-name-lookup test-obj)))
     (declare (special *nst-group-name* *nst-check-user-name*))
-    (emit-error error :format (format nil msg))))
+    (make-error-report error :format (format nil msg))))
 
 (defun fixture-binding-error-note (fixture-name variable-name error)
-  (emit-error error
-              (format nil "~~@<Error binding ~s for fixture ~s:~~_ ~~s~~:>"
-                variable-name fixture-name)))
+  (make-error-report
+   error (format nil "~~@<Error binding ~s for fixture ~s:~~_ ~~s~~:>"
+           variable-name fixture-name)))
 
 ;;;
 ;;; Result records for high-level checks.

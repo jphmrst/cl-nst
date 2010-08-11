@@ -105,7 +105,8 @@
                           (format-at-verbosity 4
                               "Caught ~s but :err expected ~s~%" e type)
                           (unless *debug-on-error*
-                            (return-from err-criterion (emit-error e))))))))
+                            (return-from err-criterion
+                              (make-error-report e))))))))
       (eval expr-form))
     (emit-failure :format "~@<No expected error:~{~_ ~s~}~:>"
                   :args `(,(cond

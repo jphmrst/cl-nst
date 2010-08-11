@@ -73,7 +73,8 @@
 
              #:def-criterion #:def-criterion-unevaluated #:def-criterion-alias
              #:check-criterion-on-value #:check-criterion-on-form
-             #:make-failure-report #:make-warning-report #:make-success-report
+             #:make-failure-report #:make-error-report
+             #:make-warning-report #:make-success-report
              #:add-failure #:add-error #:add-info
              ;; Deprecated:
              #:emit-failure #:emit-warning #:emit-success
