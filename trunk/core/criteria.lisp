@@ -24,48 +24,51 @@
 ;;; Built-in basic testing criteria.
 
 (def-criterion-unevaluated (:pass () chk :ignore-forms t)
-  (emit-success))
+  (make-success-report))
 
 (def-criterion-unevaluated (:fail (&rest args) chk :ignore-forms t)
-  (emit-failure :format (car args) :args (cdr args)))
+  (make-failure-report :format (car args) :args (cdr args)))
 
 (def-criterion-unevaluated (:warn (&rest args) chk :ignore-forms t)
-  (emit-warning :format (car args) :args (cdr args)))
+  (make-warning-report :format (car args) :args (cdr args)))
 
 (def-criterion (:true-form (bool) ())
   (if (eval bool)
-      (emit-success)
-      (emit-failure :format "Expected non-null, got: ~s"
-                    :args (list bool))))
+      (make-success-report)
+      (make-failure-report :format "Expected non-null, got: ~s"
+                           :args (list bool))))
 
 (def-criterion (:true () (bool))
   (if bool
-      (emit-success)
-      (emit-failure :format "Expected non-null, got: ~s"
-                    :args (list bool))))
+      (make-success-report)
+      (make-failure-report :format "Expected non-null, got: ~s"
+                           :args (list bool))))
 
 (def-criterion (:eq (target) (actual))
   (if (eq (eval target) actual)
-      (emit-success)
-      (emit-failure :format "Not eq to value of ~s:~_Value ~s"
-                    :args `('target ,actual))))
+      (make-success-report)
+      (make-failure-report :format "Not eq to value of ~s:~_Value ~s"
+                           :args `('target ,actual))))
 
 (def-criterion-alias (:symbol name) `(:eq ',name))
 
 (def-criterion (:eql (target) (actual))
   (if (eql (eval target) actual)
-      (emit-success)
-      (emit-failure :format "Not eql to value of ~s" :args (list target))))
+      (make-success-report)
+      (make-failure-report :format "Not eql to value of ~s"
+                           :args (list target))))
 
 (def-criterion (:equal (target) (actual))
   (if (equal (eval target) actual)
-     (emit-success)
-     (emit-failure :format "Not equal to value of ~s" :args (list target))))
+     (make-success-report)
+     (make-failure-report :format "Not equal to value of ~s"
+                          :args (list target))))
 
 (def-criterion (:equalp (target) (actual))
   (if (equalp (eval target) actual)
-      (emit-success)
-      (emit-failure :format "Not equalp to value of ~s" :args (list target))))
+      (make-success-report)
+      (make-failure-report :format "Not equalp to value of ~s"
+                           :args (list target))))
 
 (def-criterion-alias (:forms-eq)    `(:predicate eq))
 (def-criterion-alias (:forms-eql)   `(:predicate eql))
@@ -74,9 +77,9 @@
 
 (def-criterion (:predicate (pred) (&rest vals))
   (if (apply (eval `(function ,pred)) vals)
-      (emit-success)
-      (emit-failure :format "Predicate ~s fails for ~s"
-                    :args (list pred vals))))
+      (make-success-report)
+      (make-failure-report :format "Predicate ~s fails for ~s"
+                           :args (list pred vals))))
 
 (def-criterion-alias (:drop-values criterion)
   `(:apply (lambda (x &rest others) (declare (ignorable others)) x)
@@ -84,7 +87,7 @@
 
 (def-criterion (:dump-forms (blurb) (&rest forms))
   (format t "~%~a~%~{~s~%~}" blurb forms)
-  (emit-failure :format "Arguments dumped" :args nil))
+  (make-failure-report :format "Arguments dumped" :args nil))
 
 (def-criterion-unevaluated (:info (string subcriterion) expr-list-form)
   (let ((subcheck (check-criterion-on-form subcriterion expr-list-form)))
@@ -100,7 +103,7 @@
                          ((typep e type)
                           (format-at-verbosity 4
                               "Caught ~s as expected by :err criterion~%" e)
-                          (return-from err-criterion (emit-success)))
+                          (return-from err-criterion (make-success-report)))
                          ((typep e 'error)
                           (format-at-verbosity 4
                               "Caught ~s but :err expected ~s~%" e type)
@@ -108,12 +111,12 @@
                             (return-from err-criterion
                               (make-error-report e))))))))
       (eval expr-form))
-    (emit-failure :format "~@<No expected error:~{~_ ~s~}~:>"
-                  :args `(,(cond
-                            ((and (listp expr-form)
-                                  (eq 'list (car expr-form)))
-                             (cdr expr-form))
-                            (t (list expr-form)))))))
+    (make-failure-report :format "~@<No expected error:~{~_ ~s~}~:>"
+                         :args `(,(cond
+                                    ((and (listp expr-form)
+                                          (eq 'list (car expr-form)))
+                                     (cdr expr-form))
+                                    (t (list expr-form)))))))
 
 (def-criterion-unevaluated (:perf (&key (ms nil ms-supp-p)
                                         (sec nil sec-supp-p)
@@ -133,9 +136,10 @@
                (- end-time start-time))))
       (declare (ignore eval-result))
       (if (> ms elapsed-ms)
-        (emit-success)
-        (emit-failure :format "Execution time ~dms exceeded allowed time ~dms"
-                      :args (list elapsed-ms ms)))))
+        (make-success-report)
+        (make-failure-report
+         :format "Execution time ~dms exceeded allowed time ~dms"
+         :args (list elapsed-ms ms)))))
    (t
     (error ":perf check requires performance criteria specification"))))
 
@@ -145,8 +149,8 @@
      ((check-result-errors subcheck)   subcheck)
      ((check-result-failures subcheck)
       (new-check-result :info (check-result-info subcheck)))
-     (t (emit-failure :format "Expected failure from ~s"
-                      :args (list subcriterion))))))
+     (t (make-failure-report :format "Expected failure from ~s"
+                             :args (list subcriterion))))))
 
 (def-criterion-unevaluated (:all (&rest subcriteria) expr-list-form)
   (let ((*nst-context-evaluable* t))
@@ -182,8 +186,8 @@
             (return-from any-criterion
               (new-check-result :info (nconc info
                                              (check-result-info result)))))))
-      (emit-failure :format "No disjuncts succeeded:~{~_ ~s~}"
-                    :args (list criteria) :info info))))
+      (make-failure-report :format "No disjuncts succeeded:~{~_ ~s~}"
+                           :args (list criteria) :info info))))
 
 (def-criterion-unevaluated (:apply (transform criterion) exprs-form)
   (check-criterion-on-form criterion
@@ -195,15 +199,15 @@
      ((error #'(lambda (e)
                  (format-at-verbosity 4
                      "Caught ~s as expected by :check-err~%" e)
-                 (return-from check-err-block (emit-success)))))
+                 (return-from check-err-block (make-success-report)))))
       (check-criterion-on-form criterion forms))
-    (emit-failure :format "~@<No expected error for check ~s on:~
+    (make-failure-report :format "~@<No expected error for check ~s on:~
                                  ~{~_ ~s~}~:>"
-                  :args (list criterion
-                              (cond ((and (listp forms)
-                                          (eq 'list (car forms)))
-                                     (cdr forms))
-                                    (t (list forms)))))))
+                         :args (list criterion
+                                     (cond ((and (listp forms)
+                                                 (eq 'list (car forms)))
+                                            (cdr forms))
+                                           (t (list forms)))))))
 
 (def-criterion-unevaluated (:progn (&rest forms-and-criterion) forms)
   (let ((progn-forms (butlast forms-and-criterion))
@@ -242,8 +246,8 @@
     (let ((info nil) (warnings nil))
       (unless (eql (length l) (length criteria))
         (return-from seq
-          (emit-failure :format "Expected list of length ~d, got ~s"
-                        :args `(,(length criteria) ,l))))
+          (make-failure-report :format "Expected list of length ~d, got ~s"
+                               :args `(,(length criteria) ,l))))
       (loop for criterion in criteria for item in l do
         (let ((result (check-criterion-on-value criterion item)))
           (cond
@@ -266,17 +270,17 @@
                (result (check-criterion-on-value criterion x)))
           (when (and (null (check-result-errors result))
                      (null (check-result-failures result)))
-            (return-from permute-block (emit-success)))))
-      (emit-failure :format "No permutation of ~s satisfies ~s"
-                    :args `(,l ,criterion)))))
+            (return-from permute-block (make-success-report)))))
+      (make-failure-report :format "No permutation of ~s satisfies ~s"
+                           :args `(,l ,criterion)))))
 
 (def-criterion (:across (&rest criteria) (v))
   (block across-block
     (let ((info nil) (warnings nil))
       (unless (eql (length v) (length criteria))
         (return-from across-block
-          (emit-failure :format "Expected sequence of length ~d"
-                        :args `(,(length criteria)))))
+          (make-failure-report :format "Expected sequence of length ~d"
+                               :args `(,(length criteria)))))
       (loop for criterion in criteria for idx from 0 do
         (let ((result (check-criterion-on-value criterion (elt v idx))))
           (cond

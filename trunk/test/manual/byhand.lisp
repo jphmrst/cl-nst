@@ -25,7 +25,7 @@
 (def-criterion (:echo () (&rest chk))
   (declare (ignorable chk))
   (format t "              * Core check echo~%")
-  (emit-success))
+  (make-success-report))
 
 (def-fixtures fix1 () (x 3) (y (format t "Bindings from fix1~%")))
 (def-fixtures fix2 () (z2 (format t "        Bindings from fix2~%")))
