@@ -47,9 +47,9 @@ REPL macros require the dynamic configuration provided by those wrappers."
        (error 'no-nst-groups-in-package :package package-or-name)))))
 
 (defun run-group (group-class)
-  "Run a group by its user-given name.    Note that this is /not/ an interactive
-function --- certain behaviors provided by e.g. the ASDF extension or
-REPL macros require the dynamic configuration provided by those wrappers."
+  "Run a group by its user-given name.    Note that this is /not/ an
+interactive function --- certain behaviors provided by e.g. the ASDF extension
+or REPL macros require the dynamic configuration provided by those wrappers."
   ;; Print a message at the appropriate level of verbosity.
   (format-at-verbosity 0 "Running group ~s~%" group-class)
 
@@ -103,6 +103,9 @@ configuration provided by those wrappers."
               (handler-return nil))
       &body handler)
      &body body)
+  (when (and cerror-by-flag (not cerror-label-var-supp-p))
+    (error
+     "If providing :cerror-by-flag, must also provide :cerror-label-var"))
   (when (and post-cerror-supp-p (not cerror-by-flag))
     (error "Provided :post-cerror but not :cerror-by-flag"))
   (let* ((handler-body-fn (gensym "handler-body"))
@@ -131,10 +134,8 @@ configuration provided by those wrappers."
     (cond
      ((and cerror-label-supp-p cerror-label-var-supp-p)
       (setf core `(let ((,cerror-label-var ,cerror-label)) ,core)))
-     (cerror-label-supp-p
-      (error "Gave :cerror-label but not :cerror-label-var"))
-     (cerror-label-var-supp-p
-      (error "Gave :cerror-label-var but not :cerror-label")))
+     ((and cerror-label-supp-p (not cerror-label-var-supp-p))
+      (error "Gave :cerror-label but not :cerror-label-var")))
 
     (when with-retry-supp-p
       (setf core `(with-retry (,with-retry) ,core)))
@@ -147,7 +148,9 @@ configuration provided by those wrappers."
        (loop do
          (block ,inner
            (with-nst-control-handlers
-               ((e flag :for-fail t
+               ((e flag
+                   :for-fail t
+                   :cerror-label-var ,continuation-label
                    :post-cerror (return-from ,inner))
                 (format-at-verbosity 4 "In the retry handler ~s~%"
                   ',continuation-label))
@@ -450,17 +453,19 @@ for the test application class.")
                           (criterion (test-criterion test)))
                       (declare (special *current-group* *current-test*))
 
-                      (cond
-                       ((eql 1 (length forms))
-                        (check-criterion-on-form
-                         criterion
-                         `(common-lisp:multiple-value-list
-                           (locally (declare ,fixture-names-special)
-                             ,(car forms)))))
-                       (t (check-criterion-on-form
+                      (with-retry ((format nil "Try running test ~s again"
+                                     *nst-check-user-name*))
+                        (cond
+                         ((eql 1 (length forms))
+                          (check-criterion-on-form
                            criterion
-                           `(locally (declare ,fixture-names-special)
-                              (list ,@forms))))))))
+                           `(common-lisp:multiple-value-list
+                             (locally (declare ,fixture-names-special)
+                               ,(car forms)))))
+                         (t (check-criterion-on-form
+                             criterion
+                             `(locally (declare ,fixture-names-special)
+                                (list ,@forms)))))))))
           (end-time (get-internal-real-time)))
       (setf (result-stats-elapsed-time result)
         (- end-time start-time)
