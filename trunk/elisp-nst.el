@@ -227,6 +227,9 @@ minor mode should apply."
 (nst-form-indentation --nst-test 2)
 (nst-form-indentation ---on-test 2)
 
+(nst-form-indentation with-nst-control-handlers 1)
+(nst-form-indentation handler-bind-interruptable 1)
+
 (nst-form-indentation :info 1)
 (nst-form-indentation :apply 1)
 (nst-form-indentation :check-err 1)
