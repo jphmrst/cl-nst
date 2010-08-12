@@ -91,25 +91,53 @@ configuration provided by those wrappers."
 
 ;;; --------------------------------------------------------------
 
+(defmacro with-nst-control-handlers (((formal flag &key
+                                              (for-fail nil) (for-error t)
+                                              (cerror-label-var
+                                               nil cerror-label-var-supp-p)
+                                              (cerror-label
+                                               nil cerror-label-supp-p))
+                                      &body handler-maker)
+                                     &body body)
+  (let ((core
+         `(handler-bind-interruptable
+           (,@(when for-fail
+                `((debug-for-fail
+                   #'(lambda (,formal)
+                       (funcall #'(lambda (,flag)
+                                    ,@handler-maker)
+                                *debug-on-fail*)))))
+            ,@(when for-error
+                `((error
+                   #'(lambda (,formal)
+                       (funcall #'(lambda (,flag)
+                                    ,@handler-maker)
+                                *debug-on-error*))))))
+           ,@body)))
+
+    (cond
+      ((and cerror-label-supp-p cerror-label-var-supp-p)
+       (setf core `(let ((,cerror-label-var ,cerror-label)) ,core)))
+      (cerror-label-supp-p
+       (error "Gave :cerror-label but not :cerror-label-var"))
+      (cerror-label-var-supp-p
+       (error "Gave :cerror-label-var but not :cerror-label")))
+
+    core))
+
 (defmacro with-retry ((continuation-label) &body forms)
   (let ((inner (gensym)) (outer (gensym)))
     `(block ,outer
        (loop do
          (block ,inner
-           (handler-bind-interruptable
-            ((debug-for-fail #'(lambda (e)
-                                 (when *debug-on-fail*
-                                   (cerror ,continuation-label e)
-                                   (return-from ,inner))))
-             (error #'(lambda (e)
-                        (format-at-verbosity 4
-                                             "In the retry handler ~s~%"
-                                             ',continuation-label)
-                        (when *debug-on-error*
+           (with-nst-control-handlers
+               ((e flag :for-fail t)
+                (format-at-verbosity 4 "In the retry handler ~s~%"
+                  ',continuation-label)
+                        (when flag
                           (cerror ,continuation-label e)
-                          (return-from ,inner)))))
-            (return-from ,outer
-              (progn ,@forms))))))))
+                          (return-from ,inner)))
+               (return-from ,outer (progn ,@forms))))))))
 
 (define-condition debug-for-fail (condition)
   ()
@@ -120,92 +148,68 @@ configuration provided by those wrappers."
   "Programmatic entry point for running all tests in a group."
   (format-at-verbosity 4 "Called (run-group-tests ~s ~s)~%" group-obj test-objs)
   (with-retry ("Try performing group setup again.")
-    (let ((exit-tests-label
-           (format nil "~@<Exit from attempting tests in this group (~s), ~
-                         ~_and continue with tests from other groups.~:>"
-             (group-name group-obj))))
-    (handler-bind-interruptable
-     ((debug-for-fail #'(lambda (e)
-                          (when *debug-on-fail*
-                            (cerror exit-tests-label e)
-                            (return-from run-group-tests nil))))
-      (error #'(lambda (e)
-                 (format-at-verbosity 4
-                     "In the setup handler for run-group-tests ~s ~s~%"
-                   group-obj test-objs)
-                 (loop for test-obj in test-objs do
-                       (setf (gethash (check-group-name test-obj)
-                                      +results-record+)
-                         (emit-config-error e test-obj
-                           "Error in pre-fixture setup")))
-                 (when *debug-on-error*
-                   (cerror exit-tests-label e))
-                 (return-from run-group-tests nil))))
-     ;; (do-group-prefixture-setup group-obj)
-     (funcall (group-fixtures-setup-thunk group-obj)))))
+    (with-nst-control-handlers
+        ((e flag
+            :cerror-label-var exit-tests-label
+            :cerror-label (format nil
+                              "~@<Exit from attempting tests in this group ~
+                              ~_(~s), and continue with tests from other ~
+                              groups.~:>"
+                            (group-name group-obj)))
+         (format-at-verbosity 4
+             "In the setup handler for run-group-tests ~s ~s~%"
+           group-obj test-objs)
+         (loop for test-obj in test-objs do
+               (setf (gethash (check-group-name test-obj) +results-record+)
+                 (emit-config-error e test-obj
+                   "Error in pre-fixture setup")))
+         (when flag (cerror exit-tests-label e))
+         (return-from run-group-tests nil))
+      (funcall (group-fixtures-setup-thunk group-obj))))
   (format-at-verbosity 4
       "Passed setup in (run-group-tests ~s ~s)~%" group-obj test-objs)
   (with-retry
       ((format nil "Restart testing group ~s (reapplying group fixtures)"
          (group-name group-obj)))
     (block group-fixture-assignment
-      (let ((exit-tests-label (format nil
-                                  "~@<Skip group ~s (cleaning up first)~:>"
-                                (group-name group-obj))))
-      (handler-bind-interruptable
-       ((debug-for-fail #'(lambda (e)
-                            (when *debug-on-fail*
-                              (cerror exit-tests-label e)
-                              (return-from group-fixture-assignment nil))))
-        (error #'(lambda (e)
-                   (format-at-verbosity 4
-                       "In the test handler for run-group-tests ~s ~s~%"
-                     group-obj test-objs)
-                   (loop for test-obj in test-objs do
-                         (setf (gethash (check-group-name test-obj)
-                                        +results-record+)
-                           (emit-config-error e test-obj
-                             (format nil "Error binding group fixture ~s"
-                               *binding-variable*))))
-                   (when *debug-on-error*
-                     (cerror exit-tests-label e))
-                   (return-from group-fixture-assignment nil))))
-       (do-group-fixture-assignment group-obj test-objs)))))
+      (with-nst-control-handlers
+          ((e flag
+              :for-fail t
+              :cerror-label-var exit-tests-label
+              :cerror-label (format nil
+                                "~@<Skip group ~s (cleaning up first)~:>"
+                              (group-name group-obj)))
+           (format-at-verbosity 4
+               "In the test handler for run-group-tests ~s ~s~%"
+             group-obj test-objs)
+           (loop for test-obj in test-objs do
+             (setf (gethash (check-group-name test-obj) +results-record+)
+                   (emit-config-error e test-obj
+                     (format nil "Error binding group fixture ~s"
+                       *binding-variable*))))
+           (when flag (cerror exit-tests-label e))
+           (return-from group-fixture-assignment nil))
+          (do-group-fixture-assignment group-obj test-objs))))
+
   (format-at-verbosity 4
       "Passed test execution in (run-group-tests ~s ~s)~%" group-obj test-objs)
   (with-retry ("Try performing group cleanup again.")
-    (let ((exit-tests-label "Continue with tests from other groups."))
-      (handler-bind-interruptable
-       ((debug-for-fail #'(lambda (e)
-                            (when *debug-on-fail*
-                              (cerror exit-tests-label e)
-                              (return-from run-group-tests nil))))
-        (error #'(lambda (e)
-                   (format-at-verbosity 4
-                       "In the cleanup handler for run-group-tests ~s ~s~%"
-                     group-obj test-objs)
-                   (loop for test-obj in test-objs do
-                         (add-test-config-error test-obj
-                           "Error in post-fixtures cleanup: ~s" e))
-                   (when *debug-on-error*
-                     (cerror exit-tests-label e))
-                   (return-from run-group-tests nil))))
-       ;; (do-group-afterfixture-cleanup group-obj)
-       (funcall (group-fixtures-cleanup-thunk group-obj))))))
+    (with-nst-control-handlers
+        ((e flag
+            :cerror-label-var exit-tests-label
+            :cerror-label "Continue with tests from other groups.")
+         (format-at-verbosity 4
+             "In the cleanup handler for run-group-tests ~s ~s~%"
+           group-obj test-objs)
+         (loop for test-obj in test-objs do
+           (add-test-config-error test-obj
+             "Error in post-fixtures cleanup: ~s" e))
+         (when flag (cerror exit-tests-label e))
+         (return-from run-group-tests nil))
+        (funcall (group-fixtures-cleanup-thunk group-obj)))))
 
 (defgeneric group-fixtures-setup-thunk (record))
-;;;(defun do-group-prefixture-setup (record)
-;;;  (unless (typep record 'nst-group-record)
-;;;    (error "Called ~s with an argument not of type ~s"
-;;;           'do-group-prefixture-setup 'nst-group-record))
-;;;  (funcall (group-fixtures-setup-thunk record)))
-
 (defgeneric group-fixtures-cleanup-thunk (record))
-;;;(defun do-group-afterfixture-cleanup (record)
-;;;  (unless (typep record 'nst-group-record)
-;;;    (error "Called ~s with an argument not of type ~s"
-;;;           'do-group-afterfixture-cleanup 'nst-group-record))
-;;;  (funcall (group-fixtures-cleanup-thunk record)))
 
 (defgeneric do-group-fixture-assignment (group-obj test-objs)
   (:documentation
@@ -215,30 +219,22 @@ for the group application class.")
      (format-at-verbosity 4 "Called (do-group-fixture-assignment ~s ~s)~%"
        group-obj test-objs)
      (with-retry ("Try performing postfixture group setup again.")
-       (let ((exit-tests-label (format nil
-                                   "Skip group ~s (postfixture clean up first)"
-                                 (group-name group-obj))))
-       (handler-bind-interruptable
-        ((debug-for-fail #'(lambda (e)
-                             (when *debug-on-fail*
-                               (cerror exit-tests-label e)
-                               (return-from do-group-fixture-assignment nil))))
-         (error
-          #'(lambda (e)
-              (format-at-verbosity 4
-                  "In the postfixture setup handler for ~
-                                        do-group-fixture-assignment ~s ~s~%"
-                group-obj test-objs)
-              (loop for test-obj in test-objs do
-                    (setf (gethash (check-group-name test-obj)
-                                   +results-record+)
-                      (emit-config-error e test-obj
-                        "Error in post-fixture application setup")))
-              (when *debug-on-error*
-                (cerror exit-tests-label e))
-              (return-from do-group-fixture-assignment nil))))
-        ;; (do-group-postfixture-setup group-obj)
-        (funcall (group-withfixtures-setup-thunk group-obj)))))
+       (with-nst-control-handlers
+           ((e flag
+               :cerror-label-var exit-tests-label
+               :cerror-label (format nil
+                                 "Skip group ~s (postfixture clean up first)"
+                               (group-name group-obj)))
+            (format-at-verbosity 4
+                "In the postfixture setup handler for ~
+                   do-group-fixture-assignment ~s ~s~%" group-obj test-objs)
+            (loop for test-obj in test-objs do
+              (setf (gethash (check-group-name test-obj) +results-record+)
+                    (emit-config-error e test-obj
+                      "Error in post-fixture application setup")))
+            (when flag (cerror exit-tests-label e))
+            (return-from do-group-fixture-assignment nil))
+           (funcall (group-withfixtures-setup-thunk group-obj))))
 
      (format-at-verbosity 3 "    Starting run loop for ~s~%" group-obj)
 
@@ -252,147 +248,110 @@ for the group application class.")
                (block this-test
                  (format-at-verbosity 3 "    Instance ~s~%" test-inst)
                  (with-retry ("Try each-test setup for this group again.")
-                   (let ((exit-tests-label
-                          (format nil "~@<Continue with other tests from ~
+                   (with-nst-control-handlers
+                       ((e flag
+                           :cerror-label-var exit-tests-label
+                           :cerror-label
+                           (format nil "~@<Continue with other tests from ~
                                           this group ~_(~s, not likely to ~
                                           succeed).~:>"
-                            (group-name group-obj))))
-                   (handler-bind-interruptable
-                       ((debug-for-fail #'(lambda (e)
-                            (when *debug-on-fail*
-                              (cerror exit-tests-label e)
-                              (return-from this-test nil))))
-                        (error
-                         #'(lambda (e)
-                             (format-at-verbosity 4
-                                 "In the each-test setup handler for ~
+                             (group-name group-obj)))
+                        (format-at-verbosity 4
+                            "In the each-test setup handler for ~
                                   do-group-fixture-assignment ~s ~s~%"
-                               group-obj test-objs)
-                             (setf (gethash (check-group-name test-inst)
-                                            +results-record+)
-                               (emit-config-error
-                                   e test-inst
-                                 "Error in group each-test setup"))
-                             (when *debug-on-error*
-                               (cerror exit-tests-label e))
-                             (return-from this-test nil))))
-                       ;; (do-group-each-test-setup group-obj)
-                       (funcall (group-eachtest-setup-thunk group-obj)))))
+                          group-obj test-objs)
+                        (setf (gethash (check-group-name test-inst)
+                                       +results-record+)
+                          (emit-config-error e test-inst
+                            "Error in group each-test setup"))
+                        (when flag (cerror exit-tests-label e))
+                        (return-from this-test nil))
+                       (funcall (group-eachtest-setup-thunk group-obj))))
                  (unwind-protect
                      (block test-inner
                        (with-retry ((format nil "Try setting up test ~s again."
                                       test-inst))
-                         (let ((exit-tests-label
-                                (format nil "Skip this test (run the group's ~
+                         (with-nst-control-handlers
+                             ((e flag
+                                 :cerror-label-var exit-tests-label
+                                 :cerror-label
+                                 (format nil "Skip this test (run the group's ~
                                              each-test cleanup, but not the ~
-                                             test's cleanup)")))
-                           (handler-bind-interruptable
-                            ((debug-for-fail
-                              #'(lambda (e)
-                                  (when *debug-on-fail*
-                                    (cerror exit-tests-label e)
-                                    (return-from test-inner nil))))
-                             (error
-                              #'(lambda (e)
-                                  (format-at-verbosity 4
-                                      "In the prefixture setup handler for ~
-                                        do-group-fixture-assignment ~s ~s~%"
-                                    group-obj test-objs)
-                                  (setf (gethash (check-group-name test-inst)
-                                                 +results-record+)
-                                    (emit-config-error e test-inst
-                                      "Error in test pre-fixture setup"))
-                                  (when *debug-on-error*
-                                    (cerror exit-tests-label e))
-                                  (return-from test-inner nil))))
-                            ;; (do-test-prefixture-setup test-inst)
-                            (funcall (prefixture-setup-thunk test-inst)))))
+                                             test's cleanup)"))
+                              (format-at-verbosity 4
+                                  "In the prefixture setup handler for ~
+                                     do-group-fixture-assignment ~s ~s~%"
+                                group-obj test-objs)
+                              (setf (gethash (check-group-name test-inst)
+                                             +results-record+)
+                                (emit-config-error e test-inst
+                                  "Error in test pre-fixture setup"))
+                              (when flag (cerror exit-tests-label e))
+                              (return-from test-inner nil))
+                             (funcall (prefixture-setup-thunk test-inst))))
                        (unwind-protect
                            (with-retry ("Restart this test ~
                                                 (reapplying test fixtures).")
                              (block test-fixture-assignment
-                               (let ((exit-tests-label
-                                      (format nil
-                                          "Skip test ~s (running all cleanup)"
-                                        (group-name group-obj))))
-                                 (handler-bind-interruptable
-                                  ((debug-for-fail
-                                    #'(lambda (e)
-                                        (when *debug-on-fail*
-                                          (cerror exit-tests-label e)
-                                          (return-from test-fixture-assignment
-                                            nil))))
-                                   (error
-                                    #'(lambda (e)
-                                        (format-at-verbosity 4
-                                            "In the main test handler for ~
+                               (with-nst-control-handlers
+                                   ((e flag :for-fail t
+                                       :cerror-label-var exit-tests-label
+                                       :cerror-label
+                                       (format nil
+                                           "Skip test ~s (running all cleanup)"
+                                         (group-name group-obj)))
+                                    (format-at-verbosity 4
+                                        "In the main test handler for ~
                                            do-group-fixture-assignment ~s ~s~%"
-                                          group-obj test-objs)
-                                        (setf (gethash (check-group-name
-                                                        test-inst)
-                                                       +results-record+)
-                                          (emit-config-error
-                                              e test-inst
-                                            (format nil
-                                                "Error binding test fixture ~s"
-                                              *binding-variable*)))
-                                        (when *debug-on-error*
-                                          (cerror exit-tests-label e))
-                                        (return-from test-fixture-assignment
-                                          nil))))
-                                  (do-test-fixture-assignment test-inst)))))
+                                      group-obj test-objs)
+                                    (setf (gethash (check-group-name
+                                                    test-inst)
+                                                   +results-record+)
+                                      (emit-config-error e test-inst
+                                        (format nil
+                                            "Error binding test fixture ~s"
+                                          *binding-variable*)))
+                                    (when flag (cerror exit-tests-label e))
+                                    (return-from test-fixture-assignment
+                                      nil))
+                                   (do-test-fixture-assignment test-inst))))
                          (with-retry ("Try test cleanup again.")
-                           (let ((exit-tests-label
-                                  (format nil "Continue with other tests from ~
-                                               this group (~s)."
-                                    (group-name group-obj))))
-                           (handler-bind-interruptable
-                               ((debug-for-fail
-                                 #'(lambda (e)
-                                     (when *debug-on-fail*
-                                       (cerror exit-tests-label e)
-                                       (return-from test-inner nil))))
-                                (error
-                                 #'(lambda (e)
-                                     (format-at-verbosity 4
-                                         "In the cleanup handler for ~
-                                          do-group-fixture-assignment ~s ~s~%"
-                                       group-obj test-objs)
-                                     (add-test-config-error test-inst
-                                       "Error in test postfixture cleanup: ~s"
-                                       e)
-                                     (when *debug-on-error*
-                                       (cerror exit-tests-label e))
-                                     (return-from test-inner))))
-                               ;; (do-test-afterfixture-cleanup test-inst)
+                           (with-nst-control-handlers
+                               ((e flag
+                                   :cerror-label-var exit-tests-label
+                                   :cerror-label
+                                   (format nil "Continue with other tests ~
+                                                from this group (~s)."
+                                     (group-name group-obj)))
+                                (format-at-verbosity 4
+                                    "In the cleanup handler for ~
+                                       do-group-fixture-assignment ~s ~s~%"
+                                  group-obj test-objs)
+                                (add-test-config-error test-inst
+                                  "Error in test postfixture cleanup: ~s" e)
+                                (when flag (cerror exit-tests-label e))
+                                (return-from test-inner))
                                (funcall
-                                (postfixture-cleanup-thunk test-inst)))))))
+                                (postfixture-cleanup-thunk test-inst))))))
                    (with-retry ("Try each-test cleanup again.")
-                     (let ((exit-tests-label
-                            (format nil
-                                "~@<Continue with other tests from this ~
+                     (with-nst-control-handlers
+                         ((e flag
+                             :cerror-label-var exit-tests-label
+                             :cerror-label
+                             (format nil
+                                 "~@<Continue with other tests from this ~
                                     group ~_(~s, this error likely to ~
                                     recur).~:>"
-                              (group-name group-obj))))
-                       (handler-bind-interruptable
-                        ((debug-for-fail
-                          #'(lambda (e)
-                              (when *debug-on-fail*
-                                (cerror exit-tests-label e)
-                                (return-from this-test nil))))
-                         (error
-                          #'(lambda (e)
-                              (format-at-verbosity 4
-                                  "In the each-test cleanup handler for ~
+                               (group-name group-obj)))
+                          (format-at-verbosity 4
+                              "In the each-test cleanup handler for ~
                                     do-group-fixture-assignment ~s ~s~%"
-                                group-obj test-objs)
-                              (add-test-config-error test-inst
-                                "Error in group each-test cleanup: ~s" e)
-                              (when *debug-on-error*
-                                (cerror exit-tests-label e))
-                              (return-from this-test))))
-                        ;; (do-group-each-test-cleanup group-obj)
-                        (funcall (group-eachtest-cleanup-thunk group-obj)))))
+                            group-obj test-objs)
+                          (add-test-config-error test-inst
+                            "Error in group each-test cleanup: ~s" e)
+                          (when flag (cerror exit-tests-label e))
+                          (return-from this-test))
+                         (funcall (group-eachtest-cleanup-thunk group-obj))))
                    (format-at-verbosity 3
                        "      Exiting loop entry ~s~%" test-inst)))))
 
@@ -400,92 +359,28 @@ for the group application class.")
                "    Exiting run loop for ~s~%" group-obj))
 
        (with-retry ("Try performing group with-fixtures cleanup again.")
-         (let ((exit-tests-label "Continue with tests from other groups."))
-           (handler-bind-interruptable
-            ((debug-for-fail
-              #'(lambda (e)
-                  (when *debug-on-fail*
-                    (cerror exit-tests-label e)
-                    (return-from do-group-fixture-assignment nil))))
-             (error #'(lambda (e)
-                        (format-at-verbosity 4
-                            "In the group fixtures cleanup handler for ~
+         (with-nst-control-handlers
+             ((e flag
+                 :cerror-label-var exit-tests-label
+                 :cerror-label "Continue with tests from other groups.")
+              (format-at-verbosity 4
+                  "In the group fixtures cleanup handler for ~
                               do-group-fixture-assignment ~s ~s~%"
-                          group-obj test-objs)
-                        (loop for test-obj in test-objs do
-                              (add-test-config-error test-obj
-                                "Error in group fixtures cleanup: ~s" e))
-                        (when *debug-on-error*
-                          (cerror exit-tests-label e))
-                        (return-from do-group-fixture-assignment))))
-            ;; (do-group-withfixture-cleanup group-obj)
-            (funcall (group-withfixtures-cleanup-thunk group-obj))))))))
+                group-obj test-objs)
+              (loop for test-obj in test-objs do
+                    (add-test-config-error test-obj
+                      "Error in group fixtures cleanup: ~s" e))
+              (when flag (cerror exit-tests-label e))
+              (return-from do-group-fixture-assignment))
+             (funcall (group-withfixtures-cleanup-thunk group-obj)))))))
 
 (defgeneric group-withfixtures-setup-thunk (record))
-;;;(defun do-group-postfixture-setup (record)
-;;;  (unless (typep record 'nst-group-record)
-;;;    (error "Called ~s with an argument not of type ~s"
-;;;           'do-group-postfixture-setup 'nst-group-record))
-;;;  (funcall (group-withfixtures-setup-thunk record)))
 
 (defgeneric group-withfixtures-cleanup-thunk (record))
-;;;(defun do-group-withfixture-cleanup (record)
-;;;  (unless (typep record 'nst-group-record)
-;;;    (error "Called ~s with an argument not of type ~s"
-;;;           'do-group-withfixture-cleanup 'nst-group-record))
-;;;  (funcall (group-withfixtures-cleanup-thunk record)))
 
 (defgeneric group-eachtest-setup-thunk (record))
-;;;(defun do-group-each-test-setup (record)
-;;;  (unless (typep record 'nst-group-record)
-;;;    (error "Called ~s with an argument not of type ~s"
-;;;           'do-group-each-test-setup 'nst-group-record))
-;;;  (funcall (group-eachtest-setup-thunk record)))
 
 (defgeneric group-eachtest-cleanup-thunk (record))
-;;;(defun do-group-each-test-cleanup (record)
-;;;  (unless (typep record 'nst-group-record)
-;;;    (error "Called ~s with an argument not of type ~s"
-;;;           'do-group-each-test-cleanup 'nst-group-record))
-;;;  (funcall (group-eachtest-cleanup-thunk record)))
-
-;;;(defgeneric do-test-prefixture-setup (test-obj)
-;;;  (:documentation
-;;;   "Pre-fixture test application setup specs add a method to this function.")
-;;;  (:method-combination progn)
-;;;  (:method progn (test-obj)
-;;;     (declare (ignorable test-obj))
-;;;     (format-at-verbosity 4
-;;;         "Called (do-test-prefixture-setup ~s) :progn primary method~%"
-;;;       test-obj)))
-;;;(defmethod do-test-prefixture-setup progn ((obj nst-test-record))
-;;;  (funcall (prefixture-setup-thunk obj)))
-
-;;;(defun do-test-prefixture-setup (test-obj)
-;;;  "Pre-fixture test application setup"
-;;;  (format-at-verbosity 4
-;;;      "Called (do-test-prefixture-setup ~s) :progn primary method~%"
-;;;    test-obj)
-;;;  (funcall (prefixture-setup-thunk test-obj)))
-
-;;;(defgeneric do-test-afterfixture-cleanup (test-obj)
-;;;  (:documentation
-;;;   "After-test fixture cleanup specs add a method to this function.")
-;;;  (:method-combination progn)
-;;;  (:method progn (test-obj)
-;;;     (declare (ignorable test-obj))
-;;;     (format-at-verbosity 4
-;;;         "Called (do-test-afterfixture-cleanup ~s) :progn primary method~%"
-;;;       test-obj)))
-;;;(defmethod do-test-afterfixture-cleanup progn ((obj nst-test-record))
-;;;  (funcall (postfixture-cleanup-thunk obj)))
-
-;;;(defun do-test-afterfixture-cleanup (test-obj)
-;;;  "After-test fixture cleanup specs add a method to this function."
-;;;  (format-at-verbosity 4
-;;;      "Called (do-test-afterfixture-cleanup ~s) :progn primary method~%"
-;;;    test-obj)
-;;;  (funcall (postfixture-cleanup-thunk test-obj)))
 
 (defgeneric do-test-fixture-assignment (test-obj)
   (:documentation
@@ -494,136 +389,39 @@ for the test application class.")
   (:method (test-obj)
      (format-at-verbosity 4 "Called (do-test-fixture-assignment ~s)~%"
        test-obj)
-     (let ((exit-tests-label (format nil
-                                 "Continue with other tests in this group (~s)"
-                               (group-name test-obj))))
-       (handler-bind-interruptable
-        ((debug-for-fail
-          #'(lambda (e)
-              (when *debug-on-fail*
-                (cerror exit-tests-label e)
-                (return-from do-test-fixture-assignment nil))))
-         (error
-          #'(lambda (e)
-              (format-at-verbosity 4
-                  "In the setup handler for do-test-fixture-assignment ~s~%"
-                test-obj)
-              (setf (gethash (check-group-name test-obj)
-                             +results-record+)
+     (with-nst-control-handlers
+         ((e flag
+             :cerror-label-var exit-tests-label
+             :cerror-label (format nil
+                               "Continue with other tests in this group (~s)"
+                             (group-name test-obj)))
+          (format-at-verbosity 4
+              "In the setup handler for do-test-fixture-assignment ~s~%"
+            test-obj)
+          (setf (gethash (check-group-name test-obj) +results-record+)
                 (emit-config-error e test-obj
                   "Error in test post-fixture setup"))
-              (when *debug-on-error*
-                (cerror exit-tests-label e))
-              (return-from do-test-fixture-assignment nil))))
-        ;; (do-test-postfixture-setup test-obj)
-        ))
+          (when flag (cerror exit-tests-label e))
+          (return-from do-test-fixture-assignment nil))
+         ;; (do-test-postfixture-setup test-obj)
+         )
      (unwind-protect (core-run-test test-obj)
-       (let ((exit-tests-label
-              (format nil "Continue with other tests in this group (~s)"
-                (group-name test-obj))))
-         (handler-bind-interruptable
-          ((debug-for-fail
-            #'(lambda (e)
-                (when *debug-on-fail*
-                  (cerror exit-tests-label e)
-                  (return-from do-test-fixture-assignment nil))))
-           (error #'(lambda (e)
-                      (format-at-verbosity 4
-                          "In the cleanup handler for ~
-                                              do-test-fixture-assignment ~s~%"
-                        test-obj)
-                      (add-test-config-error test-obj
-                        "Error in test fixtures cleanup: ~s" e)
-                      (when *debug-on-error*
-                        (cerror exit-tests-label e))
-                      (return-from do-test-fixture-assignment nil))))
-          ;; (do-test-withfixture-cleanup test-obj)
-          )))))
+       (with-nst-control-handlers
+           ((e flag
+               :cerror-label-var exit-tests-label
+               :cerror-label (format nil
+                                 "Continue with other tests in this group (~s)"
+                               (group-name test-obj)))
+            (format-at-verbosity 4
+                "In the cleanup handler for do-test-fixture-assignment ~s~%"
+              test-obj)
+            (add-test-config-error test-obj
+              "Error in test fixtures cleanup: ~s" e)
+            (when flag (cerror exit-tests-label e))
+            (return-from do-test-fixture-assignment nil))
+           ;; (do-test-withfixture-cleanup test-obj)
+           ))))
 
-;;;(defgeneric do-test-postfixture-setup (test-obj)
-;;;  (:documentation "With-fixtures cleanup specs add a method to this function
-;;;for the test application class.")
-;;;  (:method-combination progn)
-;;;  (:method progn (test-obj)
-;;;     (declare (ignorable test-obj))
-;;;     (format-at-verbosity 4
-;;;         "Called (do-test-postfixture-setup ~s) :progn primary method~%"
-;;;       test-obj)))
-
-;;;(defgeneric do-test-withfixture-cleanup (test-obj)
-;;;  (:documentation "Fixture setup specs add a method to this function
-;;;for the test application class.")
-;;;  (:method-combination progn)
-;;;  (:method progn (test-obj)
-;;;     (declare (ignorable test-obj))
-;;;     (format-at-verbosity 4
-;;;         "Called (do-test-withfixture-cleanup ~s) :progn primary method~%"
-;;;       test-obj)))
-
-;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-;;;(defgeneric core-run-test (test)
-;;;  (:documentation
-;;;   "Test fixtures provide name-binding :around methods to this generic function
-;;;for individual tests.  Every-test and test-specific setup and cleanup are
-;;;encoded as :before and :after methods.")
-;;;
-;;;  (:method :around (test)
-;;;    "Capture the result of the test."
-;;;    (format-at-verbosity 4 "Called (core-run-test ~s) common :around~%" test)
-;;;    (let ((*nst-group-name* (group-name test))
-;;;          (*nst-check-user-name* (test-name-lookup test))
-;;;          (*nst-check-internal-name* (check-group-name test))
-;;;          (start-time)
-;;;          (caught-warnings))
-;;;      (declare (special *nst-group-name* *nst-check-user-name*))
-;;;      (format-at-verbosity 1 " - Executing test ~s~%" *nst-check-user-name*)
-;;;      (setf start-time (get-internal-real-time))
-;;;      (let ((result (handler-bind ((warning
-;;;                                    #'(lambda (w)
-;;;                                        (push w caught-warnings)
-;;;                                        (muffle-warning w))))
-;;;                        (call-next-method)))
-;;;            (end-time (get-internal-real-time)))
-;;;        (setf (result-stats-elapsed-time result)
-;;;              (- end-time start-time)
-;;;              (gethash (check-group-name test) +results-record+)
-;;;              result)
-;;;        (when caught-warnings
-;;;          (setf (check-result-warnings result)
-;;;                (nconc (check-result-warnings result)
-;;;                       (loop for w in caught-warnings
-;;;                             collect (make-check-note
-;;;                                          :context *nst-context*
-;;;                                          :stack *nst-stack*
-;;;                                          :format "Lisp warning: ~
-;;;                                               ~:@_~/nst::format-for-warning/"
-;;;                                          :args (list w))))))
-;;;        (format-at-verbosity 1 "   ~s~%" result)
-;;;        (when (and *debug-on-fail* (or (check-result-errors result)
-;;;                                       (check-result-failures result)))
-;;;          (format-at-verbosity 4
-;;;              "Detected failure; triggering debug via error~%")
-;;;          (cerror "Cleanup and proceed." 'debug-for-fail))
-;;;        result))))
-;;;(defmethod core-run-test ((obj nst-test-record))
-;;;  (declare (optimize (debug 3)))
-;;;  (let ((*current-group* (group-name obj))
-;;;        (*current-test*  (test-name-lookup obj))
-;;;        (forms (test-forms obj))
-;;;        (fixture-names-special (special-fixture-names obj))
-;;;        (criterion (test-criterion obj)))
-;;;    (declare (special *current-group* *current-test*))
-;;;
-;;;    (cond
-;;;      ((eql 1 (length forms))
-;;;       (check-criterion-on-form criterion
-;;;                                   `(common-lisp:multiple-value-list
-;;;                                     (locally (declare ,fixture-names-special)
-;;;                                       ,(car forms)))))
-;;;      (t (check-criterion-on-form criterion
-;;;                                     `(locally (declare ,fixture-names-special)
-;;;                                        (list ,@forms)))))))
 (defun core-run-test (test)
   "Capture the result of the test."
   (declare (optimize (debug 3)))
