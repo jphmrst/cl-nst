@@ -102,6 +102,7 @@ as errors arising from within the ."
 
   (let ((fp (gensym "values-form"))
         (ap (gensym "args"))
+        (vs (gensym "values"))
         (docstring nil))
     (when (stringp (car forms))
       (setf docstring (pop forms)))
@@ -110,13 +111,19 @@ as errors arising from within the ."
        (defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)
          (declare (optimize (debug 3)))
          ,@(when docstring (list docstring))
-         ;; (format t "Matching ~s~%  to ~s~%" ',ap ',args-formals)
-         (destructuring-bind ,args-formals ,ap
-           ;; (format t "  done~%Evaluating ~s~%  to match to ~s~%"
-           ;;   ,fp ',values-formals)
-           (destructuring-bind ,values-formals (eval ,fp)
-             ;; (format t "  done~%")
-             ,@forms)))
+         (returning-criterion-config-error
+             ((format nil "Criterion arguments ~a do not match lambda-list ~a"
+                ,ap ',args-formals))
+           (destructuring-bind ,args-formals ,ap
+             (let ((,vs (returning-test-error (eval ,fp))))
+               (returning-criterion-config-error
+                   ((format nil
+                        "Values under test ~a do not match lambda-list ~a"
+                      ,vs ',values-formals))
+                 (destructuring-bind ,values-formals (eval ,fp)
+                   (returning-criterion-config-error
+                       (,(format nil "Error from criterion ~s body" name))
+                     ,@forms)))))))
        ,@(when docstring
            `((setf (documentation ',name :nst-criterion) ,docstring))))))
 
@@ -146,10 +153,11 @@ as errors arising from within the ."
                   ,@(when ignore-forms `((ignore ,forms-formal))))
          ,@(when docstring (list docstring))
          (returning-criterion-config-error
-             (,(format nil "Criterion arguments ~a do not match lambda-list ~a"
-                 ap args-formals))
+             ((format nil "Criterion arguments ~a do not match lambda-list ~a"
+                ,ap ',args-formals))
            (destructuring-bind ,args-formals ,ap
-             (returning-test-error
+             (returning-criterion-config-error
+                 (,(format nil "Error from criterion ~s body" name))
                ,@forms))))
        ,@(when docstring
            `((setf (documentation ',name :nst-criterion) ,docstring))))))
@@ -164,8 +172,8 @@ as errors arising from within the ."
     `(progn
        (defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)
          (returning-criterion-config-error
-             (,(format nil "Criterion arguments ~a do not match lambda-list ~a"
-                 ap args-formals))
+             ((format nil "Criterion arguments ~a do not match lambda-list ~a"
+                ,ap ',args-formals))
            (destructuring-bind ,args-formals ,ap
              (let ((,vs (returning-test-error (eval ,fp))))
                (returning-criterion-config-error
@@ -175,7 +183,8 @@ as errors arising from within the ."
                  (destructuring-bind ,forms-formals ,vs
                    (declare (special ,@(extract-parameters forms-formals)))
                    ,@(when decl-supp-p `((declare ,@declare)))
-                   (returning-test-error
+                   (returning-criterion-config-error
+                       (,(format nil "Error from criterion ~s body" name))
                      (eval (progn ,@forms))))))))))))
 
 #+allegro (excl::define-simple-parser def-form-criterion caadr :nst-criterion)
@@ -204,11 +213,11 @@ as errors arising from within the ."
                      ,@(when docstring-or-form (list docstring-or-form))
                      (let* ((,expanded ,form)
                             (,new-name (cond
-                                         ((symbolp ,expanded) ,expanded)
-                                         (t (car ,expanded))))
+                                        ((symbolp ,expanded) ,expanded)
+                                        (t (car ,expanded))))
                             (,new-args (cond
-                                         ((symbolp ,expanded) nil)
-                                         (t (cdr ,expanded)))))
+                                        ((symbolp ,expanded) nil)
+                                        (t (cdr ,expanded)))))
                        (apply-criterion ,new-name ,new-args ,vsf)))))
     (cond
       (docstring-or-form `(progn
