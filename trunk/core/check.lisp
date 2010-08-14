@@ -25,6 +25,28 @@
   (:documentation
    "Internal generic function whose methods are the translations of criteria."))
 
+(defmacro returning-criterion-config-error ((msg) &body forms)
+  "For use within criteria definitions only --- catch errors and process them
+as errors in the \"glue\" among criteria and forms."
+  `(handler-bind-interruptable
+       ((error
+         #'(lambda (error)
+             (unless *debug-on-error*
+               (return-from apply-criterion
+                 (make-error-report error
+                                    :format (format nil "Criterion error: ~a"
+                                              ,msg)))))))
+     ,@forms))
+
+(defmacro returning-test-error (&body forms)
+  "For use within criteria definitions only --- catch errors and process them
+as errors arising from within the ."
+  `(handler-bind-interruptable ((error #'(lambda (e)
+                                           (unless *debug-on-error*
+                                             (return-from apply-criterion
+                                               (make-error-report e))))))
+     ,@forms))
+
 (defmethod apply-criterion :around (top args form)
   (format-at-verbosity 3
       "Applying criterion ~s~{ ~s~}~%  to ~s~%" top args form)
@@ -33,7 +55,7 @@
                                                  :given-stack form)
                              *nst-context*)))
     (declare (special *nst-context*))
-    (let ((result (call-next-method)))
+    (let ((result (returning-test-error (call-next-method))))
       (format-at-verbosity 3 "  Result at ~s is ~s~%" top result)
       result)))
 
@@ -123,8 +145,12 @@
          (declare (optimize (debug 3))
                   ,@(when ignore-forms `((ignore ,forms-formal))))
          ,@(when docstring (list docstring))
-         (destructuring-bind ,args-formals ,ap
-           ,@forms))
+         (returning-criterion-config-error
+             (,(format nil "Criterion arguments ~a do not match lambda-list ~a"
+                 ap args-formals))
+           (destructuring-bind ,args-formals ,ap
+             (returning-test-error
+               ,@forms))))
        ,@(when docstring
            `((setf (documentation ',name :nst-criterion) ,docstring))))))
 
@@ -134,14 +160,23 @@
                                 &body forms)
   "DEPRECATED: use def-criterion instead."
   (warn 'style-warning "def-values-criterion is deprecated from 1.3.0.")
-  (let ((ap (gensym "args")) (fp (gensym "form")))
+  (let ((ap (gensym "args")) (fp (gensym "form")) (vs (gensym "values")))
     `(progn
        (defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)
-         (destructuring-bind ,args-formals ,ap
-           (destructuring-bind ,forms-formals (eval ,fp)
-             (declare (special ,@(extract-parameters forms-formals)))
-             ,@(when decl-supp-p `((declare ,@declare)))
-             (eval (progn ,@forms))))))))
+         (returning-criterion-config-error
+             (,(format nil "Criterion arguments ~a do not match lambda-list ~a"
+                 ap args-formals))
+           (destructuring-bind ,args-formals ,ap
+             (let ((,vs (returning-test-error (eval ,fp))))
+               (returning-criterion-config-error
+                   ((format nil
+                         "Values under test ~a do not match lambda-list ~a"
+                      ,vs ',forms-formals))
+                 (destructuring-bind ,forms-formals ,vs
+                   (declare (special ,@(extract-parameters forms-formals)))
+                   ,@(when decl-supp-p `((declare ,@declare)))
+                   (returning-test-error
+                     (eval (progn ,@forms))))))))))))
 
 #+allegro (excl::define-simple-parser def-form-criterion caadr :nst-criterion)
 (defmacro def-form-criterion ((name args-formals form-formal) &rest forms)
@@ -183,10 +218,10 @@
                                         ,docstring-or-form)))))
       (t redef))))
 
-(defvar *error-checking* nil
-  "Criteria such as :check-err set this variable to t (and declare it special)
-to suppress error-handling in continue-check, and thus become able to handle
-all further errors themselves.")
+;;;(defvar *error-checking* nil
+;;;  "Criteria such as :check-err set this variable to t (and declare it special)
+;;;to suppress error-handling in continue-check, and thus become able to handle
+;;;all further errors themselves.")
 
 (defmacro within-context ((name args values) &body forms)
   `(let ((*nst-context* (cons (make-context-layer
