@@ -194,20 +194,32 @@
     `(multiple-value-call #'list (apply #',transform ,exprs-form))))
 
 (def-criterion-unevaluated (:check-err (criterion) forms)
-  (block check-err-block
-    (handler-bind-interruptable
-     ((error #'(lambda (e)
-                 (format-at-verbosity 4
-                     "Caught ~s as expected by :check-err~%" e)
-                 (return-from check-err-block (make-success-report)))))
-      (check-criterion-on-form criterion forms))
-    (make-failure-report :format "~@<No expected error for check ~s on:~
+  (let ((result (check-criterion-on-form criterion forms)))
+    (cond
+     ((check-result-errors result)
+      (make-success-report))
+     (t (make-failure-report :format "~@<No expected error for check ~s on:~
                                  ~{~_ ~s~}~:>"
-                         :args (list criterion
-                                     (cond ((and (listp forms)
-                                                 (eq 'list (car forms)))
-                                            (cdr forms))
-                                           (t (list forms)))))))
+                             :args (list criterion
+                                         (cond ((and (listp forms)
+                                                     (eq 'list (car forms)))
+                                                (cdr forms))
+                                               (t (list forms)))))))))
+
+;;;  (block check-err-block
+;;;    (handler-bind-interruptable
+;;;        ((error #'(lambda (e)
+;;;                    (format-at-verbosity 4
+;;;                        "Caught ~s as expected by :check-err~%" e)
+;;;                    (return-from check-err-block (make-success-report)))))
+;;;      (check-criterion-on-form criterion forms))
+;;;    (make-failure-report :format "~@<No expected error for check ~s on:~
+;;;                                 ~{~_ ~s~}~:>"
+;;;                         :args (list criterion
+;;;                                     (cond ((and (listp forms)
+;;;                                                 (eq 'list (car forms)))
+;;;                                            (cdr forms))
+;;;                                           (t (list forms)))))))
 
 (def-criterion-unevaluated (:progn (&rest forms-and-criterion) forms)
   (let ((progn-forms (butlast forms-and-criterion))

@@ -118,16 +118,19 @@
                                             :error e
                                             other-args)))))
 
-(defun emit-config-error (error test-obj msg)
+(defun make-config-error (error test-obj msg)
   (let ((*nst-group-name* (group-name test-obj))
         (*nst-check-user-name* (test-name-lookup test-obj)))
     (declare (special *nst-group-name* *nst-check-user-name*))
     (make-error-report error :format (format nil msg))))
 
+
 (defun fixture-binding-error-note (fixture-name variable-name error)
   (make-error-report
-   error (format nil "~~@<Error binding ~s for fixture ~s:~~_ ~~s~~:>"
-           variable-name fixture-name)))
+   error
+   (format nil "~~@<Error binding ~a for fixture ~s:~~_ ~~w~~:>"
+     variable-name fixture-name)
+   error))
 
 ;;;
 ;;; Result records for high-level checks.
