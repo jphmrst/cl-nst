@@ -180,7 +180,7 @@ configuration provided by those wrappers."
          group-obj test-objs)
        (loop for test-obj in test-objs do
          (setf (gethash (check-group-name test-obj) +results-record+)
-               (emit-config-error e test-obj "Error in pre-fixture setup"))))
+               (make-config-error e test-obj "Error in pre-fixture setup"))))
     (funcall (group-fixtures-setup-thunk group-obj)))
   (format-at-verbosity 4
       "Passed setup in (run-group-tests ~s ~s)~%" group-obj test-objs)
@@ -201,7 +201,7 @@ configuration provided by those wrappers."
            group-obj test-objs)
          (loop for test-obj in test-objs do
                (setf (gethash (check-group-name test-obj) +results-record+)
-                 (emit-config-error e test-obj
+                 (make-config-error e test-obj
                    (format nil "Error binding group fixture ~s"
                      *binding-variable*)))))
       (do-group-fixture-assignment group-obj test-objs)))
@@ -245,7 +245,7 @@ for the group application class.")
                    do-group-fixture-assignment ~s ~s~%" group-obj test-objs)
           (loop for test-obj in test-objs do
                 (setf (gethash (check-group-name test-obj) +results-record+)
-                  (emit-config-error e test-obj
+                  (make-config-error e test-obj
                     "Error in post-fixture application setup"))))
        (funcall (group-withfixtures-setup-thunk group-obj)))
 
@@ -277,7 +277,7 @@ for the group application class.")
                         group-obj test-objs)
                       (setf (gethash (check-group-name test-inst)
                                      +results-record+)
-                        (emit-config-error e test-inst
+                        (make-config-error e test-inst
                           "Error in group each-test setup")))
                    (funcall (group-eachtest-setup-thunk group-obj)))
                  (unwind-protect
@@ -299,7 +299,7 @@ for the group application class.")
                               group-obj test-objs)
                             (setf (gethash (check-group-name test-inst)
                                            +results-record+)
-                              (emit-config-error e test-inst
+                              (make-config-error e test-inst
                                 "Error in test pre-fixture setup")))
                          (funcall (prefixture-setup-thunk test-inst)))
                        (unwind-protect
@@ -322,7 +322,7 @@ for the group application class.")
                                   (setf (gethash (check-group-name
                                                   test-inst)
                                                  +results-record+)
-                                    (emit-config-error e test-inst
+                                    (make-config-error e test-inst
                                       (format nil
                                           "Error binding test fixture ~s"
                                         *binding-variable*))))
@@ -409,7 +409,7 @@ for the test application class.")
               "In the setup handler for do-test-fixture-assignment ~s~%"
             test-obj)
           (setf (gethash (check-group-name test-obj) +results-record+)
-            (emit-config-error e test-obj
+            (make-config-error e test-obj
               "Error in test post-fixture setup")))
        ;; (do-test-postfixture-setup test-obj)
        )
