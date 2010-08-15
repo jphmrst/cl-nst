@@ -172,14 +172,16 @@ as errors arising from within the ."
     `(progn
        (defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)
          (returning-criterion-config-error
-             ((format nil "Criterion arguments ~a do not match lambda-list ~a"
-                ,ap ',args-formals))
+             ((format nil
+                  ,(format nil "Criterion arguments ~~a do not match lambda-list ~a" args-formals)
+                ,ap))
            (destructuring-bind ,args-formals ,ap
              (let ((,vs (returning-test-error (eval ,fp))))
                (returning-criterion-config-error
                    ((format nil
-                         "Values under test ~a do not match lambda-list ~a"
-                      ,vs ',forms-formals))
+                        ,(format nil "Values under test ~~a do not match lambda-list ~a"
+                           forms-formals)
+                      ,vs))
                  (destructuring-bind ,forms-formals ,vs
                    (declare (special ,@(extract-parameters forms-formals)))
                    ,@(when decl-supp-p `((declare ,@declare)))
