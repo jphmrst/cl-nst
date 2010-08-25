@@ -86,7 +86,7 @@
   `(:apply (lambda (x) (check-result-warnings x)) ,subcriterion))
 
 (def-criterion (---form-true (bool) (result))
-    (declare (ignorable result))
+  (declare (ignorable result))
   (let ((result (eval bool)))
     (if result
       (make-success-report)
