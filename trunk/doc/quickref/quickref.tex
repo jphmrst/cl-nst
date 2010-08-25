@@ -6,12 +6,6 @@
 %% RRT is Copyright (c) 2005 Robert Goldman, released under the LGPL,
 %% and the Lisp-specific preamble to that license.
 
-%%% Local Variables: 
-%%% mode: latex
-%%% TeX-master: t
-%%% TeX-PDF-mode: t
-%%% End: 
-
 \documentclass{article}
 \usepackage{times}
 \usepackage{array}
@@ -84,6 +78,14 @@ with keyword arguments:
   necessarily from the same source at each use of this fixture --- at
   the point of any use of this fixture.
 
+\item\texttt{startup}, \texttt{setup}, \texttt{cleanup} and
+  \texttt{finish} forms are run when the fixture set is applied to a
+  group or test.  \texttt{Startup} is run before the fixtures' forms
+  are evaluated; \texttt{setup} is run within the scope of the
+  fixtures immediately after they are evaluated and bound;
+  \texttt{cleanup} is the last form of the scope of the fixtures'
+  bound names; \texttt{finish} is run after this scope is exited.
+
 \item\texttt{documentation} is a documentation string for the fixture
   set.
 
@@ -99,19 +101,20 @@ with keyword arguments:
   and bound names from the current package.
 \end{itemize}
 
-The \texttt{def-test-group} form 
-\input{../common/group-syntax}
+The \texttt{def-test-group} form \input{../common/group-syntax}
 defines a group of the given name, providing one instantiation of the
 bindings of the given fixtures to each test.  Forms given with the
 \texttt{setup} (respectively \texttt{cleanup}) option are run once,
-before (after) any of the individual tests.  Forms given with the
-\texttt{each-setup} (respectively \texttt{each-cleanup}) option are
-run before (after) each individual tests.
+before (after) any of the individual tests.  The \texttt{startup},
+\texttt{setup}, \texttt{cleanup} and \texttt{finish} forms are as for
+fixtures.  Forms given with the \texttt{each-setup} (respectively
+\texttt{each-cleanup}) option are run before (after) each individual
+tests.
 
 The \texttt{def-test} form defines a single named test:
-\input{../common/check-syntax}
-The \texttt{:setup}, \texttt{:cleanup} and \texttt{:fixture} options
-are as above, but apply to only this test (and note that for multiple
+\input{../common/check-syntax} The \texttt{startup}, \texttt{:setup},
+\texttt{:cleanup}, \texttt{:finish} and \texttt{:fixture} options are
+as above, but apply to only this test (and note that for multiple
 forms for the first two must be wrapped in a \texttt{progn}).  NST's
 built-in criteria are listed below; see the manual for a discussion of
 the forms which define new criteria.
@@ -198,3 +201,9 @@ NST-oriented ASDF system declarations.
 
 
 \end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% TeX-PDF-mode: t
+%%% End: 
