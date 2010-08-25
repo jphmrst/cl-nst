@@ -4,21 +4,22 @@
 Individual unit tests are encoded with the \texttt{def-test} form:
 \input{../common/check-syntax}
 %
-The \texttt{SETUP}, \texttt{CLEANUP} and \texttt{FIXTURES} are just as
-for test groups, but apply only to the one test.  The
-\texttt{CRITERION} is a list or symbol specifying the properties which
-should hold for the \texttt{FORM}s.
+The \texttt{SETUP}, \texttt{CLEANUP}, \texttt{STARTUP},
+\texttt{FINISH} and \texttt{FIXTURES} are just as for fixtures and
+test groups, but apply only to the one test.  The \texttt{CRITERION}
+is a list or symbol specifying the properties which should hold for
+the \texttt{FORM}s.
 
 When a test is not enclosed within a group body, a group name must be
 provided by the \texttt{GROUP} option.  When a test is enclosed within
 a group body, the \texttt{GROUP} option is not required, but if
 provided it must agree with the group name.
 
-When there are no \texttt{SETUP}, \texttt{CLEANUP} or
-\texttt{FIXTURES} arguments, the \texttt{NAME} may be given without
-parentheses.  Likewise, any criterion consisting of a single symbol,
-e.g.\ \texttt{(:pass)}, may be abbreviated as just the symbol without
-the parentheses, e.g.\ \texttt{:pass}.
+When there are no \texttt{SETUP}, \texttt{CLEANUP}, \texttt{STARTUP},
+\texttt{FINISH} or \texttt{FIXTURES} arguments, the \texttt{NAME} may
+be given without parentheses.  Likewise, any criterion consisting of a
+single symbol, e.g.\ \texttt{(:pass)}, may be abbreviated as just the
+symbol without the parentheses, e.g.\ \texttt{:pass}.
 
 The \texttt{:documentation} form provides a documentation string in
 the standard Lisp sense.  Since documentation strings are stored
