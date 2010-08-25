@@ -11,3 +11,9 @@
     (:nicknames :mnst-src)
     (:use :common-lisp :nst :nst-test-utils))
 
+(defpackage :nst-meta-sources-1
+    (:documentation
+     "Additional package for the source test suites for reflective NST tests")
+    (:nicknames :mnst-src-1)
+    (:use :common-lisp :nst :nst-test-utils))
+

@@ -486,6 +486,3 @@ for the test application class.")
             "Detected failure; triggering debug via error~%")
         (cerror "Cleanup and proceed." 'debug-for-fail))
       result)))
-
-
-

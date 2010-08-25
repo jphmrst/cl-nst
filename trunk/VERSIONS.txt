@@ -1,6 +1,11 @@
 
-2.1.1 -
-
+2.1.1 - public release, 
+ Fixed a bug in the implementation of fixture sets exporting names into their
+   packages, and added tests to verify exporting (ticket:163).
+ Added startup/finish hooks for tests, all hooks for fixtures.
+ Verified fix for ticket:129.
+ Many small code-cleaning patches, and some additional unit tests.
+ Updates to the manual and quick-reference sheet.
 
 2.1.0 - public release, July 1, 2010
  A fairly significant change to the translation of groups and tests.
