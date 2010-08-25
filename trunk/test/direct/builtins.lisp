@@ -132,6 +132,8 @@
     (make-instance 'classcheck :s1 10 :s2 'zz :s3 '(q w e r)))
   (def-test check-err1 (:check-err :forms-eq)
     'asdfgh (error "this should be caught"))
+  (def-test check-err2 (:not (:check-err :forms-eq))
+    'asdfgh 'asdasdasd)
   (def-test proj-1 (:proj (0 2) :forms-eq) 'a 3 (car '(a b)))
   (def-test (two-fixtures-2 :fixtures (f1 f1a)) :forms-eq d e)
   (def-test sample-1
