@@ -64,8 +64,10 @@
       (---test-passes mnst-src::permute-nil-g
                       mnst-src::pass-though-no-cands-0)
       (---test-fails mnst-src::permute-nil-g mnst-src::fail-for-no-cands-1)
-      (---test-fails mnst-src::permute-nil-g mnst-src::fail-for-no-cands-2)))
-
+      (---test-fails mnst-src::permute-nil-g mnst-src::fail-for-no-cands-2)
+      (---test-fails mnst-src::permute-nil-g mnst-src::fail-on-empty)
+      (---test-fails mnst-src::permute-nil-g mnst-src::fail-on-fewer)
+      (---test-fails mnst-src::permute-nil-g mnst-src::fail-on-more)))
 
 (def-test-group caching-fixtures-1 ())
 
@@ -114,8 +116,21 @@
       (---form-true (eql nst-meta-sources::*nst-fc2* 1))))
 
 (def-test-group nil-use-fixtures ())
-
 (def-test (nil-fix :group nil-use-fixtures
                    :setup (setf nst-meta-sources::zzz 0))
     (--nst-group nst-meta-sources::use-fixture-with-nil
       (---form-true (eql nst-meta-sources::zzz 10))))
+
+(def-test-group fixtures-export ()
+  (def-test fix-exp-0  (:package-internal :mnst-src-1) 'exp-fix-0)
+  (def-test fix-exp-0a (:package-internal :mnst-src-1) 'fix0a)
+  (def-test fix-exp-0b (:package-internal :mnst-src-1) 'fix0b)
+  (def-test fix-exp-1  (:package-exports :mnst-src-1) 'exp-fix-1)
+  (def-test fix-exp-1a (:package-exports :mnst-src-1) 'fix1a)
+  (def-test fix-exp-1b (:package-exports :mnst-src-1) 'fix1b)
+  (def-test fix-exp-2  (:package-exports :mnst-src-1) 'exp-fix-2)
+  (def-test fix-exp-2a (:package-internal :mnst-src-1) 'fix2a)
+  (def-test fix-exp-2b (:package-internal :mnst-src-1) 'fix2b)
+  (def-test fix-exp-3  (:package-internal :mnst-src-1) 'exp-fix-3)
+  (def-test fix-exp-3a (:package-exports :mnst-src-1) 'fix3a)
+  (def-test fix-exp-3b (:package-exports :mnst-src-1) 'fix3b))

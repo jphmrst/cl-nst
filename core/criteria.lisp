@@ -325,3 +325,73 @@
                      warnings (append warnings
                                       (check-result-warnings result))))))))
       (new-check-result :info info :warnings warnings))))
+
+(defun refine-package-symbol-desigs (package-desig symbol-desig)
+  (block refiner
+    (let ((package
+           (cond
+             ((packagep package-desig) package-desig)
+             ((symbolp package-desig)
+              (find-package (symbol-name package-desig)))
+             ((stringp package-desig)
+              (find-package package-desig))
+             (t (return-from refiner
+                  (values (make-failure-report
+                           :format "~s does not designate a package"
+                           :args (list package-desig))
+                          nil nil)))))
+          (symbol-string
+           (cond
+             ((symbolp symbol-desig) (symbol-name symbol-desig))
+             ((stringp symbol-desig) symbol-desig)
+             (t (return-from refiner
+                  (values (make-failure-report
+                           :format "~s does not designate a symbol"
+                           :args (list symbol-desig))
+                          nil nil))))))
+      (values nil package symbol-string))))
+
+(def-criterion (:package-exports (package-desig) (symbol-desig))
+  (block crit
+    (multiple-value-bind (fail package symbol-string)
+        (refine-package-symbol-desigs package-desig symbol-desig)
+      (when fail (return-from crit fail))
+      (multiple-value-bind (actual status) (find-symbol symbol-string package)
+        (declare (ignore actual))
+        (case status
+          ((nil) (make-failure-report
+                  :format "No symbol ~s in package ~a"
+                  :args (list symbol-string (package-name package))))
+          ((:inherited) (make-failure-report
+                         :format "Symbol ~s is inherited but not exported by ~a"
+                         :args (list symbol-string (package-name package))))
+          ((:external) (make-success-report))
+          ((:internal) (make-failure-report
+                        :format "Symbol ~s is internal, not exported, in ~a"
+                        :args (list symbol-string (package-name package))))
+          (otherwise (make-error-report
+                      :format "Unexpected status result from find-symbol ~s"
+                      :args (list status))))))))
+
+(def-criterion (:package-internal (package-desig) (symbol-desig))
+  (block crit
+    (multiple-value-bind (fail package symbol-string)
+        (refine-package-symbol-desigs package-desig symbol-desig)
+      (when fail (return-from crit fail))
+      (multiple-value-bind (actual status) (find-symbol symbol-string package)
+        (declare (ignore actual))
+        (case status
+          ((nil) (make-failure-report
+                  :format "No symbol ~s in package ~a"
+                  :args (list symbol-string (package-name package))))
+          ((:inherited) (make-failure-report
+                         :format
+                         "Symbol ~s is inherited, but not exported, by ~a"
+                         :args (list symbol-string (package-name package))))
+          ((:external) (make-failure-report
+                        :format "Symbol ~s is exported, not internal, in ~a"
+                        :args (list symbol-string (package-name package))))
+          ((:internal) (make-success-report))
+          (otherwise (make-error-report
+                      :format "Unexpected result from find-symbol")))))))
+

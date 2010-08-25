@@ -77,7 +77,9 @@
   (def-test pass-though-no-cands-0 (:permute :pass) '())
   (def-test fail-for-no-cands-1 (:permute (:seq (:eq 'a))) '())
   (def-test fail-for-no-cands-2 (:permute (:seq (:eq 'a))) '())
-  )
+  (def-test fail-on-empty (:permute (:seq (:eq 'a) (:eq 'b))) '())
+  (def-test fail-on-fewer (:permute (:seq (:eq 'a) (:eq 'b))) '(a))
+  (def-test fail-on-more (:permute (:seq (:eq 'a) (:eq 'b))) '(a c e)))
 
 ;; A test which fails in one obscure corner of its criterion, so that
 ;; the failure report has a bit of a stack to it.
@@ -99,3 +101,24 @@
 (def-test-group use-fixture-with-nil (fixture-with-nil)
   (def-test tN1 :true (boundp 'c))
   (def-test tN2 (:eq 'asdfg) d))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Testing export of names.
+
+(in-package :mnst-src-1)
+
+(def-fixtures exp-fix-0 ()
+  (fix0a :true)
+  (fix0b :false))
+
+(def-fixtures exp-fix-1 (:export-names t)
+  (fix1a :true)
+  (fix1b :false))
+
+(def-fixtures exp-fix-2 (:export-fixture-name t)
+  (fix2a :true)
+  (fix2b :false))
+
+(def-fixtures exp-fix-3 (:export-bound-names t)
+  (fix3a :true)
+  (fix3b :false))

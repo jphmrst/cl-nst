@@ -266,22 +266,25 @@ re-applied at subsequent fixture application rather than being recalculated.
 
                  ,@(when (or export-bound-names export-fixture-name)
                      `((eval-when (:compile-toplevel :load-toplevel :execute)
-                         ,@(loop for tuple in full-tuples
+                         ,@(when export-bound-names
+                             (loop for tuple in full-tuples
                                  collect
-                                 (let* ((tuple-first  (first tuple))
-                                        (tuple-second (second tuple))
-                                        (id (cond
-                                              ((symbolp tuple-first)
-                                               tuple-first)
-                                              (t
-                                               tuple-second))))
-                                   `(export ',id
-                                            ,(intern (package-name (symbol-package id))
-                                                     (find-package :keyword)))))
+                                   (let* ((tuple-first  (first tuple))
+                                          (tuple-second (second tuple))
+                                          (id (cond
+                                               ((symbolp tuple-first)
+                                                tuple-first)
+                                               (t tuple-second))))
+                                     `(export
+                                        ',id
+                                        ,(intern (package-name
+                                                  (symbol-package id))
+                                                 (find-package :keyword))))))
                          ,@(when export-fixture-name
-                             `((export ',name
-                                       ,(intern (package-name (symbol-package name))
-                                                (find-package :keyword))))))))
+                             `((export
+                                ',name
+                                ,(intern (package-name (symbol-package name))
+                                         (find-package :keyword))))))))
 
                  ',name))))))
 
