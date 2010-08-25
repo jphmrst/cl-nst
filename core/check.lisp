@@ -103,13 +103,14 @@ as errors arising from within the ."
   (let ((fp (gensym "values-form"))
         (ap (gensym "args"))
         (vs (gensym "values"))
-        (docstring nil))
-    (when (stringp (car forms))
-      (setf docstring (pop forms)))
+        (docstring nil)
+        (form-decls nil))
+    (when (stringp (car forms))       (setf docstring (pop forms)))
+    (when (eq (caar forms) 'declare)  (setf form-decls (cdr (pop forms))))
     `(progn
        #+allegro (excl:record-source-file ',name :type :nst-criterion)
        (defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)
-         (declare (optimize (debug 3)))
+         (declare (optimize (debug 3)) ,@form-decls)
          ,@(when docstring (list docstring))
          (returning-criterion-config-error
              ((format nil "Criterion arguments ~a do not match lambda-list ~a"
@@ -143,13 +144,14 @@ as errors arising from within the ."
     FORM)"
 
   (let ((ap (gensym "args"))
-        (docstring nil))
-    (when (stringp (car forms))
-      (setf docstring (pop forms)))
+        (docstring nil)
+        (form-decls nil))
+    (when (stringp (car forms))       (setf docstring (pop forms)))
+    (when (eq (caar forms) 'declare)  (setf form-decls (cdr (pop forms))))
     `(progn
        #+allegro (excl:record-source-file ',name :type :nst-criterion)
        (defmethod apply-criterion ((top (eql ',name)) ,ap ,forms-formal)
-         (declare (optimize (debug 3))
+         (declare (optimize (debug 3)) ,@form-decls
                   ,@(when ignore-forms `((ignore ,forms-formal))))
          ,@(when docstring (list docstring))
          (returning-criterion-config-error
