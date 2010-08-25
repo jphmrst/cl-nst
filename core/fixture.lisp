@@ -27,11 +27,14 @@
 #+allegro (excl::define-simple-parser def-fixtures second :nst-fixture-set)
 (defmacro def-fixtures (name
                         (&key uses assumes outer inner documentation cache
+                              (setup nil setup-supp-p)
+                              (cleanup nil cleanup-supp-p)
+                              (startup nil startup-supp-p)
+                              (finish nil finish-supp-p)
                               export-names
-                              (export-bound-names nil
-                               export-bound-names-supp-p)
-                              (export-fixture-name
-                               nil export-fixture-name-supp-p))
+                              (export-bound-names nil export-bound-names-supp-p)
+                              (export-fixture-name nil
+                                                   export-fixture-name-supp-p))
                         &body bindings)
   "(def-fixtures (FIXTURE-NAME :uses USES :assumes ASSUMES
                     :outer OUTER :inner INNER
@@ -194,10 +197,16 @@ re-applied at subsequent fixture application rather than being recalculated.
                             (special ,@(loop for used-fixture in uses
                                            append (bound-names used-fixture))
                                      ,@assumes))
-                   (let* ,bindings-with-tracking
-                     (declare (special ,@bound-names))
-                     (setf *binding-variable* nil)
-                     (call-next-method)))
+                   ,@(when startup-supp-p (list startup))
+                   (prog1
+                       (let* ,bindings-with-tracking
+                         (declare (special ,@bound-names))
+                         (setf *binding-variable* nil)
+                         ,@(when setup-supp-p (list setup))
+                         (prog1
+                           (call-next-method)
+                           ,@(when cleanup-supp-p (list cleanup))))
+                       ,@(when finish-supp-p (list finish))))
 
                  (defmethod get-fixture-bindings ((f ,name))
                    ',bindings)

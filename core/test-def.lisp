@@ -32,6 +32,8 @@ first element is that symbol and whose remaining elements are options."
    ((listp name-or-name-and-args)
     (destructuring-bind (name &key (setup nil setup-supp-p)
                                    (cleanup nil cleanup-supp-p)
+                                   (startup nil startup-supp-p)
+                                   (finish nil finish-supp-p)
                                    (fixtures nil fixtures-supp-p)
                                    (group nil group-supp-p)
                                    (documentation nil documentation-supp-p))
@@ -39,8 +41,8 @@ first element is that symbol and whose remaining elements are options."
       (when (and fixtures (symbolp fixtures))
         (setf fixtures (list fixtures)))
       (values name
-                setup setup-supp-p
-                cleanup cleanup-supp-p
+                setup setup-supp-p cleanup cleanup-supp-p
+                startup startup-supp-p finish finish-supp-p
                 fixtures fixtures-supp-p
                 group group-supp-p
                 documentation documentation-supp-p)))
@@ -57,8 +59,10 @@ first element is that symbol and whose remaining elements are options."
       (%test-forms :reader test-forms)
       (%special-fixture-names :reader special-fixture-names)
       (%criterion :reader test-criterion)
-      (%prefixture-setup :reader prefixture-setup-thunk)
-      (%postfixture-cleanup :reader postfixture-cleanup-thunk))
+      (%setup-form   :reader test-setup-form)
+      (%cleanup-form :reader test-cleanup-form)
+      (%startup-form :reader test-startup-form)
+      (%finish-form  :reader test-finish-form))
   (:documentation "Common superclass of NST test records."))
 
 ;; Provide debugging information about this test.
@@ -84,6 +88,7 @@ NAME-OR-NAME-AND-OPTIONS ::= name | NAME-AND-OPTIONS
 
 NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                             [ :setup FORM ] [ :cleanup FORM ]
+                            [ :startup FORM ]  [ :finish FORM ]
                             [ :documentation STRING ] )"
   (declare (special *group-object-variable*))
 
@@ -94,7 +99,9 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
 
     ;; Decode the name-or-name-and-args, pulling out the individual
     ;; components, and indicating which are given in this test.
-    (multiple-value-bind (test-name setup setup-supp-p cleanup cleanup-supp-p
+    (multiple-value-bind (test-name
+                          setup setup-supp-p cleanup cleanup-supp-p
+                          startup startup-supp-p finish finish-supp-p
                           fixtures fixtures-supp-p group group-supp-p
                           docstring docstring-supp-p)
         (decode-defcheck-name-and-args name-or-name-and-args)
@@ -223,13 +230,21 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
                    (set-slot '%test-forms ',forms)
                    (set-slot '%special-fixture-names ',fixture-names-special)
                    (set-slot '%criterion ',criterion)
-                   (set-slot '%prefixture-setup
+                   (set-slot '%setup-form
                              ,(cond
                                 (setup-supp-p `#'(lambda () ,setup))
                                 (t '#'no-effect)))
-                   (set-slot '%postfixture-cleanup
+                   (set-slot '%cleanup-form
                              ,(cond
                                 (cleanup-supp-p `#'(lambda () ,cleanup))
+                                (t '#'no-effect)))
+                   (set-slot '%startup-form
+                             ,(cond
+                                (startup-supp-p `#'(lambda () ,startup))
+                                (t '#'no-effect)))
+                   (set-slot '%finish-form
+                             ,(cond
+                                (finish-supp-p `#'(lambda () ,finish))
                                 (t '#'no-effect))))
 
                  ;; Store information about this test in its group.
