@@ -34,8 +34,8 @@
   (let ((checks nil)
         (setup nil) (setup-supp-p nil)
         (cleanup nil) (cleanup-supp-p nil)
-        (fixtures-setup nil) (fixtures-setup-supp-p nil)
-        (fixtures-cleanup nil) (fixtures-cleanup-supp-p nil)
+        (startup nil) (startup-supp-p nil)
+        (finish nil) (finish-supp-p nil)
         (each-setup nil) (each-setup-supp-p nil)
         (each-cleanup nil) (each-cleanup-supp-p nil)
         (docstring nil) (docstring-supp-p nil))
@@ -43,18 +43,23 @@
       (case (car form)
         (:setup (setf setup (cdr form) setup-supp-p t))
         (:cleanup (setf cleanup (cdr form) cleanup-supp-p t))
-        (:fixtures-setup (setf fixtures-setup (cdr form)
-                               fixtures-setup-supp-p t))
-        (:fixtures-cleanup (setf fixtures-cleanup (cdr form)
-                                 fixtures-cleanup-supp-p t))
-        (:each-setup (setf each-setup (cdr form) each-setup-supp-p t))
+        (:fixtures-setup
+         (warn 'style-warning
+          "The :fixtures-setup argument name is deprecated; use :startup instead.")
+         (setf startup (cdr form) startup-supp-p t))
+        (:fixtures-cleanup
+         (warn 'style-warning
+          "The :fixtures-cleanup argument name is deprecated; use :finish instead.")
+         (setf finish (cdr form)  finish-supp-p t))
+        (:startup (setf startup (cdr form) startup-supp-p t))
+        (:finish  (setf finish (cdr form)  finish-supp-p t))
+        (:each-setup   (setf each-setup (cdr form)   each-setup-supp-p t))
         (:each-cleanup (setf each-cleanup (cdr form) each-cleanup-supp-p t))
         (:documentation (setf docstring (cadr form) docstring-supp-p t))
         (otherwise (push form checks))))
     (values (nreverse checks)
-            setup setup-supp-p cleanup cleanup-supp-p
-            fixtures-setup fixtures-setup-supp-p
-            fixtures-cleanup fixtures-cleanup-supp-p
+            setup setup-supp-p      cleanup cleanup-supp-p
+            startup startup-supp-p  finish finish-supp-p
             each-setup each-setup-supp-p each-cleanup each-cleanup-supp-p
             docstring docstring-supp-p)))
 

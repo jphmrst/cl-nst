@@ -301,7 +301,7 @@ for the group application class.")
                                            +results-record+)
                               (make-config-error e test-inst
                                 "Error in test pre-fixture setup")))
-                         (funcall (prefixture-setup-thunk test-inst)))
+                         (funcall (test-startup-form test-inst)))
                        (unwind-protect
                            (block test-fixture-assignment
                              (with-nst-control-handlers
@@ -343,7 +343,7 @@ for the group application class.")
                               (add-test-config-error test-inst
                                 "Error in test postfixture cleanup: ~s" e))
                            (funcall
-                            (postfixture-cleanup-thunk test-inst)))))
+                            (test-finish-form test-inst)))))
                    (with-nst-control-handlers
                        ((e flag
                            :cerror-label-var exit-tests-label
@@ -410,9 +410,8 @@ for the test application class.")
             test-obj)
           (setf (gethash (check-group-name test-obj) +results-record+)
             (make-config-error e test-obj
-              "Error in test post-fixture setup")))
-       ;; (do-test-postfixture-setup test-obj)
-       )
+                               "Error in test post-fixture setup")))
+       (funcall (test-setup-form test-obj)))
      (unwind-protect (core-run-test test-obj)
        (with-nst-control-handlers
            ((e flag
@@ -426,8 +425,7 @@ for the test application class.")
               test-obj)
             (add-test-config-error test-obj
               "Error in test fixtures cleanup: ~s" e))
-         ;; (do-test-withfixture-cleanup test-obj)
-         ))))
+         (funcall (test-cleanup-form test-obj))))))
 
 (defun core-run-test (test)
   "Capture the result of the test."
