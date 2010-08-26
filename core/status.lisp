@@ -98,25 +98,26 @@
 
 (defmacro emit-error (&rest args)
   "Deprecated; use make-success-report."
+  (warn 'nst-soft-deprecation :old-name 'emit-error
+        :replacement '(make-error-report))
   `(make-error-report ,@args))
 
 (defun make-error-report (e &rest format-args &aux format args)
   (declare (special *nst-context* *nst-stack*))
   (cond
-    (format-args (setf format (car format) args (cdr args)))
-    (t (setf format "~w" args (list e))))
+   (format-args (setf format (car format) args (cdr args)))
+   (t (setf format "~w" args (list e))))
   (let ((other-args nil))
     #+(and allegro (not macosx))
-    (setf other-args
-          (list* :zoom (make-backtrace-lines) other-args))
-    (make-check-result ;; :erring 1
-                       :errors (list (apply #'make-error-check-note
-                                            :context *nst-context*
-                                            :stack *nst-stack*
-                                            :format format
-                                            :args args
-                                            :error e
-                                            other-args)))))
+    (setf other-args (list* :zoom (make-backtrace-lines) other-args))
+    (let ((error-note (apply #'make-error-check-note
+                             :context *nst-context*
+                             :stack *nst-stack*
+                             :format format
+                             :args args
+                             :error e
+                             other-args)))
+      (make-and-calibrate-check-result :errors (list error-note)))))
 
 (defun make-config-error (error test-obj msg)
   (let ((*nst-group-name* (group-name test-obj))
@@ -295,13 +296,13 @@ structure, permitting the use of apply."
     (when warnings (setf warning-count 1)))
   r)
 
-(defun new-check-result (&rest args)
+(defun make-and-calibrate-check-result (&rest args)
   (calibrate-check-result (apply #'make-check-result args)))
 
 (defmacro check-result (&rest args)
   (warn 'nst-soft-deprecation :old-name 'check-result
         :replacement '(make-success-report emit-failure emit-warning))
-  `(new-check-result ,@args))
+  `(make-and-calibrate-check-result ,@args))
 
 
 
@@ -861,34 +862,41 @@ six-value summary of the results:
 (defun make-warning-report (&key format args)
   "For use within user-defined NST criteria: emit a warning."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
-  (new-check-result :warnings (list (make-check-note :context *nst-context*
-                                                     :stack *nst-stack*
-                                                     :format format
-                                                     :args args))))
+  (make-success-report :warnings (list (make-check-note :context *nst-context*
+                                                        :stack *nst-stack*
+                                                        :format format
+                                                        :args args))))
 
 (defmacro emit-warning (&rest args)
   "Deprecated; use make-warning-report."
+  (warn 'nst-soft-deprecation :old-name 'emit-warning
+        :replacement '(make-warning-report))
   `(make-warning-report ,@args))
 
 (defun make-failure-report (&key format args info)
   "For use within user-defined NST criteria: explain a failure."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
-  (new-check-result :failures (list (make-check-note :context *nst-context*
-                                                     :stack *nst-stack*
-                                                     :format format :args args))
-                    :info info))
+  (make-and-calibrate-check-result
+   :failures (list (make-check-note :context *nst-context*
+                                    :stack *nst-stack*
+                                    :format format :args args))
+   :info info))
 
 (defmacro emit-failure (&rest args)
   "Deprecated; use make-failure-report."
+  (warn 'nst-soft-deprecation :old-name 'emit-failure
+        :replacement '(make-failure-report))
   `(make-failure-report ,@args))
 
-(defun make-success-report (&rest args)
+(defun make-success-report (&rest args &key warnings info)
   "For use within user-defined NST criteria: note that a test was successful."
-  (calibrate-check-result
-   (apply #'make-check-result args)))
+  (declare (ignore warnings info))
+  (apply #'make-and-calibrate-check-result args))
 
 (defmacro emit-success (&rest args)
   "Deprecated; use make-success-report."
+  (warn 'nst-soft-deprecation :old-name 'emit-success
+        :replacement '(make-success-report))
   `(make-success-report ,@args))
 
 (defun add-failure (result &key format args)
