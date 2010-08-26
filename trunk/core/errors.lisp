@@ -63,10 +63,22 @@
                              ; use ~:[~a~;one of ~{~a~^, ~:_~}~] instead.~:>"
                (old-name cnd) (listp (replacement cnd)) (replacement cnd)))))
 
-(define-condition nst-soft-deprecation (style-warning
-                                        nst-deprecation-warning-mixin) ()
-  (:report (lambda (cnd stream)
-             (format stream
-                 "~a is deprecated; use ~:[~a~;one of ~{~a~^, ~:_~}~] instead."
-               (old-name cnd) (listp (replacement cnd)) (replacement cnd)))))
+(defun soft-dep-warning (prefix cnd stream)
+  (format stream
+      "~a~a is deprecated~a."
+    prefix (old-name cnd)
+    (let ((repl (replacement cnd)))
+      (cond
+       ((null repl) ", ignored, and will be removed in a future release")
+       ((not (listp repl)) (format nil "; use ~a instead" repl))
+       ((eql (length repl) 1) (format nil "; use ~a instead" (car repl)))
+       (t (format nil "; use one of ~{~a~^, ~} instead" repl))))))
+
+(define-condition nst-soft-deprecation
+    (style-warning nst-deprecation-warning-mixin) ()
+  (:report (lambda (cnd stream) (soft-dep-warning "" cnd stream))))
+
+(define-condition nst-soft-keyarg-deprecation
+    (style-warning nst-deprecation-warning-mixin) ()
+  (:report (lambda (cnd stream) (soft-dep-warning "Argument " cnd stream))))
 

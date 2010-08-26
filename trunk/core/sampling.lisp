@@ -400,7 +400,7 @@ The FORMs construct and return (as if through progn) the arbtrary instance."
                                     :ignore-forms t)
   (declare (ignore values))
   (when values-supp-p
-    (warn "The :values parameter to the :sample criterion is deprecated, ignored, and will be removed in a future release."))
+    (warn 'nst-soft-keyarg-deprecation :old-name :values :replacement nil))
 
   (unless verify-supp-p
     (error "criterion :sample requires :verify argument"))

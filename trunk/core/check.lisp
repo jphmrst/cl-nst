@@ -68,9 +68,6 @@ as errors arising from within the ."
                   nil)
                  (t (list x)))))
 
-;;; (defmacro continue-check (criterion form)
-;;;   (warn "continue-check is deprecated; use check-criterion-on-value or check-criterion-on-form within def-criterion or def-criterion-unevaluated")
-;;;   `(continue-check ,criterion ,form))
 (defun continue-check #|continue-check-actual|# (criterion form)
   (unless (listp criterion)
     (setf criterion (list criterion)))
@@ -169,7 +166,8 @@ as errors arising from within the ."
                                       (declare nil decl-supp-p))
                                 &body forms)
   "DEPRECATED: use def-criterion instead."
-  (warn 'style-warning "def-values-criterion is deprecated from 1.3.0.")
+  (warn 'nst-soft-deprecation :old-name 'def-values-criterion
+        :replacement 'def-criterion)
   (let ((ap (gensym "args")) (fp (gensym "form")) (vs (gensym "values")))
     `(progn
        (defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)

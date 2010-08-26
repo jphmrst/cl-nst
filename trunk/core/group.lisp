@@ -44,12 +44,12 @@
         (:setup (setf setup (cdr form) setup-supp-p t))
         (:cleanup (setf cleanup (cdr form) cleanup-supp-p t))
         (:fixtures-setup
-         (warn 'style-warning
-          "The :fixtures-setup argument name is deprecated; use :startup instead.")
+         (warn 'nst-soft-keyarg-deprecation :old-name :fixtures-setup
+               :replacement ':replacement)
          (setf startup (cdr form) startup-supp-p t))
         (:fixtures-cleanup
-         (warn 'style-warning
-          "The :fixtures-cleanup argument name is deprecated; use :finish instead.")
+         (warn 'nst-soft-keyarg-deprecation :old-name :fixtures-cleanup
+               :replacement ':finish)
          (setf finish (cdr form)  finish-supp-p t))
         (:startup (setf startup (cdr form) startup-supp-p t))
         (:finish  (setf finish (cdr form)  finish-supp-p t))

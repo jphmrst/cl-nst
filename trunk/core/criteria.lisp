@@ -148,7 +148,7 @@
     (cond
      ((check-result-errors subcheck)   subcheck)
      ((check-result-failures subcheck)
-      (new-check-result :info (check-result-info subcheck)))
+      (make-success-report :info (check-result-info subcheck)))
      (t (make-failure-report :format "Expected failure from ~s"
                              :args (list subcriterion))))))
 
@@ -162,7 +162,7 @@
           append (check-result-failures subresult) into failures
           append (check-result-errors subresult) into errors
           append (check-result-info subresult) into info
-          finally (return (new-check-result :warnings warnings
+          finally (return (make-and-calibrate-check-result :warnings warnings
                                             :failures failures
                                             :errors errors :info info)))))
 
@@ -184,7 +184,7 @@
           (when ri (setf info (nconc info ri)))
           (unless (or re rf)
             (return-from any-criterion
-              (new-check-result :info (nconc info
+              (make-success-report :info (nconc info
                                              (check-result-info result)))))))
       (make-failure-report :format "No disjuncts succeeded:~{~_ ~s~}"
                            :args (list criteria) :info info))))
@@ -251,7 +251,7 @@
              (setf info (append info (check-result-info result))
                    warnings (append warnings
                                 (check-result-warnings result)))))))
-      (new-check-result :info info :warnings warnings))))
+      (make-success-report :info info :warnings warnings))))
 
 (def-criterion (:seq (&rest criteria) (l))
   (block seq
@@ -272,7 +272,7 @@
             (t (setf info (append info (check-result-info result))
                      warnings (append warnings
                                       (check-result-warnings result)))))))
-      (new-check-result :info info :warnings warnings))))
+      (make-success-report :info info :warnings warnings))))
 
 (def-criterion (:permute (criterion) (l))
   (block permute-block
@@ -305,7 +305,7 @@
             (t (setf info (append info (check-result-info result))
                      warnings (append warnings
                                       (check-result-warnings result)))))))
-      (new-check-result :info info :warnings warnings))))
+      (make-success-report :info info :warnings warnings))))
 
 (def-criterion (:slots (&rest clauses) (obj))
   (block slots-block
@@ -324,7 +324,7 @@
                (setf info (append info (check-result-info result))
                      warnings (append warnings
                                       (check-result-warnings result))))))))
-      (new-check-result :info info :warnings warnings))))
+      (make-success-report :info info :warnings warnings))))
 
 (defun refine-package-symbol-desigs (package-desig symbol-desig)
   (block refiner
