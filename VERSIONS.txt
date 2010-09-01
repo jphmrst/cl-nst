@@ -1,5 +1,5 @@
 
-2.1.1 - public release, 
+2.1.1 - public release, August 31, 2010
  Fixed a bug in the implementation of fixture sets exporting names into their
    packages, and added tests to verify exporting (ticket:163).
  Added startup/finish hooks for tests, all hooks for fixtures.
