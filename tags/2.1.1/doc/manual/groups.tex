@@ -1,0 +1,38 @@
+
+\section{Test groups}
+\label{sec:groups}
+Groups of tests\index{group}\index{test group|see{group}} can be
+associated with fixture sets, stateful initiatization, and stateful
+cleanup.  The syntax of a test group declaration
+is:\index{def-test-group@\texttt{def-test-group}}
+\input{../common/group-syntax}
+%
+\texttt{NAME} is the name of this test group.  The \texttt{FIXTURE}s
+are to be applied to the tests in this group.
+
+The \texttt{:setup} forms\index{setup@\texttt{:setup}},
+\texttt{:cleanup}, \texttt{:startup}\index{startup@\texttt{:startup}}
+and \texttt{:finish}\index{finish@\texttt{:finish}}\footnote{These
+  latter two argument names were previously
+  \texttt{:fixtures-setup}\index{fixtures-setup@\texttt{:fixtures-setup}}
+  and
+  \texttt{:fixtures-cleanup}\index{fixtures-cleanup@\texttt{:fixtures-cleanup}};
+  the old names still work but are deprecated.}  forms are just as for
+fixtures, run either just within or just outside of the scope of the
+fixtures associated with the group.  Note that any forms associated by
+these keyword arguments with applied fixtures would be executed in
+between the group's \texttt{:startup} and \texttt{:setup} (or
+\texttt{:cleanup} and \texttt{:finish}) forms.
+
+The \texttt{:each-setup}\index{each-cleanup@\texttt{:each-cleanup}}
+and \texttt{:each-cleanup}\index{each-cleanup@\texttt{:each-cleanup}}
+forms are run before each test, rather than once for the group.
+
+The \texttt{:documentation}\index{documentation@\texttt{:documentation}}
+form sets the docstring for the class.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual"
+%%% TeX-PDF-mode: t
+%%% End: 

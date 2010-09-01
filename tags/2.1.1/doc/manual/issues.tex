@@ -1,0 +1,149 @@
+
+\section{Issues, bugs and enhancements}\index{bugs}\index{enhancements}
+Tickets for NST bugs and wishes are on NST's trac:
+\begin{center}
+  \texttt{https://svn.sift.info:3333/trac/nst/}
+\end{center}
+
+\begin{enumerate}
+\item The criterion \texttt{:perf} might be extended to provide
+  (implementation-dependent) checks on memory limits as well as time
+  limits.
+\item Some sort of timeout mechanism --- perhaps
+  implementation-dependent --- could be helpful for measuring
+  correctness via termination in more complicated algorithms.
+\end{enumerate}
+
+\subsection{Removed features}
+\label{temp-removed}
+Some features of the NST 0.9 have not yet been reimplemented.  Tell
+John if one is urgent for you.
+
+\subsubsection{Test group documentation}
+The \texttt{def-test-group} form should allow group
+documentation:\index{documentation@\texttt{:documentation}}.
+\begin{verbatim}
+    (:documentation DOC-STRING)
+\end{verbatim}
+
+\subsubsection{Alternate fixture definitions}
+The
+\texttt{def-capture/restore-fixtures}\index{def-capture/restore-fixtures@\texttt{def-capture/restore-fixtures}}
+declaration binds \texttt{nil} to a collection of variables in the
+extent of associated test groups.  This form is useful when hiding
+some developers' state from tests intended to simulate a
+non-development environment.
+\begin{center}
+\textbf{def-capture/restore-fixtures}
+ \textit{name} \textit{variables}
+\texttt{\&key} \textit{documentation}
+\end{center}
+
+\subsubsection{Anonymous fixture sets}
+It is not necessary to name fixture sets; they may be given
+anonymously in any situation where a fixture set name is allowed.  The
+syntax of anonymous fixture sets
+is:\index{fixtures@\texttt{:fixtures}}\index{fixtures!anonymous}
+\begin{center}
+\texttt{(:fixtures }\textit{(name form)}$^+$\texttt{ )}
+\end{center}
+
+\subsubsection{The \texttt{:with} check}
+This check assumes that the next item is a list, whose contents are
+expanded into the methods-and-forms.\index{with@\texttt{:with}} This
+check is especially useful with the \texttt{def-test-cri\-ter\-ion}
+command below.
+\\ Syntax: \texttt{(:with \emph{criterion})}
+\\ Example: The following two \texttt{def-test}s are equivalent.
+\begin{verbatim}
+  (def-test seq1
+      (:seq (:predicate symbolp) (:eql 1) (:symbol d))
+      '(a 1 d))
+  (def-test with-seq1
+      (:with (:seq (:predicate symbolp) (:eql 1) (:symbol d)))
+      '(a 1 d))
+\end{verbatim}
+
+\subsubsection{Compilation deferral control}
+In earlier versions the \texttt{:defer-compile} switch on test
+definition allowed control over when an expression would be compiled.
+\index{defer-compile@\texttt{:defer-compile}}
+
+\subsubsection{In the runtime system}
+
+\subsubsection{The \texttt{:summarize-scheduled} operation}
+\index{summarize-scheduled@\texttt{:summarize-scheduled}}%
+If \texttt{BOOL} evaluates to non-null, then the runtime system will
+print a summary after running scheduled tests with \texttt{:run},
+\texttt{:continue}, etc.
+\\ Syntax: \texttt{:nst :summarize-scheduled BOOL}
+
+\subsubsection{The \texttt{:summarize-single} operation}
+\index{summarize-single@\texttt{:summarize-single}}%
+If \texttt{BOOL} evaluates to non-null, then the runtime system will
+print a summary after one-time test runs initiated by
+\texttt{:run-test}, \texttt{:run-group}, etc.
+\\ Syntax: \texttt{:nst :summarize-single BOOL}
+
+\subsection{Marking tests of interest for execution}
+\label{nominating-tests}
+NST allows tests to be marked for execution by the \texttt{:run}
+command.  Tests can be marked by package or group, or as an individual
+test.
+
+\subsubsection{The \texttt{:p} operation}
+\index{p@\texttt{:p}}%
+Indicates that all tests in a particular package should be run.
+\\ Syntax: \texttt{:nst :p PACKAGE}
+
+\subsubsection{The \texttt{:g} operation}
+\index{g@\texttt{:g}}%
+Indicates that all tests in a particular group should be run.
+\\ Syntax: \texttt{:nst :g GROUP}
+
+\subsubsection{The \texttt{:t} operation}
+\index{t@\texttt{:t}}%
+Indicates that the named test should be run.
+\\ Syntax: \texttt{:nst :t TEST}
+
+\subsection{Test definition}
+\subsubsection{The \texttt{:defer-test-compile} operation}
+\index{defer-test-compile@\texttt{:defer-test-compile}}%
+Sets whether tests defined subsequently should, by default, defer
+compilation of their forms until actually running the test.  This
+feature is useful when debugging code involving macros, but changing
+this feature in the runtime system can lead to confusion.  It is
+surely almost always the right thing to set this flag locally via
+def-test-group and def-test.  In fact, this operation may be removed
+in a future version of the runtime system.
+\\ Syntax: \texttt{:nst :defer-test-compile BOOL}
+
+\subsubsection{The \texttt{:open{\textasteriskcentered}} operation}
+\index{open{\textasteriskcentered}@\texttt{:open{\textasteriskcentered}}}%
+Multiple fixtures\index{fixtures!debugging} can be \emph{opened} into the
+interactive namespace with a single command using the
+\texttt{:nst~:open} command:
+\\ Syntax: \texttt{:nst :open\* } {\textit{FIXTURE-NAME}{\textasteriskcentered}}
+\par
+In earlier versions, only one fixture could be given to
+\texttt{:open}; this is no longer true, and the \texttt{open*} command
+has been removed.
+
+\subsubsection{The \texttt{:open-used} operation}
+\index{open-used@\texttt{:open-used}}%
+If \texttt{BOOL} evaluates to non-null, then opening a fixture will
+always also open the fixtures it uses.  Default is t.
+\\ Syntax: \texttt{:nst :open-used BOOL}
+
+\subsubsection{The \texttt{:reopen} operation}
+\index{reopen@\texttt{:reopen}}%
+If \texttt{BOOL} evaluates to non-null, then fixtures will be
+re-opened \emph{e.g.}\ when required multiple times by opening
+different fixtures that use them.
+\\ Syntax: \texttt{:nst :reopen BOOL}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual"
+%%% TeX-PDF-mode: t
+%%% End: 
