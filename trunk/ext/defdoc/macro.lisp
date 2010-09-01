@@ -2,6 +2,7 @@
 
 (defmacro def-documentation (name-or-spec &key (intro nil intro-supp-p)
                                           (params nil params-supp-p)
+                                          (short nil short-supp-p)
                                           (full nil full-supp-p))
   "Doc doc doc"
    (multiple-value-bind (name method-spec) (deconstruct-spec name-or-spec)
