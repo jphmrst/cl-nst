@@ -190,7 +190,8 @@ the system\'s results."
                      (debug-args-expr nst-debug-config)
                      (debug-protect nst-debug-protect)) c
       (let ((debug-args (eval debug-args-expr)))
-        (format t "debug-args ~s~%debug-protect ~s~%" debug-args debug-protect)
+        ;; (format t "debug-args ~s~%debug-protect ~s~%"
+        ;;    debug-args debug-protect)
         (let ((protected-values
                (nst-fn assemble-protected-option-values debug-protect)))
           (nst-fn run-debug-options debug-args)
