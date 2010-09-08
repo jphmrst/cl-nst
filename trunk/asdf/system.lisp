@@ -218,14 +218,16 @@ the system\'s results."
            ;; For running possibly several (or none) of each.
            (t
             (loop for pk in packages do
-                  (nst-fn run-package pk))
+              (format t "~%")
+              (nst-fn run-package pk))
             (loop for spec in group-specs do
-                  (let ((group (group-spec-symbol spec)))
-                    (nst-fn run-group group)))
+              (let ((group (group-spec-symbol spec)))
+                (format t "~%")
+                (nst-fn run-group group)))
             (loop for spec in test-specs do
-                  (multiple-value-bind (group test) (test-spec-symbols spec)
-                    (nst-fn run-test group test)
-                    (cons group test)))))
+              (multiple-value-bind (group test) (test-spec-symbols spec)
+                (format t "~%")
+                (nst-fn run-test group test)))))
           (nst-fn restore-protected-option-values protected-values))))
 
     ;; Then, do whatever else.

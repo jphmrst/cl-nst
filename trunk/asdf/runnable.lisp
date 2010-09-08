@@ -68,7 +68,8 @@ other contributors to the to-do list, so we include those tasks via
   `((asdf:load-op ,sys)
     (asdf:load-op :nst)
     ,@(loop for sub in (nst-systems sys)
-            append (list (list 'asdf:load-op sub) (list 'asdf:test-op sub)))
+            append `((asdf:load-op ,sub)
+                     (asdf:test-op ,sub)))
     ,@(call-next-method)))
 
 (defmethod all-nst-tested ((nst-test-runner nst-test-runner)
