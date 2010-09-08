@@ -1,7 +1,7 @@
 (in-package :defdoc-ex)
 
 (defgeneric f (d))
-(def-documentation (:fun f)
+(def-documentation (:fn f)
     :intro "Theoretical implementation of the Ackermann function"
     :params ((d (:latex "As for the $\Gamma$ function argument.")))
     :full "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas quis massa tellus, sodales pulvinar dolor. Cras eu placerat orci. Maecenas eu arcu molestie purus tincidunt semper ut ut lectus. Donec.")
@@ -23,6 +23,6 @@
     :full (:latex "Sed at sem mi. In ut nibh ante, non euismod odio. Suspendisse quis ipsum augue, ac porttitor odio. In pharetra molestie consectetur. Donec ut felis enim. Curabitur nisi lectus, suscipit non vulputate in, adipiscing non nulla. Aliquam nulla eros, aliquet id tempus sit amet, sagittis ac nulla. Donec eros est, suscipit sed placerat vitae, commodo tristique purus. Nulla ac neque sed lacus aliquet varius. Donec elementum mauris quis ipsum fermentum eu hendrerit tortor faucibus. Nulla ac lectus sit amet enim commodo eleifend at et eros. Donec quis urna ipsum, at consequat nisi. Nunc in est non augue bibendum volutpat nec ac leo. Sed venenatis eleifend dictum."))
 
 (defvar *hh* 8)
-(def-documentation :fun *hh*
+(def-documentation *hh*
   :short "Aliquam erat volutpat. Donec vel."
   :full "Duis sit amet bibendum nisi. Etiam elementum risus eu ante porta dapibus. Curabitur eu urna eget arcu malesuada iaculis nec.")

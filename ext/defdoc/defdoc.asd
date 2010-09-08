@@ -46,10 +46,16 @@
                  ;; and documentation generation.
                  (:file "package")
 
-                 ;; Helper functions.
-                 (:file "specs"  :depends-on ("package"))
+                 ;; Defining a comment format.
+                 (:file "globals"  :depends-on ("package"))
+
+                 ;; Defining a comment format.
+                 (:file "format"  :depends-on ("package" "globals"))
+
+                 ;; Standard comment formats.
+                 (:file "specs"  :depends-on ("format"))
 
                  ;; Error declarations.
-                 (:file "macro"  :depends-on ("package" "specs"))
+                 (:file "macro"  :depends-on ("package" "format"))
 
                  ))
