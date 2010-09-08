@@ -80,7 +80,24 @@
              #:emit-failure #:emit-warning #:emit-success
              #:def-form-criterion #:def-values-criterion
 
+             ;; Do NOT change this package's exported-symbol list
+             ;; without updating the API in the manual (or filing a
+             ;; ticket for the addition).
+
              #:with-fixtures
+
+             ;; Do NOT change this package's exported-symbol list
+             ;; without updating the API in the manual (or filing a
+             ;; ticket for the addition).
+
+             #:nst-results
+             #:def-test-generic
+             #:def-test-method
+             #:def-test-method-criterion
+
+             ;; Do NOT change this package's exported-symbol list
+             ;; without updating the API in the manual (or filing a
+             ;; ticket for the addition).
              )
 
     ;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *

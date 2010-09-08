@@ -112,6 +112,9 @@
                            ;; Sample-testing predicates.
                            (:file "sampling" :depends-on ("check"))
 
+                           ;; Object-oriented test methods.
+                           (:file "method" :depends-on ("status" "check"))
+
                            ;; Other packaged APIs.
                            (:file "interfaces"
                                   :depends-on ("check" "runner" "status"))))))

@@ -1,4 +1,10 @@
 
+2.1.2 - 
+ Improved some of the test output.
+ Fixed a bug in some of the self-test criteria (which had obviously
+   never yet come into use).
+ Removed some of the verbosity on recursively-called self-tests.
+
 2.1.1 - public release, August 31, 2010
  Fixed a bug in the implementation of fixture sets exporting names into their
    packages, and added tests to verify exporting (ticket:163).
