@@ -1,0 +1,17 @@
+(in-package :defdoc)
+
+(defvar +formats+ '(:plain :latex))
+
+(defvar +defdocs+ (make-hash-table :test 'eq)
+  "Master global hashtable of all documentation specifiers.")
+(when (null +defdocs+)
+  (setf +defdocs+ (make-hash-table :test 'eq)))
+(setf (gethash :fn +defdocs+)        (make-hash-table :test 'eq))
+(setf (gethash :macro +defdocs+)     (make-hash-table :test 'eq))
+(setf (gethash :setf +defdocs+)      (make-hash-table :test 'eq))
+(setf (gethash :var +defdocs+)       (make-hash-table :test 'eq))
+(setf (gethash :type +defdocs+)      (make-hash-table :test 'eq))
+(setf (gethash :structure +defdocs+) (make-hash-table :test 'eq))
+(setf (gethash :package +defdocs+)   (make-hash-table :test 'eq))
+(setf (gethash :method +defdocs+)    (make-hash-table :test 'eq))
+(setf (gethash :method-combination +defdocs+) (make-hash-table :test 'eq))

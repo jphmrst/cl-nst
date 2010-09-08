@@ -23,7 +23,7 @@
 (defpackage :defdoc
     (:documentation "Structured documentation definition")
     (:nicknames :ddoc)
-;;;    (:use :closer-common-lisp)
+    (:use :common-lisp)
 ;;;    #+(or sbcl allegro)
 ;;;    (:import-from #+sbcl sb-mop #-sbcl mop
 ;;;                  #:generic-function-methods #:method-specializers
@@ -34,7 +34,7 @@
 ;;;                  #:generic-function-methods #:method-specializers
 ;;;                  #:eql-specializer-object)
 
-    (:export #:defdoc))
+    (:export #:defdoc #:def-documentation))
 
 (defun defdoc::make-package-documentation ()
   "Write documentation for this package, using system package-doc."

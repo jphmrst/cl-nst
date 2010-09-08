@@ -22,6 +22,7 @@
 
 (defpackage :defdoc-ex
     (:documentation "Structured documentation definition examples")
+    (:use :common-lisp :defdoc)
     (:nicknames :ddocex))
 
 (defun defdoc-ex::make-package-documentation ()
