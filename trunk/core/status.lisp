@@ -235,7 +235,6 @@
                            (format s " - ~w" cr))))))))))))
 
 
-
 (defstruct (check-result (:include result-stats (tests 1))
                          (:constructor %make-check-result))
   "Overall check result structure, containing notes of four distinct types.  A
@@ -304,8 +303,6 @@ structure, permitting the use of apply."
         :replacement '(make-success-report emit-failure emit-warning))
   `(make-and-calibrate-check-result ,@args))
 
-
-
 (set-pprint-dispatch 'check-result
   #'(lambda (s cr)
       (declare (special *nst-verbosity* *nst-report-driver*))
@@ -319,29 +316,40 @@ structure, permitting the use of apply."
                               (length errors)))
               (succeeded (eql 0 (+ (length failures) (length errors))))
               (drill-down (or (eq *nst-report-driver* :details)
-                              (eq *nst-report-driver* :details)
                               (> *nst-verbosity* 2)
                               (and (eq *nst-report-driver* :test)
                                    (> *nst-verbosity* 1)))))
 
-          (flet ((headered-items-printer (stream header items)
+          (flet ((headered-items-printer (stream header items &key numbered)
                    (when items
                      (pprint-newline :mandatory s)
+                     (princ "  " stream)
                      (princ header stream)
-                     (loop for item in items do
+                     (loop for item in items for num from 1 do
                        (pprint-newline :mandatory stream)
-                       (princ " - " stream)
+                       (cond
+                         ((and numbered (> (length items) 1))
+                          (princ "   " stream)
+                          (princ num stream)
+                          (princ ". " stream))
+                         (t (princ "   - " stream)))
                        (princ item stream))))
 
-                 (unheadered-items-printer (stream items)
-                   (loop for item in items do
+                 (unheadered-items-printer (stream items &key numbered)
+                   (loop for item in items for num from 1 do
                      (pprint-newline :mandatory stream)
-                     (princ " . " stream)
+                       (cond
+                         ((and numbered (> (length items) 1))
+                          (princ " " stream)
+                          (princ num stream)
+                          (princ ". " stream))
+                         (t (princ " - " stream)))
                      (princ item stream))))
 
-;;;          (format t
-;;;               "drill-down ~s~%*nst-verbosity* ~s~%*nst-report-driver* ~s~%"
-;;;             drill-down *nst-verbosity* *nst-report-driver*)
+;;;            (format t
+;;;                "drill-down ~s~%*nst-verbosity* ~s~%*nst-report-driver* ~s~%~
+;;;                 info ~s~%"
+;;;              drill-down *nst-verbosity* *nst-report-driver* info)
 
             (pprint-logical-block (s '(dummy list))
               (princ "Check " s)
@@ -361,18 +369,21 @@ structure, permitting the use of apply."
                 (princ "raised an error" s)
                 (when drill-down
                   (princ ":" s)
-                  (unheadered-items-printer s errors)
-                  (unheadered-items-printer s info)))
+                  (unheadered-items-printer s errors :numbered t)
+                  (headered-items-printer s "Additional information:" info)))
 
                ((and (eql 1 total-items) warnings)
-                (format s "passed with warning~p" warnings)
-                (unheadered-items-printer s warnings)
-                (unheadered-items-printer s info))
+                (cond
+                  ((eql 1 (length warnings))
+                   (format s "passed with a warning"))
+                  (t (format s "passed with warnings")))
+                (unheadered-items-printer s warnings :numbered t)
+                (headered-items-printer s "Additional information:" info))
 
                ((and (eql 1 total-items) failures)
                 (princ "failed" s)
-                (unheadered-items-printer s failures)
-                (unheadered-items-printer s info))
+                (unheadered-items-printer s failures :numbered t)
+                (headered-items-printer s "Additional information:" info))
 
                ;; When a query asks about a specific test.
                ;;
@@ -382,23 +393,37 @@ structure, permitting the use of apply."
                  (t (princ "failed" s)))
                 (when (or errors failures warnings info)
                   (princ ": " s)
-                  (headered-items-printer s "Errors:" errors)
-                  (headered-items-printer s "Failures:" failures)
-                  (headered-items-printer s "Warnings:" warnings)
+                  (headered-items-printer s "Errors:" errors :numbered t)
+                  (headered-items-printer s "Failures:" failures :numbered t)
+                  (headered-items-printer s "Warnings:" warnings :numbered t)
                   (headered-items-printer s "Additional information:" info)))
 
                ;; If we're reporting results for a package or group,
                ;; suppress the info fields of the report.
                ;;
                (t
-                (cond (succeeded (princ "passed" s))
+                (cond (succeeded
+                       (princ "passed" s)
+                       (when warnings
+                         (princ " with warning" s)
+                         (when (> (length warnings) 1)
+                           (princ "s" s))))
+                      (errors (princ "raised an error" s))
                       (t (princ "failed" s)))
-                (when warnings (princ " with warnings" s))
-                (when (or errors failures warnings)
+                (cond
+                  ((and (not errors) (not failures) warnings)
+                   (unheadered-items-printer s warnings :numbered t)
+                   (headered-items-printer s "Additional information:"
+                                           info))
+                 ((or errors failures)
                   (princ ": " s)
-                  (headered-items-printer s "Errors:" errors)
-                  (headered-items-printer s "Failures:" failures)
-                  (headered-items-printer s "Warnings:" warnings))))))))))
+                  (headered-items-printer s "Errors:" errors :numbered t)
+                  (headered-items-printer s "Failures:" failures :numbered t)
+                  (headered-items-printer s "Further warnings:" warnings
+                                          :numbered t)
+                  (headered-items-printer s "Additional information:"
+                                          info))
+                 (t (princ "." s)))))))))))
 
 
 

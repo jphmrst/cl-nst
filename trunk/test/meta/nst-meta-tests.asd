@@ -43,6 +43,10 @@
                  ;; states.
                  (:file "faildata")
 
+                 ;; Classes and test methods for meta-tests of the
+                 ;; :methods criterion.
+                 (:file "methods")
+
                  ;; NST tests on NST runs.
                  (:file "selftest")
 

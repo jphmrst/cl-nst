@@ -25,7 +25,10 @@
               (*debug-within-metatested* nst::*debug-on-fail*)
               (t nil))))
         (declare (special nst::+results-record+))
-        (let ((nst::*nst-verbosity* (- nst::*nst-verbosity* 2)))
+        (let ((nst::*nst-verbosity* (cond
+                                      ((< nst::*nst-verbosity* 2)
+                                       -1)
+                                      (t nst::*nst-verbosity*))))
           (loop for package in packages do (run-package package))
           (loop for group in groups do (run-group group))
           (loop for (group test) in tests do (run-test group test)))

@@ -115,6 +115,74 @@
       (---form-true (eql nst-meta-sources::*nst-fc1* 2))
       (---form-true (eql nst-meta-sources::*nst-fc2* 1))))
 
+(def-test-group dispatched-tests ())
+(def-test (methods-1 :group dispatched-tests)
+    (--nst-group mnstmeth-src::method-tests
+      (---test-passes mnstmeth-src::method-tests mnstmeth-src::t-p)
+      (---test-passes mnstmeth-src::method-tests mnstmeth-src::m-p)
+      (---test-passes mnstmeth-src::method-tests mnstmeth-src::s-p)
+      (---test-passes mnstmeth-src::method-tests mnstmeth-src::b-p)
+      (---on-test mnstmeth-src::method-tests mnstmeth-src::t-f
+        (---fail-records (:apply length (:eql 1)))
+        (---info-records (:apply length (:eql 1)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0))))
+      (---on-test mnstmeth-src::method-tests mnstmeth-src::m-f-t
+        (---fail-records (:apply length (:eql 1)))
+        (---info-records (:apply length (:eql 2)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0))))
+      (---on-test mnstmeth-src::method-tests mnstmeth-src::m-f-m
+        (---fail-records (:apply length (:eql 1)))
+        (---info-records (:apply length (:eql 2)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0))))
+      (---on-test mnstmeth-src::method-tests mnstmeth-src::m-f-mt
+        (---fail-records (:apply length (:eql 2)))
+        (---info-records (:apply length (:eql 2)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0))))
+      (---on-test mnstmeth-src::method-tests mnstmeth-src::s-f
+        (---fail-records (:apply length (:eql 1)))
+        (---info-records (:apply length (:eql 1)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0))))
+      (---on-test mnstmeth-src::method-tests mnstmeth-src::b-f-t
+        (---fail-records (:apply length (:eql 1)))
+        (---info-records (:apply length (:eql 3)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0))))
+      (---on-test mnstmeth-src::method-tests mnstmeth-src::b-f-m
+        (---fail-records (:apply length (:eql 1)))
+        (---info-records (:apply length (:eql 3)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0))))
+      (---on-test mnstmeth-src::method-tests mnstmeth-src::b-f-s
+        (---fail-records (:apply length (:eql 1)))
+        (---info-records (:apply length (:eql 3)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0))))
+      (---on-test mnstmeth-src::method-tests mnstmeth-src::b-f-mt
+        (---fail-records (:apply length (:eql 2)))
+        (---info-records (:apply length (:eql 3)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0))))
+      (---on-test mnstmeth-src::method-tests mnstmeth-src::b-f-ms
+        (---fail-records (:apply length (:eql 2)))
+        (---info-records (:apply length (:eql 3)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0))))
+      (---on-test mnstmeth-src::method-tests mnstmeth-src::b-f-ts
+        (---fail-records (:apply length (:eql 2)))
+        (---info-records (:apply length (:eql 3)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0))))
+      (---on-test mnstmeth-src::method-tests mnstmeth-src::b-f-mts
+        (---fail-records (:apply length (:eql 3)))
+        (---info-records (:apply length (:eql 3)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0))))))
+
 (def-test-group nil-use-fixtures ())
 (def-test (nil-fix :group nil-use-fixtures
                    :setup (setf nst-meta-sources::zzz 0))
