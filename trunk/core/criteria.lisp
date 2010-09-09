@@ -47,28 +47,28 @@
 (def-criterion (:eq (target) (actual))
   (if (eq (eval target) actual)
       (make-success-report)
-      (make-failure-report :format "Not eq to value of ~s:~_Value ~s"
-                           :args `('target ,actual))))
+      (make-failure-report :format "Value ~s not eq to value of ~s"
+                           :args `(,actual 'target))))
 
 (def-criterion-alias (:symbol name) `(:eq ',name))
 
 (def-criterion (:eql (target) (actual))
   (if (eql (eval target) actual)
       (make-success-report)
-      (make-failure-report :format "Not eql to value of ~s"
-                           :args (list target))))
+      (make-failure-report :format "Value ~s not eql to value of ~s"
+                           :args (list actual target))))
 
 (def-criterion (:equal (target) (actual))
   (if (equal (eval target) actual)
      (make-success-report)
-     (make-failure-report :format "Not equal to value of ~s"
-                          :args (list target))))
+     (make-failure-report :format "Value ~s not equal to value of ~s"
+                          :args (list actual target))))
 
 (def-criterion (:equalp (target) (actual))
   (if (equalp (eval target) actual)
       (make-success-report)
-      (make-failure-report :format "Not equalp to value of ~s"
-                           :args (list target))))
+      (make-failure-report :format "Value ~s not equalp to value of ~s"
+                           :args (list actual target))))
 
 (def-criterion-alias (:forms-eq)    `(:predicate eq))
 (def-criterion-alias (:forms-eql)   `(:predicate eql))
