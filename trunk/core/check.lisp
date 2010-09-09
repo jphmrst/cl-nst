@@ -50,11 +50,13 @@ as errors arising from within the ."
 (defmethod apply-criterion :around (top args form)
   (format-at-verbosity 3
       "Applying criterion ~s~{ ~s~}~%  to ~s~%" top args form)
-  (let ((*nst-context* (cons (make-context-layer :criterion top
-                                                 :criterion-args args
-                                                 :given-stack form)
-                             *nst-context*)))
-    (declare (special *nst-context*))
+  (with-criterion-context-layer (:criterion top :criterion-args args :given-stack form)
+    ;;(let ((*nst-context* (cons (make-instance 'criterion-context-layer
+    ;;                                               :criterion top
+    ;;                                               :criterion-args args
+    ;;                                               :given-stack form)
+    ;;                           *nst-context*)))
+    ;;  (declare (special *nst-context*))
     (let ((result (returning-test-error (call-next-method))))
       (format-at-verbosity 3 "  Result at ~s is ~s~%" top result)
       result)))
@@ -228,23 +230,6 @@ as errors arising from within the ."
                                 `((setf (documentation ',name :nst-criterion)
                                         ,docstring-or-form)))))
       (t redef))))
-
-;;;(defvar *error-checking* nil
-;;;  "Criteria such as :check-err set this variable to t (and declare it special)
-;;;to suppress error-handling in continue-check, and thus become able to handle
-;;;all further errors themselves.")
-
-(defmacro within-context ((name args values) &body forms)
-  `(let ((*nst-context* (cons (make-context-layer
-                               :criterion ',name
-                               :criterion-args ',args
-                               :given-stack ,(cond
-                                              (*nst-context-evaluable*
-                                               values)
-                                              (t `',values)))
-                              *nst-context*)))
-     (declare (special *nst-context*))
-     ,@forms))
 
 #+allegro (excl::define-simple-parser def-values-check caadr :nst-criterion)
 (defmacro def-value-check (&rest args)

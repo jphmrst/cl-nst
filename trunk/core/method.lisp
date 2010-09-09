@@ -44,25 +44,93 @@
   :documentation "Method combination for unifying NST result records returned
 by different methods.")
 
-(defvar *test-methods* (make-hash-table :test 'eq)
-  "Global variable for programmer-defined NST test methods.")
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar *test-methods* (make-hash-table :test 'eq)
+    "Global variable for programmer-defined NST test methods."))
 
-(defmacro def-test-generic (function-name &key documentation)
-  (let ((arg (gensym)))
-    `(progn
-       (defgeneric ,function-name (,arg)
-         ,@(when documentation `((:documentation ,documentation)))
-         (:method-combination nst-results))
-       (setf (gethash (symbol-function ',function-name) *test-methods*) t)
-       ',function-name)))
+(defmacro def-test-generic (function-name &body forms)
+  (multiple-value-bind (documentation method-combination)
+      (decode-def-test-generic-body forms)
+    (let ((arg (gensym))
+          (use-combination (cond
+                            (method-combination method-combination)
+                            (t 'nst-results))))
+      `(progn
+         (defgeneric ,function-name (,arg)
+           ,@(when documentation `((:documentation ,documentation)))
+           ,@(unless (eq use-combination t)
+               `((:method-combination ,use-combination))))
+         (eval-when (:compile-toplevel :load-toplevel :execute)
+           (setf (gethash ',function-name *test-methods*) ',use-combination))
+         ',function-name))))
+
+(defun decode-def-test-generic-body (forms)
+  (let ((documentation)
+        (doc-supp-p nil)
+        (method-combination)
+        (method-combination-supp-p nil))
+    (loop for form in forms do
+      (unless (consp form)
+        (error "Expected cons, got ~s" form))
+      (let ((form-head (car form)))
+        (cond
+          ((eq form-head :documentation)
+           (when doc-supp-p
+             (error "Multiple documentation strings in def-test-generic"))
+           (setf documentation (cadr form) doc-supp-p t))
+          ((eq form-head :method-combination)
+           (when method-combination-supp-p
+             (error "Multiple method combinations in def-test-generic"))
+           (setf method-combination (cadr form) method-combination-supp-p t))
+          (t
+           (error "~s not expected in def-test-generic" form-head)))))
+    (values documentation method-combination)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass method-context-layer (context-layer)
+     ((method-name :initarg :method-name :accessor method-name)
+      (class-name :initarg :class-name :accessor class-name)
+      (object :initarg :object :accessor object))
+  (:documentation "A record of method-based test invocation."))
+
+(set-pprint-dispatch 'method-context-layer
+  #'(lambda (s cl)
+      (with-accessors ((method-name method-name)
+                       (class-name class-name)
+                       (object object)) cl
+        (cond
+         ((> *nst-verbosity* 2)
+          (format s "calling test method ~a on class ~a on ~s"
+            method-name class-name object))
+         (t
+          (format s "calling test method ~a on class ~a"
+            method-name class-name))))))
+
+(defmacro with-method-context-layer ((method-name class-name object) &body body)
+  `(with-context-layer (make-instance 'method-context-layer
+                         :method-name ',method-name
+                         :class-name ',class-name
+                         :object ,object)
+     ,@body))
+
+(defmethod show-context-layer ((layer method-context-layer))
+  (declare (special -context-display-state-))
+  (setf (gethash 'criterion -context-display-state-) t)
+  t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmacro def-test-method (function-name (arg class) &body body)
   (let ((documentation (when (and body (stringp (car body)))
-                         (pop body))))
+                         (pop body)))
+        (combination (gethash function-name *test-methods*)))
     `(progn
-       (defmethod ,function-name nst-results ((,arg ,class))
+       (defmethod ,function-name ,@(unless (eq combination t)
+                                     `(,combination)) ((,arg ,class))
          ,@(when documentation `(,documentation))
-         (let ((result (progn ,@body)))
+         (let ((result (with-method-context-layer (,function-name ,class ,arg)
+                         ,@body)))
            (push ,(format nil "Checked test method ~s for ~s"
                     function-name class)
                  (check-result-info result))
@@ -82,10 +150,12 @@ by different methods.")
 
 (defun invoke-test-methods (obj)
   (apply #'check-result-union
-         (loop for method-fn being the hash-keys of *test-methods*
+         (loop for method-name being the hash-keys of *test-methods*
+               for method-fn = (symbol-function method-name)
                for actual-method
-                 = (closer-mop:compute-applicable-methods-using-classes
-                          method-fn (list (find-class (type-of obj))))
+                 = (when method-fn
+                     (closer-mop:compute-applicable-methods-using-classes
+                      method-fn (list (find-class (type-of obj)))))
                if actual-method
                  collect (funcall method-fn obj))))
 

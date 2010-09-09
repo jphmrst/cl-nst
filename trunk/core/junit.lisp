@@ -136,7 +136,9 @@ argument should be a string of just spaces."))
              (format s
                  ">~%~a  <failure message=\"~a\" type=\"lisp.nst.criterion.~a\"><![CDATA[~%"
                padding (string-escaped msg)
-               (context-layer-criterion (car context)))
+               (get-local-criterion-context context)
+               ;; (criterion (car context))
+               )
              (format s "~a    ~@<~{~a~^~:@_~}~:>~%"
                padding context)))
                   (format s "~a  ]]></failure>~%" padding)

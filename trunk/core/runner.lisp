@@ -427,6 +427,12 @@ for the test application class.")
               "Error in test fixtures cleanup: ~s" e))
          (funcall (test-cleanup-form test-obj))))))
 
+(defun wrap-fixture-name-specials (fixture-names-special form)
+  (cond
+   ((null fixture-names-special) form)
+   ((equal fixture-names-special '(special)) form)
+   (t `(locally (declare ,fixture-names-special) ,form))))
+
 (defun core-run-test (test)
   "Capture the result of the test."
   (declare (optimize (debug 3)))
@@ -458,12 +464,18 @@ for the test application class.")
                           (check-criterion-on-form
                            criterion
                            `(common-lisp:multiple-value-list
-                             (locally (declare ,fixture-names-special)
-                               ,(car forms)))))
+                                ,(wrap-fixture-name-specials
+                                  fixture-names-special (car forms)))
+;;;                             (locally (declare ,fixture-names-special)
+;;;                               ,(car forms))
+                           ))
                          (t (check-criterion-on-form
                              criterion
-                             `(locally (declare ,fixture-names-special)
-                                (list ,@forms)))))))))
+                             (wrap-fixture-name-specials fixture-names-special
+                                                         `(list ,@forms))
+;;;                             `(locally (declare ,fixture-names-special)
+;;;                                (list ,@forms))
+                             )))))))
           (end-time (get-internal-real-time)))
       (setf (result-stats-elapsed-time result)
         (- end-time start-time)
