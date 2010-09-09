@@ -2,6 +2,8 @@
 (in-package :mnstmeth-src)
 
 (nst:def-test-generic for-clses)
+(nst:def-test-generic overridden
+    (:method-combination t))
 
 (defclass top-cls ()
      ((tc1 :initarg :tc1 :reader tc1)
@@ -17,6 +19,9 @@
     (cond
       ((< mc1 mc2) (make-success-report))
       (t (make-failure-report :format "~d not < ~d" :args (list mc1 mc2))))))
+(nst:def-test-method-criterion overridden mid-cls
+  (:slots (mc1 (:eql 0))
+          (mc2 (:eql 2))))
 
 (defclass side-cls ()
      ((sc1 :initarg :sc1 :reader sc1)
@@ -30,6 +35,9 @@
 (defclass bot-cls (mid-cls side-cls)
      ((bc1 :initarg :bc1 :reader bc1)
       (bc2 :initarg :bc2 :reader bc2)))
+(nst:def-test-method-criterion overridden bot-cls
+  (:slots (sc1 (:eql 1))
+          (sc2 (:eql 1))))
 
 (def-test-group method-tests ()
   (def-test t-p :methods (make-instance 'top-cls :tc1 0 :tc2 2))

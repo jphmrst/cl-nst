@@ -322,16 +322,12 @@ structure, permitting the use of apply."
 
           (flet ((headered-items-printer (stream header items &key numbered)
                    (when items
-                     (pprint-newline :mandatory s)
-                     (princ "  " stream)
-                     (princ header stream)
+                     (format stream "~:@_  ~a" header)
                      (loop for item in items for num from 1 do
                        (pprint-newline :mandatory stream)
                        (cond
                          ((and numbered (> (length items) 1))
-                          (princ "   " stream)
-                          (princ num stream)
-                          (princ ". " stream))
+                          (format stream "   ~d. " num))
                          (t (princ "   - " stream)))
                        (princ item stream))))
 
@@ -340,9 +336,7 @@ structure, permitting the use of apply."
                      (pprint-newline :mandatory stream)
                        (cond
                          ((and numbered (> (length items) 1))
-                          (princ " " stream)
-                          (princ num stream)
-                          (princ ". " stream))
+                          (format stream " ~d. " num))
                          (t (princ " - " stream)))
                      (princ item stream))))
 
@@ -352,13 +346,9 @@ structure, permitting the use of apply."
 ;;;              drill-down *nst-verbosity* *nst-report-driver* info)
 
             (pprint-logical-block (s '(dummy list))
-              (princ "Check " s)
-              (princ check-name s)
-              (princ " " s)
+              (format s "Check ~a " check-name)
               (unless *nst-group-shown*
-                (princ "(group " s)
-                (princ group-name s)
-                (princ ") " s))
+                (format s "(group ~a) " group-name))
 
               (cond
                ;; The first three cases are for when we have only one
@@ -426,35 +416,6 @@ structure, permitting the use of apply."
                  (t (princ "." s)))))))))))
 
 
-
-
-(defstruct context-layer
-  "A record of test criterion
- criterion - the criterion symbol itself
- criterion-args - arguments to the criterion
- given-stack - the stack of values assessed by the criterion"
-  criterion criterion-args given-stack)
-
-(set-pprint-dispatch 'context-layer
-  #'(lambda (s cl)
-      (with-accessors ((criterion context-layer-criterion)
-                       (criterion-args context-layer-criterion-args)
-                       (given-stack context-layer-given-stack)) cl
-        (cond
-         ((eq (car given-stack) 'list)
-          (format s
-              #-(or sbcl scl) "checki~@<ng (~s~@<~{~:_ ~s~}~:>) ~_on~{ ~a~}~:>"
-              #+(or sbcl scl) "checking (~s~{~:_ ~s~}) on~{ ~a~}"
-              criterion criterion-args (cdr given-stack)))
-
-         (t
-          (format s
-              #-(or sbcl scl) "ch~@<ecking (~s~@<~{~:_ ~s~}~:>) ~
-                        ~:_on ~:_the ~:_result ~:_of ~:_evaluating ~:_~a~:>"
-              #+(or sbcl scl) "checking (~s~{~:_ ~s~}) on the result of evaluating ~a"
-              criterion criterion-args given-stack))))))
-
-
 (defstruct check-note
   "A single note issued in criteria checking.
  context - the surrounding criteria structure, a list of context-layer structs
@@ -480,9 +441,15 @@ structure, permitting the use of apply."
         (pprint-logical-block (s '(dummy list))
           (when (apply-formatter s format args)
             (pprint-newline :mandatory s))
-          (cond
-            (context (format s "in context: ~{~a~^~:@_~}" context))
-            (t (princ "at top level" s)))
+          (format s "~{~w~^~:@_~}" (get-display-context-layers context))
+;;;          (cond
+;;;            ((and context (or (> *nst-verbosity* 2)
+;;;                              (and (> *nst-verbosity* 1)
+;;;                                   (eq *nst-report-driver* :details))))
+;;;             (format s "in context: ~{~:@_~a~}" context))
+;;;            (context
+;;;             (format s "~w" (car context)))
+;;;            (t (princ "at top level" s)))
           (when stack
             (pprint-newline :mandatory s)
             (princ "stack: " s)

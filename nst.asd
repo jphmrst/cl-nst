@@ -81,7 +81,12 @@
 
                            ;; Definition and expansion of check
                            ;; criteria.
-                           (:file "check" :depends-on ("pick" "interrupt"))
+                           (:file "context" :depends-on ("package"))
+
+                           ;; Definition and expansion of check
+                           ;; criteria.
+                           (:file "check" :depends-on ("pick" "context"
+                                                              "interrupt"))
 
                            ;; The def-check macro.
                            (:file "test-def"
@@ -96,7 +101,9 @@
 
                            ;; Receiving and bookkeeping the results of
                            ;; tests.
-                           (:file "status" :depends-on ("globals" "check"))
+                           (:file "status" :depends-on ("globals"
+                                                        ;; "context"
+                                                        "check"))
 
                            ;; Standard criteria declarations.
                            (:file "criteria"

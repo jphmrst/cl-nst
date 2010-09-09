@@ -129,17 +129,17 @@
         (---warning-records (:apply length (:eql 0))))
       (---on-test mnstmeth-src::method-tests mnstmeth-src::m-f-t
         (---fail-records (:apply length (:eql 1)))
-        (---info-records (:apply length (:eql 2)))
+        (---info-records (:apply length (:eql 3)))
         (---error-records (:apply length (:eql 0)))
         (---warning-records (:apply length (:eql 0))))
       (---on-test mnstmeth-src::method-tests mnstmeth-src::m-f-m
-        (---fail-records (:apply length (:eql 1)))
-        (---info-records (:apply length (:eql 2)))
+        (---fail-records (:apply length (:eql 2)))
+        (---info-records (:apply length (:eql 3)))
         (---error-records (:apply length (:eql 0)))
         (---warning-records (:apply length (:eql 0))))
       (---on-test mnstmeth-src::method-tests mnstmeth-src::m-f-mt
-        (---fail-records (:apply length (:eql 2)))
-        (---info-records (:apply length (:eql 2)))
+        (---fail-records (:apply length (:eql 3)))
+        (---info-records (:apply length (:eql 3)))
         (---error-records (:apply length (:eql 0)))
         (---warning-records (:apply length (:eql 0))))
       (---on-test mnstmeth-src::method-tests mnstmeth-src::s-f
@@ -149,37 +149,37 @@
         (---warning-records (:apply length (:eql 0))))
       (---on-test mnstmeth-src::method-tests mnstmeth-src::b-f-t
         (---fail-records (:apply length (:eql 1)))
-        (---info-records (:apply length (:eql 3)))
+        (---info-records (:apply length (:eql 4)))
         (---error-records (:apply length (:eql 0)))
         (---warning-records (:apply length (:eql 0))))
       (---on-test mnstmeth-src::method-tests mnstmeth-src::b-f-m
         (---fail-records (:apply length (:eql 1)))
-        (---info-records (:apply length (:eql 3)))
+        (---info-records (:apply length (:eql 4)))
         (---error-records (:apply length (:eql 0)))
         (---warning-records (:apply length (:eql 0))))
       (---on-test mnstmeth-src::method-tests mnstmeth-src::b-f-s
-        (---fail-records (:apply length (:eql 1)))
-        (---info-records (:apply length (:eql 3)))
+        (---fail-records (:apply length (:eql 2)))
+        (---info-records (:apply length (:eql 4)))
         (---error-records (:apply length (:eql 0)))
         (---warning-records (:apply length (:eql 0))))
       (---on-test mnstmeth-src::method-tests mnstmeth-src::b-f-mt
         (---fail-records (:apply length (:eql 2)))
-        (---info-records (:apply length (:eql 3)))
+        (---info-records (:apply length (:eql 4)))
         (---error-records (:apply length (:eql 0)))
         (---warning-records (:apply length (:eql 0))))
       (---on-test mnstmeth-src::method-tests mnstmeth-src::b-f-ms
-        (---fail-records (:apply length (:eql 2)))
-        (---info-records (:apply length (:eql 3)))
+        (---fail-records (:apply length (:eql 3)))
+        (---info-records (:apply length (:eql 4)))
         (---error-records (:apply length (:eql 0)))
         (---warning-records (:apply length (:eql 0))))
       (---on-test mnstmeth-src::method-tests mnstmeth-src::b-f-ts
-        (---fail-records (:apply length (:eql 2)))
-        (---info-records (:apply length (:eql 3)))
+        (---fail-records (:apply length (:eql 3)))
+        (---info-records (:apply length (:eql 4)))
         (---error-records (:apply length (:eql 0)))
         (---warning-records (:apply length (:eql 0))))
       (---on-test mnstmeth-src::method-tests mnstmeth-src::b-f-mts
-        (---fail-records (:apply length (:eql 3)))
-        (---info-records (:apply length (:eql 3)))
+        (---fail-records (:apply length (:eql 4)))
+        (---info-records (:apply length (:eql 4)))
         (---error-records (:apply length (:eql 0)))
         (---warning-records (:apply length (:eql 0))))))
 
