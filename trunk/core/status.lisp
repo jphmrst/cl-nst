@@ -795,29 +795,47 @@ six-value summary of the results:
 
 
 
-(defun report-summary (group-or-package gp-supp-p test test-supp-p)
+(defun get-report-from-names (group-or-package gp-supp-p test test-supp-p)
   (cond
-   ((not gp-supp-p)
-    (let ((*print-pretty* t)
-          (*print-readably* nil)
-          (*nst-verbosity* 1)
-          (*nst-report-driver* :multiple))
-      (pprint (report-interesting) *nst-output-stream*)))
+   ((not gp-supp-p) (report-interesting))
+   (test-supp-p (test-report group-or-package test))
+   ((find-package group-or-package) (package-report group-or-package))
+   ((and (find-class group-or-package nil)
+         )
+    (group-report group-or-package))
+   (t (let ((interps (lookup-artifact group-or-package)))
+         (cond
+          ((null interps)
+           (format t "There is no NST-testable unit with the name ~a.~%"
+             group-or-package))
 
-   (test-supp-p (report-test group-or-package test))
+          (t
+           (let ((packages nil) (groups nil) (tests nil))
+             (loop for interp in interps do
+               (cond
+                 ((packagep interp)
+                  (push interp packages))
 
-   ((find-package group-or-package) (report-package group-or-package))
+                ((group-record-p interp)
+                  (push interp groups))
 
-   (t (report-group group-or-package)))
+                (t
+                 (push interp tests))))
+             (multiple-report packages groups tests))))))))
+
+(defun report-summary (group-or-package gp-supp-p test test-supp-p)
+  (let ((report (get-report-from-names group-or-package gp-supp-p
+                                       test test-supp-p))
+        (*print-pretty* t)
+        (*print-readably* nil)
+        (*nst-verbosity* 1)
+        (*nst-report-driver* :multiple))
+    (pprint report *nst-output-stream*))
   nil)
 
 (defun report-details (group-or-package gp-supp-p test test-supp-p)
-  (let ((report (cond
-                  ((not gp-supp-p) (report-interesting))
-                  (test-supp-p (test-report group-or-package test))
-                  ((find-package group-or-package)
-                   (package-report group-or-package))
-                  (t (group-report group-or-package))))
+  (let ((report (get-report-from-names group-or-package gp-supp-p
+                                       test test-supp-p))
         (*print-pretty* t)
         (*print-readably* nil)
         (*nst-verbosity* 2)
