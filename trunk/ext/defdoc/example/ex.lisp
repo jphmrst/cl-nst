@@ -16,13 +16,13 @@
  Donec est odio, tincidunt sit amet interdum ut, placerat a tellus. Duis feugiat rutrum nibh, non vulputate diam adipiscing quis. In eu hendrerit leo. Vestibulum risus metus, iaculis in faucibus ut, condimentum quis nisi. Integer in imperdiet turpis. Suspendisse bibendum enim et nunc consequat et laoreet mi auctor. Aenean tristique, quam ac porttitor egestas, eros mauris ultricies mi, porta elementum dui tortor volutpat nulla. Aliquam vestibulum varius dapibus. Praesent nec purus nisi. Donec ipsum massa, malesuada in porta sit amet, suscipit id sapien. Duis condimentum odio cursus ligula tristique pellentesque. Proin ut diam ac urna feugiat scelerisque. Aenean faucibus neque eget metus rhoncus sodales. Aliquam erat volutpat. Sed tellus dui, sollicitudin in scelerisque at, sagittis eu nulla. Morbi scelerisque tempor arcu, in sodales mi facilisis quis. Mauris at arcu quam, ut accumsan nulla."))
 
 (defun g (x y) (+ x y))
-(def-documentation (:fun g)
+(def-documentation (:fn g)
     :intro "Lorem ipsum dolor sit amet."
     :params ((x (:latex "Vestibulum ut diam vel nisi $\nu\epsilon\sigma\tau\iota\beta\upsilon\lambda\upsilon\mu$ hendrerit. Duis auctor."))
              (y (:plain "Morbi pharetra elementum consectetur. Duis ultrices odio.")))
     :full (:latex "Sed at sem mi. In ut nibh ante, non euismod odio. Suspendisse quis ipsum augue, ac porttitor odio. In pharetra molestie consectetur. Donec ut felis enim. Curabitur nisi lectus, suscipit non vulputate in, adipiscing non nulla. Aliquam nulla eros, aliquet id tempus sit amet, sagittis ac nulla. Donec eros est, suscipit sed placerat vitae, commodo tristique purus. Nulla ac neque sed lacus aliquet varius. Donec elementum mauris quis ipsum fermentum eu hendrerit tortor faucibus. Nulla ac lectus sit amet enim commodo eleifend at et eros. Donec quis urna ipsum, at consequat nisi. Nunc in est non augue bibendum volutpat nec ac leo. Sed venenatis eleifend dictum."))
 
 (defvar *hh* 8)
-(def-documentation *hh*
+(def-documentation (:var *hh*)
   :short "Aliquam erat volutpat. Donec vel."
   :full "Duis sit amet bibendum nisi. Etiam elementum risus eu ante porta dapibus. Curabitur eu urna eget arcu malesuada iaculis nec.")

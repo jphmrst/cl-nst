@@ -14,29 +14,17 @@
     ((boundp name) :var)
     (t (error "Cannot determine name use for documentation of ~s" name))))
 
-(defun defdoc-spec (out-type spec)
-  (destructuring-bind (in-type &rest spec-args) spec
-    (defdoc-spec-to out-type in-type spec-args)))
+(defmacro ensure-margins ((&key) &body body)
+  `(let ((-text-width- (if (boundp '-text-width-)
+                           (symbol-value '-text-width-)
+                           78)))
+     (declare (special -text-width-))
+     ,@body))
 
-(def-spec-format :plain (string)
-  (:latex (let ((was-space t))
-            (loop for char across string
-                append (let ((next-space nil))
-                         (prog1
-                             (case char
-                               (#\\ (coerce "$\\backslash$" 'list))
-                               ((#\$ #\% #\# #\& #\_) (list #\\ char))
-                               ((#\~ #\^) (list #\\ char #\{ #\}))
-                               ((#\")
-                                (cond
-                                 (was-space (list #\` #\`))
-                                 (t (list #\' #\'))))
-                               ((#\space #\tab)
-                                (setf next-space t) (list #\space))
-                               (otherwise (list char)))
-                           (setf was-space next-space)))
-                into characters
-                finally (return `(:latex ,(coerce characters 'string)))))))
+(def-spec-format :plain (string))
+(def-spec-format :latex (string))
+(def-spec-format :paragraphs (&rest pars))
+(def-spec-format :seq (&rest pars))
+(def-spec-format :itemize (options &rest items))
+(def-spec-format :enumerate (options &rest items))
 
-(def-spec-format :latex (string)
-  (:plain `(:plain ,string)))
