@@ -24,6 +24,7 @@
 
 (defsystem :defdoc-ex
     :description "Example using structured document specifiers"
+    :depends-on (:defdoc)
     :components (;; The DEFDOC package, plus internal packages
                  ;; and documentation generation.
                  (:file "package")

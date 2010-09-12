@@ -50,12 +50,18 @@
                  (:file "globals"  :depends-on ("package"))
 
                  ;; Defining a comment format.
-                 (:file "format"  :depends-on ("package" "globals"))
+                 (:file "def-spec"  :depends-on ("package" "globals"))
 
                  ;; Standard comment formats.
-                 (:file "specs"  :depends-on ("format"))
+                 (:file "specs"  :depends-on ("def-spec"))
 
                  ;; Error declarations.
-                 (:file "macro"  :depends-on ("package" "format"))
+                 (:file "macro"  :depends-on ("package" "def-spec"))
+
+                 ;; Standard comment formats.
+                 (:file "plaintext"  :depends-on ("specs"))
+
+                 ;; Standard comment formats.
+                 (:file "latex"  :depends-on ("specs"))
 
                  ))
