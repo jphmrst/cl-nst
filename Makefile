@@ -1,6 +1,6 @@
 
 docs:
-	(cd doc/manual; pdflatex manual; makeindex manual; pdflatex manual)
+	(cd doc/manual; ./make-generated.lisp; pdflatex manual; makeindex manual; pdflatex manual)
 	(cd doc/quickref; pdflatex quickref; pdflatex quickref)
 	@echo
 	@echo NST documentation generated
