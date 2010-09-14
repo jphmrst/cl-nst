@@ -14,18 +14,19 @@
     (apply #'concatenate 'string
       (cond
         ((or intro-supp-p full-supp-p)
-           (nconc (when intro-supp-p
+         (funcall #'append
+                  (when intro-supp-p
                     (list (spec-to-latex intro)))
                   (when params-supp-p
-                    (nconc '("\\begin{description}")
-                           (loop for (name subspec) in params
-                               append (list "\\item["
-                                            (format nil "~a" name)
-                                            "]"
-                                            (spec-to-latex subspec)))
-                           '("\\end{description}")))
+                    `("\\begin{description}"
+                      ,@(loop for (name subspec) in params
+                            append (list "\\item["
+                                         (format nil "~a" name)
+                                         "]"
+                                         (spec-to-latex subspec)))
+                      "\\end{description}"))
                   (when full-supp-p
-                    (list (spec-to-latex full)))))
+                     (list (spec-to-latex full)))))
 
         (short-supp-p
          (list* (spec-to-text short)
@@ -76,11 +77,16 @@
                append (let ((par (spec-to-latex p-spec)))
                         `(,par ,@(when other-specs (list " ")))))))
 
+
+(defmethod output-latex ((in (eql :code)) spec-args)
+  (destructuring-bind (string) spec-args
+    (concatenate 'string "\\begin{verbatim}" string "\\end{verbatim}")))
+
 (defmethod output-latex ((in (eql :paragraphs)) spec-args)
   (apply #'concatenate 'string
          (loop for (p-spec . other-specs) on spec-args
                append (let ((par (spec-to-latex p-spec)))
-                        `(,par ,@(when other-specs (list "\\par")))))))
+                        `(,par ,@(when other-specs (list "\\par ")))))))
 
 (defmethod output-latex ((in (eql :enumerate)) args)
   (let ((options (pop args)))
@@ -102,9 +108,14 @@
 (defun get-spec-latex (name usage)
   (spec-to-latex (gethash name (gethash usage +defdocs+))))
 
-(defun write-spec-latex (name usage &key (directory #p"./") (file "out.tex"))
-  (with-open-file (out (merge-pathnames file directory)
-                       :direction :output :if-exists :supersede
-                       :if-does-not-exist :create)
-    (format out "~a~%"
-      (spec-to-latex (gethash name (gethash usage +defdocs+))))))
+(defvar *defdoc-latex-default-directory* #p"./")
+(defun write-spec-latex (name usage &key
+                              (directory *defdoc-latex-default-directory*)
+                              (file (concatenate 'string
+                                      (symbol-name name) "_"
+                                      (symbol-name usage) ".tex")))
+  (let ((file-spec (merge-pathnames file directory)))
+    (with-open-file (out file-spec
+                     :direction :output :if-exists :supersede
+                     :if-does-not-exist :create)
+      (format out "~a~%" (get-spec-latex name usage)))))
