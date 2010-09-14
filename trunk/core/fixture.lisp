@@ -36,47 +36,6 @@
                               (export-fixture-name nil
                                                    export-fixture-name-supp-p))
                         &body bindings)
-  "(def-fixtures (FIXTURE-NAME :uses USES :assumes ASSUMES
-                    :outer OUTER :inner INNER
-                    :documentation DOCUMENTATION
-                    :export-names FLAG
-                    :export-bound-names FLAG
-                    :export-fixture-name FLAG)
-  (NAME FORM)
-  (NAME FORM)
-  ...
-  (NAME FORM))
-
-Associate names to values.  One or more fixtures may be applied to each test
-group, test or another fixture.  None of the keyword options are manditory.
-
-uses - fixtures whose names are assumed to be bound --- although not necessarily
-by those same fixtures --- whenever this fixture is used.
-
-assumes - names assumed to be bound at the point of any use of this fixture.
-
-inner - list of declarations to be made inside the let-binding of names of any
-use of this fixture.  Do not include the \"declare\" keyword here; NST adds
-these declarations to others, including a special declaration of all bound
-names.
-
-documentation - a documentation string for the fixture set.
-
-outer - list of declarations to be made outside the let-binding of names of any
-use of this fixture.
-
-export-fixture-name - When non-nil, the fixture name will be added to the
-list of symbols exported by the current package.
-
-export-bound-names - When non-nil, the names bound by this fixture will be
-added to the list of symbols exported by the current package.
-
-export-names - When non-nil, sets the default value to t for the two options
-above.
-
-cache - When non-nil, the fixture values are cached at their first use, and
-re-applied at subsequent fixture application rather than being recalculated.
-"
   (declare (ignorable assumes outer inner))
 
   ;; Some arguments can be either a singleton or a list; correct the
@@ -287,6 +246,28 @@ re-applied at subsequent fixture application rather than being recalculated.
                                          (find-package :keyword))))))))
 
                  ',name))))))
+(def-documentation (:macro def-fixtures)
+    :intro (:paragraphs
+            (:code "(def-fixtures (FIXTURE-NAME :uses USES :assumes ASSUMES
+                    :outer OUTER :inner INNER
+                    :documentation DOCUMENTATION
+                    :export-names FLAG
+                    :export-bound-names FLAG
+                    :export-fixture-name FLAG)
+  (NAME FORM)
+  (NAME FORM)
+  ...
+  (NAME FORM))")
+            (:plain "Associate names to values.  One or more fixtures may be applied to each test group, test or another fixture.  None of the keyword options are manditory."))
+    :params ((uses (:plain "Fixtures whose names are assumed to be bound --- although not necessarily by those same fixtures --- whenever this fixture is used."))
+             (assumes (:plain "Names assumed to be bound at the point of any use of this fixture."))
+             (inner (:plain "List of declarations to be made inside the let-binding of names of any use of this fixture.  Do not include the \"declare\" keyword here; NST adds these declarations to others, including a special declaration of all bound names."))
+             (documentation (:plain "A documentation string for the fixture set."))
+             (outer (:plain "List of declarations to be made outside the let-binding of names of any use of this fixture."))
+             (export-fixture-name (:plain "When non-nil, the fixture name will be added to the list of symbols exported by the current package."))
+             (export-bound-names (:plain "When non-nil, the names bound by this fixture will be added to the list of symbols exported by the current package."))
+             (export-names (:plain "When non-nil, sets the default value to t for the two options above."))
+             (cache (:plain "When non-nil, the fixture values are cached at their first use, and re-applied at subsequent fixture application rather than being recalculated."))))
 
 (defgeneric get-fixture-bindings (fixture)
   (:documentation "Internal function: pull the symbolic fixture bindings")

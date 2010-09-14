@@ -16,6 +16,10 @@
 \makeindex
 \parskip 0.6em
 \parindent 0pt
+\def\indexLisp#1{\index{#1@\texttt{#1}}}
+\def\indexLispGlobal#1{\index{#1@\texttt{*#1*}}}
+\def\indexLispConst#1{\index{#1@\texttt{+#1+}}}
+\def\indexKeyword#1{\index{#1@\texttt{:#1}}}
 
 \begin{document}
 \maketitle
@@ -51,6 +55,7 @@ include Mike Pelican, Steve Harp and Michael Atighetchi.
 \input{checks}
 \input{criteria}
 \input{quickcheck}
+\input{methods}
 \input{runtime}
 \input{asdf}
 \appendix
