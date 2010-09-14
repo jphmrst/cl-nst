@@ -1,13 +1,13 @@
 
 \section{Verifying invariants against sampled data}
 \label{quickcheck}
-The \texttt{:sample} criterion provides random generation of data for
-validating program properties.  Our approach is based on Claessen and
-Hughes's Quickcheck\footnote{Koen Claessen and John Hughes,
-  ``QuickCheck: a lightweight tool for random testing of Haskell
-  programs,'' from \emph{Proceedings of the International Conference
-    on Functional Programming}, 2000.  QuickCheck papers, code and
-  other resources are available at
+The \texttt{:sample}\indexKeyword{sample} criterion provides random
+generation of data for validating program properties.  Our approach is
+based on Claessen and Hughes's Quickcheck\footnote{Koen Claessen and
+  John Hughes, ``QuickCheck: a lightweight tool for random testing of
+  Haskell programs,'' from \emph{Proceedings of the International
+    Conference on Functional Programming}, 2000.  QuickCheck papers,
+  code and other resources are available at
   \textsl{www.cs.chalmers.se/\~{}rjmh/QuickCheck}~.}.
 
 This style of testing is somewhat more complicated than specific tests
@@ -18,20 +18,20 @@ be generated, and specifying the test itself.
 \subsection{Generating sample data}
 \label{sec:quickcheck-data}
 Data generation is centered around the generic function
-\texttt{arbitrary}.  This function takes a single argument, which
-determines the type of the value to be generated.  For simple types,
-the name of the type (or the class object, such as returned by
-\texttt{find-class}) by itself is a complete specification.  For more
-complicated types, \texttt{arbitrary} can also take a list argument,
-where the first element gives the type and the remaining elements are
-keyword argument providing additional requirements for the generated
-value.
+\texttt{arbitrary}.\indexLisp{arbitrary} This function takes a single
+argument, which determines the type of the value to be generated.  For
+simple types, the name of the type (or the class object, such as
+returned by \texttt{find-class}) by itself is a complete
+specification.  For more complicated types, \texttt{arbitrary} can
+also take a list argument, where the first element gives the type and
+the remaining elements are keyword argument providing additional
+requirements for the generated value.
 
 NST provides method of \texttt{arbitrary} for many standard Lisp
 types, listed in Table~\ref{table:built-in-arbitrary-types}.  Types in
 the first column --- the standard numeric types plus the common
 supertype \texttt{t} --- are not associated with additional keyword
-arguments.
+arguments.\indexLisp{t}\indexLisp{complex}\indexLisp{integer}\indexLisp{ratio}\indexLisp{single-float}
 \begin{verbatim}
   (nst:arbitrary t)
   (nst:arbitrary 'complex)
@@ -70,12 +70,12 @@ are as follows:
 \footnotetext{Not available on Allegro Lisp.}
 
 \begin{itemize}
-\item Types \texttt{character} and \texttt{string}:
+\item Types \texttt{character} and \texttt{string}:\indexLisp{character}\indexLisp{string}
   \begin{itemize}
   \item Argument \texttt{noncontrol}.  Excludes the control characters
-    associated with ASCII code 0 through 31.
+    associated with ASCII code 0 through 31.\indexLisp{noncontrol}
   \item Argument \texttt{range}.  Allows the range of characters to be
-    restricted to a particular subset:
+    restricted to a particular subset:\indexLisp{range}\indexKeyword{standard}
     \begin{center}
       \begin{tabular}{>{\ttfamily:}c|l}
         \multicolumn{1}{c|}{Value} & \multicolumn{1}{c}{Meaning}
@@ -93,7 +93,7 @@ are as follows:
 \end{verbatim}
   \end{itemize}
   
-\item Type \texttt{symbol}:
+\item Type \texttt{symbol}:\indexLisp{symbol}\indexKeyword{existing}\indexKeyword{exported}\indexKeyword{package}\indexKeyword{nonnull}\indexKeyword{gensym}
   \begin{itemize}
   \item Argument \texttt{existing}.  If non-nil, requires that the
     result be a previously-interned symbol.
@@ -112,7 +112,7 @@ are as follows:
     uninterned symbol.
   \end{itemize}
   
-\item Type \texttt{cons}:
+\item Type \texttt{cons}:\indexLisp{cons}\indexKeyword{car}\indexKeyword{cdr}
   \begin{itemize}
   \item Arguments \texttt{car} and \texttt{cdr} should be additional
     type specifications, used direct the generation of respectively
@@ -120,7 +120,7 @@ are as follows:
     \texttt{t}~.
   \end{itemize}
   
-\item Types \texttt{list} and \texttt{vector}:
+\item Types \texttt{list} and \texttt{vector}:\indexLisp{list}\indexLisp{vector}\indexKeyword{length}\indexKeyword{elem}
   \begin{itemize}
   \item Argument \texttt{length} specifies the length of the structure.
     If omitted, will be randomly generated.
@@ -128,7 +128,7 @@ are as follows:
     container's elements.  For both, the default element type is
     \texttt{t}~.
   \end{itemize}
-  
+
 \item Type \texttt{array}:
   \begin{itemize}
   \item Argument \texttt{elem}.  As for \texttt{list} and
@@ -142,37 +142,38 @@ are as follows:
     \texttt{:dimens} are omitted, then both are randomly generated.
   \end{itemize}
   
-\item Type \texttt{hash-table}:
+\item Type \texttt{hash-table}:\indexLisp{hash-table}\indexKeyword{size}\indexKeyword{test}\indexKeyword{key}\indexKeyword{val}
   \begin{itemize}
   \item Argument \texttt{size}.  Specifies the number of entries in
     the table.  If omitted, will be randomly generated.
   \item Argument \texttt{test}.  Specifies the hash table's test
     function.  If omitted, will be randomly selected from \texttt{eq},
-    \texttt{eql}, \texttt{equal} and \texttt{equalp}.
+    \texttt{eql}, \texttt{equal} and
+    \texttt{equalp}.\indexLisp{eq}\indexLisp{eql}\indexLisp{equal}\indexLisp{equalp}
   \item Arguments \texttt{key} and \texttt{val} direct the generation
     of the table's keys and values, respectively.  For the keys, the
     default element type is \texttt{t} when the test function is
     \texttt{eq} or \texttt{eql}, and \texttt{scalar} otherwise.  For
-    the values, the default element type is \texttt{t}~.
+    the values, the default element type is \texttt{t}~.\indexLisp{scalar}
   \end{itemize}
 \end{itemize}
 
 Beyond those standard Lisp types, NST provides the type
-\texttt{scalar} as a supertype of the numeric types,
+\texttt{scalar} as a supertype of the numeric types plus
 \texttt{character}, \texttt{string} and \texttt{symbol}.  Users may
 extend this definition to include additional type specifications, as
 we discuss below.  Types are not associated with \texttt{scalar} are
 referred to as \emph{compound} (although there is no corresponding
 type specification).  To avoid generating structures too large to hold
 in memory, NST provides the global variable
-\texttt{*max-compound-structure-depth*}\label{max-compound-structure-depth}
+\texttt{*max-compound-structure-depth*}\label{max-compound-structure-depth}\indexLispGlobal{max-compound-structure-depth}
 which sets the maximum nesting depth of compound data structures:
 beyond that depth, \texttt{scalar} rather than \texttt{t} is the
 default element generator.  This restriction does not apply to
 explicitly specified element types, only to the use of defaults.
 
 New type specifications are defined with the
-\texttt{def-arbitrary-instance-type}
+\texttt{def-arbitrary-instance-type}\indexLisp{def-arbitrary-instance-type}
 macro.
 \label{def-arbitrary-instance-type}
 \begin{verbatim}
@@ -215,7 +216,7 @@ arguments allow specifications for the left and right components:
 \subsection{Invariants as tests}
 \label{sec:quickcheck-tests}
 Invariants to be tested, and the domains over which they range, are
-specified in the \texttt{:sample} criterion:
+specified in the \texttt{:sample} criterion:\indexKeyword{sample}
 \begin{verbatim}
   (:sample [ :value LAMBDA-LIST ]
            [ :domains ((NAME SPEC) ... (NAME SPEC)) ]
@@ -230,25 +231,28 @@ evaluated, and which is expected always to return a non-null value.
 This is the sole required argument, although in any particular use it
 is unlikely to be the only argument given.  The other arguments are:
 \begin{itemize}
-\item The \texttt{domains} argument declares the variables in the
-  \texttt{verify} expression which are to be given multiple randomized
-  values.  The default value is \texttt{nil}, denoting an empty list.
-\item The \texttt{value} argument is a lambda list to which the values
-  given by the argument form should be applied.  The default value is
-  \texttt{nil}, denoting no such arguments.
-\item The \texttt{where} argument is a condition which determines the
-  validity of the input argument.  For example, the condition would
-  assert that a number is positive in an application where a negative
-  value would be known to cause a failure.  The default value is
-  \texttt{t}, allowing any values.
-\item The \texttt{sample-size} argument gives the base specification
-  of the number of value sets which will be generated.  Two further
-  arguments have some bearing on the number of generation attempts
-  when the \texttt{where} argument is non-\texttt{t}.  The
-  \texttt{qualifying-sample} argument gives the minimum acceptable
-  size of actual tested values, not counting sets rejected via the
-  \texttt{where} expression.  The \texttt{max-tries} argument gives
-  the maximum number of value sets to be generated.
+\item The \texttt{domains}\indexKeyword{domains} argument declares the
+  variables in the \texttt{verify} expression which are to be given
+  multiple randomized values.  The default value is \texttt{nil},
+  denoting an empty list.
+\item The \texttt{value}\indexKeyword{value} argument is a lambda list
+  to which the values given by the argument form should be applied.
+  The default value is \texttt{nil}, denoting no such arguments.
+\item The \texttt{where}\indexKeyword{where} argument is a condition
+  which determines the validity of the input argument.  For example,
+  the condition would assert that a number is positive in an
+  application where a negative value would be known to cause a
+  failure.  The default value is \texttt{t}, allowing any values.
+\item The \texttt{sample-size}\indexKeyword{sample-size} argument
+  gives the base specification of the number of value sets which will
+  be generated.  Two further arguments have some bearing on the number
+  of generation attempts when the \texttt{where} argument is
+  non-\texttt{t}.  The
+  \texttt{qualifying-sample}\indexKeyword{qualifying-sample} argument
+  gives the minimum acceptable size of actual tested values, not
+  counting sets rejected via the \texttt{where} expression.  The
+  \texttt{max-tries}\indexKeyword{max-tries} argument gives the
+  maximum number of value sets to be generated.
 \end{itemize}
 
 Examples:

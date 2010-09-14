@@ -101,3 +101,10 @@
 
 (defun get-spec-latex (name usage)
   (spec-to-latex (gethash name (gethash usage +defdocs+))))
+
+(defun write-spec-latex (name usage &key (directory #p"./") (file "out.tex"))
+  (with-open-file (out (merge-pathnames file directory)
+                       :direction :output :if-exists :supersede
+                       :if-does-not-exist :create)
+    (format out "~a~%"
+      (spec-to-latex (gethash name (gethash usage +defdocs+))))))

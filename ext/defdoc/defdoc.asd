@@ -37,7 +37,7 @@
                                         ; number) should be
                                         ; incremented immediately
                                         ; after a version is shipped.
-    :version "0.0.0"
+    :version "0.1.1"
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :defdoc-test)))
@@ -46,17 +46,17 @@
                  ;; and documentation generation.
                  (:file "package")
 
-                 ;; Defining a comment format.
-                 (:file "globals"  :depends-on ("package"))
-
-                 ;; Defining a comment format.
-                 (:file "def-spec"  :depends-on ("package" "globals"))
+                 ;; Standard comment formats.
+                 (:file "components"  :depends-on ("package"))
 
                  ;; Standard comment formats.
-                 (:file "specs"  :depends-on ("def-spec"))
+                 (:file "type"  :depends-on ("components"))
+
+                 ;; Standard comment formats.
+                 (:file "specs"  :depends-on ("components"))
 
                  ;; Error declarations.
-                 (:file "macro"  :depends-on ("package" "def-spec"))
+                 (:file "macro"  :depends-on ("components"))
 
                  ;; Standard comment formats.
                  (:file "plaintext"  :depends-on ("specs"))

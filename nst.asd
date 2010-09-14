@@ -45,7 +45,7 @@
     :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :nst-test)))
     :depends-on ( :closer-mop ;; (:version :closer-mop "0.55")
-                 )
+                  :defdoc )
 
     :components ((:module "core" :components
                           (;; The NST package, plus internal packages

@@ -4,7 +4,8 @@
 (def-documentation (:fn f)
     :intro "Theoretical implementation of the Ackermann function"
     :params ((d (:latex "As for the $\Gamma$ function argument.")))
-    :full "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas quis massa tellus, sodales pulvinar dolor. Cras eu placerat orci. Maecenas eu arcu molestie purus tincidunt semper ut ut lectus. Donec.")
+    :full "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas quis massa tellus, sodales pulvinar dolor. Cras eu placerat orci. Maecenas eu arcu molestie purus tincidunt semper ut ut lectus. Donec."
+    :callspec (diamond))
 
 (defmethod f ((d symbol))
   "Bleh bleh")
@@ -26,3 +27,15 @@
 (def-documentation (:var *hh*)
   :short "Aliquam erat volutpat. Donec vel."
   :full "Duis sit amet bibendum nisi. Etiam elementum risus eu ante porta dapibus. Curabitur eu urna eget arcu malesuada iaculis nec.")
+
+(defmacro ii (x (y z &key ball peen) &body body)
+  `(list ',x ',y ',z ',ball ',peen ',body))
+(def-documentation (:macro ii)
+  :short "Aliquam erat volutpat. Donec vel."
+  :full "Duis sit amet bibendum nisi. Etiam elementum risus eu ante porta."
+  :callspec (name (type full-name
+                    &keys
+                    (:opt-key ball DIAMETER)
+                    (:opt-key peen hammer))
+                  &body
+                  (:seq FORM)))

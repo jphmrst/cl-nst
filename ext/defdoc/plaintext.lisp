@@ -102,7 +102,7 @@
   (output-lines :plain spec-args width))
 
 (defmethod output-lines ((in (eql :paragraphs)) spec-args width)
-  (destructuring-bind (paragraph-specs) spec-args
+  (destructuring-bind (&rest paragraph-specs) spec-args
     (loop for (spec . other-specs) on paragraph-specs
         append (nconc (spec-to-lines spec width)
                       (when other-specs (list ""))))))
@@ -111,6 +111,22 @@
   (destructuring-bind (paragraph-specs) spec-args
     (loop for spec in paragraph-specs
         append (spec-to-lines spec width))))
+
+(defmethod output-lines ((in (eql :code)) args width)
+  (declare (ignore width))
+  (destructuring-bind (string) args
+    (let ((scan 0) (max (length string)))
+      (loop for point = (position #\Newline string :start scan)
+          while point
+          collect (prog1 (subseq string scan point)
+                    (setf scan (+ 1 point)))
+          into lines
+          finally
+            (return-from output-lines
+              (cond
+                ((< scan max)
+                 (nconc lines (list (subseq string scan))))
+                (t lines)))))))
 
 (defmethod output-lines ((in (eql :itemize)) spec-args width)
   (destructuring-bind (options &rest items) spec-args
