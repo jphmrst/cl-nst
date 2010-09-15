@@ -78,18 +78,6 @@ first element is that symbol and whose remaining elements are options."
 ;;; -----------------------------------------------------------------
 
 (defmacro def-test (name-or-name-and-args criterion &rest forms)
-  "Define a single unit test.
-
-\(def-test NAME-OR-NAME-AND-OPTIONS
-     CRITERION
-   FORM ... FORM)
-
-NAME-OR-NAME-AND-OPTIONS ::= name | NAME-AND-OPTIONS
-
-NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
-                            [ :setup FORM ] [ :cleanup FORM ]
-                            [ :startup FORM ]  [ :finish FORM ]
-                            [ :documentation STRING ] )"
   (declare (special *group-object-variable*))
 
   (handler-bind (#+sbcl (style-warning
@@ -265,6 +253,19 @@ NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
 ;;;                ,gproto tproto)
 ;;;                 (format t " - List is now ~s~%" (test-list ,gproto))
                  ))))))))
+(def-documentation (:macro def-test)
+    :intro (:plain "Define a single unit test.")
+    :full (:paragraphs
+           (:code "\(def-test NAME-OR-NAME-AND-OPTIONS
+     CRITERION
+   FORM ... FORM)
+
+NAME-OR-NAME-AND-OPTIONS ::= name | NAME-AND-OPTIONS
+
+NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
+                            [ :setup FORM ] [ :cleanup FORM ]
+                            [ :startup FORM ]  [ :finish FORM ]
+                            [ :documentation STRING ] )")))
 
 (defpackage nst-test-class-package
     (:documentation "Internal package for NST tests' class names."))

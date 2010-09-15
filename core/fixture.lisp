@@ -248,26 +248,71 @@
                  ',name))))))
 (def-documentation (:macro def-fixtures)
     :intro (:paragraphs
-            (:code "(def-fixtures (FIXTURE-NAME :uses USES :assumes ASSUMES
-                    :outer OUTER :inner INNER
-                    :documentation DOCUMENTATION
-                    :export-names FLAG
-                    :export-bound-names FLAG
-                    :export-fixture-name FLAG)
-  (NAME FORM)
-  (NAME FORM)
-  ...
-  (NAME FORM))")
+            (:latex "Fixtures\\index{fixtures} are data structures and values which may be
+referred to by name during testing.  NST provides the ability to use
+fixtures across multiple tests and test groups, and to inject fixtures
+into the runtime namespace for debugging.
+A set of fixtures is defined using the \\texttt{def-fixtures}
+macro:\\index{def-fixtures@\\texttt{def-fixtures}}")
+            (:code "  (def-fixtures FIXTURE-NAME
+          ([ :uses USES ]
+           [ :assumes ASSUMES ]
+           [ :outer OUTER ]
+           [ :inner INNER ]
+           [ :setup FORM ]
+           [ :cleanup FORM ]
+           [ :startup FORM ]
+           [ :finish FORM ]
+           [ :documentation DOCUMENTATION ]
+           [ :cache FLAG ]
+           [ :export-names FLAG ]
+           [ :export-fixture-name FLAG ]
+           [ :export-bound-names FLAG ])
+    ([ ([ :cache FLAG ]) ] NAME FORM)
+    ([ ([ :cache FLAG ]) ] NAME FORM)
+    ...
+    ([ ([ :cache FLAG ]) ] NAME FORM))")
             (:plain "Associate names to values.  One or more fixtures may be applied to each test group, test or another fixture.  None of the keyword options are manditory."))
-    :params ((uses (:plain "Fixtures whose names are assumed to be bound --- although not necessarily by those same fixtures --- whenever this fixture is used."))
-             (assumes (:plain "Names assumed to be bound at the point of any use of this fixture."))
-             (inner (:plain "List of declarations to be made inside the let-binding of names of any use of this fixture.  Do not include the \"declare\" keyword here; NST adds these declarations to others, including a special declaration of all bound names."))
-             (documentation (:plain "A documentation string for the fixture set."))
-             (outer (:plain "List of declarations to be made outside the let-binding of names of any use of this fixture."))
+    :params ((FIXTURE-NAME (:plain "The name to be associated with this set of
+fixtures."))
+             (USES (:plain "List of the names of other fixture sets which this declaration assumes to be available.  This declaration is optional, but will supress some warnings."))
+             (ASSUMES (:plain "List of names assumed to be bound at the point of any use of this fixture."))
+             (INNER (:plain "List of declarations to be made inside the let-binding of names of any use of this fixture.  Do not include the \"declare\" keyword here; NST adds these declarations to others, including a special declaration of all bound names."))
+             (OUTER (:plain "List of declarations to be made outside the let-binding of names of any use of this fixture."))
+             (DOCUMENTATION (:plain "A documentation string for the fixture set."))
              (export-fixture-name (:plain "When non-nil, the fixture name will be added to the list of symbols exported by the current package."))
              (export-bound-names (:plain "When non-nil, the names bound by this fixture will be added to the list of symbols exported by the current package."))
              (export-names (:plain "When non-nil, sets the default value to t for the two options above."))
-             (cache (:plain "When non-nil, the fixture values are cached at their first use, and re-applied at subsequent fixture application rather than being recalculated."))))
+             (cache (:plain "If specified with the group options, when non-nil, the fixture values are cached at their first use, and re-applied at subsequent fixture application rather than being recalculated.")))
+    :full (:paragraphs
+           (:latex "When a fixture is attached to a test or test group, each \\texttt{NAME} defined in that fixture becomes available in the body of that test or group as if \\texttt{let*}-bound to the corresponding \\texttt{FORM}.  A fixture in one set may refer back to other fixtures in the same set (again \\emph{\\`a la} \\texttt{let*}) but forward references are not allowed.")
+           (:latex "The four arguments \\texttt{:startup}\\index{startup@\\texttt{:startup}}, \\texttt{:finish}\\index{finish@\\texttt{:finish}}, \\texttt{:setup}\\index{setup@\\texttt{:setup}} and \\texttt{:cleanup}\\index{cleanup@\\texttt{:cleanup}} specify forms which are run everytime the fixture is applied to a group or test.  The \\texttt{:startup} (respectively \\texttt{:finish}) form is run before fixtures are bound (after their bindings are released).  These forms are useful, for example, to initialize a database connection from which the fixture values are drawn.  The \\texttt{:setup} form are run after inclusion of names from fixture sets, but before any tests from the group.  The \\texttt{:cleanup} forms are normally run after the setup completes.  Normally, the \\texttt{:cleanup} form will not be run if the \\texttt{:setup} form raises an error, and the \\texttt{:startup} form will not be run if the \\texttt{:finish} form raises an error; although the user is able to select, perhaps unwisely, a restart which disregards the error.")
+           (:latex "The names of a fixture and the names it binds can be exported from the
+package where the fixture is defined using the
+\\texttt{export-bound-names} and \\texttt{export-fixture-name}
+arguments.  The default value of both is \\texttt{nil} unless a
+non-\\texttt{nil} value is provided for \\texttt{export-names}.")
+           (:latex "The \\texttt{cache} option, if non-nil, directs NST to evaluate a
+fixture's form one single time, and re-use the resulting value on
+subsequent applications of the fixture.  Note that if this value is
+mutated by the test cases, test behavior may become unpredictable!
+However this option can considerably improve performance when
+constant-valued fixtures are applied repeatedly.  Caching may be set
+on or off (the default is off) for the entire fixture set, and the
+setting may vary for individual fixtures.")
+           (:seq
+            (:latex "Examples of fixture definitions:")
+            (:code "  (def-fixtures f1 ()
+    (c 3)
+    (d 'asdfg))
+  (def-fixtures f2 (:uses (f1))
+    (d 4)
+    (e 'asdfg)
+    (f c))
+  (def-fixtures f3 ()
+    ((:cache t)   g (ackermann 1 2))
+    ((:cache nil) h (factorial 5)))"))
+           (:latex "To cause a side-effect among the evaluation of a fixture's name definitions, \\texttt{nil} can be provided as a fixture name.  In uses of the fixture, NST will replace \\texttt{nil} with a non-interned symbol; in documentation such as form \\texttt{:whatis}, any \\texttt{nil}s are omitted.")))
 
 (defgeneric get-fixture-bindings (fixture)
   (:documentation "Internal function: pull the symbolic fixture bindings")

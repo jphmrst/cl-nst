@@ -99,7 +99,62 @@
           finally (return-from output-lines lines))))
 
 (defmethod output-lines ((in (eql :latex)) spec-args width)
-  (output-lines :plain spec-args width))
+  (destructuring-bind (orig-string) spec-args
+    (let ((string-chars (loop for spot from (- (length orig-string) 1) downto 0
+                              collect (elt orig-string spot))))
+      (output-lines :plain `(,(reassemble-latex-strip string-chars)) width))))
+
+(defun reassemble-latex-strip (input &aux output)
+  (loop while input for this = (pop input) do
+    (cond
+      ;; It's a space.  If it follows whitespace throw it away; else
+      ;; keep it.
+      ((eql this #\Space)
+       (unless (whitespace-p (car input))  (push this output)))
+
+      ;; Other whitespace: convert to a space.
+      ((whitespace-p this)
+       (push #\Space input))
+
+      ;; It's a backslash, and so is the prior character: that's a
+      ;; line break; replace them with a single space.
+      ((and (eql this #\\) (eql (car input) #\\))
+       (pop input)
+       (push #\Space input))
+
+      ;; An isolated backslash
+      ((eql this #\\)
+       (setf output (check-macro output)))
+
+      ;; Everything else goes onto the output.
+      (t (push this output))))
+
+  ;; Coerce that list to a string.
+  (coerce (make-array (length output) :initial-contents output) 'string))
+
+(defun check-macro (output-stack)
+  (let (macro-name
+        (scanner output-stack))
+    (loop while (and scanner (alpha-char-p (car scanner))) do
+      (push (pop scanner) macro-name))
+    (setf macro-name (coerce (reverse macro-name) 'string))
+    (loop while (and scanner (whitespace-p (car scanner))) do
+      (pop scanner))
+    (cond
+      ((eql (car scanner) #\{)
+       (pop scanner)
+       (let ((buffer nil))
+         (loop while (and scanner (not (eql (car scanner) #\}))) do
+               (push (pop scanner) buffer))
+         (pop scanner)
+         (cond
+          ((or (string= macro-name "index"))
+           nil)
+          (t
+           (loop while buffer do
+                 (push (pop buffer) scanner))))
+         scanner))
+      (t output-stack))))
 
 (defmethod output-lines ((in (eql :paragraphs)) spec-args width)
   (destructuring-bind (&rest paragraph-specs) spec-args
@@ -108,7 +163,7 @@
                       (when other-specs (list ""))))))
 
 (defmethod output-lines ((in (eql :seq)) spec-args width)
-  (destructuring-bind (paragraph-specs) spec-args
+  (destructuring-bind (&rest paragraph-specs) spec-args
     (loop for spec in paragraph-specs
         append (spec-to-lines spec width))))
 
@@ -166,7 +221,11 @@
                (block find-last-space
                  (loop for cand from width downto 0
                        if (whitespace-p (elt string cand))
-                         do (return-from find-last-space cand))))
+                         do (return-from find-last-space cand))
+                 (loop for cand from (+ 1 width) upto (- len 1)
+                       if (whitespace-p (elt string cand))
+                         do (return-from find-last-space cand))
+                 len))
               (last-nonspace
                (block find-last-nonspace
                  (loop for cand from (- rightmost-space 1) downto 0
