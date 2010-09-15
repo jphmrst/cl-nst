@@ -109,7 +109,7 @@ as errors arising from within the ."
     `(progn
        #+allegro (excl:record-source-file ',name :type :nst-criterion)
        (defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)
-         (declare (optimize (debug 3)) ,@form-decls)
+         (declare (optimize (debug 3)))
          ,@(when docstring (list docstring))
          (returning-criterion-config-error
              ((format nil "Criterion arguments ~a do not match lambda-list ~a"
@@ -121,6 +121,7 @@ as errors arising from within the ."
                         "Values under test ~a do not match lambda-list ~a"
                       ,vs ',values-formals))
                  (destructuring-bind ,values-formals (eval ,fp)
+                   ,@(when form-decls `((declare ,@form-decls)))
                    (returning-criterion-config-error
                        (,(format nil "Error from criterion ~s body" name))
                      ,@forms)))))))
@@ -150,13 +151,14 @@ as errors arising from within the ."
     `(progn
        #+allegro (excl:record-source-file ',name :type :nst-criterion)
        (defmethod apply-criterion ((top (eql ',name)) ,ap ,forms-formal)
-         (declare (optimize (debug 3)) ,@form-decls
+         (declare (optimize (debug 3))
                   ,@(when ignore-forms `((ignore ,forms-formal))))
          ,@(when docstring (list docstring))
          (returning-criterion-config-error
              ((format nil "Criterion arguments ~a do not match lambda-list ~a"
                 ,ap ',args-formals))
            (destructuring-bind ,args-formals ,ap
+             ,@(when form-decls `((declare ,@form-decls)))
              (returning-criterion-config-error
                  (,(format nil "Error from criterion ~s body" name))
                ,@forms))))
