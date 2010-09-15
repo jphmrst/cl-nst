@@ -257,8 +257,6 @@ instances, and the info field is of any value."
                                (elapsed-time 0)
                                (timestamp (multiple-value-list
                                               (get-decoded-time))))
-  "Functional wrapper around the constructor for check-result
-structure, permitting the use of apply."
   (%make-check-result :group-name group-name
                       :check-name check-name
                       :warnings warnings
@@ -269,6 +267,9 @@ structure, permitting the use of apply."
                       :failing failing :warning warning
                       :elapsed-time elapsed-time
                       :timestamp timestamp))
+(def-documentation (function make-check-result)
+    (:intro "Functional wrapper around the constructor for check-result
+structure, permitting the use of apply."))
 
 (defun interesting-result-p (result)
   (when (typep result 'check-result)
@@ -899,9 +900,10 @@ six-value summary of the results:
   `(make-failure-report ,@args))
 
 (defun make-success-report (&rest args &key warnings info)
-  "For use within user-defined NST criteria: note that a test was successful."
   (declare (ignore warnings info))
   (apply #'make-and-calibrate-check-result args))
+(def-documentation (function make-success-report)
+    (:intro "For use within user-defined NST criteria: note that a test was successful."))
 
 (defmacro emit-success (&rest args)
   "Deprecated; use make-success-report."

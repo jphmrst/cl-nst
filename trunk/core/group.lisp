@@ -247,8 +247,8 @@
                    (note-executable ',group-name ,*group-object-variable*)))
 
                ',group-name))))))))
-(def-documentation (:macro def-test-group)
-    :intro (:plain "Define a group of tests associated with certain fixtures, initialization and cleanup.")
-    :params ((group-name "Name of the test group being defined")
+(def-documentation (compiler-macro def-test-group)
+    (:intro "Define a group of tests associated with certain fixtures, initialization and cleanup.")
+    (:params (group-name "Name of the test group being defined")
              (given-fixtures "List of the names of fixtures and anonymous fixtures to be used with the tests in this group.")
              (forms "Zero or more test forms, given by def-check.")))
