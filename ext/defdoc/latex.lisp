@@ -106,7 +106,7 @@
                 (list "\\end{" list-tag "}"))))
 
 (defun get-spec-latex (name usage)
-  (spec-to-latex (gethash name (gethash usage +defdocs+))))
+  (spec-to-latex (get-doc-spec name usage)))
 
 (defvar *defdoc-latex-default-directory* #p"./")
 (defun write-spec-latex (name usage &key

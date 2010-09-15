@@ -246,17 +246,10 @@ first element is that symbol and whose remaining elements are options."
 
                  ;; Store the new artifact against the uses of its
                  ;; name in NST.
-                 (note-executable ',test-name tproto)
-
-;;;              (format t "~%* * * * * * For ~s/~s~% - ~s~% - ~s~%"
-;;;                ',*group-class-name* ',name
-;;;                ,gproto tproto)
-;;;                 (format t " - List is now ~s~%" (test-list ,gproto))
-                 ))))))))
-(def-documentation (:macro def-test)
-    :intro (:plain "Define a single unit test.")
-    :full (:paragraphs
-           (:code "\(def-test NAME-OR-NAME-AND-OPTIONS
+                 (note-executable ',test-name tproto)))))))))
+(def-documentation (compiler-macro def-test)
+    (:intro "Define a single unit test.")
+    (:full (:code "\(def-test NAME-OR-NAME-AND-OPTIONS
      CRITERION
    FORM ... FORM)
 

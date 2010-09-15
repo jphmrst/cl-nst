@@ -46,39 +46,34 @@
 
 ;;; -----------------------------------------------------------------
 
-(defun get-doc-spec (name type)
+(defun get-doc-spec-type-hash (type)
   (let ((type-hash (gethash type +defdocs+)))
     (unless type-hash
       (error "No such documentation type ~s" type))
-  (gethash name type-hash)))
+    type-hash))
+
+(defun get-doc-spec (name type)
+  (let ((type-hash (get-doc-spec-type-hash type)))
+    (gethash name type-hash)))
 
 (define-setf-expander get-doc-spec (name type)
-  (let ((store (gensym)))
+  (let ((store (gensym))
+        (type-hash (gensym)))
     (values nil
             nil
             `(,store)
-            `(let ((type-hash (gethash ,type +defdocs+)))
-               (unless type-hash
-                 (error ,(format nil "No such documentation type ~s" type)))
-               (setf (gethash ,name type-hash) ,store))
+            `(let ((,type-hash (get-doc-spec-type-hash ,type)))
+               (setf (gethash ,name ,type-hash) ,store))
             `(get-doc-spec ,name ,type))))
 
 (defmacro def-spec-format (name-or-name-and-options formals &rest body)
   (declare (ignore name-or-name-and-options formals body))
   nil)
 
-(defun deconstruct-spec (name-or-spec)
-  (cond
-   ((symbolp name-or-spec)
-    (values name-or-spec (guess-spec-type name-or-spec) nil))
-   ((listp name-or-spec)
-    (destructuring-bind (spec-type name &rest spec-args) name-or-spec
-      (values name spec-type spec-args)))))
-
 (defun guess-spec-type (name)
   (cond
-    ((fboundp name) :fn)
-    ((boundp name) :var)
+    ((fboundp name) 'function)
+    ((boundp name) 'variable)
     (t (error "Cannot determine name use for documentation of ~s" name))))
 
 ;;; -----------------------------------------------------------------

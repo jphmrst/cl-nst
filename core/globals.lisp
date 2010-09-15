@@ -133,8 +133,9 @@ current criterion.")
 (defparameter *nst-report-driver* nil
   "Dynamic-scoped variable - one of :multiple, :package, :group or :test to determine the top-level form of a report.  Used as a control parameter for printing reports.")
 
-(defvar *nst-output-stream* t
-  "User variable determining the output stream to which NST should print its output (*standard-output* by default).")
+(defvar *nst-output-stream* t)
+(def-documentation (variable *nst-output-stream*)
+    (:intro (:latex "User variable determining the output stream to which NST should print its output (\\texttt{*standard-output*} by default).")))
 
 (defparameter *nst-group-shown* nil
   "Dynamic-scoped variable tracking whether the name of a group has been printed, so that tests need not repeat it.")

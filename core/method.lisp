@@ -40,9 +40,9 @@
       (calibrate-check-result result))
     result))
 
-(define-method-combination nst-results :operator check-result-union
-  :documentation "Method combination for unifying NST result records returned
-by different methods.")
+(define-method-combination nst-results :operator check-result-union)
+(def-documentation (method-combination nst-results)
+    (:intro "Method combination for unifying NST result records returned by different methods."))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defvar *test-methods* (make-hash-table :test 'eq)
