@@ -58,7 +58,6 @@
   "Subcriteria get a results report of type nst:check-result"
   (let* ((inst (ensure-test-instance group-name test-name))
          (result (gethash (nst::check-group-name inst) results-hash)))
-    ;; (format t " Result type ~s~%" (type-of ,result))
     (cond
       (result
        (check-criterion-on-value `(:all ,@subcriteria) result))
@@ -92,7 +91,7 @@
   `(:apply (lambda (x) (nst::check-result-info x)) ,subcriterion))
 
 (def-criterion (---form-true (bool) (result))
-  (declare (ignorable result))
+  (declare (ignore result))
   (let ((result (eval bool)))
     (if result
       (make-success-report)
