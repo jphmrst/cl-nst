@@ -248,7 +248,39 @@
 
                ',group-name))))))))
 (def-documentation (compiler-macro def-test-group)
-    (:intro "Define a group of tests associated with certain fixtures, initialization and cleanup.")
-    (:params (group-name "Name of the test group being defined")
-             (given-fixtures "List of the names of fixtures and anonymous fixtures to be used with the tests in this group.")
-             (forms "Zero or more test forms, given by def-check.")))
+    (:intro (:latex "Groups of tests\\index{group}\\index{test group|see{group}} can be associated with fixture sets, stateful initiatization, and stateful cleanup.  The syntax of a test group declaration is:\\index{def-test-group@\\texttt{def-test-group}}")
+            (:code "  (def-test-group NAME (FIXTURE FIXTURE ... FIXTURE)
+    [ (:setup FORM FORM ... FORM) ]
+    [ (:cleanup FORM FORM ... FORM) ]
+    [ (:startup FORM FORM ... FORM) ]
+    [ (:finish FORM FORM ... FORM) ]
+    [ (:each-setup FORM FORM ... FORM) ]
+    [ (:each-cleanup FORM FORM ... FORM) ]
+    [ (:documentation STRING) ]
+    TEST
+    TEST
+    ...
+    TEST)"))
+  (:params (group-name "Name of the test group being defined")
+           (given-fixtures "List of the names of fixtures and anonymous fixtures to be used with the tests in this group.")
+           (forms "Zero or more test forms, given by def-check."))
+  (:full (:latex "The \\texttt{:setup}\\index{setup@\\texttt{:setup}},
+\\texttt{:cleanup}\\index{cleanup@\\texttt{:ceanup}},
+\\texttt{:startup}\\index{startup@\\texttt{:startup}}
+and \\texttt{:finish}\\index{finish@\\texttt{:finish}}
+arguments\\footnote{These
+  latter two argument names were previously
+  \\texttt{:fixtures-setup}\\index{fixtures-setup@\\texttt{:fixtures-setup}}
+  and
+  \\texttt{:fixtures-cleanup}\\index{fixtures-cleanup@\\texttt{:fixtures-cleanup}};
+  the old names still work but are deprecated.}  forms are just as for
+fixtures, run either just within or just outside of the scope of the
+fixtures associated with the group.  Note that any forms associated by
+these keyword arguments with applied fixtures would be executed in
+between the group's \\texttt{:startup} and \\texttt{:setup} (or
+\\texttt{:cleanup} and \\texttt{:finish}) forms.")
+         (:latex "The \\texttt{:each-setup}\\index{each-cleanup@\\texttt{:each-cleanup}}
+and \\texttt{:each-cleanup}\\index{each-cleanup@\\texttt{:each-cleanup}}
+forms are run before each test, rather than once for the group.")
+         (:latex "The \\texttt{:documentation}\\index{documentation@\\texttt{:documentation}}
+form sets the docstring for the class.")))
