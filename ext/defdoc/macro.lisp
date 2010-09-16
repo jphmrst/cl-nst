@@ -38,23 +38,23 @@
                               ,var (decode-spec-args ,args))))))
         ;; Unpack the forms
         (loop for form in forms do
-              (destructuring-bind (tag . args) form
-                (case tag
-                  ((:intro) (assign-text-spec tag args intro intro-supp-p))
-                  ((:short) (assign-text-spec tag args short short-supp-p))
-                  ((:full)  (assign-text-spec tag args full  full-supp-p))
+          (destructuring-bind (tag . args) form
+            (case tag
+              ((:intro) (assign-text-spec tag args intro intro-supp-p))
+              ((:short) (assign-text-spec tag args short short-supp-p))
+              ((:full)  (assign-text-spec tag args full  full-supp-p))
 
-                  ((:params)
-                   (cond
-                    (params-supp-p (error "Duplicate param: ~s" args))
-                    (t (setf params-supp-p t params args))))
+              ((:params)
+               (cond
+                (params-supp-p (error "Duplicate param: ~s" args))
+                (t (setf params-supp-p t params args))))
 
-                  ((:callspec)
-                   (cond
-                    (callspec-supp-p (error "Duplicate callspec: ~s" args))
-                    (t (setf callspec-supp-p t callspec args))))
+              ((:callspec)
+               (cond
+                (callspec-supp-p (error "Duplicate callspec: ~s" args))
+                (t (setf callspec-supp-p t callspec args))))
 
-                  (otherwise (error "Unrecognized ~s" form)))))))
+              (otherwise (error "Unrecognized ~s" form)))))))
 
     (when params-supp-p
       (loop for name-spec in params do
@@ -70,7 +70,7 @@
                     ,@(when params-supp-p   `(:params ,params))
                     ,@(when short-supp-p    `(:short ,short))
                     ,@(when full-supp-p     `(:full ,full))
-                    ,@(when callspec-supp-p `(:callspec ,callspec)))
+                    ,@(when callspec-supp-p `(:callspecs ,callspec)))
             intro intro-supp-p
             params params-supp-p
             short short-supp-p
