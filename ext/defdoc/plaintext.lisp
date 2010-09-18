@@ -152,9 +152,6 @@
              (bracket-with items "[ " " ]")))
 
           ((listp item)
-           (format t "** Relaying back to callspec-to-lines~%")
-           (format t "   with margin ~d~%" max)
-           (format t "   for ~s~%" item)
            (callspec-to-lines item max))
 
           (t (error "Unrecognized callspec item ~w" item)))))

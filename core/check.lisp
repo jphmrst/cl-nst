@@ -89,16 +89,6 @@ as errors arising from within the ."
 
 ;; #+allegro (excl::define-simple-parser def-criterion caadr :nst-criterion)
 (defmacro def-criterion ((name args-formals values-formals) &body forms)
-  "Define a new criterion for use in NST tests.
-
-  \(def-criterion \(NAME CRITERION-LAMBDA-LIST
-                       VALUES-LAMBDA-LIST)
-    [ DOCUMENTATION ]
-    FORM
-    FORM
-    ...
-    FORM)"
-
   (let ((fp (gensym "values-form"))
         (ap (gensym "args"))
         (vs (gensym "values"))
@@ -127,6 +117,31 @@ as errors arising from within the ."
                      ,@forms)))))))
        ,@(when docstring
            `((setf (documentation ',name :nst-criterion) ,docstring))))))
+(def-documentation (compiler-macro def-criterion)
+    (:intro (:latex "The \\texttt{def-criterion} macro defines a new criterion for use in NST tests.\index{def-criterion@\texttt{def-criterion}}"))
+  (:callspec ((name criterion-lambda-list values-lambda-list)
+                   &body
+                   (:opt documentation)
+                   (:seq FORM)))
+  (:full (:latex "These criteria definitions are like generic function method
+definitions with two sets of formal parameters:")
+         (:itemize ()
+          (:latex "The forms provided as the actual parameters of the criterion  itself.")
+          (:latex "The values arising from the evaluation of the forms under test."))
+         (:latex "The body of a \\texttt{def-criterion} should return a test result report contructed with the \\texttt{make-success-report}, etc.\\ functions.")
+         (:seq
+          (:latex "Examples:")
+          (:code "(def-criterion (:true () (bool))
+  (if bool
+      (make-success-report)
+      (make-failure-report :format \"Expected non-null, got: ~s\"
+                    :args (list bool))))
+
+(def-criterion (:eql (target) (actual))
+  (if (eql (eval target) actual)
+      (make-success-report)
+      (make-failure-report :format \"Not eql to value of ~s\"
+                    :args (list target))))"))))
 
 ;; #+allegro (excl::define-simple-parser def-criterion-unevaluated
 ;;              caadr :nst-criterion)

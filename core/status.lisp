@@ -871,12 +871,15 @@ six-value summary of the results:
 ;;;
 
 (defun make-warning-report (&key format args)
-  "For use within user-defined NST criteria: emit a warning."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
   (make-success-report :warnings (list (make-check-note :context *nst-context*
                                                         :stack *nst-stack*
                                                         :format format
                                                         :args args))))
+(def-documentation (function make-warning-report)
+    (:intro (:latex "Function \\texttt{make-warning-report} is like \\texttt{make-failure-report}, but provides supplimentary information as a warning."))
+  (:callspec (&key (format format-string) (args arg-form-list)))
+  (:full (:latex "The \\texttt{emit-warning} function is an older, deprecated version of this function.")))
 
 (defmacro emit-warning (&rest args)
   "Deprecated; use make-warning-report."
@@ -885,13 +888,16 @@ six-value summary of the results:
   `(make-warning-report ,@args))
 
 (defun make-failure-report (&key format args info)
-  "For use within user-defined NST criteria: explain a failure."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
   (make-and-calibrate-check-result
    :failures (list (make-check-note :context *nst-context*
                                     :stack *nst-stack*
                                     :format format :args args))
    :info info))
+(def-documentation (function make-failure-report)
+    (:intro (:latex "The \\texttt{make-failure-report} function returns a report of test failure."))
+  (:callspec (&key (format format-string) (args arg-form-list)))
+  (:full (:latex "The \\texttt{format-string} and \\texttt{args} are as to the Common Lisp function \\texttt{format}.  The \\texttt{emit-failure} function is an older, deprecated version of this function.")))
 
 (defmacro emit-failure (&rest args)
   "Deprecated; use make-failure-report."
@@ -903,7 +909,9 @@ six-value summary of the results:
   (declare (ignore warnings info))
   (apply #'make-and-calibrate-check-result args))
 (def-documentation (function make-success-report)
-    (:intro "For use within user-defined NST criteria: note that a test was successful."))
+    (:intro (:latex "The \\texttt{make-success-report} function indicates a successful test result."))
+  (:callspec ())
+  (:full (:latex "Note that some older examples show \\texttt{(make-check-result)}, \\texttt{(emit-success)} or \\texttt{(check-result)}.  The former is an internal function and should not be used from outside the core NST files.  The latter two are deprecated.")))
 
 (defmacro emit-success (&rest args)
   "Deprecated; use make-success-report."

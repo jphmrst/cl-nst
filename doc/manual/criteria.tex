@@ -55,100 +55,22 @@ criterion into Lisp.  For both of these mechanisms, this Lisp code is
 expected to return a test report.  NST provides three functions for
 building test reports:
 \begin{itemize}
-\item\texttt{(make-success-report)}%
+\item
+  \input{gen/make-success-report_function}
   \index{make-success-report@\texttt{make-success-report}}
-  \index{success@\texttt{success}}
-  \par This function indicates a successful test result.
-  \par Note that some older examples show
-  \texttt{(make-check-result)}, \texttt{(emit-success)} or
-  \texttt{(check-result)}.  The former is an internal function and
-  should not be used from outside the core NST files.  The latter two
-  are deprecated.
-\item\texttt{(make-failure-report [ :format format-string [ :args args ] ] )}%
+\item
+  \input{gen/make-failure-report_function}
   \index{make-failure-report@\texttt{make-failure-report}}
   \index{failure@\texttt{failure}}
-  \par This function returns a report of test failure.  The
-  \texttt{format-string} and \texttt{args} are as to the Common Lisp
-  function \texttt{format}.  The \texttt{emit-failure} function is an
-  older, deprecated version of this function.
-\item\texttt{(make-warning-report [ :format format-string [ :args args ] ] )}%
+\item
+  \input{gen/make-warning-report_function}
   \index{make-warning-report@\texttt{make-warning-report}}
   \index{warning@\texttt{warning}}
-  \par Like \texttt{make-failure-report}, but provides supplimentary
-  information as a warning.  The \texttt{emit-warning} function is an
-  older, deprecated version of this function.
 \end{itemize}
 
 \subsection{Defining criteria over evaluated values}
 \label{sec:def-criterion}
-{\ttfamily\begin{tabbing}
-\textrm{Syntax: }(de\=f-criterion (name \=criterion-body-lambda-list
-\\ \>            \>actual-values-lambda-list)
-\\ \> FORM
-\\ \> FORM
-\\ \> ~$\vdots$
-\\ \> FORM)
-\end{tabbing}}%
-\index{def-criterion@\texttt{def-criterion}}
-
-Examples:
-\begin{verbatim}
-(def-criterion (:true () (bool))
-  (if bool
-      (make-success-report)
-      (make-failure-report :format "Expected non-null, got: ~s"
-                    :args (list bool))))
-
-(def-criterion (:eql (target) (actual))
-  (if (eql (eval target) actual)
-      (make-success-report)
-      (make-failure-report :format "Not eql to value of ~s"
-                    :args (list target))))
-\end{verbatim}
-These criteria definitions are like generic function method
-definitions with two sets of formal parameters:
-\begin{itemize}
-\item The forms provided as the actual parameters of the criterion
-  itself.
-\item The values arising from the evaluation of the forms under test.
-\end{itemize}
-The body of a \texttt{def-criterion} should return a test result
-report contructed by the function described in
-Section~\ref{sec:criteria-forms-report} above.
- 
-% {\ttfamily\begin{tabbing}
-% \textrm{Syntax: 
-% }(de\=f-values-criterion (na\=me \=subcriteria-lambda-list
-% \\ \> \> \> test-values-lambda-list
-% \\ \> \> \&key \= blurb-format
-% \\ \> \>        \> full-format
-% \\ \> \>        \> stack-transformer)
-% \\ \> expansion)
-% \end{tabbing}}
-% %
-% Every time the new criterion is used in a test, the \texttt{expansion}
-% will be evaluated in a context which provides values to the
-% \texttt{subcriteria-lambda-list}.  The resulting expression will be
-% used as part of the body of a method to a NST-internal generic
-% function which corresponds to the \texttt{def-test} itself.  This
-% method, in code enclosing the resulting expression, will provide
-% values to the \texttt{test-values-lambda-list}.
-% 
-% The \texttt{test-values-lambda-list} will most often contain only a
-% single symbol.  Declarations regarding the names in the
-% \texttt{test-values-lambda-list} are OK, but should be quoted.
-% 
-% Examples:
-% \begin{verbatim}
-% (def-values-criterion (:pass () (&rest chk))
-%   `(declare (ignorable chk))
-%   `(make-success-report))
-% 
-% (def-values-criterion (:eq (eq-form) (check-form))
-%   `(if (eq ,eq-form check-form)
-%      (make-success-report)
-%      (make-failure-report :format "Not eq to ~s" :args '(,eq-form))))
-% \end{verbatim}
+\input{gen/def-criterion_compiler-macro}%
 
 \subsection{Processing subcriteria on values}
 \label{sec:subcriteria-values}
