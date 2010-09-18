@@ -24,7 +24,8 @@
     (:documentation "Structured documentation definition")
     (:nicknames :ddoc)
     (:use :common-lisp)
-    (:export #:def-documentation #:write-spec-latex))
+    (:export #:def-documentation #:write-spec-latex
+             #:write-package-specs-latex))
 
 (defun defdoc::make-package-documentation ()
   "Write documentation for this package, using system package-doc."
@@ -32,3 +33,10 @@
   (funcall (symbol-function (intern (symbol-name 'package-doc)
                                     (find-package :package-doc)))
            (find-package :defdoc)))
+
+(defmacro defdoc::let-echo* (bindings &body body)
+  (let ((x (gensym)))
+    `(let* ,(loop for (name form) in bindings
+                  collect `(,name (let ((,x ,form))
+                                    (format t "~a = ~s~%" ',name ,x))))
+       ,@body)))

@@ -248,17 +248,41 @@ first element is that symbol and whose remaining elements are options."
                  ;; name in NST.
                  (note-executable ',test-name tproto)))))))))
 (def-documentation (compiler-macro def-test)
-    (:intro "Define a single unit test.")
-    (:full (:code "\(def-test NAME-OR-NAME-AND-OPTIONS
-     CRITERION
-   FORM ... FORM)
+    (:intro (:latex "Individual unit tests are encoded with the \\texttt{def-test} form:"))
+  (:callspec ((NAME &key (group GROUP-NAME)
+                    (setup FORM)
+                    (cleanup FORM)
+                    (startup FORM)
+                    (finish FORM)
+                    (fixtures ((:seq FIXTURE)))
+                    (documentation STRING) )
+              criterion &body (:seq FORM))
+             (NAME criterion &body (:seq FORM)))
+  (:full (:latex "The \\texttt{SETUP}, \\texttt{CLEANUP}, \\texttt{STARTUP},
+\\texttt{FINISH} and \\texttt{FIXTURES} are just as for fixtures and
+test groups, but apply only to the one test.  The \\texttt{CRITERION}
+is a list or symbol specifying the properties which should hold for
+the \\texttt{FORM}s.")
 
-NAME-OR-NAME-AND-OPTIONS ::= name | NAME-AND-OPTIONS
+         (:latex "When a test is not enclosed within a group body, a group name must be
+provided by the \\texttt{GROUP} option.  When a test is enclosed within
+a group body, the \\texttt{GROUP} option is not required, but if
+provided it must agree with the group name.")
 
-NAME-AND-OPTIONS ::= \( name [ :fixtures FORM ] [ :group GROUP ]
-                            [ :setup FORM ] [ :cleanup FORM ]
-                            [ :startup FORM ]  [ :finish FORM ]
-                            [ :documentation STRING ] )")))
+         (:latex "When there are no \\texttt{SETUP}, \\texttt{CLEANUP}, \\texttt{STARTUP},
+\\texttt{FINISH} or \\texttt{FIXTURES} arguments, the \\texttt{NAME} may
+be given without parentheses.  Likewise, any criterion consisting of a
+single symbol, e.g.\\ \\texttt{(:pass)}, may be abbreviated as just the
+symbol without the parentheses, e.g.\\ \\texttt{:pass}.")
+
+         (:latex "The \\texttt{:documentation} form provides a documentation string in
+the standard Lisp sense.  Since documentation strings are stored
+against names, and since the same name can be used for several tests
+(so long as they are all in different packages), documentation strings
+on tests may not be particularly useful.")
+
+         (:latex "The \\texttt{def-check} form is a deprecated synonym for
+\\texttt{def-test}.")))
 
 (defpackage nst-test-class-package
     (:documentation "Internal package for NST tests' class names."))

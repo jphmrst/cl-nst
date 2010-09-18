@@ -4,7 +4,7 @@
   "Doc doc doc"
   (multiple-value-bind (name spec-type spec-args)
       (deconstruct-spec name-or-spec)
-    (let ((actual-spec (decode-defdoc-forms spec-type spec-args body))
+    (let ((actual-spec (decode-defdoc-forms name spec-type spec-args body))
           (spec (gensym "spec")))
       `(let ((,spec ',actual-spec))
          (setf (get-doc-spec ',name ',spec-type) ,spec)
@@ -20,7 +20,7 @@
     (destructuring-bind (spec-type name &rest spec-args) name-or-spec
       (values name spec-type spec-args)))))
 
-(defun decode-defdoc-forms (spec-type spec-args forms)
+(defun decode-defdoc-forms (name spec-type spec-args forms)
   (let ((intro nil) (intro-supp-p nil)
         (params nil) (params-supp-p nil)
         (short nil) (short-supp-p nil)
@@ -65,12 +65,12 @@
     (when (and intro-supp-p (stringp intro)) (setf intro `(:plain ,intro)))
     (when (and  full-supp-p (stringp full))  (setf full  `(:plain ,full)))
 
-    (values `(:spec :spec-type ,spec-type :spec-args ,spec-args
+    (values `(:spec :self ,name :spec-type ,spec-type :spec-args ,spec-args
                     ,@(when intro-supp-p    `(:intro ,intro))
                     ,@(when params-supp-p   `(:params ,params))
                     ,@(when short-supp-p    `(:short ,short))
                     ,@(when full-supp-p     `(:full ,full))
-                    ,@(when callspec-supp-p `(:callspecs ,callspec)))
+                    ,@(when callspec-supp-p `(:callspec ,callspec)))
             intro intro-supp-p
             params params-supp-p
             short short-supp-p

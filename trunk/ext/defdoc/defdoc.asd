@@ -58,11 +58,14 @@
                  ;; Error declarations.
                  (:file "macro"  :depends-on ("components"))
 
+                 ;; Decoding the callspec forms.
+                 (:file "callspec"  :depends-on ("package"))
+
                  ;; Converting specs to plain text.
-                 (:file "plaintext"  :depends-on ("specs"))
+                 (:file "plaintext"  :depends-on ("specs" "callspec"))
 
                  ;; Converting specs to LaTeX.
-                 (:file "latex"  :depends-on ("specs"))
+                 (:file "latex"  :depends-on ("specs" "callspec"))
 
-                 ;; Documentation of this functions of this system.
-                 (:file "self"  :depends-on ("macro"))))
+                 ;; Documentation in def-doc of def-doc.
+                 (:file "auto"  :depends-on ("macro"))))

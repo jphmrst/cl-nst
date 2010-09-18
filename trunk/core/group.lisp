@@ -248,19 +248,16 @@
 
                ',group-name))))))))
 (def-documentation (compiler-macro def-test-group)
-    (:intro (:latex "Groups of tests\\index{group}\\index{test group|see{group}} can be associated with fixture sets, stateful initiatization, and stateful cleanup.  The syntax of a test group declaration is:\\index{def-test-group@\\texttt{def-test-group}}")
-            (:code "  (def-test-group NAME (FIXTURE FIXTURE ... FIXTURE)
-    [ (:setup FORM FORM ... FORM) ]
-    [ (:cleanup FORM FORM ... FORM) ]
-    [ (:startup FORM FORM ... FORM) ]
-    [ (:finish FORM FORM ... FORM) ]
-    [ (:each-setup FORM FORM ... FORM) ]
-    [ (:each-cleanup FORM FORM ... FORM) ]
-    [ (:documentation STRING) ]
-    TEST
-    TEST
-    ...
-    TEST)"))
+    (:intro (:latex "Groups of tests\\index{group}\\index{test group|see{group}} can be associated with fixture sets, stateful initiatization, and stateful cleanup.  The syntax of a test group declaration is:\\index{def-test-group@\\texttt{def-test-group}}"))
+  (:callspec (NAME ((:seq FIXTURE)) &body
+                   (:key-head :setup (:seq FORM))
+                   (:key-head :cleanup (:seq FORM))
+                   (:key-head :startup (:seq FORM))
+                   (:key-head :finish (:seq FORM))
+                   (:key-head :each-setup (:seq FORM))
+                   (:key-head :each-cleanup (:seq FORM))
+                   (:key-head :documentation STRING)
+                   (:seq TEST)))
   (:params (group-name "Name of the test group being defined")
            (given-fixtures "List of the names of fixtures and anonymous fixtures to be used with the tests in this group.")
            (forms "Zero or more test forms, given by def-check."))
