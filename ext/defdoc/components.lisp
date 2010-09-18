@@ -3,6 +3,11 @@
 
 (defvar +defdocs+ (make-hash-table :test 'eq)
   "Master global hashtable of all documentation specifiers.")
+(defun get-doctypes ()
+  (loop for type being the hash-keys of +defdocs+ collect type))
+
+;;; -----------------------------------------------------------------
+
 (defvar +doctype-lispinstallers+ (make-hash-table :test 'eq)
   "Master global hashtable of all documentation specifiers.")
 

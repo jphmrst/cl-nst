@@ -254,42 +254,42 @@ fixtures across multiple tests and test groups, and to inject fixtures
 into the runtime namespace for debugging.
 A set of fixtures is defined using the \\texttt{def-fixtures}
 macro:\\index{def-fixtures@\\texttt{def-fixtures}}")
-            (:code "  (def-fixtures FIXTURE-NAME
-          ([ :uses USES ]
-           [ :assumes ASSUMES ]
-           [ :outer OUTER ]
-           [ :inner INNER ]
-           [ :setup FORM ]
-           [ :cleanup FORM ]
-           [ :startup FORM ]
-           [ :finish FORM ]
-           [ :documentation DOCUMENTATION ]
-           [ :cache FLAG ]
-           [ :export-names FLAG ]
-           [ :export-fixture-name FLAG ]
-           [ :export-bound-names FLAG ])
-    ([ ([ :cache FLAG ]) ] NAME FORM)
-    ([ ([ :cache FLAG ]) ] NAME FORM)
-    ...
-    ([ ([ :cache FLAG ]) ] NAME FORM))")
-            (:plain "Associate names to values.  One or more fixtures may be applied to each test group, test or another fixture.  None of the keyword options are manditory."))
-  (:callspec (FIXTURE-NAME (&keys (:opt-key uses USES)
-                                  (:opt-key assumes ASSUMES)
-                                  (:opt-key outer OUTER)
-                                  (:opt-key inner INNER)
-                                  (:opt-key setup FORM)
-                                  (:opt-key cleanup FORM)
-                                  (:opt-key startup FORM)
-                                  (:opt-key finish FORM)
-                                  (:opt-key documentation DOCUMENTATION)
-                                  (:opt-key cache FLAG)
-                                  (:opt-key export-names FLAG)
-                                  (:opt-key export-fixture-name FLAG)
-                                  (:opt-key export-bound-names FLAG))
+;;;            (:code "  (def-fixtures FIXTURE-NAME
+;;;          ([ :uses USES ]
+;;;           [ :assumes ASSUMES ]
+;;;           [ :outer OUTER ]
+;;;           [ :inner INNER ]
+;;;           [ :setup FORM ]
+;;;           [ :cleanup FORM ]
+;;;           [ :startup FORM ]
+;;;           [ :finish FORM ]
+;;;           [ :documentation DOCUMENTATION ]
+;;;           [ :cache FLAG ]
+;;;           [ :export-names FLAG ]
+;;;           [ :export-fixture-name FLAG ]
+;;;           [ :export-bound-names FLAG ])
+;;;    ([ ([ :cache FLAG ]) ] NAME FORM)
+;;;    ([ ([ :cache FLAG ]) ] NAME FORM)
+;;;    ...
+;;;    ([ ([ :cache FLAG ]) ] NAME FORM))")
+;;;            (:plain "Associate names to values.  One or more fixtures may be applied to each test group, test or another fixture.  None of the keyword options are manditory.")
+            )
+  (:callspec (FIXTURE-NAME (&key (uses USES)
+                                 (assumes ASSUMES)
+                                 (outer OUTER)
+                                 (inner INNER)
+                                 (setup FORM)
+                                 (cleanup FORM)
+                                 (startup FORM)
+                                 (finish FORM)
+                                 (documentation DOCUMENTATION)
+                                 (cache FLAG)
+                                 (export-names FLAG)
+                                 (export-fixture-name FLAG)
+                                 (export-bound-names FLAG))
                            &body
-                           (:seq ((:opt ((:opt-key cache FLAG))) NAME FORM))))
-  (:params (FIXTURE-NAME (:plain "The name to be associated with this set of
-fixtures."))
+                           (:seq ( (:opt (&key (cache FLAG))) NAME FORM))))
+  (:params (FIXTURE-NAME (:plain "The name to be associated with this set of fixtures."))
            (USES (:plain "List of the names of other fixture sets which this declaration assumes to be available.  This declaration is optional, but will supress some warnings."))
            (ASSUMES (:plain "List of names assumed to be bound at the point of any use of this fixture."))
            (INNER (:plain "List of declarations to be made inside the let-binding of names of any use of this fixture.  Do not include the \"declare\" keyword here; NST adds these declarations to others, including a special declaration of all bound names."))
@@ -361,7 +361,10 @@ setting may vary for individual fixtures.")
                 (values fixture-set-names nil fixture-names))))
 
 (defmacro with-fixtures ((&rest fixtures) &body forms)
-  "Evaluate forms in an environment which provides fixture bindings."
   `(let ,(loop for fixture in fixtures
                append (get-fixture-bindings fixture))
      ,@forms))
+(def-documentation (compiler-macro with-fixtures)
+    (:intro (:latex "The \\texttt{with-fixtures} macro faciliates debugging and other non-NST uses of fixtures sets:"))
+  (:callspec (((:seq FIXTURE)) &body (:seq FORM)))
+  (:full (:latex "This macro evaluates the forms in a namespace expanded with the bindings provided by the fixtures.")))

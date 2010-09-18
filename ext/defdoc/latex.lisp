@@ -6,44 +6,78 @@
 
 (defgeneric output-latex (spec-head spec-args))
 
+(defvar *latex-verbatim-width* 65)
+
 (defmethod output-latex ((in (eql :spec)) spec-args)
-  (destructuring-bind (&key (intro nil intro-supp-p)
+  (destructuring-bind (&key self
+                            (intro nil intro-supp-p)
                             (params nil params-supp-p)
                             (short nil short-supp-p)
-                            (full nil full-supp-p) &allow-other-keys) spec-args
+                            (full nil full-supp-p)
+                            (callspec nil callspec-supp-p)
+                            &allow-other-keys) spec-args
     (apply #'concatenate 'string
       (cond
         ((or intro-supp-p full-supp-p)
-         (funcall #'append
-                  (when intro-supp-p
-                    (list (spec-to-latex intro)))
-                  (when params-supp-p
-                    `("\\begin{description}"
-                      ,@(loop for (name subspec) in params
-                            append (list "\\item["
-                                         (format nil "~a" name)
-                                         "]"
-                                         (spec-to-latex subspec)))
-                      "\\end{description}"))
-                  (when full-supp-p
-                     (list (spec-to-latex full)))))
-
-        (short-supp-p
-         (list* (spec-to-text short)
-                (when params-supp-p
-                  (loop for (name subspec) in params
-                        append (list "\\item["
+         (append (when intro-supp-p
+                   (list (spec-to-latex intro)))
+                 (when callspec-supp-p
+                   `(" \\begin{verbatim}"
+                     ,@(loop for (cspec . others) on callspec
+                             append
+                             (append
+                              (loop for line
+                                    in (callspec-to-lines cspec
+                                                *latex-verbatim-width* self)
+                                  collect (concatenate 'string
+                                            "  " line (format nil "~%")))
+                              (when others (list ""))))
+                     "\\end{verbatim}"))
+                 (when params-supp-p
+                   `("\\begin{description}"
+                     ,@(loop for (name subspec) in params
+                           append (list "\\item["
                                         (format nil "~a" name)
                                         "]"
-                                        (spec-to-latex subspec))))))
+                                        (spec-to-latex subspec)))
+                     "\\end{description}"))
+                 (when full-supp-p
+                   (list (spec-to-latex full)))))
+
+        (short-supp-p
+         (append (list (spec-to-latex short))
+                 (when callspec-supp-p
+                   `(" \\begin{verbatim}"
+                     ,@(loop for cspec in callspec
+                           append (loop for line
+                                        in (callspec-to-lines cspec
+                                                    *latex-verbatim-width* self)
+                                        collect (concatenate 'string
+                                                  "  " line (format nil "~%"))))
+                     "\\end{verbatim}"))
+                 (when params-supp-p
+                   (loop for (name subspec) in params
+                       append (list "\\item["
+                                    (format nil "~a" name)
+                                    "]"
+                                    (spec-to-latex subspec))))))
 
         (params-supp-p
-         (when params-supp-p
-           (loop for (name subspec) in params
-               append (list "\\item["
-                            (format nil "~a" name)
-                            "]"
-                            (spec-to-latex subspec)))))
+         (append (when callspec-supp-p
+                   `(" \\begin{verbatim}"
+                     ,@(loop for cspec in callspec
+                           append (loop for line
+                                        in (callspec-to-lines cspec
+                                                    *latex-verbatim-width* self)
+                                        collect (concatenate 'string
+                                                  "  " line (format nil "~%"))))
+                     "\\end{verbatim}"))
+                 (when params-supp-p
+                   (loop for (name subspec) in params
+                       append (list "\\item["
+                                    (format nil "~a" name)
+                                    "]"
+                                    (spec-to-latex subspec))))))
 
         (t nil)))))
 
@@ -100,7 +134,7 @@
 
 (defun build-latex-list (list-tag specs)
   (apply #'concatenate 'string
-         (nconc "\\begin{" list-tag "}"
+         (nconc (list "\\begin{" list-tag "}")
                 (loop for spec in specs
                       append (list "\\item " (spec-to-latex spec)))
                 (list "\\end{" list-tag "}"))))
@@ -119,3 +153,14 @@
                      :direction :output :if-exists :supersede
                      :if-does-not-exist :create)
       (format out "~a~%" (get-spec-latex name usage)))))
+
+(defun write-package-specs-latex (package-specifier
+                                  &optional (echo nil echo-supp)
+                                  (directory *defdoc-latex-default-directory*))
+  (let ((package (find-package package-specifier)))
+    (do-external-symbols (sym package)
+      (loop for form in (get-doctypes) do
+        (when (get-doc-spec sym form)
+          (when echo-supp
+            (funcall echo :name sym :type form))
+          (write-spec-latex sym form :directory directory))))))
