@@ -1,49 +1,64 @@
 (in-package :defdoc)
 
 (def-documentation (compiler-macro def-documentation)
-    (:intro (:latex "")))
+    (:callspec ((name) &body
+                (:opt (:key-head :short string-or-docspec))
+                (:opt (:key-head :intro string-or-docspec))
+                (:opt (:key-head :params (:seq (name string-or-docspec))))
+                (:opt (:key-head :callspec (:seq call-sequence)))
+                (:opt (:key-head :full string-or-docspec)))
+               (name &body
+                     (:opt (:key-head :short string-or-docspec))
+                     (:opt (:key-head :intro string-or-docspec))
+                     (:opt (:key-head :params (:seq (name string-or-docspec))))
+                     (:opt (:key-head :callspec (:seq call-sequence)))
+                     (:opt (:key-head :full string-or-docspec)))))
 
 (def-documentation (compiler-macro def-doctype)
-    (:intro (:latex "")))
+    (:callspec (name (&key) &body (:seq form))))
 
 (def-documentation (compiler-macro def-spec-format)
-    (:intro (:latex "")))
+    (:callspec (name formals &rest (:seq form))
+               ((name) formals &rest (:seq form))))
 
 (def-documentation (function get-doctypes)
-    (:intro (:latex "")))
+    (:callspec ()))
 
 (def-documentation (function format-docspec)
-    (:intro (:latex "")))
+    (:callspec (stream style spec)))
 
 (def-documentation (function format-docspec-element)
-    (:intro (:latex "")))
+    (:callspec (spec-head stream style spec-args)))
 
 (def-documentation (function write-spec-latex)
-    (:intro (:latex "")))
+    (:callspec (name usage &key
+                              (style style)
+                              (directory pathname)
+                              (file filename-string))))
 
 (def-documentation (function write-package-specs-latex)
-    (:intro (:latex "")))
+    (:callspec (package-specifier &optional echo directory style)))
 
 (def-documentation (function spec-to-lines)
-    (:intro (:latex "")))
+    (:callspec (spec width)))
 
 (def-documentation (function indent-by)
-    (:intro (:latex "")))
+    (:callspec (lines length)))
 
 (def-documentation (function bracket-with)
-    (:intro (:latex "")))
+    (:callspec (lines prefix suffix)))
 
 (def-documentation (function width)
-    (:intro (:latex "")))
+    (:callspec (lines)))
 
 (def-documentation (function flow)
-    (:intro (:latex "")))
+    (:callspec (formatter artifacts max)))
 
 (def-documentation (type standard-docstring-style)
-    (:intro (:latex "")))
+    (:short "The default style for docstring generation."))
 
 (def-documentation (variable *docstring-style*)
-    (:intro (:latex "")))
+    (:short "Style used when generating docstrings."))
 
 (def-documentation (variable *defdoc-latex-default-directory*)
-    (:intro (:latex "")))
+    (:short "Directory where generated latex files should be written."))
