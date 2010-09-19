@@ -24,8 +24,21 @@
     (:documentation "Structured documentation definition")
     (:nicknames :ddoc)
     (:use :common-lisp)
-    (:export #:def-documentation #:write-spec-latex
-             #:write-package-specs-latex))
+    (:export #:def-documentation
+             #:def-doctype
+             #:def-spec-format
+
+             #:get-doctypes
+             #:format-docspec #:format-docspec-element
+             #:write-spec-latex
+             #:write-package-specs-latex
+
+             #:spec-to-lines
+             #:indent-by #:bracket-with #:width #:flow
+
+             #:standard-docstring-style
+             #:*docstring-style*
+             #:*defdoc-latex-default-directory*))
 
 (defun defdoc::make-package-documentation ()
   "Write documentation for this package, using system package-doc."

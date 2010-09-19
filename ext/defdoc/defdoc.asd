@@ -55,14 +55,20 @@
                  ;; Standard comment formats.
                  (:file "specs"  :depends-on ("components"))
 
+                 ;; Generics for the output API.
+                 (:file "format"  :depends-on ("package"))
+
                  ;; Error declarations.
-                 (:file "macro"  :depends-on ("components"))
+                 (:file "macro"  :depends-on ("components" "format"))
 
                  ;; Decoding the callspec forms.
                  (:file "callspec"  :depends-on ("package"))
 
+                 ;; Operations on blocks of lines.
+                 (:file "block"  :depends-on ("package"))
+
                  ;; Converting specs to plain text.
-                 (:file "plaintext"  :depends-on ("specs" "callspec"))
+                 (:file "plaintext"  :depends-on ("specs" "callspec" "block"))
 
                  ;; Converting specs to LaTeX.
                  (:file "latex"  :depends-on ("specs" "callspec"))

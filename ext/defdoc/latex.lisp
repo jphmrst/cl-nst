@@ -1,14 +1,10 @@
 
 (in-package :defdoc)
 
-(defun spec-to-latex (spec)
-  (output-latex (car spec) (cdr spec)))
-
-(defgeneric output-latex (spec-head spec-args))
-
 (defvar *latex-verbatim-width* 65)
+(defclass latex-style () ())
 
-(defmethod output-latex ((in (eql :spec)) spec-args)
+(defmethod format-docspec-element ((in (eql :spec)) stream (style latex-style) spec-args)
   (destructuring-bind (&key self
                             (intro nil intro-supp-p)
                             (params nil params-supp-p)
@@ -16,72 +12,48 @@
                             (full nil full-supp-p)
                             (callspec nil callspec-supp-p)
                             &allow-other-keys) spec-args
-    (apply #'concatenate 'string
+    (flet ((generate-intro ()
+             (when intro-supp-p (format-docspec stream style intro)))
+           (generate-full ()
+             (when full-supp-p (format-docspec stream style full)))
+           (generate-short ()
+             (when short-supp-p (format-docspec stream style short)))
+           (generate-params ()
+             (when params-supp-p
+               (princ "\\begin{description}" stream)
+               (loop for (name subspec) in params do
+                 (format stream "\\item[~a] " name)
+                 (format-docspec stream style subspec))
+               (princ "\\end{description}" stream)))
+           (generate-callspec ()
+             (when callspec-supp-p
+               (princ " \\begin{verbatim}" stream)
+               (loop for (cspec . others) on callspec do
+                 (loop for line
+                       in (callspec-to-lines cspec *latex-verbatim-width* self)
+                       do (format stream "  ~a~%" line))
+                 (when others (format stream "~%")))
+               (princ "\\end{verbatim}" stream))))
       (cond
         ((or intro-supp-p full-supp-p)
-         (append (when intro-supp-p
-                   (list (spec-to-latex intro)))
-                 (when callspec-supp-p
-                   `(" \\begin{verbatim}"
-                     ,@(loop for (cspec . others) on callspec
-                             append
-                             (append
-                              (loop for line
-                                    in (callspec-to-lines cspec
-                                                *latex-verbatim-width* self)
-                                  collect (concatenate 'string
-                                            "  " line (format nil "~%")))
-                              (when others (list ""))))
-                     "\\end{verbatim}"))
-                 (when params-supp-p
-                   `("\\begin{description}"
-                     ,@(loop for (name subspec) in params
-                           append (list "\\item["
-                                        (format nil "~a" name)
-                                        "]"
-                                        (spec-to-latex subspec)))
-                     "\\end{description}"))
-                 (when full-supp-p
-                   (list (spec-to-latex full)))))
+         (generate-intro)
+         (generate-callspec)
+         (generate-params)
+         (generate-full))
 
         (short-supp-p
-         (append (list (spec-to-latex short))
-                 (when callspec-supp-p
-                   `(" \\begin{verbatim}"
-                     ,@(loop for cspec in callspec
-                           append (loop for line
-                                        in (callspec-to-lines cspec
-                                                    *latex-verbatim-width* self)
-                                        collect (concatenate 'string
-                                                  "  " line (format nil "~%"))))
-                     "\\end{verbatim}"))
-                 (when params-supp-p
-                   (loop for (name subspec) in params
-                       append (list "\\item["
-                                    (format nil "~a" name)
-                                    "]"
-                                    (spec-to-latex subspec))))))
+         (generate-short)
+         (generate-callspec)
+         (generate-params))
 
         (params-supp-p
-         (append (when callspec-supp-p
-                   `(" \\begin{verbatim}"
-                     ,@(loop for cspec in callspec
-                           append (loop for line
-                                        in (callspec-to-lines cspec
-                                                    *latex-verbatim-width* self)
-                                        collect (concatenate 'string
-                                                  "  " line (format nil "~%"))))
-                     "\\end{verbatim}"))
-                 (when params-supp-p
-                   (loop for (name subspec) in params
-                       append (list "\\item["
-                                    (format nil "~a" name)
-                                    "]"
-                                    (spec-to-latex subspec))))))
+         (generate-callspec)
+         (generate-params))
 
         (t nil)))))
 
-(defmethod output-latex ((in (eql :plain)) args)
+(defmethod format-docspec-element ((in (eql :plain)) stream
+                                   (style latex-style) args)
   (destructuring-bind (string) args
     (let ((was-space t))
       (loop for char across string
@@ -100,50 +72,52 @@
                          (otherwise (list char)))
                      (setf was-space next-space)))
           into characters
-          finally (return (coerce characters 'string))))))
+          finally (princ (coerce characters 'string) stream)))))
 
-(defmethod output-latex ((in (eql :latex)) spec-args)
-  (car spec-args))
+(defmethod format-docspec-element ((in (eql :latex)) stream
+                                   (style latex-style) spec-args)
+  (princ (car spec-args) stream))
 
-(defmethod output-latex ((in (eql :seq)) spec-args)
-  (apply #'concatenate 'string
-         (loop for (p-spec . other-specs) on spec-args
-               append (let ((par (spec-to-latex p-spec)))
-                        `(,par ,@(when other-specs (list " ")))))))
+(defmethod format-docspec-element ((in (eql :seq)) stream
+                                   (style latex-style) spec-args)
+  (loop for (p-spec . other-specs) on spec-args do
+    (format-docspec stream style p-spec)
+    (when other-specs (princ " " stream))))
 
 
-(defmethod output-latex ((in (eql :code)) spec-args)
-  (destructuring-bind (string) spec-args
-    (concatenate 'string "\\begin{verbatim}" string "\\end{verbatim}")))
+(defmethod format-docspec-element ((in (eql :code)) stream
+                                   (style latex-style) args)
+  (destructuring-bind (string) args
+    (format stream "\\begin{verbatim}~a\\end{verbatim}" string)))
 
-(defmethod output-latex ((in (eql :paragraphs)) spec-args)
-  (apply #'concatenate 'string
-         (loop for (p-spec . other-specs) on spec-args
-               append (let ((par (spec-to-latex p-spec)))
-                        `(,par ,@(when other-specs (list "\\par ")))))))
+(defmethod format-docspec-element ((in (eql :paragraphs)) stream
+                                   (style latex-style) args)
+  (loop for (p-spec . other-specs) on args do
+    (format-docspec stream style p-spec)
+    (when other-specs (princ "\\par " stream))))
 
-(defmethod output-latex ((in (eql :enumerate)) args)
+(defmethod format-docspec-element ((in (eql :enumerate)) stream
+                                   (style latex-style) args)
   (let ((options (pop args)))
     (declare (ignore options))
-    (build-latex-list "enumerate" args)))
+    (format-latex-list stream style "enumerate" args)))
 
-(defmethod output-latex ((in (eql :itemize)) args)
+(defmethod format-docspec-element ((in (eql :itemize)) stream
+                                   (style latex-style) args)
   (let ((options (pop args)))
     (declare (ignore options))
-    (build-latex-list "itemize" args)))
+    (format-latex-list stream style "itemize" args)))
 
-(defun build-latex-list (list-tag specs)
-  (apply #'concatenate 'string
-         (nconc (list "\\begin{" list-tag "}")
-                (loop for spec in specs
-                      append (list "\\item " (spec-to-latex spec)))
-                (list "\\end{" list-tag "}"))))
-
-(defun get-spec-latex (name usage)
-  (spec-to-latex (get-doc-spec name usage)))
+(defun format-latex-list (stream style list-tag specs)
+  (format stream "\\begin{~a}" list-tag)
+  (loop for spec in specs do
+    (princ "\\item " stream)
+    (format-docspec stream style spec))
+  (format stream "\\end{~a}" list-tag))
 
 (defvar *defdoc-latex-default-directory* #p"./")
 (defun write-spec-latex (name usage &key
+                              (style 'latex-style)
                               (directory *defdoc-latex-default-directory*)
                               (file (concatenate 'string
                                       (symbol-name name) "_"
@@ -152,15 +126,16 @@
     (with-open-file (out file-spec
                      :direction :output :if-exists :supersede
                      :if-does-not-exist :create)
-      (format out "~a~%" (get-spec-latex name usage)))))
+      (format-docspec out style (get-doc-spec name usage)))))
 
 (defun write-package-specs-latex (package-specifier
                                   &optional (echo nil echo-supp)
-                                  (directory *defdoc-latex-default-directory*))
+                                  (directory *defdoc-latex-default-directory*)
+                                  (style 'latex-style))
   (let ((package (find-package package-specifier)))
     (do-external-symbols (sym package)
       (loop for form in (get-doctypes) do
         (when (get-doc-spec sym form)
           (when echo-supp
             (funcall echo :name sym :type form))
-          (write-spec-latex sym form :directory directory))))))
+          (write-spec-latex sym form :directory directory :style style))))))
