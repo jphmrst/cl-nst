@@ -5,6 +5,9 @@
   "Master global hashtable of all documentation specifiers.")
 (defun get-doctypes ()
   (loop for type being the hash-keys of +defdocs+ collect type))
+(defun get-symbol-doctypes (sym)
+  (loop for type being the hash-keys of +defdocs+ using (hash-value hash)
+        if (gethash sym hash) collect type))
 
 ;;; -----------------------------------------------------------------
 
