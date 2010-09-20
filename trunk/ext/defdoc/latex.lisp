@@ -1,56 +1,57 @@
 
 (in-package :defdoc)
 
-(defvar *latex-verbatim-width* 65)
 (defclass latex-style () ())
+(defclass full-package-latex-style (latex-style) ())
 
-(defmethod format-docspec-element ((in (eql :spec)) stream (style latex-style) spec-args)
-  (destructuring-bind (&key self
+(defmethod format-docspec-element ((in (eql :spec)) stream
+                                   (style latex-style) spec-args)
+  (destructuring-bind (&key self spec-type
                             (intro nil intro-supp-p)
                             (params nil params-supp-p)
                             (short nil short-supp-p)
                             (full nil full-supp-p)
                             (callspec nil callspec-supp-p)
-                            &allow-other-keys) spec-args
-    (flet ((generate-intro ()
-             (when intro-supp-p (format-docspec stream style intro)))
-           (generate-full ()
-             (when full-supp-p (format-docspec stream style full)))
-           (generate-short ()
-             (when short-supp-p (format-docspec stream style short)))
-           (generate-params ()
-             (when params-supp-p
-               (princ "\\begin{description}" stream)
-               (loop for (name subspec) in params do
-                 (format stream "\\item[~a] " name)
-                 (format-docspec stream style subspec))
-               (princ "\\end{description}" stream)))
-           (generate-callspec ()
-             (when callspec-supp-p
-               (princ " \\begin{verbatim}" stream)
-               (loop for (cspec . others) on callspec do
-                 (loop for line
-                       in (callspec-to-lines cspec *latex-verbatim-width* self)
-                       do (format stream "  ~a~%" line))
-                 (when others (format stream "~%")))
-               (princ "\\end{verbatim}" stream))))
-      (cond
-        ((or intro-supp-p full-supp-p)
-         (generate-intro)
-         (generate-callspec)
-         (generate-params)
-         (generate-full))
+                       &allow-other-keys) spec-args
+    (cond
+     (intro-supp-p
+      (format-docspec stream style intro))
+     ((and short-supp-p (not full-supp-p))
+      (format-docspec stream style short)))
 
-        (short-supp-p
-         (generate-short)
-         (generate-callspec)
-         (generate-params))
+    (when callspec-supp-p
+      (princ " \\begin{verbatim}" stream)
+      (loop for (cs . others) on callspec do
+        (loop for line in (callspec-to-lines cs *latex-verbatim-width* self) do
+          (format stream "  ~a~%" line))
+        (when others (format stream "~%")))
+      (princ "\\end{verbatim}" stream))
 
-        (params-supp-p
-         (generate-callspec)
-         (generate-params))
+    (when params-supp-p
+      (princ "\\begin{description}" stream)
+      (loop for (name subspec) in params do
+        (format stream "\\item[~a] " name)
+        (format-docspec stream style subspec))
+      (princ "\\end{description}" stream))
 
-        (t nil)))))
+    (when full-supp-p (format-docspec stream style full))
+
+    (cond
+      ((eq spec-type 'package)
+       (do-external-symbols (var self)
+         (format stream "~a{~a}"
+           *latex-full-package-item-header-macro* self))
+       (format-docspec stream style (get-doc-spec self spec-type))))))
+
+(defmethod format-docspec-element ((in (eql :spec)) stream
+                                   (style full-package-latex-style) spec-args)
+  (destructuring-bind (&key self spec-type &allow-other-keys) spec-args
+    (cond
+      ((eq spec-type 'package)
+       (do-external-symbols (var self)
+         (format stream "~a{~a}"
+           *latex-full-package-item-header-macro* self))
+       (format-docspec stream style (get-doc-spec self spec-type))))))
 
 (defmethod format-docspec-element ((in (eql :plain)) stream
                                    (style latex-style) args)
@@ -115,13 +116,13 @@
     (format-docspec stream style spec))
   (format stream "\\end{~a}" list-tag))
 
-(defvar *defdoc-latex-default-directory* #p"./")
 (defun write-spec-latex (name usage &key
                               (style 'latex-style)
                               (directory *defdoc-latex-default-directory*)
                               (file (concatenate 'string
                                       (symbol-name name) "_"
-                                      (symbol-name usage) ".tex")))
+                                      (symbol-name usage)"_"
+                                      (symbol-name style) ".tex")))
   (let ((file-spec (merge-pathnames file directory)))
     (with-open-file (out file-spec
                      :direction :output :if-exists :supersede
@@ -131,11 +132,19 @@
 (defun write-package-specs-latex (package-specifier
                                   &optional (echo nil echo-supp)
                                   (directory *defdoc-latex-default-directory*)
-                                  (style 'latex-style))
+                                  (style 'latex-style)
+                                  (package-style 'full-package-latex-style))
   (let ((package (find-package package-specifier)))
     (do-external-symbols (sym package)
       (loop for form in (get-doctypes) do
         (when (get-doc-spec sym form)
           (when echo-supp
             (funcall echo :name sym :type form))
-          (write-spec-latex sym form :directory directory :style style))))))
+          (write-spec-latex sym form :directory directory :style style))))
+    (let ((pkg-sym-name (intern (package-name package) :keyword)))
+  (when (get-doc-spec pkg-sym-name 'package)
+    (write-spec-latex pkg-sym-name 'package
+                      :directory directory :style style)
+    (unless (eq package-style style)
+      (write-spec-latex pkg-sym-name 'package
+                        :directory directory :style package-style))))))
