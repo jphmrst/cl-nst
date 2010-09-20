@@ -76,13 +76,15 @@ as errors arising from within the ."
   `(apply-criterion ',(car criterion) ',(cdr criterion) ',form))
 
 (defun check-criterion-on-value (criterion expr)
-  "Verify that a value adheres to a criterion."
   (check-criterion-on-form criterion `(list ',expr)))
+(def-documentation (function check-criterion-on-value)
+    (:short "Verify that a value adheres to a criterion."))
 (defun check-criterion-on-form (criterion form)
-  "Verify that an unevaluated form adheres to a criterion."
   (unless (listp criterion)
     (setf criterion (list criterion)))
   (apply-criterion (car criterion) (cdr criterion) form))
+(def-documentation (function check-criterion-on-form)
+    (:short "Verify that an unevaluated form adheres to a criterion."))
 
 (defun build-continue-check-expr (criterion form)
   `(apply-criterion ',(car criterion) ',(cdr criterion) ',form))
@@ -148,16 +150,6 @@ definitions with two sets of formal parameters:")
 (defmacro def-criterion-unevaluated ((name args-formals forms-formal &key
                                            (ignore-forms nil))
                                      &body forms)
-  "Define a new criterion for use in NST tests.
-
-  \(def-criterion-unevaluated \(NAME CRITERION-LAMBDA-LIST
-                                   FORMS-ARG)
-    [ DOCUMENTATION ]
-    FORM
-    FORM
-    ...
-    FORM)"
-
   (let ((ap (gensym "args"))
         (docstring nil)
         (form-decls nil))
@@ -179,12 +171,15 @@ definitions with two sets of formal parameters:")
                ,@forms))))
        ,@(when docstring
            `((setf (documentation ',name :nst-criterion) ,docstring))))))
+(def-documentation (compiler-macro def-criterion-unevaluated)
+  (:intro "Define a new criterion for use in NST tests.")
+  (:callspec ((name criterion-lambda-list forms-arg) &body
+              (:opt documentation) (:seq form))))
 
 #+allegro (excl::define-simple-parser def-values-criterion caadr :nst-criterion)
 (defmacro def-values-criterion ((name args-formals forms-formals &key
                                       (declare nil decl-supp-p))
                                 &body forms)
-  "DEPRECATED: use def-criterion instead."
   (warn 'nst-soft-deprecation :old-name 'def-values-criterion
         :replacement 'def-criterion)
   (let ((ap (gensym "args")) (fp (gensym "form")) (vs (gensym "values")))
@@ -207,24 +202,23 @@ definitions with two sets of formal parameters:")
                    (returning-criterion-config-error
                        (,(format nil "Error from criterion ~s body" name))
                      (eval (progn ,@forms))))))))))))
+(def-documentation (compiler-macro def-values-criterion)
+    (:short "DEPRECATED: use def-criterion instead."))
+
 
 #+allegro (excl::define-simple-parser def-form-criterion caadr :nst-criterion)
 (defmacro def-form-criterion ((name args-formals form-formal) &rest forms)
-  "DEPRECATED: use def-criterion-unevaluated instead."
   (warn
    "def-form-criterion is deprecated from 1.3.0, AND PROBABLY WILL NOT WORK.")
   (let ((ap (gensym "args")))
     `(defmethod apply-criterion ((top (eql ',name)) ,ap ,form-formal)
        (destructuring-bind ,args-formals ,ap
          (eval (progn ,@forms))))))
+(def-documentation (compiler-macro def-form-criterion)
+    (:short "DEPRECATED: use def-criterion-unevaluated instead."))
 
 (defmacro def-criterion-alias ((name . args-formals) docstring-or-form
                                &optional (form nil form-supp-p))
-  "Define one criterion in terms of another.
-
-  \(def-criterion-alias \(name &rest args)
-    [ DOCUMENTATION ]
-    EXPANSION)"
   (unless form-supp-p (setf form docstring-or-form docstring-or-form nil))
   (let* ((vsf (gensym "form"))
          (expanded (gensym "res"))
@@ -247,6 +241,9 @@ definitions with two sets of formal parameters:")
                                 `((setf (documentation ',name :nst-criterion)
                                         ,docstring-or-form)))))
       (t redef))))
+(def-documentation (compiler-macro def-criterion-alias)
+    (:intro "Define one criterion in terms of another.")
+  (:callspec ((name &rest args) &body (:opt documentation) expansion)))
 
 #+allegro (excl::define-simple-parser def-values-check caadr :nst-criterion)
 (defmacro def-value-check (&rest args)

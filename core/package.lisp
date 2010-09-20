@@ -35,41 +35,19 @@
                   #:generic-function-methods #:method-specializers
                   #:eql-specializer-object)
 
-    ;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-    ;; * REMEMBER! * REMEMBER! * REMEMBER! * REMEMBER! * REMEMBER! * *
-    ;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-    ;; * * * Mirror and document the exported API in the manual. * * *
-    ;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-
     (:export #:def-fixtures #:def-test-group #:def-test
              #:nst-cmd
 
-             ;; Do NOT change this package's exported-symbol list
-             ;; without updating the API in the manual (or filing a
-             ;; ticket for the addition).
-
              #:nst-junit-dump #:junit-results-by-group
-
-             ;; Do NOT change this package's exported-symbol list
-             ;; without updating the API in the manual (or filing a
-             ;; ticket for the addition).
 
              #:*nst-output-stream*
              #:*default-report-verbosity*
              #:*debug-on-error*
              #:*debug-on-fail*
 
-             ;; Do NOT change this package's exported-symbol list
-             ;; without updating the API in the manual (or filing a
-             ;; ticket for the addition).
-
              #:arbitrary
              #:compound-structure
              #:def-arbitrary-instance-type
-
-             ;; Do NOT change this package's exported-symbol list
-             ;; without updating the API in the manual (or filing a
-             ;; ticket for the addition).
 
              #:def-criterion #:def-criterion-unevaluated #:def-criterion-alias
              #:check-criterion-on-value #:check-criterion-on-form
@@ -80,33 +58,15 @@
              #:emit-failure #:emit-warning #:emit-success
              #:def-form-criterion #:def-values-criterion
 
-             ;; Do NOT change this package's exported-symbol list
-             ;; without updating the API in the manual (or filing a
-             ;; ticket for the addition).
-
              #:with-fixtures
-
-             ;; Do NOT change this package's exported-symbol list
-             ;; without updating the API in the manual (or filing a
-             ;; ticket for the addition).
 
              #:nst-results
              #:def-test-generic
              #:def-test-method
-             #:def-test-method-criterion
+             #:def-test-method-criterion))
 
-             ;; Do NOT change this package's exported-symbol list
-             ;; without updating the API in the manual (or filing a
-             ;; ticket for the addition).
-             )
-
-    ;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-    ;; * REMEMBER! * REMEMBER! * REMEMBER! * REMEMBER! * REMEMBER! * *
-    ;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-    ;; * * * Mirror and document the exported API in the manual. * * *
-    ;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-
-    )
+(defdoc:def-documentation (package :nst)
+    (:short "NST unit testing package"))
 
 (defun nst::make-package-documentation ()
   "Write documentation for this package, using system package-doc."

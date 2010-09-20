@@ -63,11 +63,13 @@
 (defvar *nst-verbosity* 1
   "User variable determining how verbose NST's output to the REPL should be.  Internally, this variable takes an integer value: 0 and below are silent, 1 is the default, 2 and 3 are more verbose, and 4 is for full tracing.  The command-line interpreter assigns keywords to these values, from most terse to most verbose: :silent, nil, :quiet, :default, t, :verbose, :vverbose (:quiet and :default are the same, and are the initial setting).")
 
-(defvar *debug-on-error* nil
-  "User variable: if non-nil, will break into the Lisp REPL debugger upon encountering an unexpected error.  If nil, will record the error and continue with other tests.")
+(defvar *debug-on-error* nil)
+(def-documentation (variable *debug-on-error*)
+    (:short "User variable: if non-nil, will break into the Lisp REPL debugger upon encountering an unexpected error.  If nil, will record the error and continue with other tests."))
 
-(defvar *debug-on-fail* nil
-  "User variable: if non-nil, will break into the Lisp REPL debugger upon encountering a test which fails.  If nil, will record the failure and continue with other tests.  This variable is useful inspecting the dynamic environment under which a test was evaluated.")
+(defvar *debug-on-fail* nil)
+(def-documentation (variable *debug-on-fail*)
+    (:short "User variable: if non-nil, will break into the Lisp REPL debugger upon encountering a test which fails.  If nil, will record the failure and continue with other tests.  This variable is useful inspecting the dynamic environment under which a test was evaluated."))
 
 (defvar *generate-backtraces*
     (cond
@@ -94,8 +96,9 @@
 ;;;  Flags and dynamic variable declarations.
 ;;;
 
-(defvar *default-report-verbosity* 2
-  "User variable determining the default value for *nst-verbosity* when printing reports (2 by default).")
+(defvar *default-report-verbosity* 2)
+(def-documentation (variable *default-report-verbosity*)
+    (:short "User variable determining the default value for *nst-verbosity* when printing reports (2 by default)."))
 
 (defvar *nst-debug* nil
   "User variable: apply customizable debugging settings.")

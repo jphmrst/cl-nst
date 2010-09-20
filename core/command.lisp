@@ -430,8 +430,9 @@ The last form shows all interesting results."
          (t (apply #'run-command-actual command-name command-args)))))))
 
 (defmacro nst-cmd (&rest args)
-  "Run an NST command."
   `(apply #'run-nst-command ',args))
+(def-documentation (compiler-macro nst-cmd)
+    (:short "Run an NST command."))
 
 ;;; Platform-specific command-line interpreter interfaces.
 

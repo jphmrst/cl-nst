@@ -155,8 +155,9 @@ argument should be a string of just spaces."))
 (defun junit-header (stream)
   (format stream "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>~%"))
 
-(defgeneric nst-junit-dump (stream)
-  (:documentation "Push the entire NST state to a JUnit XML file."))
+(defgeneric nst-junit-dump (stream))
+(def-documentation (function nst-junit-dump)
+    (:short "Push the entire NST state to a JUnit XML file."))
 
 (defmethod nst-junit-dump ((stream stream))
   (junit-header stream)
@@ -241,11 +242,12 @@ argument should be a string of just spaces."))
     (unless stream-supp-p (close the-stream))))
 
 (defun junit-results-by-group (&rest args &key verbose &allow-other-keys)
-  "Write the NST test results in JUnit XML format, organized by group."
   (loop for report in (multi-results-group-reports (all-groups-report)) do
     (when verbose
       (format t "Making XML for group ~s~%" (group-result-group-name report)))
     (apply #'junit-group-result report args)))
+(def-documentation (function junit-results-by-group)
+    (:short "Write the NST test results in JUnit XML format, organized by group."))
 
 ;;; The following three definitions are Copyright (c) 2003, Miles Egan
 ;;; All rights reserved.
