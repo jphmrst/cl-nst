@@ -63,6 +63,8 @@
          (eval-when (:compile-toplevel :load-toplevel :execute)
            (setf (gethash ',function-name *test-methods*) ',use-combination))
          ',function-name))))
+(def-documentation (compiler-macro def-test-generic)
+    (:short "Declare a generic test function."))
 
 (defun decode-def-test-generic-body (forms)
   (let ((documentation)
@@ -135,7 +137,9 @@
                     function-name class)
                  (check-result-info result))
            result))
-     ',function-name)))
+       ',function-name)))
+(def-documentation (compiler-macro def-test-method)
+    (:short "Define one method for a generic test function."))
 
 (defmacro def-test-method-criterion (function-name class documentation
                                                    &optional

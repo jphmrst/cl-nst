@@ -118,6 +118,8 @@
                              :error e
                              other-args)))
       (make-and-calibrate-check-result :errors (list error-note)))))
+(def-documentation (function make-error-report)
+    (:short "Report an error in a test"))
 
 (defun make-config-error (error test-obj msg)
   (let ((*nst-group-name* (group-name test-obj))
@@ -882,10 +884,11 @@ six-value summary of the results:
   (:full (:latex "The \\texttt{emit-warning} function is an older, deprecated version of this function.")))
 
 (defmacro emit-warning (&rest args)
-  "Deprecated; use make-warning-report."
   (warn 'nst-soft-deprecation :old-name 'emit-warning
         :replacement '(make-warning-report))
   `(make-warning-report ,@args))
+(def-documentation (compiler-macro emit-warning)
+    (:short "Deprecated; use make-warning-report."))
 
 (defun make-failure-report (&key format args info)
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
@@ -900,10 +903,11 @@ six-value summary of the results:
   (:full (:latex "The \\texttt{format-string} and \\texttt{args} are as to the Common Lisp function \\texttt{format}.  The \\texttt{emit-failure} function is an older, deprecated version of this function.")))
 
 (defmacro emit-failure (&rest args)
-  "Deprecated; use make-failure-report."
   (warn 'nst-soft-deprecation :old-name 'emit-failure
         :replacement '(make-failure-report))
   `(make-failure-report ,@args))
+(def-documentation (compiler-macro emit-failure)
+    (:short "Deprecated; use make-failure-report."))
 
 (defun make-success-report (&rest args &key warnings info)
   (declare (ignore warnings info))
@@ -914,26 +918,30 @@ six-value summary of the results:
   (:full (:latex "Note that some older examples show \\texttt{(make-check-result)}, \\texttt{(emit-success)} or \\texttt{(check-result)}.  The former is an internal function and should not be used from outside the core NST files.  The latter two are deprecated.")))
 
 (defmacro emit-success (&rest args)
-  "Deprecated; use make-success-report."
   (warn 'nst-soft-deprecation :old-name 'emit-success
         :replacement '(make-success-report))
   `(make-success-report ,@args))
+(def-documentation (compiler-macro emit-success)
+    (:short "Deprecated; use make-success-report."))
 
 (defun add-failure (result &key format args)
-  "For use within user-defined NST criteria: add a failure to a result."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
 
   (push (make-check-note :context *nst-context* :stack *nst-stack*
                          :format format :args args)
         (check-result-failures result)))
+(def-documentation (function add-failure)
+    (:short
+     "For use within user-defined NST criteria: add a failure to a result."))
 
 (defun add-error (result &key format args)
-  "For use within user-defined NST criteria: add an error to a result."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
 
   (push (make-check-note :context *nst-context* :stack *nst-stack*
                          :format format :args args)
         (check-result-errors result)))
+(def-documentation (function add-error)
+    (:short "For use within user-defined NST criteria: add an error to a result."))
 
 (defun add-test-config-error (test-obj format &rest args)
   (let ((*nst-group-name* (group-name test-obj))
@@ -943,9 +951,10 @@ six-value summary of the results:
     (add-error report :format format :args args)))
 
 (defun add-info (result item)
-  "For use within user-defined NST criteria: add an info note to a result."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
   (push item (check-result-info result)))
+(def-documentation (function add-info)
+    (:short "For use within user-defined NST criteria: add an info note to a result."))
 
 (defgeneric format-for-warning (stream item colon at-sign &rest params)
   (:documentation "Hook allowing us to sometimes do better than the usual
