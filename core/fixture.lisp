@@ -248,6 +248,7 @@
 
                  ',name))))))
 (def-documentation (compiler-macro def-fixtures)
+    (:tags primary)
     (:intro (:latex "Fixtures\\index{fixtures} are data structures and values which may be
 referred to by name during testing.  NST provides the ability to use
 fixtures across multiple tests and test groups, and to inject fixtures
@@ -365,6 +366,7 @@ setting may vary for individual fixtures.")
                append (get-fixture-bindings fixture))
      ,@forms))
 (def-documentation (compiler-macro with-fixtures)
+    (:tags &rest)
     (:intro (:latex "The \\texttt{with-fixtures} macro faciliates debugging and other non-NST uses of fixtures sets:"))
   (:callspec (((:seq FIXTURE)) &body (:seq FORM)))
   (:full (:latex "This macro evaluates the forms in a namespace expanded with the bindings provided by the fixtures.")))

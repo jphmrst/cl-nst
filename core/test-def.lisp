@@ -248,6 +248,7 @@ first element is that symbol and whose remaining elements are options."
                  ;; name in NST.
                  (note-executable ',test-name tproto)))))))))
 (def-documentation (compiler-macro def-test)
+    (:tags primary)
     (:intro (:latex "Individual unit tests are encoded with the \\texttt{def-test} form:"))
   (:callspec ((NAME &key (group GROUP-NAME)
                     (setup FORM)

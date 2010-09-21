@@ -42,6 +42,7 @@
           (+ 1 *current-compound-structure-depth*)))
      ,@forms))
 (def-documentation (compiler-macro compound-structure)
+    (:tags sample)
     (:short "Annotation macro for sampling over structured data."))
 
 (defgeneric arbitrary (typ)
@@ -50,6 +51,7 @@
   (:method (other)
      (arbitrary-by-spec other)))
 (def-documentation (function arbitrary)
+    (:tags sample)
     (:short "Return an arbitrary element of the given type."))
 
 
@@ -95,6 +97,7 @@
            `((setf (gethash ,type-spec +scalar-generable-types+) t)))
        (setf (gethash ,type-spec +arbitrary-generable-types+) t))))
 (def-documentation (compiler-macro def-arbitrary-instance-type)
+    (:tags sample)
     (:intro "Register a type for instance generation for invariant-testing.")
   (:callspec ((spec-name &key (params formals) (scalar bool))
               &body (:seq form)))

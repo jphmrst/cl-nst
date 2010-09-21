@@ -78,12 +78,14 @@ as errors arising from within the ."
 (defun check-criterion-on-value (criterion expr)
   (check-criterion-on-form criterion `(list ',expr)))
 (def-documentation (function check-criterion-on-value)
+    (:tags criteria)
     (:short "Verify that a value adheres to a criterion."))
 (defun check-criterion-on-form (criterion form)
   (unless (listp criterion)
     (setf criterion (list criterion)))
   (apply-criterion (car criterion) (cdr criterion) form))
 (def-documentation (function check-criterion-on-form)
+    (:tags criteria)
     (:short "Verify that an unevaluated form adheres to a criterion."))
 
 (defun build-continue-check-expr (criterion form)
@@ -120,6 +122,7 @@ as errors arising from within the ."
        ,@(when docstring
            `((setf (documentation ',name :nst-criterion) ,docstring))))))
 (def-documentation (compiler-macro def-criterion)
+    (:tags primary)
     (:intro (:latex "The \\texttt{def-criterion} macro defines a new criterion for use in NST tests.\index{def-criterion@\texttt{def-criterion}}"))
   (:callspec ((name criterion-lambda-list values-lambda-list)
                    &body
@@ -172,6 +175,7 @@ definitions with two sets of formal parameters:")
        ,@(when docstring
            `((setf (documentation ',name :nst-criterion) ,docstring))))))
 (def-documentation (compiler-macro def-criterion-unevaluated)
+    (:tags primary)
   (:intro "Define a new criterion for use in NST tests.")
   (:callspec ((name criterion-lambda-list forms-arg) &body
               (:opt documentation) (:seq form))))
@@ -203,6 +207,8 @@ definitions with two sets of formal parameters:")
                        (,(format nil "Error from criterion ~s body" name))
                      (eval (progn ,@forms))))))))))))
 (def-documentation (compiler-macro def-values-criterion)
+    (:tags primary)
+    (:deprecated t)
     (:short "DEPRECATED: use def-criterion instead."))
 
 
@@ -215,6 +221,8 @@ definitions with two sets of formal parameters:")
        (destructuring-bind ,args-formals ,ap
          (eval (progn ,@forms))))))
 (def-documentation (compiler-macro def-form-criterion)
+    (:tags primary)
+    (:deprecated t)
     (:short "DEPRECATED: use def-criterion-unevaluated instead."))
 
 (defmacro def-criterion-alias ((name . args-formals) docstring-or-form
@@ -242,6 +250,7 @@ definitions with two sets of formal parameters:")
                                         ,docstring-or-form)))))
       (t redef))))
 (def-documentation (compiler-macro def-criterion-alias)
+    (:tags primary)
     (:intro "Define one criterion in terms of another.")
   (:callspec ((name &rest args) &body (:opt documentation) expansion)))
 

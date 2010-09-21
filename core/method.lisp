@@ -42,6 +42,7 @@
 
 (define-method-combination nst-results :operator check-result-union)
 (def-documentation (method-combination nst-results)
+    (:tags object)
     (:intro "Method combination for unifying NST result records returned by different methods."))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -64,6 +65,7 @@
            (setf (gethash ',function-name *test-methods*) ',use-combination))
          ',function-name))))
 (def-documentation (compiler-macro def-test-generic)
+    (:tags primary)
     (:short "Declare a generic test function."))
 
 (defun decode-def-test-generic-body (forms)
@@ -139,6 +141,7 @@
            result))
        ',function-name)))
 (def-documentation (compiler-macro def-test-method)
+    (:tags primary)
     (:short "Define one method for a generic test function."))
 
 (defmacro def-test-method-criterion (function-name class documentation
