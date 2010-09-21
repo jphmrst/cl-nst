@@ -1,7 +1,8 @@
 (in-package :defdoc)
 
-
 (defvar +defdocs+ (make-hash-table :test 'eq)
+  "Master global hashtable of all documentation specifiers.")
+(defvar +defdocs-tags+ (make-hash-table :test 'eq)
   "Master global hashtable of all documentation specifiers.")
 (defun get-doctypes ()
   (loop for type being the hash-keys of +defdocs+ collect type))
@@ -38,6 +39,8 @@
          #',(cond
              (lisp-installer-supp-p lisp-installer)
              (t '(lambda (x y) (declare (ignore x y))))))
+       (unless (gethash ',name +defdocs-tags+)
+         (setf (gethash ',name +defdocs-tags+) (make-hash-table :test 'eq)))
        (unless (gethash ',name +defdocs+)
          (setf (gethash ',name +defdocs+) (make-hash-table :test 'eq))))))
 
@@ -60,6 +63,12 @@
       (error "No such documentation type ~s" type))
     type-hash))
 
+(defun get-doc-tags-type-hash (type)
+  (let ((type-hash (gethash type +defdocs-tags+)))
+    (unless type-hash
+      (error "No such documentation type ~s" type))
+    type-hash))
+
 (defun get-doc-spec (name type)
   (let ((type-hash (get-doc-spec-type-hash type)))
     (gethash name type-hash)))
@@ -73,6 +82,20 @@
             `(let ((,type-hash (get-doc-spec-type-hash ,type)))
                (setf (gethash ,name ,type-hash) ,store))
             `(get-doc-spec ,name ,type))))
+
+(defun get-doc-tags (name type)
+  (let ((tags-hash (get-doc-tags-type-hash type)))
+    (gethash name tags-hash)))
+
+(define-setf-expander get-doc-tags (name type)
+  (let ((store (gensym))
+        (tags-hash (gensym)))
+    (values nil
+            nil
+            `(,store)
+            `(let ((,tags-hash (get-doc-tags-type-hash ,type)))
+               (setf (gethash ,name ,tags-hash) ,store))
+            `(get-doc-tags ,name ,type))))
 
 (defmacro def-spec-format (name-or-name-and-options formals &rest body)
   (declare (ignore name-or-name-and-options formals body))

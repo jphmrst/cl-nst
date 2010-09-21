@@ -52,6 +52,9 @@
                  ;; Standard comment formats.
                  (:file "components"  :depends-on ("package"))
 
+                 ;; Standard comment formats.
+                 (:file "tag"  :depends-on ("package"))
+
                  ;; Things we give documentation to.
                  (:file "type"  :depends-on ("components"))
 
@@ -74,7 +77,8 @@
                  (:file "plaintext"  :depends-on ("specs" "callspec" "block"))
 
                  ;; Converting specs to LaTeX.
-                 (:file "latex"  :depends-on ("globals" "specs" "callspec"))
+                 (:file "latex"  :depends-on ("globals"
+                                              "specs" "callspec" "tag"))
 
                  ;; Documentation in def-doc of def-doc.
                  (:file "auto"  :depends-on ("globals"

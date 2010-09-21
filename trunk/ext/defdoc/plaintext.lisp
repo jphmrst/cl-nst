@@ -2,8 +2,9 @@
 (in-package :defdoc)
 
 (defclass standard-docstring-style () ())
-(defmethod format-docspec (stream (style standard-docstring-style) spec
+(defmethod format-docspec (stream (style standard-docstring-style) spec type
                                   &key &allow-other-keys)
+  (declare (ignore type))
   (format stream "~{~a~^~%~}" (spec-to-lines spec 79)))
 
 ;;; -----------------------------------------------------------------
