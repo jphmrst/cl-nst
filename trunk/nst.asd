@@ -43,7 +43,8 @@
     :version "2.1.1"
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
-    :in-order-to ((test-op (test-op :nst-test)))
+    :in-order-to ((test-op (test-op :nst-test))
+                  (cl-user::doc-op (load-op :nst)))
     :depends-on ( :closer-mop ;; (:version :closer-mop "0.55")
                   :defdoc )
 
@@ -125,3 +126,29 @@
                            ;; Other packaged APIs.
                            (:file "interfaces"
                                   :depends-on ("check" "runner" "status"))))))
+
+(defclass cl-user::doc-op (asdf:operation) ())
+(defmethod asdf:perform ((op cl-user::doc-op) other)
+  (declare (ignore other)))
+(defmethod asdf:perform ((op cl-user::doc-op)
+                         (system (eql (asdf:find-system :nst))))
+  (format t "system ~s~%*load-truename* ~s~%" system *load-truename*)
+  (funcall (symbol-function (intern '#:write-package-specs-latex
+                                    (find-package :defdoc)))
+           :nst
+           :echo #'(lambda (&key name type)
+                     (format t "Writing ~a ~a...~%" type name))
+           :directory (asdf:system-relative-pathname (asdf:find-system :nst)
+                                                     "doc/manual/gen/")
+           :package-style (intern '#:package-list-latex-style :defdoc))
+  (asdf:run-shell-command
+   "pdflatex"
+   (namestring
+    (merge-pathnames #p"manual.tex"
+                     (symbol-value
+                      (intern #:*defdoc-latex-default-directory*
+                              :defdoc))))))
+
+(defmethod asdf:operation-done-p ((op cl-user::doc-op)
+                                  (system (eql (asdf:find-system :nst))))
+  nil)
