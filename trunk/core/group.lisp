@@ -248,6 +248,7 @@
 
                ',group-name))))))))
 (def-documentation (compiler-macro def-test-group)
+    (:tags primary)
     (:intro (:latex "Groups of tests\\index{group}\\index{test group|see{group}} can be associated with fixture sets, stateful initiatization, and stateful cleanup.  The syntax of a test group declaration is:\\index{def-test-group@\\texttt{def-test-group}}"))
   (:callspec (NAME ((:seq FIXTURE)) &body
                    (:key-head :setup (:seq FORM))

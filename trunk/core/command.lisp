@@ -432,6 +432,7 @@ The last form shows all interesting results."
 (defmacro nst-cmd (&rest args)
   `(apply #'run-nst-command ',args))
 (def-documentation (compiler-macro nst-cmd)
+    (:tags control)
     (:short "Run an NST command."))
 
 ;;; Platform-specific command-line interpreter interfaces.

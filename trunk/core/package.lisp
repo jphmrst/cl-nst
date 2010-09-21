@@ -65,8 +65,45 @@
              #:def-test-method
              #:def-test-method-criterion))
 
-(defdoc:def-documentation (package :nst)
-    (:short "NST unit testing package"))
+(defdoc:def-documentation (package :sift.nst)
+    (:short "NST unit testing package")
+  (:descriptive "NST"))
+
+(defdoc:def-doc-tag nst::primary (:package :nst)
+  :sort 0
+  :formatter (lambda (sy pk tg sr)
+               (declare (ignore sy pk tg))
+               (format sr "Primary macros")))
+(defdoc:def-doc-tag nst::criteria (:package :nst)
+  :sort 1
+  :formatter (lambda (sy pk tg sr)
+               (declare (ignore sy pk tg))
+               (format sr "Functions used in criteria definitions")))
+(defdoc:def-doc-tag nst::control (:package :nst)
+  :sort 2
+  :formatter (lambda (sy pk tg sr)
+               (declare (ignore sy pk tg))
+               (format sr "Programmatic control of testing and output")))
+(defdoc:def-doc-tag nst::settings (:package :nst)
+  :sort 4
+  :formatter (lambda (sy pk tg sr)
+               (declare (ignore sy pk tg))
+               (format sr "User settings")))
+(defdoc:def-doc-tag nst::sample (:package :nst)
+  :sort 8
+  :formatter (lambda (sy pk tg sr)
+               (declare (ignore sy pk tg))
+               (format sr "Testing randomized samples")))
+(defdoc:def-doc-tag nst::object (:package :nst)
+  :sort 9
+  :formatter (lambda (sy pk tg sr)
+               (declare (ignore sy pk tg))
+               (format sr "Method-based tests on objects")))
+(defdoc:def-doc-tag &rest (:package :nst)
+  :sort 10
+  :formatter (lambda (sy pk tg sr)
+               (declare (ignore sy pk tg))
+               (format sr "Other symbols")))
 
 (defun nst::make-package-documentation ()
   "Write documentation for this package, using system package-doc."

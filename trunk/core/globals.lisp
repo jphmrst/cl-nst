@@ -65,10 +65,12 @@
 
 (defvar *debug-on-error* nil)
 (def-documentation (variable *debug-on-error*)
+    (:tags settings)
     (:short "User variable: if non-nil, will break into the Lisp REPL debugger upon encountering an unexpected error.  If nil, will record the error and continue with other tests."))
 
 (defvar *debug-on-fail* nil)
 (def-documentation (variable *debug-on-fail*)
+    (:tags settings)
     (:short "User variable: if non-nil, will break into the Lisp REPL debugger upon encountering a test which fails.  If nil, will record the failure and continue with other tests.  This variable is useful inspecting the dynamic environment under which a test was evaluated."))
 
 (defvar *generate-backtraces*
@@ -98,6 +100,7 @@
 
 (defvar *default-report-verbosity* 2)
 (def-documentation (variable *default-report-verbosity*)
+    (:tags settings)
     (:short "User variable determining the default value for *nst-verbosity* when printing reports (2 by default)."))
 
 (defvar *nst-debug* nil
@@ -138,6 +141,7 @@ current criterion.")
 
 (defvar *nst-output-stream* t)
 (def-documentation (variable *nst-output-stream*)
+    (:tags settings)
     (:intro (:latex "User variable determining the output stream to which NST should print its output (\\texttt{*standard-output*} by default).")))
 
 (defparameter *nst-group-shown* nil

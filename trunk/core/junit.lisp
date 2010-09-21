@@ -157,6 +157,7 @@ argument should be a string of just spaces."))
 
 (defgeneric nst-junit-dump (stream))
 (def-documentation (function nst-junit-dump)
+    (:tags control)
     (:short "Push the entire NST state to a JUnit XML file."))
 
 (defmethod nst-junit-dump ((stream stream))
@@ -247,6 +248,7 @@ argument should be a string of just spaces."))
       (format t "Making XML for group ~s~%" (group-result-group-name report)))
     (apply #'junit-group-result report args)))
 (def-documentation (function junit-results-by-group)
+    (:tags control)
     (:short "Write the NST test results in JUnit XML format, organized by group."))
 
 ;;; The following three definitions are Copyright (c) 2003, Miles Egan
