@@ -11,8 +11,10 @@
 (asdf:oos 'asdf:load-op :nst :force t)
 (setf defdoc::*defdoc-latex-default-directory* #p"./gen/")
 (defdoc:write-package-specs-latex :nst
-                               #'(lambda (&key name type)
-                                   (format t "Writing ~a ~a...~%" type name)))
+                                  :echo #'(lambda (&key name type)
+                                            (format t "Writing ~a ~a...~%"
+                                              type name))
+                                  :package-style 'defdoc::package-list-latex-style)
 
 ;;;(defun process (symbol usage)
 ;;;  (format t "Writing ~a ~a...~%" usage symbol)
@@ -24,3 +26,4 @@
 ;;;(process 'nst:*nst-output-stream* 'variable)
 ;;;(process 'nst:nst-results 'method-combination)
 (format t "Exiting~%")
+
