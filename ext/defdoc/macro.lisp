@@ -3,16 +3,24 @@
 (defmacro def-documentation (name-or-spec &body body)
   "Doc doc doc"
   (multiple-value-bind (name spec-type spec-args)
-      (deconstruct-spec name-or-spec)
-    (let ((actual-spec (decode-defdoc-forms name spec-type spec-args body))
-          (spec (gensym "spec")))
-      `(let ((,spec ',actual-spec))
-         (setf (get-doc-spec ',name ',spec-type) ,spec)
-         (funcall (get-doctype-lisp-installer ',spec-type) ',name ,spec)))))
+      (decode-defdoc-spec name-or-spec)
+    (multiple-value-bind (spec tags deprecation descriptive intro intro-supp-p
+                          params params-supp-p short short-supp-p
+                          full full-supp-p callspec callspec-supp-p)
+        (decode-defdoc-forms name spec-type spec-args body)
+      (declare (ignore deprecation descriptive intro intro-supp-p
+                       params params-supp-p short short-supp-p
+                       full full-supp-p callspec callspec-supp-p))
+      (let ((spec-id (gensym "spec")))
+        `(let ((,spec-id ',spec))
+           (setf (get-doc-spec ',name ',spec-type) ,spec-id)
+           (setf (get-doc-tags ',name ',spec-type) ',tags)
+           (funcall (get-doctype-lisp-installer ',spec-type)
+                    ',name ,spec-id))))))
 
 ;;; -----------------------------------------------------------------
 
-(defun deconstruct-spec (name-or-spec)
+(defun decode-defdoc-spec (name-or-spec)
   (cond
    ((symbolp name-or-spec)
     (values name-or-spec (guess-spec-type name-or-spec) nil))
@@ -25,7 +33,9 @@
         (params nil) (params-supp-p nil)
         (short nil) (short-supp-p nil)
         (full nil) (full-supp-p nil)
-        (callspec nil) (callspec-supp-p nil))
+        (callspec nil) (callspec-supp-p nil)
+        tags deprecation
+        (descriptive (symbol-name name)))
     (flet ((decode-spec-args (args)
              (cond
               ((not (listp args)) args)
@@ -40,6 +50,9 @@
         (loop for form in forms do
           (destructuring-bind (tag . args) form
             (case tag
+              ((:descriptive) (setf descriptive (car args)))
+              ((:tags) (setf tags args))
+              ((:deprecated) (setf deprecation (car args)))
               ((:intro) (assign-text-spec tag args intro intro-supp-p))
               ((:short) (assign-text-spec tag args short short-supp-p))
               ((:full)  (assign-text-spec tag args full  full-supp-p))
@@ -66,11 +79,13 @@
     (when (and  full-supp-p (stringp full))  (setf full  `(:plain ,full)))
 
     (values `(:spec :self ,name :spec-type ,spec-type :spec-args ,spec-args
+                    :descriptive ,descriptive
                     ,@(when intro-supp-p    `(:intro ,intro))
                     ,@(when params-supp-p   `(:params ,params))
                     ,@(when short-supp-p    `(:short ,short))
                     ,@(when full-supp-p     `(:full ,full))
                     ,@(when callspec-supp-p `(:callspec ,callspec)))
+            tags deprecation descriptive
             intro intro-supp-p
             params params-supp-p
             short short-supp-p

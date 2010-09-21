@@ -27,6 +27,7 @@
     (:export #:def-documentation
              #:def-doctype
              #:def-spec-format
+             #:def-doc-tag
 
              #:get-doctypes
              #:format-docspec #:format-docspec-element
