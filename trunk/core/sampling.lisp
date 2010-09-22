@@ -384,18 +384,16 @@
 (defun pick-from-sequence (seq)
   (elt seq (random (length seq))))
 
-(def-criterion-unevaluated (:sample (&key (values nil
-                                                  values-supp-p) ; deprecated
-                                          (domains nil)
-                                          (where t)
-                                          (verify nil verify-supp-p)
-                                          (sample-size 100)
-                                          (qualifying-sample
-                                           nil qualifying-sample-supp-p)
-                                          (max-tries nil max-tries-supp-p))
-                                    expr-list-form
-                                    :ignore-forms t)
-  (declare (ignore values))
+(def-criterion (:sample (:forms &key (values nil values-supp-p) ; deprecated
+                                (domains nil)
+                                (where t)
+                                (verify nil verify-supp-p)
+                                (sample-size 100)
+                                (qualifying-sample
+                                 nil qualifying-sample-supp-p)
+                                (max-tries nil max-tries-supp-p))
+                        (:form expr-list-form))
+  (declare (ignore values expr-list-form))
   (when values-supp-p
     (warn 'nst-soft-keyarg-deprecation :old-name :values :replacement nil))
 
@@ -489,6 +487,8 @@
              (length (check-result-errors result))))
 
     result))
+(defdoc:def-documentation (criterion :sample)
+    (:intro (:latex "Experimentally test a program property by generating random data.  See \manualOrRef{Section~\\ref{quickcheck}}{the users' manual} for more information.")))
 
 (defun generate-sample (domains)
   (let ((result (make-hash-table :test 'eq)))
