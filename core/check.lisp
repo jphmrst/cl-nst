@@ -91,36 +91,145 @@ as errors arising from within the ."
 (defun build-continue-check-expr (criterion form)
   `(apply-criterion ',(car criterion) ',(cdr criterion) ',form))
 
-;; #+allegro (excl::define-simple-parser def-criterion caadr :nst-criterion)
+(defun decompose-arg-values-lambda-list (args-formals)
+  (let ((opt-or-keys nil))
+    (flet ((mk-pair (param)
+             (cond
+              ((symbolp param)
+               (let ((form-var (gensym (concatenate 'string
+                                         (symbol-name param) "-form"))))
+                 (if opt-or-keys
+                   (let ((supp-var (gensym (concatenate 'string
+                                             (symbol-name param)
+                                             "-form-supp-p"))))
+                     (list `(,form-var nil ,supp-var)
+                           `(,param (when ,supp-var (eval ,form-var)))))
+                   (list form-var
+                         `(,param (eval ,form-var))))))
+              ((listp param)
+               (destructuring-bind
+                     (param-name &optional
+                                 (param-default nil)
+                                 (param-supp-var
+                                  (gensym (concatenate 'string
+                                            (symbol-name param-name)
+                                            "-form-supp-p"))))
+                   param
+                 (let ((form-var (gensym (concatenate 'string
+                                           (symbol-name param-name)
+                                           "-form-supp-p"))))
+                   (if opt-or-keys
+                     (list `(,form-var nil ,param-supp-var)
+                           `(,param-name
+                             (cond (,param-supp-var (eval ,form-var))
+                                   (t ,param-default))))
+                     (error "~@<Bad element ~s~_in values lambda list ~s~:>"
+                            param args-formals)))))
+              (t
+               (error "~@<Bad element ~s~_in values lambda list ~s~:>"
+                      param args-formals)))))
+      (loop for param in args-formals
+          if (and (symbolp param)
+                  (eq (symbol-package param) (find-package :common-lisp)))
+          collect (list param nil) into zipper
+          and do (when (or (eq param '&optional) (eq param '&key))
+                   (setf opt-or-keys t))
+          else
+          collect (mk-pair param) into zipper
+          finally
+            (loop for (form-dec val-bnd) in zipper
+                  collect form-dec into form-deconstructor
+                  if val-bnd
+                    collect val-bnd into values-binder
+                finally
+                  (return-from decompose-arg-values-lambda-list
+                    (values form-deconstructor values-binder)))))))
+
 (defmacro def-criterion ((name args-formals values-formals) &body forms)
-  (let ((fp (gensym "values-form"))
+  (let ((fp)
         (ap (gensym "args"))
-        (vs (gensym "values"))
         (docstring nil)
-        (form-decls nil))
+        (form-decls nil)
+        (args-list-type (cond
+                         ((and (consp args-formals)
+                               (symbolp (car args-formals))
+                               (eq (symbol-package (car args-formals))
+                                   (find-package :keyword)))
+                          (pop args-formals)
+                          (error "This feature is not yet implemented"))
+                         (t :forms)))
+        (values-list-type (cond
+                           ((and (consp values-formals)
+                                 (symbolp (car values-formals))
+                                 (eq (symbol-package (car values-formals))
+                                     (find-package :keyword)))
+                            (pop values-formals)
+                            (error "This feature is not yet implemented"))
+                           (t :values)))
+        (args-formals-orig args-formals)
+        (values-formals-orig values-formals)
+        (defer-form-decls nil))
     (when (stringp (car forms))       (setf docstring (pop forms)))
     (when (eq (caar forms) 'declare)  (setf form-decls (cdr (pop forms))))
-    `(progn
-       #+allegro (excl:record-source-file ',name :type :nst-criterion)
-       (defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)
-         (declare (optimize (debug 3)))
-         ,@(when docstring (list docstring))
-         (returning-criterion-config-error
-             ((format nil "Criterion arguments ~a do not match lambda-list ~a"
-                ,ap ',args-formals))
-           (destructuring-bind ,args-formals ,ap
-             (let ((,vs (returning-test-error (eval ,fp))))
-               (returning-criterion-config-error
-                   ((format nil
-                        "Values under test ~a do not match lambda-list ~a"
-                      ,vs ',values-formals))
-                 (destructuring-bind ,values-formals (eval ,fp)
-                   ,@(when form-decls `((declare ,@form-decls)))
-                   (returning-criterion-config-error
-                       (,(format nil "Error from criterion ~s body" name))
-                     ,@forms)))))))
-       ,@(when docstring
-           `((setf (documentation ',name :nst-criterion) ,docstring))))))
+    (let ((core-form
+           `(returning-criterion-config-error
+                (,(format nil "Error from criterion ~s body" name))
+              ,@forms)))
+
+      ;; Set the fp symbol; and wrap the core-form if we want its
+      ;; values.
+      (case values-list-type
+        ((:values)
+         (setf fp (gensym "values-form")
+               core-form
+               (let ((vs (gensym "values")))
+                 `(let ((,vs (returning-test-error (eval ,fp))))
+                    (returning-criterion-config-error
+                        ((format nil
+                             "Values under test ~a do not match lambda-list ~a"
+                           ,vs ',values-formals-orig))
+                      (destructuring-bind ,values-formals ,vs
+                        ,@(when form-decls `((declare ,@form-decls)))
+                        ,core-form))))))
+        ((:form)
+         (setf fp (car values-formals)
+               defer-form-decls t))
+        (otherwise
+         (error "Unrecognized tag ~s for tested forms lambda list."
+                values-list-type)))
+
+      (when (eq args-list-type :values)
+        (multiple-value-bind (form-deconstructor values-binders)
+            (decompose-arg-values-lambda-list args-formals)
+          (setf core-form `(let ,values-binders
+                             ,@(when (and form-decls defer-form-decls)
+                                 `((declare ,@form-decls)))
+                             ,core-form)
+                args-formals form-deconstructor)))
+
+      (case args-list-type
+        ((:values :forms)
+         (setf core-form
+           `(returning-criterion-config-error
+                ((format nil
+                     "Criterion arguments ~a do not match lambda-list ~a"
+                   ,ap ',args-formals-orig))
+              (destructuring-bind ,args-formals ,ap
+                ,@(when (and form-decls defer-form-decls)
+                    `((declare ,@form-decls)))
+                ,core-form))))
+        (otherwise
+         (error "Unrecognized tag ~s for criteria arguments lambda list"
+                args-list-type)))
+
+      `(progn
+         #+allegro (excl:record-source-file ',name :type :nst-criterion)
+         (defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)
+           (declare (optimize (debug 3)))
+           ,@(when docstring (list docstring))
+           ,core-form)
+         ,@(when docstring
+             `((setf (documentation ',name :nst-criterion) ,docstring)))))))
 (def-documentation (compiler-macro def-criterion)
     (:tags primary)
     (:intro (:latex "The \\texttt{def-criterion} macro defines a new criterion for use in NST tests.\index{def-criterion@\texttt{def-criterion}}"))
