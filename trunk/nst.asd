@@ -142,12 +142,11 @@
                                                      "doc/manual/gen/")
            :package-style (intern '#:package-list-latex-style :defdoc))
   (asdf:run-shell-command
-   "pdflatex"
-   (namestring
-    (merge-pathnames #p"manual.tex"
-                     (symbol-value
-                      (intern #:*defdoc-latex-default-directory*
-                              :defdoc))))))
+   (format nil "pdflatex ~a"
+     (namestring
+      (merge-pathnames #p"manual.tex"
+                       (asdf:system-relative-pathname (asdf:find-system :nst)
+                                                      "doc/manual/"))))))
 
 (defmethod asdf:operation-done-p ((op cl-user::doc-op)
                                   (system (eql (asdf:find-system :nst))))
