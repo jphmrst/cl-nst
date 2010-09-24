@@ -752,7 +752,7 @@ six-value summary of the results:
         (*print-pretty* t)
         (*print-readably* nil))
     (declare (special *nst-report-driver*))
-    (format stream "~w" (package-report package))
+    (format stream "~w~%" (package-report package))
     nil))
 
 (defun report-group (group
@@ -765,7 +765,7 @@ six-value summary of the results:
         (*print-pretty* t)
         (*print-readably* nil))
     (declare (special *nst-report-driver*))
-    (format stream "~w" (group-report group))
+    (format stream "~w~%" (group-report group))
     nil))
 
 (defun report-test (group
@@ -778,7 +778,7 @@ six-value summary of the results:
         (*print-pretty* t)
         (*print-readably* nil))
     (declare (special *nst-report-driver*))
-    (format stream "~w" (test-report group test))
+    (format stream "~w~%" (test-report group test))
     nil))
 
 (defun report-multiple (packages groups tests &key
@@ -796,7 +796,7 @@ six-value summary of the results:
                          (system-supp-p `(:system ,system))
                          (t nil)))))
     (declare (special *nst-verbosity* *nst-report-driver*))
-    (format stream "~w" report)
+    (format stream "~w~%" report)
     nil))
 
 
