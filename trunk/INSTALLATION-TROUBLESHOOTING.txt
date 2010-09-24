@@ -29,7 +29,20 @@ svn export https://svn.sift.info:3333/svn/nst/tags/1.2.2 old-nst
 #+END_EXAMPLE
 * Compiling and loading
 ** The core NST system
-*** Loading NST's self-tests
+*** Loading NST
+    NST is most easily loaded by its ASDF file.  Before loading, you must make sure that your asdf:*central-registry* contains the directories for nst.asd, as well as for the two ASFD systems on which NST depends, closer-mop and defdoc.  The latter system is distributed with NST in the ext/defdoc directory; the former is a separate system not packaged with NST.  The following sample initialization code will load NST:
+#+BEGIN_EXAMPLE
+(let ((repos-dir "/PATH/TO/YOUR/NST/REPOS/")
+      (closer-dir "/PATH/TO/YOUR/CLOSER-MOP/REPOS/"))
+  (push (make-pathname :directory closer-dir)
+        asdf:*central-registry*)
+  (push (make-pathname :directory repos-dir)
+        asdf:*central-registry*)
+  (push (make-pathname :directory (concatenate 'string repos-dir "ext/defdoc/"))
+        asdf:*central-registry*))
+(asdf:oos 'asdf:load-op :nst)
+#+END_EXAMPLE
+*** Loading and running NST's self-tests
     NST's tests are spread among several directories; use the following code to prepare your ASDF registry to load them in:
 #+BEGIN_EXAMPLE
 (let ((repos-dir "/PATH/TO/YOUR/NST/REPOS/"))
@@ -39,11 +52,13 @@ svn export https://svn.sift.info:3333/svn/nst/tags/1.2.2 old-nst
                      "test/manual/"
                      "test/meta/"
                      "test/util/"
-                     "test/asdf/masdfnst.asd") do
+                     "test/asdf/masdfnst.asd"
+                     "ext/defdoc/") do
     (push (make-pathname :directory (concatenate 'string repos-dir dir))
           asdf:*central-registry*)))
 (push (make-pathname :directory "/PATH/TO/YOUR/CLOSER-MOP/REPOS/")
       asdf:*central-registry*)
 #+END_EXAMPLE
-* Test construction
-* Running NST
+** Building the documentation
+   Some elements of the NST manual are derived from the source code itself.  To (re-)generate the manual, load the ASDF system nst-doc.  Loading this system will trigger generation of LaTeX source, and then will run tools from the pdflatex suite to generate the manual.
+
