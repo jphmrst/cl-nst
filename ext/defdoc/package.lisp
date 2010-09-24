@@ -31,6 +31,7 @@
 
              #:get-doctypes
              #:format-docspec #:format-docspec-element
+             #:write-doctype-latex
              #:write-spec-latex
              #:write-package-specs-latex
 
@@ -38,6 +39,7 @@
              #:indent-by #:bracket-with #:width #:flow
 
              #:standard-docstring-style
+             #:package-list-latex-style
              #:*docstring-style*
              #:*defdoc-latex-default-directory*))
 
