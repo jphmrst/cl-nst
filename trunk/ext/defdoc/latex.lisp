@@ -12,11 +12,40 @@
                                       (symbol-name usage)"_"
                                       (symbol-name style) ".tex")))
   ;; (format t "----------~%style ~s~%dir ~s~%file ~s~%" style directory file)
+  #+sbcl
+  (setf file (block quote-wild
+               (loop for char across file
+                   append (case char
+                            ((#\* #\? #\[ #\]) (list #\\ char))
+                            (otherwise (list char))) into new-file
+                   finally (return-from quote-wild
+                             (coerce new-file 'string)))))
+
+;;;  #+clozure
+;;;  (progn
+;;;    (format t "Correcting ~s for Clozure~%" file)
+;;;    (setf file (block quote-wild
+;;;                 (loop for char across file
+;;;                     append (case char
+;;;                              ((#\* #\? #\[ #\]) (list #\\ #\\ #\\ char))
+;;;                              (otherwise (list char))) into new-file
+;;;                     finally (return-from quote-wild
+;;;                               (coerce new-file 'string)))))
+;;;    (format t "Corrected to ~s~%" file))
+
   (let ((file-spec (merge-pathnames file directory)))
     (with-open-file (out file-spec
                      :direction :output :if-exists :supersede
                      :if-does-not-exist :create)
       (format-doc out style (get-doc-spec name usage)))))
+
+(defun write-doctype-latex (doctype &key (echo nil echo-supp)
+                                    (directory *defdoc-latex-default-directory*)
+                                    (style 'latex-style))
+  (loop for name being the hash-keys of (gethash doctype +defdocs+) do
+    (when echo-supp
+      (funcall echo :name name :type doctype))
+    (write-spec-latex name doctype :directory directory :style style)))
 
 (defun write-package-specs-latex (package-specifier
                                   &key (echo nil echo-supp)

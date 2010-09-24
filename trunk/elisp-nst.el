@@ -239,3 +239,5 @@ minor mode should apply."
 (nst-form-indentation :sample 0)
 
 (nst-form-indentation :docstring-installer 1)
+(nst-form-indentation def-documentation 1)
+(nst-form-indentation defdoc:def-documentation 1)
