@@ -44,11 +44,14 @@
                  (excl:chdir manual-dir)
                  ;; (asdf:run-shell-command "pdflatex" "manual.tex")
                  (excl:run-shell-command "pdflatex manual.tex")
+                 (excl:run-shell-command "makeindex manual")
                  (excl:run-shell-command "pdflatex manual.tex"))
 
     #+sbcl (progn
              (sb-posix:chdir manual-dir)
              (sb-ext:run-program "pdflatex" '("manual.tex")
+                                 :wait t :search t :output nil :error t)
+             (sb-ext:run-program "makeindex" '("manual")
                                  :wait t :search t :output nil :error t)
              (sb-ext:run-program "pdflatex" '("manual.tex")
                                  :wait t :search t :output nil :error t))
