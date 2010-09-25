@@ -48,11 +48,6 @@
 (def-criterion-alias (--nst-test group-name test-name &rest subcriteria)
   `(--nst-run (:tests ((,group-name ,test-name))) ,@subcriteria))
 
-(def-criterion-alias (--nst-counter-group criterion)
-  `(:progn (setf nst-meta-sources-1::*test-exec-counter* 0)
-           (--nst-group nst-meta-sources-1::counter-tests
-             ,criterion)))
-
 (def-criterion-alias (--nst-no-test-in-group group-name test-name)
   `(:true-form (not (gethash ',test-name
                              (nst::test-name-lookup
