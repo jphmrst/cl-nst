@@ -31,12 +31,13 @@
         :echo #'(lambda (&key name type)
                   (format t "Writing ~a ~a...~%" type name))
         :directory gen-dir
-        :style 'defdoc:package-list-latex-style)
+        :style 'nst-criterion-style)
     (defdoc:write-package-specs-latex :nst
         :echo #'(lambda (&key name type)
                   (format t "Writing ~a ~a...~%" type name))
         :directory gen-dir
-        :package-style 'defdoc:package-list-latex-style)
+        :style 'nst-item-style
+        :package-style 'nst-package-list-latex-style)
 
     ;; Run LaTeX to build the manual
     (format t "Generating PDF manual from LaTeX...~%")
@@ -45,6 +46,7 @@
                  ;; (asdf:run-shell-command "pdflatex" "manual.tex")
                  (excl:run-shell-command "pdflatex manual.tex")
                  (excl:run-shell-command "makeindex manual")
+                 (excl:run-shell-command "pdflatex manual.tex")
                  (excl:run-shell-command "pdflatex manual.tex"))
 
     #+sbcl (progn
@@ -54,15 +56,50 @@
              (sb-ext:run-program "makeindex" '("manual")
                                  :wait t :search t :output nil :error t)
              (sb-ext:run-program "pdflatex" '("manual.tex")
+                                 :wait t :search t :output nil :error t)
+             (sb-ext:run-program "pdflatex" '("manual.tex")
                                  :wait t :search t :output nil :error t))
 
 ;;;    #+clozure (progn
 ;;;                (setf (current-directory) manual-dir)
 ;;;                (run-program "pdflatex" '("manual.tex")
 ;;;                             :wait t :search t :output nil :error t)
+;;;             (sb-ext:run-program "makeindex" '("manual")
+;;;                                 :wait t :search t :output nil :error t)
+;;;                (run-program "pdflatex" '("manual.tex")
+;;;                             :wait t :search t :output nil :error t))
 ;;;                (run-program "pdflatex" '("manual.tex")
 ;;;                             :wait t :search t :output nil :error t))
 
     #-(or allegro sbcl ;; clozure
           )
-    (warn "Documentation building not fully implemented on this system --- please run~%  pdflatex manual.tex~%from the directory~%  ~a~%" manual-dir)))
+    (warn "Documentation building not fully implemented on this system --- please run~%  pdflatex manual.tex~%  makeindex manual~%  pdflatex manual.tex~%from the directory~%  ~a~%" manual-dir)))
+
+(defclass nst-criterion-style (defdoc:package-list-latex-style) ())
+
+(defclass nst-item-style (defdoc:latex-style) ())
+(defmethod defdoc:latex-style-adjust-spec-element ((style nst-item-style)
+                                                   spec-type spec-head
+                                                   (element (eql :intro))
+                                                   spec-args datum)
+  (declare (ignore datum spec-head spec-type))
+  (destructuring-bind (&key self &allow-other-keys) spec-args
+  `(:seq (:latex ,(format nil "\\label{~a:primary}" self))
+         ,(call-next-method))))
+(defmethod defdoc:latex-style-adjust-spec-element ((style nst-item-style)
+                                                   spec-type spec-head
+                                                   (element (eql :short))
+                                                   spec-args datum)
+  (declare (ignore datum spec-head spec-type))
+  (destructuring-bind (&key self &allow-other-keys) spec-args
+  `(:seq (:latex ,(format nil "\\label{~a:primary}" self))
+         ,(call-next-method))))
+
+(defclass nst-package-list-latex-style (defdoc:package-list-latex-style) ())
+(defmethod defdoc:package-list-entry ((style nst-package-list-latex-style)
+                                      spec group entry stream)
+     (declare (ignore spec group))
+     (destructuring-bind (&key self &allow-other-keys) (cdr entry)
+       (format stream
+           "\\texttt{~a} --- \\S\\ref{~:*~a:primary}, p.\\,\\pageref{~:*~a:primary}.~%~%"
+         self)))

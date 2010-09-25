@@ -36,6 +36,9 @@
 
 (defvar *current-compound-structure-depth* 0)
 (defvar *max-compound-structure-depth* 4)
+(def-documentation (variable *max-compound-structure-depth*)
+    (:tags sample)
+    (:short (:latex "The \\texttt{*max-compound-structure-depth*} variable sets the maximum nesting depth of compound data structures: beyond that depth, \\texttt{scalar} rather than \\texttt{t} is the default element generator.  This restriction does not apply to explicitly specified element types, only to the use of defaults.")))
 
 (defmacro compound-structure (&body forms)
   `(let ((*current-compound-structure-depth*
@@ -43,7 +46,7 @@
      ,@forms))
 (def-documentation (compiler-macro compound-structure)
     (:tags sample)
-    (:short "Annotation macro for sampling over structured data."))
+    (:short (:latex "The \\texttt{compound-structure} macro wraps substructure which should be considered compound for the limits set by \\texttt{*max-compound-structure-depth*}.")))
 
 (defgeneric arbitrary (typ)
   (:method ((spec cons))
@@ -52,7 +55,7 @@
      (arbitrary-by-spec other)))
 (def-documentation (function arbitrary)
     (:tags sample)
-    (:short "Return an arbitrary element of the given type."))
+    (:intro (:latex "This function takes a single argument, which determines the type of the value to be generated.  For simple types, the name of the type (or the class object, such as returned by \\texttt{find-class}) by itself is a complete specification.  For more complicated types, \\texttt{arbitrary} can also take a list argument, where the first element gives the type and the remaining elements are keyword argument providing additional requirements for the generated value.")))
 
 
 (defgeneric arbitrary-by-spec (name &key &allow-other-keys)
@@ -98,11 +101,32 @@
        (setf (gethash ,type-spec +arbitrary-generable-types+) t))))
 (def-documentation (compiler-macro def-arbitrary-instance-type)
     (:tags sample)
-    (:intro "Register a type for instance generation for invariant-testing.")
-  (:callspec ((spec-name &key (params formals) (scalar bool))
+    (:intro "New type specifications for invariant-testing. are defined with the \\texttt{def-arbitrary-instance-type}\\indexLisp{def-arbitrary-instance-type} macro.")
+  (:callspec ((spec-name &key (params formals) (scalar bool) (key key))
               &body (:seq form)))
   (:params (formals (:latex "Formal parameter definition used to pass subcomponent types."))
-           (bool (:latex "Should be set to non-null if this SPEC-NAME corresponds to scalar objects."))
+           (scalar (:seq
+                    (:latex "When a non-null value is provided for the \\texttt{:scalar} argument, the new specifier is taken to be generable by the \\texttt{scalar} specification.")
+                    (:code "  (def-arbitrary-instance-type (ratio :scalar t)
+    (/ (arbitrary 'integer)
+       (let ((raw (arbitrary (find-class 'integer))))
+         (cond
+           ((< raw 0) raw)
+           (t (+ 1 raw))))))")))
+           (key (:seq
+                 (:latex "The \\texttt{:key} argument gives a list of keyword arguments which may accompany the new specification.  For the \\texttt{cons} type, keyword arguments allow specifications for the left and right components:")
+                 (:code "  (def-arbitrary-instance-type (cons :key ((car t car-supp-p)
+                                           (cdr t cdr-supp-p)))
+    (compound-structure
+     (when (and (not car-supp-p)
+                (>= *current-compound-structure-depth*
+                    *max-compound-structure-depth*))
+       (setf car 'scalar))
+     (when (and (not cdr-supp-p)
+                (>= *current-compound-structure-depth*
+                    *max-compound-structure-depth*))
+       (setf cdr 'scalar))
+     (cons (arbitrary car) (arbitrary cdr))))")))
            (form (:latex "Construct and return (as if through progn) the arbtrary instance."))))
 
 (def-arbitrary-instance-type (number :param n)

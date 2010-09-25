@@ -1,7 +1,7 @@
 
 \section{Inheritance-based test methods}
 \label{sec:methods}
-\emph{This experimental feature currently does not work under Lispworks or Clisp.}
+\emph{This in-progress feature currently does not work under Lispworks or Clisp.}
 
 For testing objects in a class hierarchy NST offers xUnit-style test
 methods dispatching on different classes.  The idea is that an object
@@ -31,22 +31,13 @@ four classes:
 \end{verbatim}
 
 \subsection{Declaring methods}
-
 \indexLisp{def-test-generic}\indexLisp{def-test-method}\indexLisp{def-test-method-criterion}
+\input{../gen/def-test-generic_compiler-macro_nst-item-style}
+\input{../gen/def-test-method-criterion_compiler-macro_nst-item-style}
+\input{../gen/def-test-method_compiler-macro_nst-item-style}
 \begin{verbatim}
-(nst:def-test-generic for-clses)
-(nst:def-test-method-criterion for-clses top-cls
-      (:predicate (lambda (tc) (< (tc1 tc) (tc2 tc)))))
-(nst:def-test-method for-clses (o mid-cls)
-  (with-slots (mc1 mc2) o
-    (cond
-      ((< mc1 mc2) (make-success-report))
-      (t (make-failure-report :format "~d not < ~d" :args (list mc1 mc2))))))
-(nst:def-test-method for-clses (o side-cls)
-  (with-slots (sc1 sc2) o
-    (cond
-      ((eql sc1 sc2) (make-success-report))
-      (t (make-failure-report :format "~d not eql ~d" :args (list sc1 sc2))))))
+
+
 \end{verbatim}
 
 \begin{verbatim}
@@ -85,18 +76,7 @@ four classes:
 
 \subsection{Method combinations}
 \indexLisp{nst-results}
-
-\begin{verbatim}
-(nst:def-test-generic overridden
-    (:method-combination t))
-(nst:def-test-method-criterion overridden mid-cls
-  (:slots (mc1 (:eql 0))
-          (mc2 (:eql 2))))
-(nst:def-test-method-criterion overridden bot-cls
-  (:slots (sc1 (:eql 1))
-          (sc2 (:eql 1))))
-\end{verbatim}
-
+\input{../gen/nst-results_method-combination_nst-item-style}
 
 %%% Local Variables: 
 %%% mode: latex

@@ -18,14 +18,8 @@ be generated, and specifying the test itself.
 \subsection{Generating sample data}
 \label{sec:quickcheck-data}
 Data generation is centered around the generic function
-\texttt{arbitrary}.\indexLisp{arbitrary} This function takes a single
-argument, which determines the type of the value to be generated.  For
-simple types, the name of the type (or the class object, such as
-returned by \texttt{find-class}) by itself is a complete
-specification.  For more complicated types, \texttt{arbitrary} can
-also take a list argument, where the first element gives the type and
-the remaining elements are keyword argument providing additional
-requirements for the generated value.
+\texttt{arbitrary}.\indexLisp{arbitrary} %
+\input{../gen/arbitrary_function_nst-item-style}
 
 NST provides method of \texttt{arbitrary} for many standard Lisp
 types, listed in Table~\ref{table:built-in-arbitrary-types}.  Types in
@@ -167,51 +161,11 @@ referred to as \emph{compound} (although there is no corresponding
 type specification).  To avoid generating structures too large to hold
 in memory, NST provides the global variable
 \texttt{*max-compound-structure-depth*}\label{max-compound-structure-depth}\indexLispGlobal{max-compound-structure-depth}
-which sets the maximum nesting depth of compound data structures:
-beyond that depth, \texttt{scalar} rather than \texttt{t} is the
-default element generator.  This restriction does not apply to
-explicitly specified element types, only to the use of defaults.
-
-New type specifications are defined with the
-\texttt{def-arbitrary-instance-type}\indexLisp{def-arbitrary-instance-type}
-macro.
-\label{def-arbitrary-instance-type}
-\begin{verbatim}
-  (def-arbitrary-instance-type (SPECIFICATION-NAME
-                                 [ :key KEYWORD-PARAMS ]
-                                 [ :scalar BOOL ] )
-    FORM
-    ...
-    FORM)
-\end{verbatim}
-When a non-null value is provided for the \texttt{:scalar} argument,
-the new specifier is taken to be generable by the \texttt{scalar}
-specification.
-\begin{verbatim}
-  (def-arbitrary-instance-type (ratio :scalar t)
-    (/ (arbitrary 'integer)
-       (let ((raw (arbitrary (find-class 'integer))))
-         (cond
-           ((< raw 0) raw)
-           (t (+ 1 raw))))))
-\end{verbatim}
-The \texttt{:key} argument gives a list of keyword arguments which may
-accompany the new specification.  For the \texttt{cons} type, keyword
-arguments allow specifications for the left and right components:
-\begin{verbatim}
-  (def-arbitrary-instance-type (cons :key ((car t car-supp-p)
-                                           (cdr t cdr-supp-p)))
-    (compound-structure
-     (when (and (not car-supp-p)
-                (>= *current-compound-structure-depth*
-                    *max-compound-structure-depth*))
-       (setf car 'scalar))
-     (when (and (not cdr-supp-p)
-                (>= *current-compound-structure-depth*
-                    *max-compound-structure-depth*))
-       (setf cdr 'scalar))
-     (cons (arbitrary car) (arbitrary cdr))))
-\end{verbatim}
+and the macro \texttt{compund-structure}.
+\input{../gen/*max-compound-structure-depth*_variable_nst-item-style}
+\input{../gen/compound-structure_compiler-macro_nst-item-style}
+\par
+\input{../gen/def-arbitrary-instance-type_compiler-macro_nst-item-style}
 
 \subsection{Invariants as tests}
 \label{sec:quickcheck-tests}

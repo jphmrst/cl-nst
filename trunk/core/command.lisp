@@ -433,7 +433,9 @@ The last form shows all interesting results."
   `(apply #'run-nst-command ',args))
 (def-documentation (compiler-macro nst-cmd)
     (:tags control)
-    (:short "Run an NST command."))
+    (:intro (:latex "NST operations are accessible from the~\\texttt{nst-cmd}\\index{nst-cmd@\\texttt{nst-cmd}} macro"))
+    (:callspec (nst-command (:seq arg)))
+    (:short "Run an NST command.  See the NST manual for a list of NST commands."))
 
 ;;; Platform-specific command-line interpreter interfaces.
 

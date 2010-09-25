@@ -4,13 +4,8 @@
   "Doc doc doc"
   (multiple-value-bind (name spec-type spec-args)
       (decode-defdoc-spec name-or-spec)
-    (multiple-value-bind (spec tags deprecation descriptive intro intro-supp-p
-                          params params-supp-p short short-supp-p
-                          full full-supp-p callspec callspec-supp-p)
+    (multiple-value-bind (spec tags)
         (decode-defdoc-forms name spec-type spec-args body)
-      (declare (ignore deprecation descriptive intro intro-supp-p
-                       params params-supp-p short short-supp-p
-                       full full-supp-p callspec callspec-supp-p))
       (let ((spec-id (gensym "spec")))
         `(let ((,spec-id ',spec))
            (setf (get-doc-spec ',name ',spec-type) ,spec-id)
@@ -29,65 +24,42 @@
       (values name spec-type spec-args)))))
 
 (defun decode-defdoc-forms (name spec-type spec-args forms)
-  (let ((intro nil) (intro-supp-p nil)
-        (params nil) (params-supp-p nil)
-        (short nil) (short-supp-p nil)
-        (full nil) (full-supp-p nil)
-        (callspec nil) (callspec-supp-p nil)
-        tags deprecation
-        (descriptive (symbol-name name)))
-    (flet ((decode-spec-args (args)
+  (let (tags
+        (descriptive (symbol-name name))
+        (result-args nil))
+    (flet ((add-spec-args (tag value)
+             (push value result-args)
+             (push tag result-args))
+           (decode-spec-args (args)
              (cond
               ((not (listp args)) args)
               ((eql 1 (length args)) (car args))
               (t `(:paragraphs ,@args)))))
-      (macrolet ((assign-text-spec (tag args var supp-var)
-                   `(cond
-                     (,supp-var (error "Duplicate intro: ~s" ,args))
-                     (t (setf ,supp-var t
-                              ,var (decode-spec-args ,args))))))
         ;; Unpack the forms
-        (loop for form in forms do
-          (destructuring-bind (tag . args) form
-            (case tag
-              ((:descriptive) (setf descriptive (car args)))
-              ((:tags) (setf tags args))
-              ((:deprecated) (setf deprecation (car args)))
-              ((:intro) (assign-text-spec tag args intro intro-supp-p))
-              ((:short) (assign-text-spec tag args short short-supp-p))
-              ((:full)  (assign-text-spec tag args full  full-supp-p))
+      (loop for form in forms do
+        (destructuring-bind (tag . args) form
+          (case tag
+            ((:descriptive) (setf descriptive (car args)))
+            ((:tags) (setf tags args))
+            ((:intro :short :full)
+             (let ((given (decode-spec-args args)))
+               (when (stringp given)
+                 (setf given `(:plain ,given)))
+               (add-spec-args tag given)))
+            ((:params)
+             (loop for name-spec in args do
+               (let ((this-spec (cadr name-spec)))
+                 (when (stringp this-spec)
+                   (setf (cadr name-spec) `(:plain ,this-spec)))))
+             (add-spec-args tag args))
+            ((:deprecated)
+             (add-spec-args tag (car args)))
+            (otherwise
+             (add-spec-args tag args))))))
 
-              ((:params)
-               (cond
-                (params-supp-p (error "Duplicate param: ~s" args))
-                (t (setf params-supp-p t params args))))
-
-              ((:callspec)
-               (cond
-                (callspec-supp-p (error "Duplicate callspec: ~s" args))
-                (t (setf callspec-supp-p t callspec args))))
-
-              (otherwise (error "Unrecognized ~s" form)))))))
-
-    (when params-supp-p
-      (loop for name-spec in params do
-        (let ((this-spec (cadr name-spec)))
-          (when (stringp this-spec)
-            (setf (cadr name-spec) `(:plain ,this-spec))))))
-    (when (and short-supp-p (stringp short)) (setf short `(:plain ,short)))
-    (when (and intro-supp-p (stringp intro)) (setf intro `(:plain ,intro)))
-    (when (and  full-supp-p (stringp full))  (setf full  `(:plain ,full)))
-
-    (values `(:spec :self ,name :spec-type ,spec-type :spec-args ,spec-args
+    (values `(:spec :self ,name
+                    :spec-type ,spec-type
+                    :spec-args ,spec-args
                     :descriptive ,descriptive
-                    ,@(when intro-supp-p    `(:intro ,intro))
-                    ,@(when params-supp-p   `(:params ,params))
-                    ,@(when short-supp-p    `(:short ,short))
-                    ,@(when full-supp-p     `(:full ,full))
-                    ,@(when callspec-supp-p `(:callspec ,callspec)))
-            tags deprecation descriptive
-            intro intro-supp-p
-            params params-supp-p
-            short short-supp-p
-            full full-supp-p
-            callspec callspec-supp-p)))
+                    ,@result-args)
+            tags)))

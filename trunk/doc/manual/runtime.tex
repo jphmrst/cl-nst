@@ -1,11 +1,10 @@
 \section{The runtime system}
 The runtime system provides several operations for scheduling and
-running tests, and debugging failing and erring tests.  The operations
-are accessible from
-the~\texttt{nst-cmd}\index{nst-cmd@\texttt{nst-cmd}} macro.  Under
-Allegro, the top-level alias \texttt{:nst}\index{nst@\texttt{:nst}}
-provides a shorthand to this function; for the sake of brevity we use
-this shorthand below.
+running tests, and debugging failing and erring tests.
+\input{../gen/nst-cmd_compiler-macro_nst-item-style} 
+Under Allegro, the top-level alias
+\texttt{:nst}\index{nst@\texttt{:nst}} provides a shorthand to this
+function; for the sake of brevity we use this shorthand below.
 
 The \texttt{:help} command gives a complete inventory of runtime
 system commands:\index{help@\texttt{:help}}
@@ -126,6 +125,21 @@ There are currently three properties which can be manipulated by
   that system, but this setting can be overriden by the property
   \texttt{:nst-unsafe-allegro-backtraces}.  Finally, if none of these
   issues apply, the initial value is \texttt t.
+\end{itemize}
+
+The above NST commands are governed by a number of global variables.
+In general, interactive use of NST should not require direct access to
+these variables, but when automating NST operations may require
+changing, or creating a new dynamic scope for, their settings.
+\begin{itemize}
+\item
+\input{../gen/*debug-on-error*_variable_nst-item-style}
+\item
+\input{../gen/*debug-on-fail*_variable_nst-item-style}
+\item
+\input{../gen/*default-report-verbosity*_variable_nst-item-style}
+\item
+\input{../gen/*nst-output-stream*_variable_nst-item-style}
 \end{itemize}
 
 Fixtures\index{fixtures!debugging} can be \emph{opened} into the

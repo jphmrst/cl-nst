@@ -42,8 +42,17 @@
 
 (define-method-combination nst-results :operator check-result-union)
 (def-documentation (method-combination nst-results)
-    (:tags object)
-    (:intro "Method combination for unifying NST result records returned by different methods."))
+  (:tags object)
+  (:intro (:latex "NST defines a method combination \\texttt{nst-results} as the default method combination for functions defined by \\texttt{def-test-generic}.  This combination runs \\emph{all} applicable methods, and combines all of their results into a single NST result record."))
+  (:full (:latex "This default can be overridden by specifying \\texttt{t} as the method combination in the intial declaration.")
+         (:code "(nst:def-test-generic overridden
+    (:method-combination t))
+(nst:def-test-method-criterion overridden mid-cls
+  (:slots (mc1 (:eql 0))
+          (mc2 (:eql 2))))
+(nst:def-test-method-criterion overridden bot-cls
+  (:slots (sc1 (:eql 1))
+          (sc2 (:eql 1))))")))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defvar *test-methods* (make-hash-table :test 'eq)
@@ -65,8 +74,10 @@
            (setf (gethash ',function-name *test-methods*) ',use-combination))
          ',function-name))))
 (def-documentation (compiler-macro def-test-generic)
-    (:tags primary)
-    (:short "Declare a generic test function."))
+    (:tags object)
+    (:intro (:latex "The \\texttt{def-test-generic} declares a generic test function."))
+    (:callspec (function-name))
+    (:full (:code "(nst:def-test-generic for-clses)")))
 
 (defun decode-def-test-generic-body (forms)
   (let ((documentation)
@@ -141,8 +152,19 @@
            result))
        ',function-name)))
 (def-documentation (compiler-macro def-test-method)
-    (:tags primary)
-    (:short "Define one method for a generic test function."))
+    (:tags object)
+    (:intro (:latex "Define one method for a generic test function."))
+    (:callspec (class-name (formal-parameter class-name) &body (:seq form)))
+    (:full (:code "(nst:def-test-method for-clses (o mid-cls)
+  (with-slots (mc1 mc2) o
+    (cond
+      ((< mc1 mc2) (make-success-report))
+      (t (make-failure-report :format \"~d not < ~d\" :args (list mc1 mc2))))))
+(nst:def-test-method for-clses (o side-cls)
+  (with-slots (sc1 sc2) o
+    (cond
+      ((eql sc1 sc2) (make-success-report))
+      (t (make-failure-report :format \"~d not eql ~d\" :args (list sc1 sc2))))))")))
 
 (defmacro def-test-method-criterion (function-name class documentation
                                                    &optional
@@ -154,6 +176,12 @@
     `(def-test-method ,function-name (,arg ,class)
        ,@(when documentation `(,documentation))
        (check-criterion-on-form ',criterion `(list ,,arg)))))
+(def-documentation (compiler-macro def-test-method-criterion)
+    (:tags object)
+    (:intro (:latex "Define a method for a generic test function in terms of an NST criterion."))
+    (:callspec (function-name class-name &body criterion))
+    (:full (:code "(nst:def-test-method-criterion for-clses top-cls
+      (:predicate (lambda (tc) (< (tc1 tc) (tc2 tc)))))")))
 
 (defun invoke-test-methods (obj)
   (apply #'check-result-union
