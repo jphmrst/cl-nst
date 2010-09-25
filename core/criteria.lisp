@@ -57,7 +57,8 @@
           (:plain "Example:")
           (:code "(:warn \"\~{}d is not a perfect square\" 5)"))))
 
-(def-criterion (:true-form (:forms bool) ())
+(def-criterion (:true-form (:forms bool) (:form forms))
+  (declare (ignore forms))
   (if (eval bool)
       (make-success-report)
       (make-failure-report :format "Expected non-null, got: ~s"
