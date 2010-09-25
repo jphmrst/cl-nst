@@ -48,6 +48,14 @@
 (def-criterion-alias (--nst-test group-name test-name &rest subcriteria)
   `(--nst-run (:tests ((,group-name ,test-name))) ,@subcriteria))
 
+(def-criterion-alias (--nst-counter-group count-criterion)
+  (cond
+    ((listp group-name)
+     `(--nst-run (:groups ,group-name) ,@subcriteria))
+    ((symbolp group-name)
+     `(--nst-run (:groups (,group-name)) ,@subcriteria))
+    (t (error "Expected a symbol or list; got ~s" group-name))))
+
 (def-criterion-alias (--nst-no-test-in-group group-name test-name)
   `(:true-form (not (gethash ',test-name
                              (nst::test-name-lookup
