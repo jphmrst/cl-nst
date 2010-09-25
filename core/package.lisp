@@ -47,6 +47,7 @@
 
              #:arbitrary
              #:compound-structure
+             #:*max-compound-structure-depth*
              #:def-arbitrary-instance-type
 
              #:def-criterion #:def-criterion-unevaluated #:def-criterion-alias
@@ -75,35 +76,35 @@
                (declare (ignore sy pk tg))
                (format sr "Primary macros")))
 (defdoc:def-doc-tag nst::criteria (:package :nst)
-  :sort 1
+  :sort 3
   :formatter (lambda (sy pk tg sr)
                (declare (ignore sy pk tg))
                (format sr "Functions used in criteria definitions")))
 (defdoc:def-doc-tag nst::control (:package :nst)
-  :sort 2
+  :sort 5
   :formatter (lambda (sy pk tg sr)
                (declare (ignore sy pk tg))
                (format sr "Programmatic control of testing and output")))
-(defdoc:def-doc-tag nst::settings (:package :nst)
-  :sort 4
-  :formatter (lambda (sy pk tg sr)
-               (declare (ignore sy pk tg))
-               (format sr "User settings")))
 (defdoc:def-doc-tag nst::sample (:package :nst)
   :sort 8
   :formatter (lambda (sy pk tg sr)
                (declare (ignore sy pk tg))
                (format sr "Testing randomized samples")))
 (defdoc:def-doc-tag nst::object (:package :nst)
-  :sort 9
+  :sort 11
   :formatter (lambda (sy pk tg sr)
                (declare (ignore sy pk tg))
                (format sr "Method-based tests on objects")))
 (defdoc:def-doc-tag &rest (:package :nst)
-  :sort 10
+  :sort 15
   :formatter (lambda (sy pk tg sr)
                (declare (ignore sy pk tg))
                (format sr "Other symbols")))
+(defdoc:def-doc-tag nst::deprecated (:package :nst)
+  :sort 20
+  :formatter (lambda (sy pk tg sr)
+               (declare (ignore sy pk tg))
+               (format sr "Deprecated macros, functions and variable")))
 
 (defun nst::make-package-documentation ()
   "Write documentation for this package, using system package-doc."

@@ -2,7 +2,7 @@
 
 (defvar +defdocs+ (make-hash-table :test 'eq)
   "Master global hashtable of all documentation specifiers.")
-(defvar +defdocs-tags+ (make-hash-table :test 'eq)
+(defvar +doctypes+ (make-hash-table :test 'eq)
   "Master global hashtable of all documentation specifiers.")
 (defun get-doctypes ()
   (loop for type being the hash-keys of +defdocs+ collect type))
@@ -39,8 +39,8 @@
          #',(cond
              (lisp-installer-supp-p lisp-installer)
              (t '(lambda (x y) (declare (ignore x y))))))
-       (unless (gethash ',name +defdocs-tags+)
-         (setf (gethash ',name +defdocs-tags+) (make-hash-table :test 'eq)))
+       (unless (gethash ',name +doctypes+)
+         (setf (gethash ',name +doctypes+) (make-hash-table :test 'eq)))
        (unless (gethash ',name +defdocs+)
          (setf (gethash ',name +defdocs+) (make-hash-table :test 'eq))))))
 
@@ -64,7 +64,7 @@
     type-hash))
 
 (defun get-doc-tags-type-hash (type)
-  (let ((type-hash (gethash type +defdocs-tags+)))
+  (let ((type-hash (gethash type +doctypes+)))
     (unless type-hash
       (error "No such documentation type ~s" type))
     type-hash))

@@ -87,9 +87,15 @@
                        &allow-other-keys) spec-args
     (cond
      (intro-supp-p
-      (format-docspec stream style intro spec-type))
+      (format-docspec stream style
+                      (latex-style-adjust-spec-element style spec-type in
+                                                       :intro spec-args intro)
+                      spec-type))
      ((and short-supp-p (not full-supp-p))
-      (format-docspec stream style short spec-type)))
+      (format-docspec stream style
+                      (latex-style-adjust-spec-element style spec-type in
+                                                       :short spec-args short)
+                      spec-type)))
 
     (when callspec-supp-p
       (princ " \\begin{verbatim}" stream)
@@ -103,10 +109,24 @@
       (princ "\\begin{description}" stream)
       (loop for (name subspec) in params do
         (format stream "\\item[~a] " name)
-        (format-docspec stream style subspec spec-type))
+        (format-docspec stream style
+                        (latex-style-adjust-spec-element style spec-type in
+                              :subspec spec-args subspec)
+                        spec-type))
       (princ "\\end{description}" stream))
 
-    (when full-supp-p (format-docspec stream style full spec-type))))
+    (when full-supp-p
+      (format-docspec stream style
+                      (latex-style-adjust-spec-element style spec-type in
+                                                       :full spec-args full)
+                      spec-type))))
+
+(defgeneric latex-style-adjust-spec-element (style spec-type spec-head element
+                                                   spec-args datum)
+  (:method (style spec-type spec-head element
+                  spec-args datum)
+     (declare (ignore style spec-type spec-head element spec-args))
+     datum))
 
 (defmethod format-docspec-element ((style latex-style) spec-type
                                    (in (eql :plain)) stream args)
@@ -234,8 +254,10 @@
              (loop for tag being the hash-keys of tag-sort collect tag)))
         (loop for tag
               in (sort tag-list #'(lambda (x y)
-                                    (< (tag-sort style actual-package x)
-                                       (tag-sort style actual-package y))))
+                                    (let ((sx (tag-sort style actual-package x))
+                                          (sy (tag-sort style
+                                                        actual-package y)))
+                                      (< sx sy))))
               for tag-hash = (gethash tag tag-sort)
               do
            (package-list-group-header style pspec tag stream)

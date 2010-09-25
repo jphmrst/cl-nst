@@ -891,8 +891,9 @@ six-value summary of the results:
         :replacement '(make-warning-report))
   `(make-warning-report ,@args))
 (def-documentation (compiler-macro emit-warning)
-    (:tags criteria)
-    (:short "Deprecated; use make-warning-report."))
+  (:tags deprecated)
+  (:deprecated t)
+  (:short "Deprecated; use make-warning-report."))
 
 (defun make-failure-report (&key format args info)
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
@@ -912,8 +913,9 @@ six-value summary of the results:
         :replacement '(make-failure-report))
   `(make-failure-report ,@args))
 (def-documentation (compiler-macro emit-failure)
-    (:tags criteria)
-    (:short "Deprecated; use make-failure-report."))
+  (:tags deprecated)
+  (:deprecated t)
+  (:short "Deprecated; use make-failure-report."))
 
 (defun make-success-report (&rest args &key warnings info)
   (declare (ignore warnings info))
@@ -929,8 +931,9 @@ six-value summary of the results:
         :replacement '(make-success-report))
   `(make-success-report ,@args))
 (def-documentation (compiler-macro emit-success)
-    (:tags criteria)
-    (:short "Deprecated; use make-success-report."))
+  (:tags deprecated)
+  (:deprecated t)
+  (:short "Deprecated; use make-success-report."))
 
 (defun add-failure (result &key format args)
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
@@ -940,8 +943,10 @@ six-value summary of the results:
         (check-result-failures result)))
 (def-documentation (function add-failure)
     (:tags criteria)
-    (:short
-     "For use within user-defined NST criteria: add a failure to a result."))
+    (:short (:latex
+             "For use within user-defined NST criteria: add a failure to a result."))
+    (:intro (:latex
+             "The \\texttt{add-failure} function adds a failure note to a result record.")))
 
 (defun add-error (result &key format args)
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
@@ -951,7 +956,9 @@ six-value summary of the results:
         (check-result-errors result)))
 (def-documentation (function add-error)
     (:tags criteria)
-    (:short "For use within user-defined NST criteria: add an error to a result."))
+    (:intro (:latex "For use within user-defined NST criteria: add an error to a result."))
+    (:intro (:latex
+             "The \\texttt{add-error} function adds an error note to a result record.")))
 
 (defun add-test-config-error (test-obj format &rest args)
   (let ((*nst-group-name* (group-name test-obj))
@@ -965,7 +972,9 @@ six-value summary of the results:
   (push item (check-result-info result)))
 (def-documentation (function add-info)
     (:tags criteria)
-    (:short "For use within user-defined NST criteria: add an info note to a result."))
+    (:short "For use within user-defined NST criteria: add an info note to a result.")
+    (:intro (:latex
+             "The \\texttt{add-info} function adds auxiliary information to a result record.")))
 
 (defgeneric format-for-warning (stream item colon at-sign &rest params)
   (:documentation "Hook allowing us to sometimes do better than the usual

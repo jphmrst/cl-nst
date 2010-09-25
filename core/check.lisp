@@ -79,14 +79,17 @@ as errors arising from within the ."
   (check-criterion-on-form criterion `(list ',expr)))
 (def-documentation (function check-criterion-on-value)
     (:tags criteria)
-    (:short "Verify that a value adheres to a criterion."))
+    (:short "This function verifies that the value adheres to the criterion.")
+    (:callspec (criterion value)))
 (defun check-criterion-on-form (criterion form)
   (unless (listp criterion)
     (setf criterion (list criterion)))
   (apply-criterion (car criterion) (cdr criterion) form))
 (def-documentation (function check-criterion-on-form)
     (:tags criteria)
-    (:short "Verify that an unevaluated form adheres to a criterion."))
+    (:short
+     "This function verifies that the values return by evaluating the form adheres to the criterion.")
+    (:callspec (criterion form)))
 
 (defun build-continue-check-expr (criterion form)
   `(apply-criterion ',(car criterion) ',(cdr criterion) ',form))
@@ -287,9 +290,30 @@ definitions with two sets of formal parameters:")
            `((setf (documentation ',name :nst-criterion) ,docstring))))))
 (def-documentation (compiler-macro def-criterion-unevaluated)
     (:tags primary)
-  (:intro "Define a new criterion for use in NST tests.")
+  (:intro (:latex "\\index{def-criterion-unevaluated@\\texttt{def-criterion-unevaluated}}As under \\texttt{def-criterion}, the body of these criteria
+definitions receive the forms provided as the actual parameters of the
+criterion itself, and should return a test result report.  However,
+these criteria receive the unevaluated forms under test, deciding when
+and whether to evaluate them."))
   (:callspec ((name criterion-lambda-list forms-arg) &body
-              (:opt documentation) (:seq form))))
+              (:opt documentation) (:seq form)))
+;;;  (:full (:seq (:latex "Example:")
+;;;               (:code "  (def-form-criterion (:apply (transform criterion) forms)
+;;;    (continue-check criterion
+;;;                  `(multiple-value-list (apply #',transform ,forms))))
+;;;
+;;;  (def-form-criterion (:not (subcriterion) exprs-form)
+;;;    (let ((subcheck (gensym)))
+;;;      `(let ((,subcheck ,(continue-check subcriterion exprs-form)))
+;;;         (cond
+;;;          ((check-result-errors ,subcheck)
+;;;           ,subcheck)
+;;;          ((check-result-failures ,subcheck)
+;;;           (check-result :info (check-result-info ,subcheck)))
+;;;          (t
+;;;           (make-failure-report :format \"Expected failure from ~s\"
+;;;                         :args '(,subcriterion)))))))")))
+  )
 
 #+allegro (excl::define-simple-parser def-values-criterion caadr :nst-criterion)
 (defmacro def-values-criterion ((name args-formals forms-formals &key
@@ -318,7 +342,7 @@ definitions with two sets of formal parameters:")
                        (,(format nil "Error from criterion ~s body" name))
                      (eval (progn ,@forms))))))))))))
 (def-documentation (compiler-macro def-values-criterion)
-    (:tags primary)
+    (:tags deprecated)
     (:deprecated t)
     (:short "DEPRECATED: use def-criterion instead."))
 
@@ -332,9 +356,9 @@ definitions with two sets of formal parameters:")
        (destructuring-bind ,args-formals ,ap
          (eval (progn ,@forms))))))
 (def-documentation (compiler-macro def-form-criterion)
-    (:tags primary)
+    (:tags deprecated)
     (:deprecated t)
-    (:short "DEPRECATED: use def-criterion-unevaluated instead."))
+    (:short (:latex "DEPRECATED: use def-criterion-unevaluated instead.")))
 
 (defmacro def-criterion-alias ((name . args-formals) docstring-or-form
                                &optional (form nil form-supp-p))
@@ -362,23 +386,40 @@ definitions with two sets of formal parameters:")
       (t redef))))
 (def-documentation (compiler-macro def-criterion-alias)
     (:tags primary)
-    (:intro "Define one criterion in terms of another.")
-  (:callspec ((name &rest args) &body (:opt documentation) expansion)))
+    (:intro (:latex "The simplest mechanism for defining a new criterion involves simply
+defining one criterion to rewrite as another using
+\\texttt{def-criterion-alias}:\\index{def-criterion-alias@\\texttt{def-criterion-alias}}"))
+    (:callspec ((name (:seq arg)) &body (:opt documentation) expansion))
+    (:full (:latex "The body of the expansion should be a Lisp form which, when evaluated, returns an S-expression quoting the new criterion which the rewrite should produce.  The \\texttt{arg}s are passed as for Lisp macros: they are not evaluated and are most typically comma-inserted into a backquoted result.  For example:")
+           (:code "  (def-criterion-alias (:forms-eq) `(:predicate eq))
+  (def-criterion-alias (:symbol name) `(:eq ',name))")))
 
 #+allegro (excl::define-simple-parser def-values-check caadr :nst-criterion)
 (defmacro def-value-check (&rest args)
   (warn 'nst-soft-deprecation
-        :old-name 'def-value-check :replacement 'def-values-criterion)
+        :old-name 'def-value-check :replacement 'def-criterion)
   `(def-values-criterion ,@args))
+(def-documentation (compiler-macro def-values-check)
+  (:tags deprecated)
+  (:deprecated t)
+  (:short "Deprecated: use def-criterion instead"))
 
 #+allegro (excl::define-simple-parser def-control-check caadr :nst-criterion)
 (defmacro def-control-check (&rest args)
   (warn 'nst-soft-deprecation
-        :old-name 'def-control-check :replacement 'def-form-criterion)
+        :old-name 'def-control-check :replacement 'def-criterion)
   `(def-form-criterion ,@args))
+(def-documentation (compiler-macro def-control-check)
+  (:tags deprecated)
+  (:deprecated t)
+  (:short "Deprecated: use def-criterion instead"))
 
 #+allegro (excl::define-simple-parser def-check-alias caadr :nst-criterion)
 (defmacro def-check-alias (&rest args)
   (warn 'nst-soft-deprecation
         :old-name 'def-check-alias :replacement 'def-criterion-alias)
   `(def-criterion-alias ,@args))
+(def-documentation (compiler-macro def-check-alias)
+  (:tags deprecated)
+  (:deprecated t)
+  (:short "Deprecated: use def-criterion-alias instead"))

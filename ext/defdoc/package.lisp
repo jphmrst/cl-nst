@@ -38,7 +38,13 @@
              #:spec-to-lines
              #:indent-by #:bracket-with #:width #:flow
 
+             #:latex-style-adjust-spec-element
+             #:package-list-entry
+             #:package-list-group-header
+             #:package-list-overall-header
+
              #:standard-docstring-style
+             #:latex-style
              #:package-list-latex-style
              #:*docstring-style*
              #:*defdoc-latex-default-directory*))
