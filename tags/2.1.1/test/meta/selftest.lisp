@@ -134,3 +134,9 @@
   (def-test fix-exp-3  (:package-internal :mnst-src-1) 'exp-fix-3)
   (def-test fix-exp-3a (:package-exports :mnst-src-1) 'fix3a)
   (def-test fix-exp-3b (:package-exports :mnst-src-1) 'fix3b))
+
+(def-test-group counter-metatest ()
+  (def-test ct
+      (:progn (setf nst-meta-sources-1::*test-exec-counter* 0)
+              (--nst-group nst-meta-sources-1::counter-tests
+                (:true-form (eql nst-meta-sources-1::*test-exec-counter* 1))))))
