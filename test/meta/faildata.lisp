@@ -122,3 +122,11 @@
 (def-fixtures exp-fix-3 (:export-bound-names t)
   (fix3a :true)
   (fix3b :false))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Testing the number of times a test is executed
+
+(defvar *test-exec-counter* 0)
+(def-test-group counter-tests ()
+   (nst:def-test counter-test :true
+     (incf *test-exec-counter*)))
