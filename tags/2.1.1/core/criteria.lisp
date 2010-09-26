@@ -32,7 +32,7 @@
 (def-criterion-unevaluated (:warn (&rest args) chk :ignore-forms t)
   (make-warning-report :format (car args) :args (cdr args)))
 
-(def-criterion (:true-form (bool) ())
+(def-criterion-unevaluated (:true-form (bool) ignored :ignore-forms t)
   (if (eval bool)
       (make-success-report)
       (make-failure-report :format "Expected non-null, got: ~s"
