@@ -28,6 +28,10 @@
 ;;; Programmatic starters for a test from Lisp.  Starters such
 ;;; as via ASDF and REPL macros call these functions.
 ;;;
+
+;;; (defun run-multiple (packages groups tests)
+;;;  (loop for group in groups collect
+
 (defun run-package (&optional (package-or-name *package*))
   "Run all groups in a package.  Note that this is /not/ an interactive
 function --- certain behaviors provided by e.g. the ASDF extension or
