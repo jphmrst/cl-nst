@@ -65,41 +65,43 @@ Examples of NST fixtures, groups and tests are available in
 page shows the changes involved in using NST in a system definition.
 
 \section*{Forms}
-The \texttt{def-fixtures} form associates a sequence of names and
-forms.
-\input{../common/fixture-syntax}
-with keyword arguments:
-\begin{itemize}
-
-\item\texttt{uses} gives fixtures assumed to also be used whenever
-  this fixture is used.
-
-\item\texttt{assumes} lists names assumed to be bound --- although not
-  necessarily from the same source at each use of this fixture --- at
-  the point of any use of this fixture.
-
-\item\texttt{startup}, \texttt{setup}, \texttt{cleanup} and
-  \texttt{finish} forms are run when the fixture set is applied to a
-  group or test.  \texttt{Startup} is run before the fixtures' forms
-  are evaluated; \texttt{setup} is run within the scope of the
-  fixtures immediately after they are evaluated and bound;
-  \texttt{cleanup} is the last form of the scope of the fixtures'
-  bound names; \texttt{finish} is run after this scope is exited.
-
-\item\texttt{documentation} is a documentation string for the fixture
-  set.
-
-\item\texttt{inner} is the list of declarations to be made inside the
-  let-binding of names of any use of this fixture.  Do not include the
-  "declare" keyword here; NST adds these declarations to others,
-  including a special declaration of all bound names.
-
-\item\texttt{outer} is the list of declarations to be made outside the
-  let-binding of names of any use of this fixture.
-
-\item The \texttt{export-...} arguments control export of the fixture
-  and bound names from the current package.
-\end{itemize}
+\input{../gen/def-fixtures_compiler-macro_nst-quickref}
+% 
+% The \texttt{def-fixtures} form associates a sequence of names and
+% forms.
+% \input{../common/fixture-syntax}
+% with keyword arguments:
+% \begin{itemize}
+% 
+% \item\texttt{uses} gives fixtures assumed to also be used whenever
+%   this fixture is used.
+% 
+% \item\texttt{assumes} lists names assumed to be bound --- although not
+%   necessarily from the same source at each use of this fixture --- at
+%   the point of any use of this fixture.
+% 
+% \item\texttt{startup}, \texttt{setup}, \texttt{cleanup} and
+%   \texttt{finish} forms are run when the fixture set is applied to a
+%   group or test.  \texttt{Startup} is run before the fixtures' forms
+%   are evaluated; \texttt{setup} is run within the scope of the
+%   fixtures immediately after they are evaluated and bound;
+%   \texttt{cleanup} is the last form of the scope of the fixtures'
+%   bound names; \texttt{finish} is run after this scope is exited.
+% 
+% \item\texttt{documentation} is a documentation string for the fixture
+%   set.
+% 
+% \item\texttt{inner} is the list of declarations to be made inside the
+%   let-binding of names of any use of this fixture.  Do not include the
+%   "declare" keyword here; NST adds these declarations to others,
+%   including a special declaration of all bound names.
+% 
+% \item\texttt{outer} is the list of declarations to be made outside the
+%   let-binding of names of any use of this fixture.
+% 
+% \item The \texttt{export-...} arguments control export of the fixture
+%   and bound names from the current package.
+% \end{itemize}
 
 The \texttt{def-test-group} form \input{../common/group-syntax}
 defines a group of the given name, providing one instantiation of the

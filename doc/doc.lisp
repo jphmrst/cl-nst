@@ -26,7 +26,8 @@
   (let* ((doc-root-dir (asdf:system-relative-pathname (asdf:find-system :nst)
                                                       "doc/"))
          (gen-dir (merge-pathnames #p"gen/" doc-root-dir))
-         (manual-dir (merge-pathnames #p"manual/" doc-root-dir)))
+         (manual-dir (merge-pathnames #p"manual/" doc-root-dir))
+         (quickref-dir (merge-pathnames #p"quickref/" doc-root-dir)))
     (defdoc:write-doctype-latex 'nst::criterion
         :echo #'(lambda (&key name type)
                   (format t "Writing ~a ~a...~%" type name))
@@ -34,20 +35,27 @@
         :style 'nst-criterion-style)
     (defdoc:write-package-specs-latex :nst
         :echo #'(lambda (&key name type)
-                  (format t "Writing ~a ~a...~%" type name))
+                  (format t "Writing ~a ~a for manual...~%" type name))
         :directory gen-dir
         :style 'nst-item-style
         :package-style 'nst-package-list-latex-style)
+    (defdoc:write-package-specs-latex :nst
+        :echo #'(lambda (&key name type)
+                  (format t "Writing ~a ~a for quickref...~%" type name))
+        :directory gen-dir
+        :style 'nst-quickref
+        :package-style nil)
 
     ;; Run LaTeX to build the manual
     (format t "Generating PDF manual from LaTeX...~%")
     #+allegro (progn
                  (excl:chdir manual-dir)
-                 ;; (asdf:run-shell-command "pdflatex" "manual.tex")
                  (excl:run-shell-command "pdflatex manual.tex")
                  (excl:run-shell-command "makeindex manual")
                  (excl:run-shell-command "pdflatex manual.tex")
-                 (excl:run-shell-command "pdflatex manual.tex"))
+                 (excl:run-shell-command "pdflatex manual.tex")
+                 (excl:chdir quickref-dir)
+                 (excl:run-shell-command "pdflatex quickref"))
 
     #+sbcl (progn
              (sb-posix:chdir manual-dir)
@@ -58,6 +66,9 @@
              (sb-ext:run-program "pdflatex" '("manual.tex")
                                  :wait t :search t :output nil :error t)
              (sb-ext:run-program "pdflatex" '("manual.tex")
+                                 :wait t :search t :output nil :error t)
+             (sb-posix:chdir quickref-dir)
+             (sb-ext:run-program "pdflatex" '("quickref.tex")
                                  :wait t :search t :output nil :error t))
 
 ;;;    #+clozure (progn
@@ -94,6 +105,48 @@
   (destructuring-bind (&key self &allow-other-keys) spec-args
   `(:seq (:latex ,(format nil "\\label{~a:primary}" self))
          ,(call-next-method))))
+
+(defclass nst-quickref (defdoc:latex-style) ())
+(defmethod format-docspec-element ((style nst-quickref) spec-type
+                                   (in (eql :spec)) stream spec-args)
+  (destructuring-bind (&key self
+                            (intro nil intro-supp-p)
+                            (params nil params-supp-p)
+                            (short nil short-supp-p)
+                            (callspec nil callspec-supp-p)
+                       &allow-other-keys) spec-args
+    (cond
+     (short-supp-p
+      (format-docspec stream style
+                      (latex-style-adjust-spec-element style spec-type in
+                                                       :intro spec-args short)
+                      spec-type))
+     (intro-supp-p
+      (format-docspec stream style
+                      (latex-style-adjust-spec-element style spec-type in
+                                                       :intro spec-args intro)
+                      spec-type)))
+
+    (when callspec-supp-p
+      (princ " \\begin{verbatim}" stream)
+      (loop for (cs . others) on callspec do
+        (loop for line
+              in (defdoc::callspec-to-lines cs defdoc::*latex-verbatim-width* self)
+              do
+           (format stream "  ~a~%" line))
+        (when others (format stream "~%")))
+      (princ "\\end{verbatim}" stream))
+
+    (when params-supp-p
+      (princ "\\begin{description}" stream)
+      (loop for (name subspec) in params do
+        (format stream "\\item[~a] " name)
+        (format-docspec stream style
+                        (latex-style-adjust-spec-element style spec-type in
+                              :subspec spec-args subspec)
+                        spec-type))
+      (princ "\\end{description}" stream))))
+
 
 (defclass nst-package-list-latex-style (defdoc:package-list-latex-style) ())
 (defmethod defdoc:package-list-entry ((style nst-package-list-latex-style)
