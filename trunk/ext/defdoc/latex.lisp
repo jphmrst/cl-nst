@@ -4,15 +4,27 @@
 ;;; -----------------------------------------------------------------
 ;;; Top-level LaTeX generation APIs.
 
+(defgeneric get-latex-output-file-name (style usage name)
+  (:method ((style symbol) usage name)
+           (concatenate 'string
+             (symbol-name name) "_"
+             (symbol-name usage) "_"
+             (symbol-name style) ".tex"))
+  (:method (style usage name)
+     (get-latex-output-file-name (type-of style) usage name)))
+
 (defun write-spec-latex (name usage &key
                               (style 'latex-style)
                               (directory *defdoc-latex-default-directory*)
-                              (file (concatenate 'string
-                                      (symbol-name name) "_"
-                                      (symbol-name usage)"_"
-                                      (symbol-name style) ".tex")))
+                              (file nil file-supp-p))
   ;; (format t "----------~%style ~s~%dir ~s~%file ~s~%" style directory file)
-  #+sbcl
+  (when (symbolp style)
+    (setf style (make-instance style)))
+
+  (unless file-supp-p
+    (setf file (get-latex-output-file-name style usage name)))
+
+  #+(or sbcl lispworks)
   (setf file (block quote-wild
                (loop for char across file
                    append (case char

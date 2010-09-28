@@ -42,6 +42,7 @@
              #:package-list-entry
              #:package-list-group-header
              #:package-list-overall-header
+             #:get-latex-output-file-name
 
              #:standard-docstring-style
              #:latex-style
