@@ -271,54 +271,34 @@
 
                    ',name)))))))
 (def-documentation (compiler-macro def-fixtures)
-    (:tags primary)
-    (:intro (:latex "Fixtures\\index{fixtures} are data structures and values which may be
+  (:tags primary)
+  (:intro (:latex "Fixtures\\index{fixtures} are data structures and values which may be
 referred to by name during testing.  NST provides the ability to use
 fixtures across multiple tests and test groups, and to inject fixtures
 into the runtime namespace for debugging.
 A set of fixtures is defined using the \\texttt{def-fixtures}
 macro:\\index{def-fixtures@\\texttt{def-fixtures}}")
-;;;            (:code "  (def-fixtures FIXTURE-NAME
-;;;          ([ :uses USES ]
-;;;           [ :assumes ASSUMES ]
-;;;           [ :outer OUTER ]
-;;;           [ :inner INNER ]
-;;;           [ :setup FORM ]
-;;;           [ :cleanup FORM ]
-;;;           [ :startup FORM ]
-;;;           [ :finish FORM ]
-;;;           [ :documentation DOCUMENTATION ]
-;;;           [ :cache FLAG ]
-;;;           [ :export-names FLAG ]
-;;;           [ :export-fixture-name FLAG ]
-;;;           [ :export-bound-names FLAG ])
-;;;    ([ ([ :cache FLAG ]) ] NAME FORM)
-;;;    ([ ([ :cache FLAG ]) ] NAME FORM)
-;;;    ...
-;;;    ([ ([ :cache FLAG ]) ] NAME FORM))")
-;;;            (:plain "Associate names to values.  One or more fixtures may be applied to each test group, test or another fixture.  None of the keyword options are manditory.")
             )
-  (:callspec (FIXTURE-NAME (&key (uses USES)
-                                 (assumes ASSUMES)
-                                 (outer OUTER)
-                                 (inner INNER)
+  (:callspec (fixture-name (&key (special ((:seq NAME)
+                                           (:key-head fixture (:seq NAME))))
+                                 (outer FORM)
+                                 (inner FORM)
                                  (setup FORM)
                                  (cleanup FORM)
                                  (startup FORM)
                                  (finish FORM)
-                                 (documentation DOCUMENTATION)
+                                 (documentation STRING)
                                  (cache FLAG)
                                  (export-names FLAG)
                                  (export-fixture-name FLAG)
                                  (export-bound-names FLAG))
                            &body
                            (:seq ( (:opt (&key (cache FLAG))) NAME FORM))))
-  (:params (FIXTURE-NAME (:plain "The name to be associated with this set of fixtures."))
-           (USES (:plain "List of the names of other fixture sets which this declaration assumes to be available.  This declaration is optional, but will supress some warnings."))
-           (ASSUMES (:plain "List of names assumed to be bound at the point of any use of this fixture."))
-           (INNER (:plain "List of declarations to be made inside the let-binding of names of any use of this fixture.  Do not include the \"declare\" keyword here; NST adds these declarations to others, including a special declaration of all bound names."))
-           (OUTER (:plain "List of declarations to be made outside the let-binding of names of any use of this fixture."))
-           (DOCUMENTATION (:plain "A documentation string for the fixture set."))
+  (:params (fixture-name (:plain "The name to be associated with this set of fixtures."))
+           (inner (:plain "List of declarations to be made inside the let-binding of names of any use of this fixture.  Do not include the \"declare\" keyword here; NST adds these declarations to others, including a special declaration of all bound names."))
+           (outer (:plain "List of declarations to be made outside the let-binding of names of any use of this fixture."))
+           (documentation (:plain "A documentation string for the fixture set."))
+           (special (:latex "Specifies a list of names which should be declared \\texttt{special} in the scope within which this set's fixtures are evaluated.  The individual names are taken to be single variable names.  Each \\texttt{(:fixture NAME)} specifies all of the names of the given fixture set.  This declaration is generally optional under most platforms, but can help supress spurious warnings.  Note that multiple \\texttt{(:fixture NAME)}s may be listed, and these lists and the bare names may be intermixed.  If only one name or fixture is specified, it need not be placed in a list"))
            (export-fixture-name (:plain "When non-nil, the fixture name will be added to the list of symbols exported by the current package."))
            (export-bound-names (:plain "When non-nil, the names bound by this fixture will be added to the list of symbols exported by the current package."))
            (export-names (:plain "When non-nil, sets the default value to t for the two options above."))
