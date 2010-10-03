@@ -1,9 +1,17 @@
 
-2.1.2 - 
+2.1.2 - public release
  Improved some of the test output.
  Fixed a bug in some of the self-test criteria (which had obviously
    never yet come into use).
  Removed some of the verbosity on recursively-called self-tests.
+ Ticket 212: Correct some duplicate execution of tests.
+ Ticket 189: Allow packages to be omitted from :report and :detail.
+ Documentation tickets: #192, #193, #210.
+ Consolidate the :uses and :assumes options to def-fixtures into the single,
+   clearer option :special.  Old options still allowed for now but deprecated.
+ Ticket 187: Removed some deprecated internal names.
+ Added a new documentation system for generating common text of the docstrings,
+   manual and reference card: #161, #194, #195.
 
 2.1.1 - public release, August 31, 2010
  Fixed a bug in the implementation of fixture sets exporting names into their

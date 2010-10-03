@@ -26,7 +26,9 @@
 
 #+allegro (excl::define-simple-parser def-fixtures second :nst-fixture-set)
 (defmacro def-fixtures (name
-                        (&key uses assumes outer inner documentation cache
+                        (&key (uses nil uses-supp-p)
+                              (assumes nil assumes-supp-p)
+                              special outer inner documentation cache
                               (setup nil setup-supp-p)
                               (cleanup nil cleanup-supp-p)
                               (startup nil startup-supp-p)
@@ -34,7 +36,7 @@
                               export-names
                               (export-bound-names nil export-bound-names-supp-p)
                               (export-fixture-name nil
-                                                   export-fixture-name-supp-p))
+                               export-fixture-name-supp-p))
                         &body bindings)
   (declare (ignorable assumes outer inner))
 
@@ -42,6 +44,16 @@
   ;; latter into the former so that internally it's all uniform.
   (unless (listp uses) (setf uses (list uses)))
   (unless (listp assumes) (setf assumes (list assumes)))
+  (when (or (not (listp special))
+            (and (listp special) (eq :fixture (car special))))
+    (setf special (list special)))
+
+  ;; Discourage deprecated forms
+  (when uses-supp-p
+    (warn 'nst-soft-keyarg-deprecation :old-name :uses :replacement :special))
+  (when assumes-supp-p
+    (warn 'nst-soft-keyarg-deprecation
+          :old-name :assumes :replacement :special))
 
   (when export-names
     (unless export-bound-names-supp-p
@@ -121,132 +133,143 @@
                                 (when b
                                   (return-from make-cache-any t)))
                               nil))
-            (return-from def-fixtures
-              `(progn
-                 #+allegro
-                 (excl:record-source-file ',name :type :nst-fixture-set)
-                 #+allegro
-                 (loop for name in ',bound-names do
-                   (excl:record-source-file name :type :nst-fixture))
+            (let* ((external-special `(,@(loop for used-fixture in uses
+                                             append (bound-names used-fixture))
+                                       ,@assumes
+                                       ,@(loop for sp in special
+                                             append
+                                               (cond
+                                                ((and (listp sp)
+                                                      (eq :fixture (car sp)))
+                                                 (loop for fx in (cdr sp)
+                                                     append (bound-names fx)))
+                                                ((symbolp sp)
+                                                 (list sp)))))))
+              (return-from def-fixtures
+                `(progn
+                   #+allegro
+                   (excl:record-source-file ',name :type :nst-fixture-set)
+                   #+allegro
+                   (loop for name in ',bound-names do
+                         (excl:record-source-file name :type :nst-fixture))
 
-                 (eval-when (:compile-toplevel :load-toplevel :execute)
-                   (defclass ,name (standard-fixture)
-                     ((bound-names :reader bound-names :allocation :class)
-                      ,@(when cache-any
-                          `((cached-values :initform (make-hash-table :test 'eq)
-                                           :accessor cached-values))))
-                     (:metaclass singleton-class)
-                     ,@(when documentation `((:documentation ,documentation))))
+                   (eval-when (:compile-toplevel :load-toplevel :execute)
+                     (defclass ,name (standard-fixture)
+                       ((bound-names :reader bound-names :allocation :class)
+                        ,@(when cache-any
+                            `((cached-values :initform (make-hash-table
+                                                        :test 'eq)
+                                             :accessor cached-values))))
+                       (:metaclass singleton-class)
+                       ,@(when documentation
+                           `((:documentation ,documentation))))
 
-                   (finalize-inheritance (find-class ',name))
-                   (setf (slot-value (make-instance ',name) 'bound-names)
-                         ',bound-names)
+                     (finalize-inheritance (find-class ',name))
+                     (setf (slot-value (make-instance ',name) 'bound-names)
+                       ',bound-names)
 
-                   ,@(when cache-any
-                       `((clrhash (cached-values (make-instance ',name))))))
+                     ,@(when cache-any
+                         `((clrhash (cached-values (make-instance ',name))))))
 
-                 (record-name-use :fixture ',name (make-instance ',name))
+                   (record-name-use :fixture ',name (make-instance ',name))
 
-                 ,(when cache-any
-                    `(defmethod flush-fixture-cache ((f ,name))
-                       (clrhash (cached-values f))))
+                   ,(when cache-any
+                      `(defmethod flush-fixture-cache ((f ,name))
+                         (clrhash (cached-values f))))
 
-                 (defmethod do-group-fixture-assignment
-                     :around ((,g-param ,name) ,t-param)
-                   (declare (ignorable ,t-param)
-                            (special ,@(loop for used-fixture in uses
-                                           append (bound-names used-fixture))
-                                     ,@assumes))
-                   ,@(when startup-supp-p (list startup))
-                   (prog1
-                       (let* ,bindings-with-tracking
-                         (declare (special ,@bound-names))
-                         (setf *binding-variable* nil)
-                         ,@(when setup-supp-p (list setup))
-                         (prog1
-                           (call-next-method)
-                           ,@(when cleanup-supp-p (list cleanup))))
+                   (defmethod do-group-fixture-assignment
+                       :around ((,g-param ,name) ,t-param)
+                     (declare (ignorable ,t-param)
+                              ,@(when external-special
+                                  `((special ,@external-special))))
+                     ,@(when startup-supp-p (list startup))
+                     (prog1
+                         (let* ,bindings-with-tracking
+                           ,@(when bound-names
+                               `((declare (special ,@bound-names))))
+                           (setf *binding-variable* nil)
+                           ,@(when setup-supp-p (list setup))
+                           (prog1
+                               (call-next-method)
+                             ,@(when cleanup-supp-p (list cleanup))))
                        ,@(when finish-supp-p (list finish))))
 
-                 (defmethod get-fixture-bindings ((f ,name))
-                   ',bindings)
+                   (defmethod get-fixture-bindings ((f ,name))
+                     ',bindings)
 
-                 (defmethod do-test-fixture-assignment
-                     :around ((,t-param ,name))
-                   (declare (special ,@(loop for used-fixture in uses
-                                           append (bound-names used-fixture))
-                                     ,@assumes))
-                   (let* ,bindings-with-tracking
-                     (declare (special ,@bound-names))
-                     (setf *binding-variable* nil)
-                     (call-next-method)))
+                   (defmethod do-test-fixture-assignment
+                       :around ((,t-param ,name))
+                     ,@(when external-special
+                         `((declare (special ,@external-special))))
+                     (let* ,bindings-with-tracking
+                       ,@(when bound-names
+                           `((declare (special ,@bound-names))))
+                       (setf *binding-variable* nil)
+                       (call-next-method)))
 
-                 ;; Function for expanding names into the current namespace.
-                 (defmethod open-fixture ((f ,name)
-                                          &optional (in-package *package*))
-                   ,@(when documentation `(,documentation))
-                   (declare (special ,@(loop for used-fixture in uses
-                                           append (bound-names used-fixture))
-                                     ,@bound-names
-                                     ,@assumes
-                                     *open-via-repl*))
-                   (unless (packagep in-package)
-                     (setf in-package (find-package in-package)))
+                   ;; Function for expanding names into the current namespace.
+                   (defmethod open-fixture ((f ,name)
+                                            &optional (in-package *package*))
+                     ,@(when documentation `(,documentation))
+                     (declare (special ,@external-special ,@bound-names
+                                       *open-via-repl*))
+                     (unless (packagep in-package)
+                       (setf in-package (find-package in-package)))
 
-                   ,@(loop for (var form) in bindings-with-tracking
-                         append
-                           `((format-at-verbosity 3
-                                 ,(format nil " - Calculating ~a ~a~~%"
-                                    var options))
-                             (setf ,(cond
-                                     (var `(symbol-value ',var))
-                                     (t (gensym)))
-                               ,form)))
+                     ,@(loop for (var form) in bindings-with-tracking
+                           append
+                             `((format-at-verbosity 3
+                                   ,(format nil " - Calculating ~a ~a~~%"
+                                      var options))
+                               (setf ,(cond
+                                       (var `(symbol-value ',var))
+                                       (t (gensym)))
+                                 ,form)))
 
-                   ;;(import ',bound-names in-package)
+                     ;;(import ',bound-names in-package)
 
-                   ',name)
+                     ',name)
 
-                 (defmethod trace-fixture ((f ,name))
-                   (format t "Fixture ~s~% - Bindings:~%" ',name)
-                   ,@(loop for (var form options) in full-tuples
+                   (defmethod trace-fixture ((f ,name))
+                     (format t "Fixture ~s~% - Bindings:~%" ',name)
+                     ,@(loop for (var form options) in full-tuples
                            collect
-                           (cond
-                             (options
-                              `(format t "   (~s ~s ~s)~%"
-                                 ',options ',var ',form))
-                             (t `(format t "   (~s ~s)~%" ',var ',form))))
-                   (format t " - Other fixtures: ~@<~{~s~^ ~_~}~:>~%" ',uses)
-                   (format t " - Names expected: ~@<~{~s~^ ~_~}~:>~%" ',assumes)
-                   (format t " - Outer bindings: ~@<~{~s~^ ~_~}~:>~%" ',outer)
-                   (format t " - Inner bindings: ~@<~{~s~^ ~_~}~:>~%" ',inner)
-                   (format t " - Documentation string: ~s~%" ,documentation)
+                             (cond
+                              (options
+                               `(format t "   (~s ~s ~s)~%"
+                                  ',options ',var ',form))
+                              (t `(format t "   (~s ~s)~%" ',var ',form))))
+                     (format t " - Other fixtures: ~@<~{~s~^ ~_~}~:>~%" ',uses)
+                     (format t " - Names expected: ~@<~{~s~^ ~_~}~:>~%" ',assumes)
+                     (format t " - Outer bindings: ~@<~{~s~^ ~_~}~:>~%" ',outer)
+                     (format t " - Inner bindings: ~@<~{~s~^ ~_~}~:>~%" ',inner)
+                     (format t " - Documentation string: ~s~%" ,documentation)
 
-                   ',name)
+                     ',name)
 
-                 ,@(when (or export-bound-names export-fixture-name)
-                     `((eval-when (:compile-toplevel :load-toplevel :execute)
-                         ,@(when export-bound-names
-                             (loop for tuple in full-tuples
-                                 collect
-                                   (let* ((tuple-first  (first tuple))
-                                          (tuple-second (second tuple))
-                                          (id (cond
-                                               ((symbolp tuple-first)
-                                                tuple-first)
-                                               (t tuple-second))))
-                                     `(export
-                                        ',id
-                                        ,(intern (package-name
-                                                  (symbol-package id))
-                                                 (find-package :keyword))))))
-                         ,@(when export-fixture-name
-                             `((export
-                                ',name
-                                ,(intern (package-name (symbol-package name))
-                                         (find-package :keyword))))))))
+                   ,@(when (or export-bound-names export-fixture-name)
+                       `((eval-when (:compile-toplevel :load-toplevel :execute)
+                           ,@(when export-bound-names
+                               (loop for tuple in full-tuples
+                                   collect
+                                     (let* ((tuple-first  (first tuple))
+                                            (tuple-second (second tuple))
+                                            (id (cond
+                                                 ((symbolp tuple-first)
+                                                  tuple-first)
+                                                 (t tuple-second))))
+                                       `(export
+                                         ',id
+                                         ,(intern (package-name
+                                                   (symbol-package id))
+                                                  (find-package :keyword))))))
+                           ,@(when export-fixture-name
+                               `((export
+                                  ',name
+                                  ,(intern (package-name (symbol-package name))
+                                           (find-package :keyword))))))))
 
-                 ',name))))))
+                   ',name)))))))
 (def-documentation (compiler-macro def-fixtures)
     (:tags primary)
     (:intro (:latex "Fixtures\\index{fixtures} are data structures and values which may be
