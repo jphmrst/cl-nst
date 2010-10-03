@@ -42,8 +42,39 @@
 (def-fixtures f2 (:uses (f1))
   (d 4) (e 'asdfg) (f c))
 
+(def-fixtures f2a (:special (:fixture f1))
+  (d 4) (e 'asdfg) (f c))
+
+(def-fixtures fxy ()
+  (x 1000) (y 200))
+
 (def-fixtures capture-x-y-fixtures (:assumes (x y))
   (z (+ x y)) (w 10))
+
+(def-fixtures capture-x-y-fixtures-a (:special (x y))
+  (z (+ x y)) (w 10))
+
+(def-test-group caps-xy (fxy capture-x-y-fixtures)
+  (def-test ex-x (:eql 1000) x)
+  (def-test ex-y (:eql  200) y)
+  (def-test ex-z (:eql 1200) z)
+  (def-test ex-w (:eql   10) w))
+
+(def-test-group caps-xy-a (fxy capture-x-y-fixtures-a)
+  (def-test exa-x (:eql 1000) x)
+  (def-test exa-y (:eql  200) y)
+  (def-test exa-z (:eql 1200) z)
+  (def-test exa-w (:eql   10) w))
+
+(def-test-group f2-usage (f1 f2)
+  (def-test ex-d (:eql 4) d)
+  (def-test ex-e (:eq 'asdfg) e)
+  (def-test ex-f (:eql 3) f))
+
+(def-test-group f2a-usage (f1 f2a)
+  (def-test exa-d (:eql 4) d)
+  (def-test exa-e (:eq 'asdfg) e)
+  (def-test exa-f (:eql 3) f))
 
 (def-test-group g2a (f1)
   (def-test using-c :true (boundp 'c)))
