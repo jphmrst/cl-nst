@@ -75,8 +75,8 @@ as errors arising from within the ."
     (setf criterion (list criterion)))
   `(apply-criterion ',(car criterion) ',(cdr criterion) ',form))
 
-(defun check-criterion-on-value (criterion expr)
-  (check-criterion-on-form criterion `(list ',expr)))
+(defun check-criterion-on-value (criterion val)
+  (check-criterion-on-form criterion `(list ',val)))
 (def-documentation (function check-criterion-on-value)
     (:tags criteria)
     (:short "This function verifies that the value adheres to the criterion.")
@@ -364,26 +364,16 @@ and whether to evaluate them."))
                                &optional (form nil form-supp-p))
   (unless form-supp-p (setf form docstring-or-form docstring-or-form nil))
   (let* ((vsf (gensym "form"))
-         (expanded (gensym "res"))
-         (new-name (gensym "new-name"))
-         (new-args (gensym "new-args"))
-         (redef `(def-criterion-unevaluated (,name ,args-formals ,vsf)
-                     ,@(when docstring-or-form (list docstring-or-form))
-                     (let* ((,expanded ,form)
-                            (,new-name (cond
-                                        ((symbolp ,expanded) ,expanded)
-                                        (t (car ,expanded))))
-                            (,new-args (cond
-                                        ((symbolp ,expanded) nil)
-                                        (t (cdr ,expanded)))))
-                       (apply-criterion ,new-name ,new-args ,vsf)))))
+         (redef `(def-criterion (,name (:forms ,@args-formals) (:form ,vsf))
+                   ,@(when docstring-or-form (list docstring-or-form))
+                   (check-criterion-on-form ,form ,vsf))))
     (cond
-      (docstring-or-form `(progn
-                            ,redef
-                            ,@(when docstring-or-form
-                                `((setf (documentation ',name :nst-criterion)
-                                        ,docstring-or-form)))))
-      (t redef))))
+     (docstring-or-form `(progn
+                           ,redef
+                           ,@(when docstring-or-form
+                               `((setf (documentation ',name :nst-criterion)
+                                   ,docstring-or-form)))))
+     (t redef))))
 (def-documentation (compiler-macro def-criterion-alias)
     (:tags primary)
     (:intro (:latex "The simplest mechanism for defining a new criterion involves simply
