@@ -101,7 +101,7 @@
        (setf (gethash ,type-spec +arbitrary-generable-types+) t))))
 (def-documentation (compiler-macro def-arbitrary-instance-type)
     (:tags sample)
-    (:intro "New type specifications for invariant-testing. are defined with the \\texttt{def-arbitrary-instance-type}\\indexLisp{def-arbitrary-instance-type} macro.")
+    (:intro (:latex "New type specifications for invariant-testing. are defined with the \\texttt{def-arbitrary-instance-type}\\indexLisp{def-arbitrary-instance-type} macro."))
   (:callspec ((spec-name &key (params formals) (scalar bool) (key key))
               &body (:seq form)))
   (:params (formals (:latex "Formal parameter definition used to pass subcomponent types."))
@@ -512,7 +512,36 @@
 
     result))
 (defdoc:def-documentation (criterion :sample)
-    (:intro (:latex "Experimentally test a program property by generating random data.  See \manualOrRef{Section~\\ref{quickcheck}}{the users' manual} for more information.")))
+    (:intro (:latex "Invariants to be tested, and the domains over which they range, are specified with the \\texttt{:sample} criterion:\\indexKeyword{sample}"))
+  (:callspec (&key (verify FORM)
+                   (value LAMBDA-LIST)
+                   (domains (:seq (NAME SPEC)))
+                   (where FORM)
+                   (sample-size NUMBER)
+                   (qualifying-sample NUMBER)
+                   (max-tries NUMBER)))
+  (:params (verify
+            (:latex "The the expression to be (repeatedly) evaluated, which is expected always to return a non-null value.  This is the sole required argument, although in any particular use it is unlikely to be the only argument given."))
+           (domains
+            (:latex "Declares the variables in the \\texttt{verify} expression which are to be given multiple randomized values.  The default value is \\texttt{nil}, denoting an empty list."))
+           (value
+            (:latex "A lambda list to which the values given by the argument form should be applied. The default value is \\texttt{nil}, denoting no such arguments."))
+           (where
+            (:latex "A condition which determines the validity of the input argument.  For example, the condition would assert that a number is positive in an application where a negative value would be known to cause a failure.  The default value is \\texttt{t}, allowing any values."))
+           (sample-size
+            (:latex "Gives the base specification of the number of value sets which will be generated.  Two further arguments have some bearing on the number of generation attempts when the \\texttt{where} argument is non-\\texttt{t}.  The \\texttt{qualifying-sample}\\indexKeyword{qualifying-sample} argument gives the minimum acceptable size of actual tested values, not counting sets rejected via the \\texttt{where} expression.  The \\texttt{max-tries}\\indexKeyword{max-tries} argument gives the maximum number of value sets to be generated.")))
+  (:full (:seq
+          (:plain "Examples:")
+          (:code
+           "(:sample :sample-size 10
+  :domains ((x (list :elem symbol)))
+  :verify (equal x (reverse (reverse x))))")
+          (:code
+           "(:sample :domains ((x real))
+  :where (> x 1)
+  :verify (< (sqrt x) x)
+  :sample-size 10
+  :max-tries 12)"))))
 
 (defun generate-sample (domains)
   (let ((result (make-hash-table :test 'eq)))

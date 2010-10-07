@@ -79,6 +79,7 @@ as errors arising from within the ."
   (check-criterion-on-form criterion `(list ',val)))
 (def-documentation (function check-criterion-on-value)
     (:tags criteria)
+    (:intro (:latex "The \\texttt{check-criterion-on-value} function can be called from within a criterion body to verify that a value adheres to a criterion."))
     (:short "This function verifies that the value adheres to the criterion.")
     (:callspec (criterion value)))
 (defun check-criterion-on-form (criterion form)
@@ -87,6 +88,7 @@ as errors arising from within the ."
   (apply-criterion (car criterion) (cdr criterion) form))
 (def-documentation (function check-criterion-on-form)
     (:tags criteria)
+    (:intro (:latex "The \\texttt{check-criterion-on-form} function verifies that an unevaluated form adheres to a criterion."))
     (:short
      "This function verifies that the values return by evaluating the form adheres to the criterion.")
     (:callspec (criterion form)))
@@ -237,18 +239,17 @@ as errors arising from within the ."
              `((setf (documentation ',name :nst-criterion) ,docstring)))))))
 (def-documentation (compiler-macro def-criterion)
     (:tags primary)
-    (:intro (:latex "The \\texttt{def-criterion} macro defines a new criterion for use in NST tests.\index{def-criterion@\texttt{def-criterion}}"))
+    (:intro (:latex "The \\texttt{def-criterion} macro defines a new criterion for use in NST tests.  These criteria definitions are like generic function method definitions with two sets of formal parameters: the forms provided as the actual parameters of the criterion  itself, and the values arising from the evaluation of the forms under test.\\index{def-criterion@\texttt{def-criterion}}"))
   (:callspec ((name criterion-lambda-list values-lambda-list)
                    &body
                    (:opt documentation)
-                   (:seq FORM)))
-  (:full (:latex "These criteria definitions are like generic function method
-definitions with two sets of formal parameters:")
-         (:itemize ()
-          (:latex "The forms provided as the actual parameters of the criterion  itself.")
-          (:latex "The values arising from the evaluation of the forms under test."))
-         (:latex "The body of a \\texttt{def-criterion} should return a test result report contructed with the \\texttt{make-success-report}, etc.\\ functions.")
-         (:seq
+              (:seq form)))
+  (:params (name "Name of the criterion.")
+           (criterion-lambda-list (:latex "Lambda list for the arguments to the criterion.  Optionally, the first element of the list is a symbol specifying the parameter-passing semantics for the criterion arguments: \\texttt{:values} for call-by-value, or \\texttt{:forms} for call-by-name (the default).  The list may include the keywords \\texttt{\\&key}, \\texttt{\\&optional}, \\texttt{\\&body} and \\texttt{\\&rest} but may not use \\texttt{\\&whole} or \\texttt{\\&environment}.  Apart from this restriction, in the former case the list may be any ordinary lambda list as for \\texttt{defun}, and in the latter case the list may be any macro lambda list as for \\texttt{defmacro}."))
+           (values-lambda-list "Lambda list for the forms under test.  Optionally, the first element of the list is a symbol specifying the parameter-passing semantics for the criterion arguments: \\texttt{:values} for call-by-value (the default), or \\texttt{:form} for call-by-name.  In the former case, the list may include the keywords \\texttt{\\&key}, \\texttt{\\&optional}, \\texttt{\\&body} and \\texttt{\\&rest}, but not \\texttt{\\&whole} or \\texttt{\\&environment}; apart from that restriction, list may be any ordinary lambda list as for \\texttt{defun}.  In the latter case, the remainder of the list must contain exactly one symbol, to which a form which would evaluate to the values under test will be bound.")
+           (documentation "An optional documentation string for the criterion.")
+           (form "The body of the criterion definition should return a test result report contructed with the \\texttt{make-success-report}, etc.\\ functions."))
+  (:full (:seq
           (:latex "Examples:")
           (:code "(def-criterion (:true () (bool))
   (if bool
@@ -289,14 +290,23 @@ definitions with two sets of formal parameters:")
        ,@(when docstring
            `((setf (documentation ',name :nst-criterion) ,docstring))))))
 (def-documentation (compiler-macro def-criterion-unevaluated)
-    (:tags primary)
-  (:intro (:latex "\\index{def-criterion-unevaluated@\\texttt{def-criterion-unevaluated}}As under \\texttt{def-criterion}, the body of these criteria
-definitions receive the forms provided as the actual parameters of the
-criterion itself, and should return a test result report.  However,
-these criteria receive the unevaluated forms under test, deciding when
-and whether to evaluate them."))
-  (:callspec ((name criterion-lambda-list forms-arg) &body
-              (:opt documentation) (:seq form)))
+  (:tags deprecated)
+  (:deprecated t)
+  (:intro (:latex "The \\texttt{def-criterion-unevaluated} macro is deprecated as of NST 2.1.2.  It was consolidated into the \\texttt{def-criterion} macro."))
+  (:full (:seq (:latex " Replace:")
+               (:code "(def-criterion-unevaluated name (pattern ... pattern) name
+  BODY)")
+               (:plain "with:")
+               (:code "(def-criterion name (:forms pattern ... pattern)
+                    (:form name)
+  BODY)")))
+;;;  (:intro (:latex "\\index{def-criterion-unevaluated@\\texttt{def-criterion-unevaluated}}As under \\texttt{def-criterion}, the body of these criteria
+;;;definitions receive the forms provided as the actual parameters of the
+;;;criterion itself, and should return a test result report.  However,
+;;;these criteria receive the unevaluated forms under test, deciding when
+;;;and whether to evaluate them."))
+;;;  (:callspec ((name criterion-lambda-list forms-arg) &body
+;;;              (:opt documentation) (:seq form)))
 ;;;  (:full (:seq (:latex "Example:")
 ;;;               (:code "  (def-form-criterion (:apply (transform criterion) forms)
 ;;;    (continue-check criterion
@@ -344,7 +354,7 @@ and whether to evaluate them."))
 (def-documentation (compiler-macro def-values-criterion)
     (:tags deprecated)
     (:deprecated t)
-    (:short "DEPRECATED: use def-criterion instead."))
+    (:short (:latex "The \\texttt{def-values-criterion} macro was deprecated as of NST 1.3.0. For new criteria, use \\texttt{def-criterion} instead.  In the short term, code using \texttt{def-values-criterion} should continue to work as before.")))
 
 
 #+allegro (excl::define-simple-parser def-form-criterion caadr :nst-criterion)
@@ -358,7 +368,7 @@ and whether to evaluate them."))
 (def-documentation (compiler-macro def-form-criterion)
     (:tags deprecated)
     (:deprecated t)
-    (:short (:latex "DEPRECATED: use def-criterion-unevaluated instead.")))
+    (:short (:latex "The \\texttt{def-form-criterion} macro was deprecated as of NST 1.3.0. \\emph{Code using \\texttt{def-form-criterion} in any but the simplest ways is very likely to fail.} Use \\texttt{def-criterion} instead.")))
 
 (defmacro def-criterion-alias ((name . args-formals) docstring-or-form
                                &optional (form nil form-supp-p))

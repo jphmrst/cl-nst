@@ -46,7 +46,7 @@
 
              #:standard-docstring-style
              #:latex-style
-             #:package-list-latex-style
+             #:package-list-latex-mixin
              #:*docstring-style*
              #:*defdoc-latex-default-directory*))
 
