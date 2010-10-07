@@ -28,22 +28,24 @@
          (manual-dir (merge-pathnames #p"manual/" doc-root-dir))
          (quickref-dir (merge-pathnames #p"quickref/" doc-root-dir)))
     (format t "Creating documentation in ~a~%" doc-root-dir)
-    (defdoc:write-doctype-latex 'nst::criterion
-        :echo #'(lambda (&key name type)
-                  (format t "Writing ~a ~a...~%" type name))
-        :directory gen-dir
-        :style 'nst-criterion-style)
+;;;    (defdoc:write-doctype-latex 'nst::criterion
+;;;        :echo #'(lambda (&key name type)
+;;;                  (format t "Writing ~a ~a...~%" type name))
+;;;        :directory gen-dir
+;;;        :style 'nst-criterion-style)
     (defdoc:write-package-specs-latex :nst
         :echo #'(lambda (&key name type)
                   (format t "Writing ~a ~a for manual...~%" type name))
         :directory gen-dir
         :style 'nst-item-style
+        :include-doctypes '(nst::criterion)
         :package-style 'nst-package-list-latex-style)
     (defdoc:write-package-specs-latex :nst
         :echo #'(lambda (&key name type)
                   (format t "Writing ~a ~a for quickref...~%" type name))
         :directory gen-dir
         :style 'nst-quickref
+        :include-doctypes '(nst::criterion)
         :package-style nil)
 
     ;; Run LaTeX to build the manual
@@ -107,13 +109,20 @@
           )
     (warn "Documentation building not fully implemented on this system --- please run~%  pdflatex manual.tex~%  makeindex manual~%  pdflatex manual.tex~%from the directory~%  ~a~%" manual-dir)))
 
-(defclass nst-criterion-style (defdoc:package-list-latex-style) ())
+;;; --------------------------------------------------
+;;; Style for criteria --- prob. deprecated
+
+(defclass nst-criterion-style (defdoc:latex-style
+                               defdoc:package-list-latex-mixin) ())
 (defmethod defdoc:get-latex-output-file-name ((style nst-criterion-style)
                                               usage name)
   (string-downcase (concatenate 'string
                      (symbol-name name) "_"
                      (symbol-name usage) "_"
                      (symbol-name (type-of style)) ".tex")))
+
+;;; --------------------------------------------------
+;;; Style for the manual.
 
 (defclass nst-item-style (defdoc:latex-style) ())
 (defmethod defdoc:get-latex-output-file-name ((style nst-item-style)
@@ -138,6 +147,30 @@
   (destructuring-bind (&key self &allow-other-keys) spec-args
   `(:seq (:latex ,(format nil "\\label{~a:primary}" self))
          ,(call-next-method))))
+
+(defmethod format-docspec-element ((style nst-item-style)
+                                   (spec-type (eql 'nst::criterion))
+                                   (in (eql :spec))
+                                   stream spec-args)
+  (destructuring-bind (&key self &allow-other-keys) spec-args
+    (format stream "\\subsubsection{The \\texttt{~s} criterion}" self)
+    (call-next-method)))
+
+;;; --------------------------------------------------
+;;; Style for the manual's package list.
+
+(defclass nst-package-list-latex-style (defdoc:package-list-latex-mixin
+                                        defdoc:latex-style) ())
+(defmethod defdoc:package-list-entry ((style nst-package-list-latex-style)
+                                      spec group entry stream)
+     (declare (ignore spec group))
+     (destructuring-bind (&key self &allow-other-keys) (cdr entry)
+       (format stream
+           "\\texttt{~a} --- \\S\\ref{~:*~a:primary}, p.\\,\\pageref{~:*~a:primary}.~%~%"
+         self)))
+
+;;; --------------------------------------------------
+;;; Style for the quickref card.
 
 (defclass nst-quickref (defdoc:latex-style) ())
 (defmethod defdoc:get-latex-output-file-name ((style nst-quickref)
@@ -185,12 +218,3 @@
                               :subspec spec-args subspec)
                         spec-type))
       (princ "\\end{description}" stream))))
-
-(defclass nst-package-list-latex-style (defdoc:package-list-latex-style) ())
-(defmethod defdoc:package-list-entry ((style nst-package-list-latex-style)
-                                      spec group entry stream)
-     (declare (ignore spec group))
-     (destructuring-bind (&key self &allow-other-keys) (cdr entry)
-       (format stream
-           "\\texttt{~a} --- \\S\\ref{~:*~a:primary}, p.\\,\\pageref{~:*~a:primary}.~%~%"
-         self)))

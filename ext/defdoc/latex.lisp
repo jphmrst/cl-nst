@@ -63,7 +63,8 @@
                                   &key (echo nil echo-supp)
                                   (directory *defdoc-latex-default-directory*)
                                   (style 'latex-style)
-                                  (package-style 'full-package-latex-style))
+                                  (package-style 'full-package-latex-style)
+                                  include-doctypes)
   (let ((package (find-package package-specifier)))
     (do-external-symbols (sym package)
       (loop for form in (get-doctypes) do
@@ -71,6 +72,14 @@
           (when echo-supp
             (funcall echo :name sym :type form))
           (write-spec-latex sym form :directory directory :style style))))
+
+    (loop for doctype in include-doctypes do
+      (loop for sym being the hash-keys of (gethash doctype +defdocs+) do
+        (when (get-doc-spec sym doctype)
+          (when echo-supp
+            (funcall echo :name sym :type doctype))
+          (write-spec-latex sym doctype :directory directory :style style))))
+
     ;; (format t "package-style ~s~%" package-style)
     (when package-style
       (let ((pkg-sym-name (intern (package-name package) :keyword)))
@@ -207,11 +216,11 @@
   (format stream "\\end{~a}" list-tag))
 
 ;;; -----------------------------------------------------------------
-;;; Style for a full description of packages.
+;;; Mixin for a full description of packages.
 
-(defclass full-package-latex-style (latex-style) ())
+(defclass full-package-latex-style-mixin () ())
 
-(defmethod format-docspec-element ((style full-package-latex-style)
+(defmethod format-docspec-element ((style full-package-latex-style-mixin)
                                    (spec-type (eql 'package)) (in (eql :spec))
                                    stream spec-args)
   (destructuring-bind (&key self &allow-other-keys) spec-args
@@ -226,26 +235,28 @@
 ;;; Style for a sectioned listing of the symbols exported in a
 ;;; package.
 
-(defclass package-list-latex-style (latex-style) ())
-
 (defgeneric package-list-overall-header (style spec stream)
-  (:method ((style package-list-latex-style) spec stream)
+  (:method (style spec stream)
+     (declare (ignore style))
      (destructuring-bind (&key descriptive &allow-other-keys) (cdr spec)
        (format stream "\\section{The ~a API}~%" descriptive))))
 (defgeneric package-list-group-header (style spec group stream)
-  (:method ((style package-list-latex-style) spec group stream)
+  (:method (style spec group stream)
+     (declare (ignore style))
      (princ "\\subsection{" stream)
      (destructuring-bind (&key self &allow-other-keys) (cdr spec)
        ;; (format t "~s ~s~%" self group)
        (format-tag style (find-package self) group stream))
      (format stream "}~%")))
 (defgeneric package-list-entry (style spec group entry stream)
-  (:method ((style package-list-latex-style) spec group entry stream)
-     (declare (ignore spec group))
+  (:method (style spec group entry stream)
+     (declare (ignore style spec group))
      (destructuring-bind (&key self &allow-other-keys) (cdr entry)
        (format stream "\\texttt{~a}~%~%" self))))
 
-(defmethod format-docspec-element ((style package-list-latex-style)
+(defclass package-list-latex-mixin () ())
+
+(defmethod format-docspec-element ((style package-list-latex-mixin)
                                    (spec-type (eql 'package)) (in (eql :spec))
                                    stream spec-args)
   (destructuring-bind (&key self &allow-other-keys) spec-args

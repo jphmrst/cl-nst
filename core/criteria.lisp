@@ -66,11 +66,12 @@
 (defdoc:def-documentation (criterion :true-form)
   (:callspec (bool))
   (:intro (:latex ""))
-  (:full (:seq
-          (:plain "Example:")
-          (:code "")
-          (:plain "A example of a test which fails:")
-          (:code ""))))
+;;;  (:full (:seq
+;;;          (:plain "Example:")
+;;;          (:code "")
+;;;          (:plain "A example of a test which fails:")
+;;;          (:code "")))
+  )
 
 (def-criterion (:true (:forms) (:values bool))
   (if bool
@@ -80,11 +81,12 @@
 (defdoc:def-documentation (criterion :true)
   (:callspec ())
   (:intro "Expects one form, which is evaluated at testing time; the criterion requires the result to be non-nil.")
-  (:full (:seq
-          (:plain "Example:")
-          (:code "")
-          (:plain "A example of a test which fails:")
-          (:code ""))))
+;;;  (:full (:seq
+;;;          (:plain "Example:")
+;;;          (:code "")
+;;;          (:plain "A example of a test which fails:")
+;;;          (:code "")))
+  )
 
 (def-criterion (:eq (:forms target) (:values actual))
   (if (eq (eval target) actual)
@@ -117,8 +119,7 @@
   (:intro (:latex "The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \\texttt{eql}."))
   (:full (:seq
           (:plain "Example:")
-          (:code "(def-test eql1 (:eql 2) (cadr '(1 2 3)))")
-          (:code ""))))
+          (:code "(def-test eql1 (:eql 2) (cadr '(1 2 3)))"))))
 
 (def-criterion (:equal (:forms target) (:values actual))
   (if (equal (eval target) actual)
@@ -127,12 +128,7 @@
                           :args (list actual target))))
 (defdoc:def-documentation (criterion :equal)
   (:callspec (target))
-  (:intro (:latex "The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \\texttt{equal}."))
-  (:full (:seq
-          (:plain "Example:")
-          (:code "")
-          (:plain "A example of a test which fails:")
-          (:code ""))))
+  (:intro (:latex "The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \\texttt{equal}.")))
 
 (def-criterion (:equalp (:forms target) (:values actual))
   (if (equalp (eval target) actual)
@@ -141,12 +137,7 @@
                            :args (list actual target))))
 (defdoc:def-documentation (criterion :equalp)
   (:callspec (target))
-  (:intro (:latex "The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \\texttt{equalp}."))
-  (:full (:seq
-          (:plain "Example:")
-          (:code "")
-          (:plain "A example of a test which fails:")
-          (:code ""))))
+  (:intro (:latex "The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \\texttt{equalp}.")))
 
 (def-criterion-alias (:forms-eq)    `(:predicate eq))
 (defdoc:def-documentation (criterion :forms-eq)
@@ -165,21 +156,11 @@
 (def-criterion-alias (:forms-equal) `(:predicate equal))
 (defdoc:def-documentation (criterion :forms-equal)
   (:callspec ())
-  (:intro (:latex "The two forms under test are both evaluated at testing time; the criterion requires that the results be \\texttt{equal}."))
-  (:full (:seq
-          (:plain "Example:")
-          (:code "")
-          (:plain "A example of a test which fails:")
-          (:code ""))))
+  (:intro (:latex "The two forms under test are both evaluated at testing time; the criterion requires that the results be \\texttt{equal}.")))
 (def-criterion-alias (:value-list further) `(:apply list ,further))
 (defdoc:def-documentation (criterion :value-list)
   (:callspec (further))
-  (:intro (:latex "Converts multiple values into a single list value."))
-  (:full (:seq
-          (:plain "Example:")
-          (:code "")
-          (:plain "A example of a test which fails:")
-          (:code ""))))
+  (:intro (:latex "Converts multiple values into a single list value.")))
 
 (def-criterion (:predicate (:forms pred) (:values &rest vals))
   (if (apply (eval `(function ,pred)) vals)
@@ -200,24 +181,14 @@
            ,criterion))
 (defdoc:def-documentation (criterion :drop-values)
   (:callspec (criterion))
-  (:intro (:latex "Checks the primary value according to the subordinate criterion, ignoring any additional returned values from the evaluation of the form under test."))
-  (:full (:seq
-          (:plain "Example:")
-          (:code "")
-          (:plain "A example of a test which fails:")
-          (:code ""))))
+  (:intro (:latex "Checks the primary value according to the subordinate criterion, ignoring any additional returned values from the evaluation of the form under test.")))
 
 (def-criterion (:dump-forms (:forms blurb) (:values &rest forms))
   (format t "~%~a~%~{~s~%~}" blurb forms)
   (make-failure-report :format "Arguments dumped" :args nil))
 (defdoc:def-documentation (criterion :dump-forms)
   (:callspec (blurb))
-  (:intro (:latex "For debugging NST criteria: fails after writing the current forms to standard output."))
-  (:full (:seq
-          (:plain "Example:")
-          (:code "")
-          (:plain "A example of a test which fails:")
-          (:code ""))))
+  (:intro (:latex "For debugging NST criteria: fails after writing the current forms to standard output.")))
 
 (def-criterion (:info (:forms string subcriterion) (:form expr-list-form))
   (let ((subcheck (check-criterion-on-form subcriterion expr-list-form)))
@@ -321,7 +292,7 @@
                                             :failures failures
                                             :errors errors :info info)))))
 (defdoc:def-documentation (criterion :all)
-  (:callspec (&rest (:seq criterion)))
+  (:callspec ((:seq subcriterion)))
   (:intro (:latex "This criterion brings several other criteria under one check, and verifies that they all pass."))
   (:full (:seq
           (:plain "Example:")
@@ -353,7 +324,7 @@
       (make-failure-report :format "No disjuncts succeeded:~{~_ ~s~}"
                            :args (list criteria) :info info))))
 (defdoc:def-documentation (criterion :any)
-  (:callspec (&rest (:seq criterion)))
+  (:callspec ((:seq subcriterion)))
   (:intro (:latex "Passes when any of the subordinate criteria pass."))
   (:full (:seq
           (:plain "Example:")
@@ -399,7 +370,7 @@
     (loop for form in progn-forms do (eval form))
     (check-criterion-on-form criterion forms)))
 (defdoc:def-documentation (criterion :progn)
-  (:callspec (&rest forms-and-criterion))
+  (:callspec ((:seq form) subcriterion))
   (:intro (:latex "At testing time, first evaluates the \\texttt{FORM}s in order, and then proceeds with evaluation of the forms under test according to the subordinate criterion."))
   (:full (:seq
           (:plain "Example:")
@@ -420,13 +391,8 @@
 (def-criterion (:values (:forms &rest args) (:form form))
   (check-criterion-on-form `(:seq ,@args) `(list ,form)))
 (defdoc:def-documentation (criterion :values)
-  (:callspec (&rest args))
-  (:intro (:latex "Checks each of the forms under test according to the respective subordinate criterion."))
-  (:full (:seq
-          (:plain "Example:")
-          (:code "")
-          (:plain "A example of a test which fails:")
-          (:code ""))))
+  (:callspec ((:seq subcriterion)))
+  (:intro (:latex "Checks each of the forms under test according to the respective subordinate criterion.")))
 
 (def-criterion (:each (:forms criterion) (:values l))
   (block each
@@ -474,7 +440,7 @@
                                       (check-result-warnings result)))))))
       (make-success-report :info info :warnings warnings))))
 (defdoc:def-documentation (criterion :seq)
-  (:callspec (&rest criteria))
+  (:callspec ((:seq subcriterion)))
   (:intro (:latex "Evaluates its input form, checks each of its elements according to the respective subordinate criterion, and passes when all of them pass."))
   (:full (:seq
           (:plain "Example:")
@@ -526,7 +492,7 @@
                                       (check-result-warnings result)))))))
       (make-success-report :info info :warnings warnings))))
 (defdoc:def-documentation (criterion :across)
-  (:callspec (&rest criteria))
+  (:callspec ((:seq subcriterion)))
   (:intro (:latex "Like \\texttt{:seq}, but for a vector instead of a list."))
   (:full (:seq
           (:plain "Example:")
@@ -553,7 +519,7 @@
                                       (check-result-warnings result))))))))
       (make-success-report :info info :warnings warnings))))
 (defdoc:def-documentation (criterion :slots)
-  (:callspec (&rest clauses))
+  (:callspec ((:seq (slot-name subcriterion))))
   (:intro (:latex "Evaluates its input form, and passes when the value at each given slot satisfies the corresponding subordinate constraint."))
   (:full (:seq
           (:plain "Example:")
@@ -616,13 +582,7 @@
                       :format "Unexpected status result from find-symbol ~s"
                       :args (list status))))))))
 (defdoc:def-documentation (criterion :package-exports)
-  (:callspec (package-desig))
-  (:intro (:latex ""))
-  (:full (:seq
-          (:plain "Example:")
-          (:code "")
-          (:plain "A example of a test which fails:")
-          (:code ""))))
+  (:callspec (package-desig)))
 
 (def-criterion (:package-internal (:forms package-desig) (:values symbol-desig))
   (block crit
@@ -646,11 +606,5 @@
           (otherwise (make-error-report
                       :format "Unexpected result from find-symbol")))))))
 (defdoc:def-documentation (criterion :package-internal)
-  (:callspec (package-desig))
-  (:intro (:latex ""))
-  (:full (:seq
-          (:plain "Example:")
-          (:code "")
-          (:plain "A example of a test which fails:")
-          (:code ""))))
+  (:callspec (package-desig)))
 

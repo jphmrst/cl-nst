@@ -19,7 +19,11 @@
     (when (null calling)
       (setf calling ""))
     (when (symbolp calling)
-      (setf calling (concatenate 'string (symbol-name calling) " ")))
+      (setf calling (concatenate 'string
+                      (if (eq (symbol-package calling)
+                              (find-package :keyword))
+                          ":" "")
+                      (symbol-name calling) " ")))
 
     (let ((prefix-len (+ 1 (length calling))))
       (multiple-value-bind (mandatory optional optional-supp

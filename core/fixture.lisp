@@ -308,8 +308,8 @@ macro:\\index{def-fixtures@\\texttt{def-fixtures}}")
          (:latex "The names of a fixture and the names it binds can be exported from the
 package where the fixture is defined using the
 \\texttt{export-bound-names} and \\texttt{export-fixture-name}
-arguments.  The default value of both is \\texttt{nil} unless a
-non-\\texttt{nil} value is provided for \\texttt{export-names}.")
+arguments.  The default value of both is the value of \\texttt{export-names},
+whose default value is \\texttt{nil}.")
          (:latex "The \\texttt{cache} option, if non-nil, directs NST to evaluate a
 fixture's form one single time, and re-use the resulting value on
 subsequent applications of the fixture.  Note that if this value is
