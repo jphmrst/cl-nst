@@ -1,7 +1,7 @@
 
 \section{Inheritance-based test methods}
 \label{sec:methods}
-\emph{This in-progress feature currently does not work under Lispworks or Clisp.}
+\emph{This feature is in-progress. It currently does not work under Lispworks or Clisp, and details of the API may change in subsequent versions.}
 
 For testing objects in a class hierarchy NST offers xUnit-style test
 methods dispatching on different classes.  The idea is that an object
@@ -33,46 +33,15 @@ four classes:
 \subsection{Declaring methods}
 \indexLisp{def-test-generic}\indexLisp{def-test-method}\indexLisp{def-test-method-criterion}
 \input{../gen/def-test-generic_compiler-macro_nst-item-style}
+
+There are two macros which define a particular method of a generic
+test function.
 \input{../gen/def-test-method-criterion_compiler-macro_nst-item-style}
 \input{../gen/def-test-method_compiler-macro_nst-item-style}
-\begin{verbatim}
-
-
-\end{verbatim}
-
-\begin{verbatim}
-(def-test-group method-tests ()
-  (def-test t-p :methods (make-instance 'top-cls :tc1 0 :tc2 2))
-  (def-test m-p :methods (make-instance 'mid-cls :tc1 0 :tc2 2 :mc1 0 :mc2 2))
-  (def-test s-p :methods (make-instance 'side-cls :sc1 1 :sc2 1))
-  (def-test b-p :methods (make-instance 'bot-cls
-                           :tc1 0 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 1))
-  (def-test t-f :methods (make-instance 'top-cls :tc1 4 :tc2 2))
-  (def-test m-f-t  :methods (make-instance 'mid-cls
-                              :tc1 4 :tc2 2 :mc1 0 :mc2 2))
-  (def-test m-f-m  :methods (make-instance 'mid-cls
-                              :tc1 0 :tc2 2 :mc1 4 :mc2 2))
-  (def-test m-f-mt :methods (make-instance 'mid-cls
-                              :tc1 4 :tc2 2 :mc1 4 :mc2 2))
-  (def-test s-f :methods (make-instance 'side-cls :sc1 1 :sc2 3))
-  (def-test b-f-t :methods (make-instance 'bot-cls
-                             :tc1 4 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 1))
-  (def-test b-f-m :methods (make-instance 'bot-cls
-                             :tc1 0 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 1))
-  (def-test b-f-s :methods (make-instance 'bot-cls
-                             :tc1 0 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 3))
-  (def-test b-f-mt :methods (make-instance 'bot-cls
-                              :tc1 4 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 1))
-  (def-test b-f-ms :methods (make-instance 'bot-cls
-                              :tc1 0 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 3))
-  (def-test b-f-ts :methods (make-instance 'bot-cls
-                              :tc1 4 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 3))
-  (def-test b-f-mts :methods (make-instance 'bot-cls
-                               :tc1 4 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 3)))
-\end{verbatim}
 
 \subsection{Invoking methods}
 \indexKeyword{methods}
+\input{../gen/methods_criterion_nst-item-style}
 
 \subsection{Method combinations}
 \indexLisp{nst-results}
