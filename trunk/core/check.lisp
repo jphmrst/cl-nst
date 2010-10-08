@@ -263,11 +263,11 @@ as errors arising from within the ."
       (make-failure-report :format \"Not eql to value of ~s\"
                     :args (list target))))"))))
 
-;; #+allegro (excl::define-simple-parser def-criterion-unevaluated
-;;              caadr :nst-criterion)
 (defmacro def-criterion-unevaluated ((name args-formals forms-formal &key
                                            (ignore-forms nil))
                                      &body forms)
+  (warn 'nst-soft-deprecation :old-name 'def-criterion-unevaluated
+        :replacement 'def-criterion)
   (let ((ap (gensym "args"))
         (docstring nil)
         (form-decls nil))
