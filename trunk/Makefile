@@ -1,12 +1,4 @@
 
-docs: core/*.lisp
-	(cd doc/manual; ./make-generated.lisp; pdflatex manual; makeindex manual; pdflatex manual)
-	(cd doc/quickref; pdflatex quickref; pdflatex quickref)
-	@echo
-	@echo NST documentation generated
-	@echo - User manual in doc/manual/manual.pdf
-	@echo - Quick reference card in doc/quickref/quickref.pdf
-
 clean:
 	rm -f *.ps */*.ps */*/*.ps \
 	      *.fasl */*.fasl */*/*.fasl */*/*/*.fasl \
