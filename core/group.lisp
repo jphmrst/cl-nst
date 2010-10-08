@@ -91,7 +91,6 @@
 
 (defun no-effect () nil)
 
-#+allegro (excl::define-simple-parser def-test-group second :nst-group)
 (defmacro def-test-group (group-name given-fixtures &body forms)
 
   (handler-bind (#+sbcl (style-warning

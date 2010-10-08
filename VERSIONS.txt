@@ -1,5 +1,8 @@
 
-2.1.2 - public release
+3.0.0 - public release
+ This release was planned as 2.1.2, but contains enough extensions to
+   the API macros to justify bumping the major release, to allow the
+   new API to be required e.g. by ASDF.
  Improved some of the test output.
  Fixed a bug in some of the self-test criteria (which had obviously
    never yet come into use).
