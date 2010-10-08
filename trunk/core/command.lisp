@@ -433,8 +433,9 @@ The last form shows all interesting results."
   `(apply #'run-nst-command ',args))
 (def-documentation (compiler-macro nst-cmd)
     (:tags control)
-    (:intro (:latex "NST operations are accessible from the~\\texttt{nst-cmd}\\index{nst-cmd@\\texttt{nst-cmd}} macro"))
+    (:intro (:latex "User-level NST operations are accessible from the REPL via the~\\texttt{nst-cmd}\\index{nst-cmd@\\texttt{nst-cmd}} macro."))
     (:callspec (nst-command (:seq arg)))
+    (:full (:latex "Where a particular system supports the facility,\\footnote{Currently Allegro, and SBCL under ACL-REPL.} the top-level alias \\texttt{:nst}\\index{nst@\texttt{:nst}} provides a shorthand to this function."))
     (:short "Run an NST command.  See the NST manual for a list of NST commands."))
 
 ;;; Platform-specific command-line interpreter interfaces.

@@ -77,7 +77,8 @@
     (:tags object)
     (:intro (:latex "The \\texttt{def-test-generic} declares a generic test function."))
     (:callspec (function-name))
-    (:full (:code "(nst:def-test-generic for-clses)")))
+    (:full (:latex "For example,")
+           (:code "(nst:def-test-generic for-clses)")))
 
 (defun decode-def-test-generic-body (forms)
   (let ((documentation)
@@ -153,9 +154,14 @@
        ',function-name)))
 (def-documentation (compiler-macro def-test-method)
     (:tags object)
-    (:intro (:latex "Define one method for a generic test function."))
-    (:callspec (class-name (formal-parameter class-name) &body (:seq form)))
-    (:full (:code "(nst:def-test-method for-clses (o mid-cls)
+    (:intro (:latex "The \\texttt{def-test-method} defines a general method for a generic test function."))
+    (:callspec (function-name (test-value class-name) &body (:seq form)))
+    (:params (function-name (:latex "The name of the test function for which we are defining a method."))
+             (test-value (:latex "Formal parameter to which the value under test will be bound."))
+             (class-name (:latex "The class for which we are defining a method.")))
+    (:full (:latex "The method body should return a test result report, constructed with \\texttt{make-success-result}, etc.")
+           (:latex "For example:")
+           (:code "(nst:def-test-method for-clses (o mid-cls)
   (with-slots (mc1 mc2) o
     (cond
       ((< mc1 mc2) (make-success-report))
@@ -178,9 +184,13 @@
        (check-criterion-on-form ',criterion `(list ,,arg)))))
 (def-documentation (compiler-macro def-test-method-criterion)
     (:tags object)
-    (:intro (:latex "Define a method for a generic test function in terms of an NST criterion."))
+    (:intro (:latex "The \\texttt{def-test-method-criterion} macro provides a simple facility for defining a generic test function method in terms of an NST criterion."))
     (:callspec (function-name class-name &body criterion))
-    (:full (:code "(nst:def-test-method-criterion for-clses top-cls
+    (:params (function-name (:latex "The name of the test function for which we are defining a method."))
+             (class-name (:latex "The class for which we are defining a method."))
+             (criterion (:latex "The criterion to be applied to members of the class.")))
+    (:full (:latex "For example:")
+           (:code "(nst:def-test-method-criterion for-clses top-cls
       (:predicate (lambda (tc) (< (tc1 tc) (tc2 tc)))))")))
 
 (defun invoke-test-methods (obj)
@@ -196,3 +206,35 @@
 
 (def-criterion (:methods () (object))
   (invoke-test-methods object))
+(defdoc:def-documentation (criterion :methods)
+  (:intro (:latex "The \\texttt{:methods} criterion runs the test functions applicable to the value under test."))
+  (:full (:seq
+          (:plain " For example:")
+          (:code "(def-test-group method-tests ()
+  (def-test t-p :methods (make-instance 'top-cls :tc1 0 :tc2 2))
+  (def-test m-p :methods (make-instance 'mid-cls :tc1 0 :tc2 2 :mc1 0 :mc2 2))
+  (def-test s-p :methods (make-instance 'side-cls :sc1 1 :sc2 1))
+  (def-test b-p :methods (make-instance 'bot-cls
+                           :tc1 0 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 1))
+  (def-test t-f :methods (make-instance 'top-cls :tc1 4 :tc2 2))
+  (def-test m-f-t  :methods (make-instance 'mid-cls
+                              :tc1 4 :tc2 2 :mc1 0 :mc2 2))
+  (def-test m-f-m  :methods (make-instance 'mid-cls
+                              :tc1 0 :tc2 2 :mc1 4 :mc2 2))
+  (def-test m-f-mt :methods (make-instance 'mid-cls
+                              :tc1 4 :tc2 2 :mc1 4 :mc2 2))
+  (def-test s-f :methods (make-instance 'side-cls :sc1 1 :sc2 3))
+  (def-test b-f-t :methods (make-instance 'bot-cls
+                             :tc1 4 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 1))
+  (def-test b-f-m :methods (make-instance 'bot-cls
+                             :tc1 0 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 1))
+  (def-test b-f-s :methods (make-instance 'bot-cls
+                             :tc1 0 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 3))
+  (def-test b-f-mt :methods (make-instance 'bot-cls
+                              :tc1 4 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 1))
+  (def-test b-f-ms :methods (make-instance 'bot-cls
+                              :tc1 0 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 3))
+  (def-test b-f-ts :methods (make-instance 'bot-cls
+                              :tc1 4 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 3))
+  (def-test b-f-mts :methods (make-instance 'bot-cls
+                               :tc1 4 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 3)))"))))
