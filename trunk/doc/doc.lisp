@@ -28,11 +28,6 @@
          (manual-dir (merge-pathnames #p"manual/" doc-root-dir))
          (quickref-dir (merge-pathnames #p"quickref/" doc-root-dir)))
     (format t "Creating documentation in ~a~%" doc-root-dir)
-;;;    (defdoc:write-doctype-latex 'nst::criterion
-;;;        :echo #'(lambda (&key name type)
-;;;                  (format t "Writing ~a ~a...~%" type name))
-;;;        :directory gen-dir
-;;;        :style 'nst-criterion-style)
     (defdoc:write-package-specs-latex :nst
         :echo #'(lambda (&key name type)
                   (format t "Writing ~a ~a for manual...~%" type name))
@@ -57,6 +52,7 @@
                  (excl:run-shell-command "pdflatex manual.tex")
                  (excl:run-shell-command "pdflatex manual.tex")
                  (excl:chdir quickref-dir)
+                 (excl:run-shell-command "pdflatex quickref")
                  (excl:run-shell-command "pdflatex quickref"))
 
     #+sbcl (progn
@@ -70,6 +66,8 @@
              (sb-ext:run-program "pdflatex" '("manual.tex")
                                  :wait t :search t :output nil :error t)
              (sb-posix:chdir quickref-dir)
+             (sb-ext:run-program "pdflatex" '("quickref.tex")
+                                 :wait t :search t :output nil :error t)
              (sb-ext:run-program "pdflatex" '("quickref.tex")
                                  :wait t :search t :output nil :error t))
 
@@ -107,7 +105,7 @@
 
     #-(or allegro sbcl ;; clozure clisp lispworks
           )
-    (warn "Documentation building not fully implemented on this system --- please run~%  pdflatex manual.tex~%  makeindex manual~%  pdflatex manual.tex~%from the directory~%  ~a~%" manual-dir)))
+    (warn "Documentation building not fully implemented on this system" manual-dir)))
 
 ;;; --------------------------------------------------
 ;;; Style for criteria --- prob. deprecated
