@@ -1,5 +1,8 @@
 
-3.0.0 - public release
+3.0.1 - 
+ 
+
+3.0.0 - public release, October 11, 2010
  This release was planned as 2.1.2, but contains enough extensions to
    the API macros to justify bumping the major release, to allow the
    new API to be required e.g. by ASDF.
