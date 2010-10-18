@@ -1,0 +1,362 @@
+
+%% \criteriaDoc
+%%    1 - criteria name without punctuation
+%%    2 - criteria name with punctuation
+%%    3 - syntax
+%%    4 - applicable to
+%%    5 - blurb
+%%    6 - additional text --- wrap in \hasExpl, or \noExpl
+%%    7 - example type --- \noEx, \singleEx, \multiEx, \tabbingEx
+%%    8 - example(s)
+
+%% \kwdCriteriaDoc
+%%    1 - criteria name without colon
+%%    2 - syntax
+%%    3 - applicable to
+%%    4 - blurb
+%%    5 - additional text --- wrap in \hasExpl, or \noExpl
+%%    6 - example type --- \noEx, \singleEx, \multiEx, \tabbingEx
+%%    7 - example(s)
+
+\def\kwdCriteriaDoc#1#2#3#4#5#6#7{\criteriaDoc{#1}{:#1}{#2}{#3}{#4}{#5}{#6}{#7}}
+
+\begin{criteriaGroup}{Basic criteria}{}
+
+\kwdCriteriaDoc{true}{:true}
+{The form is evaluated at testing time; the criterion requires the result to be non-nil.}
+{A single form.}
+{\noExpl}
+{\noEx}{}
+
+\kwdCriteriaDoc{eq}{(:eq FORM)}
+{The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \texttt{eq}.}
+{A single form.}
+{\noExpl}
+{\singleEx}{(def-test eq1 (:eq 'b) (cadr '(a b c)))}
+
+\kwdCriteriaDoc{symbol}{(:symbol NAME)}
+{The form under test is evaluated at testing time.  The criterion requires that the result be a symbol which is \texttt{eq} to the symbol name given as the criterion argument.}
+{A single form.}
+{\noExpl}
+{\multiEx}
+{\passExample{(def-test sym1  (:symbol a) (car '(a b c)))}
+ \failExample{(def-test sym1x (:symbol a) (cadr '(a b c)))}}
+
+\kwdCriteriaDoc{eql}{(:eql FORM)}
+{The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \texttt{eql}.}
+{A single form.}
+{\noExpl}
+{\singleEx}{(def-test eql1 (:eql 2) (cadr '(1 2 3)))}
+
+\kwdCriteriaDoc{equal}{(:equal FORM)}
+{The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \texttt{equal}.}
+{A single form.}
+{\noExpl}
+{\noEx}{}
+
+\kwdCriteriaDoc{equalp}{(:equalp FORM)}
+{The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \texttt{equalp}.}
+{A single form.}
+{\noExpl}
+{\noEx}{}
+
+\kwdCriteriaDoc{forms-eq}{:forms-eq}
+{The two forms under test are both evaluated at testing time; the criterion requires that the results be \texttt{eq}.}
+{Exactly two forms.}
+{\noExpl}
+{\singleEx}{(def-test eqforms1 :forms-eq (cadr '(a b c)) (caddr '(a c b)))}
+
+\kwdCriteriaDoc{forms-eql}{:forms-eql}
+{The two forms under test are both evaluated at testing time; the criterion requires that the results be \texttt{eql}.}
+{Exactly two forms.}
+{\noExpl}
+{\singleEx}{(def-test eqlforms1 :forms-eql (cadr '(a 3 c)) (caddr '(a c 3)))}
+
+\kwdCriteriaDoc{forms-equal}{:forms-equal}
+{The two forms under test are both evaluated at testing time; the criterion requires that the results be \texttt{equal}.}
+{Exactly two forms.}
+{\noExpl}
+{\noEx}{}
+
+\kwdCriteriaDoc{predicate}{(:predicate FUNCTION-FORM)}
+{The criterion argument is a symbol (unquoted) or a lambda expression;
+  at testing time, the forms under test are evaluated and passed to
+  the denoted function.  The criterion expects that the result of the
+  function is non-nil.}
+{Forms matching the input lambda list of the \texttt{FUNCTION-FORM}.}
+{\noExpl}
+{\multiEx}
+{\passExample{(def-test pred1 (:predicate numberp) 3)}
+ \passExample{(def-test pred2 (:predicate eql) (+ 1 2) 3)}}
+
+\kwdCriteriaDoc{err}{(:err [:type CLASS])}
+{At testing time, evaluates the form under test, expecting the
+  evaluation to raise some condition.  If the \textit{CLASS} argument
+  is supplied, the criterion expects the raised condition to be a
+  subclass.  Note that the name of the type should \emph{not} be
+  quoted; it is not evaluated.}
+{Any.}
+{\noExpl}
+{\multiEx}
+{\passExample{(def-test err1 (:err :type error) (error "this should be caught"))}
+ \passExample{(def-test err2 (:err) (error "this should be caught"))}}
+
+\kwdCriteriaDoc{perf}{(:perf [ :ns | :sec | :min ] TIME)}
+{Evaluates the forms under test at testing time, and expects the
+  evaluation to complete within the given time limit.}
+{Any.}
+{\noExpl}
+{\singleEx}{(def-test perf1 (:perf :min 2) (ack 3 5))}
+
+\end{criteriaGroup}
+
+\begin{criteriaGroup}{Compound criteria}{}
+
+\kwdCriteriaDoc{not}{(:not CRITERION)}
+{Passes when testing according to \texttt{CRITERION} fails (but
+does not throw an error).}
+{As required by the subordinate criterion.}
+{\noExpl}
+{\singleEx}{(def-test not1 (:not (:symbol b)) 'a)}
+
+\kwdCriteriaDoc{all}{(:all CRITERION CRITERION ...\ CRITERION)}
+{This criterion brings several other criteria under one check, and
+verifies that they all pass.}
+{As required by the subordinate criteria.}
+{\noExpl}
+{\tabbingEx}{\texttt{(de}\=\texttt{f-}\=\texttt{check not1 ()}
+\\ \>\>\texttt{(:all }\=\texttt{(:predicate even-p)}
+\\ \>\>\>\texttt{(:predicate prime-p))}
+\\ \>\texttt{2)}}
+
+\kwdCriteriaDoc{any}{(:any CRITERION CRITERION ...\ CRITERION)}
+{Passes when any of the subordinate criteria pass.}
+{As required by the subordinate criteria.}
+{\noExpl}
+{\tabbingEx}{
+\texttt{(de}\=\texttt{f-}\=\texttt{check not1 ()}
+\\ \>\>\texttt{(:any }\=\texttt{(:predicate even-p)}
+\\ \>\>\>\texttt{(:predicate prime-p))}
+\\ \>\texttt{5)}}
+
+\kwdCriteriaDoc{apply}{(:apply FUNCTION CRITERION)}
+{At testing time, first evaluates the forms under test, applying
+  \texttt{FUNCTION} to them.  The overall criterion passes or fails
+  exactly when the subordinate \texttt{CRITERION} with the
+  application's multiple result values.}
+{Forms matching the input lambda list of the \texttt{FUNCTION}.}
+{\noExpl}
+{\singleEx}{(def-test applycheck (:apply cadr (:eql 10)) '(0 10 20))}
+
+\kwdCriteriaDoc{check-err}{(:check-err CRITERION)}
+{Like \texttt{:err}, but proceeds according to the subordinate
+criterion rather than simply evaluating the input forms.}
+{As required by the subordinate criterion.}
+{\hasExpl{The difference between \texttt{:check-err} and \texttt{:err}
+is that the latter deals only with evaluation of a form, whereas
+\texttt{:check-err} is more about the unit testing process.  This form
+is mostly useful for temporarily disregarding certain checks until
+some later fix, when they \emph{won't} throw an error.}}
+{\tabbingEx}
+{\texttt{(de}\=\texttt{f-}\=\texttt{test check-err1}
+\\ \> \> \texttt{(:check-err :forms-eq)}
+\\ \> \texttt{'asdfgh (error "this should be caught"))}}
+
+\kwdCriteriaDoc{progn}{(:progn FORM FORM ...\ FORM CRITERION)}
+{At testing time, first evaluates the \texttt{FORM}s in order, and
+  then proceeds with evaluation of the forms under test according to
+  the subordinate criterion.}
+{As required by the subordinate criterion.}
+{\noExpl}
+{\singleEx}
+{(def-test form1 (:progn (setf zz 3) (:eql 3)) zz)}
+
+\kwdCriteriaDoc{proj}{(:proj (INDEX INDEX ...\ INDEX) CRITERION)}
+{Rearranges the forms under test by selecting a new list according to
+  the index numbers into the old list.  Checking of the reorganized
+  forms continues according to the subordinate criterion.}
+{At least as many as to be accessible to the largest index.}
+{\hasExpl{Note that containing criteria may have reordered forms and
+    value from the original check.}}
+{\tabbingEx}
+{\texttt{(d}\=\texttt{ef}\=\texttt{-test proj-1}
+\\ \>\> \texttt{(:proj (0 2) :forms-eq)}
+\\ \> \texttt{'a 3 (car '(a b)))}}
+
+\end{criteriaGroup}
+
+\begin{criteriaGroup}{Criteria for multiple values}{
+NST's approach to multiple values is stricter than Common Lisp's view
+in the language itself.  In Lisp programs, additional returned values
+are eminently ignorable; in fact some extra programming overhead is
+required to access them.  However, in designing NST we draw a
+distinction between \emph{using} a function on the one hand, and
+\emph{designing} and \emph{testing} it on the other.  For example,
+when using the \texttt{floor} function one often needs only the
+quotient, and it is correspondingly easy to ignore the additional
+argument which gives the remainder.  However, for the implementor of
+\texttt{floor} it is impormtant that both results be predictable and
+verified.\vspace{\parskip}\\\hspace*{\parindent}NST encourages the
+thoughtful, consistent design and correct implementation of functions
+returning multiple values by enforcing that tested forms generating
+multiple variables should be paired with criteria for multiple values.
+\emph{Any mismatch between the quantity of values returned by an
+  evaluation and the quantity of values expected by a criterion is
+  interpreted as a test failure}.  Dually to the usage mode of Common
+Lisp, NST requires the additional overhead of the
+\texttt{:drop-values} criterion to simply ignore additional returned
+values.}
+
+\kwdCriteriaDoc{value-list}{(:value-list CRITERION)}
+{Converts multiple values into a single list value.}
+{Arbitrarily many values.}
+{\noExpl}{\noEx}{}
+
+\kwdCriteriaDoc{values}{(:values CRITERION CRITERION ...\ CRITERION)}
+{Checks each of the forms under test according to the respective
+  subordinate criterion.}
+{Exactly as many forms as subordinate criteria.}
+{\noExpl}{\noEx}{}
+
+\kwdCriteriaDoc{drop-values}{(:drop-values CRITERION)}
+{Checks the primary value according to the subordinate criterion,
+  ignoring any additional returned values from the evaluation of the
+  form under test.}
+{Any.}
+{\noExpl}{\noEx}{}
+
+\end{criteriaGroup}
+
+\begin{criteriaGroup}{Criteria for lists}{}
+
+\kwdCriteriaDoc{each}{(:each CRITERION)}
+{At testing time, evaluates the form under test, expecting to find a
+  list as a result.  Expects that each argument of the list according
+  to the subordinate \texttt{CRITERION}, and passes when all of these
+  checks pass.}
+{A single form which evaluates to a list.}
+{\noExpl}
+{\singleEx}
+{(def-test each1 (:each (:symbol a)) '(a a a a a))}
+
+\kwdCriteriaDoc{seq}{(:seq CRITERION CRITERION ...\ CRITERION)}
+{Evaluates its input form, checks each of its elements according to
+  the respective subordinate criterion, and passes when all of them
+  pass.}
+{A single form which evaluates to a list with the same number of
+elements as there are subordinate criteria to the
+\texttt{:seq}.}
+{\hasExpl{Note that \texttt{:seq} expects that the length of the list
+will be the same as the number of subordinate criteria, and will fail
+otherwise.}}
+{\tabbingEx}{
+(de\=f-\=check seqcheck
+\\ \>\>  (:seq (:predicate symbolp) (:eql 1) (:symbol d))
+\\ \>  '(a 1 d))
+}
+
+\kwdCriteriaDoc{permute}{(:permute CRITERION)}
+{At testing time, evaluates the form under test, expecting to find a
+  list as a result.  The criterion expects to find that some
+  permutation of this list will satisfy the subordinate criterion.}
+{A single form evaluating to a list.}
+{\noExpl}{\tabbingEx}{
+\textrm{Examples:}\ \=(def-test permute1 (:permute (:each (:eq 'a))) '(a a))
+\\ \> (de\=f-\=check permute2
+\\ \> \> \> (:permute (:seq \=(:symbol b)
+\\ \> \> \>             \>(:predicate symbolp)
+\\ \> \> \>             \>(:predicate numberp)))
+\\ \> \>'(1 a b))
+}
+
+\end{criteriaGroup}
+
+\begin{criteriaGroup}{Criteria for vectors}{}
+
+\kwdCriteriaDoc{across}{(:across CRITERION CRITERION ...\ CRITERION)}
+{Like \texttt{:seq}, but for a vector instead of a list.}
+{A single form evaluating to a vector.}
+{\noExpl}{\tabbingEx}{
+(de\=f-\=check across1
+\\ \>\>  (:across (:predicate symbolp) (:eql 1))
+\\ \>  (vector 'a 1))}
+
+\end{criteriaGroup}
+
+\begin{criteriaGroup}{Criteria for classes}{}
+
+\kwdCriteriaDoc{slots}{\small(:slots (NAME CRT) (NAME CRT) ...\ (NAME
+    CRT))}
+{Evaluates its input form, and passes when the value at each given
+slot satisfies the corresponding subordinate constraint.}
+{A single form evaluating to a class or struct object.}
+{\hasExpl{Use of this criterion with structs rather than classes does
+work on many platforms, since the CL specification defines
+\texttt{with-slots} on classes only.}}
+{\tabbingEx}{
+(defc\=lass classcheck ()
+\\ \> (\=(s1 :initarg :s1 :reader get-s1)
+\\ \> \> (s2 :initarg :s2)
+\\ \> \> (s3 :initarg :s3)))
+\\ (def-test \=slot1
+\\ \>  (:slots \=(s1 (:eql 10))
+\\ \>  \>(s2 (:symbol zz))
+\\ \>  \>(s3 (:seq \=(:symbol q) (:symbol w)
+\\ \>  \> \> (:symbol e) (:symbol r))))
+\\ \>  (m\=ake-instance 'classcheck
+\\ \> \>  :s1 10 :s2 'zz :s3 '(q w e r)))
+}
+
+\end{criteriaGroup}
+
+\begin{criteriaGroup}{Special criteria}{}
+
+\kwdCriteriaDoc{sample}{(:sample \&key domains where verify values sample-size qualifying-sample max-tries)}
+{Experimentally test a program property by generating random data.  See \manualOrRef{Section~\ref{quickcheck}}{the users' manual} for more information.}
+{Forms must match lambda list \texttt{values}.}
+{\noExpl}{\noEx}{}
+
+\end{criteriaGroup}
+
+\begin{criteriaGroup}{Programmatic and debugging criteria}{}
+
+\kwdCriteriaDoc{info}{(:info MESSAGE SUBCRITERION)}
+{Add an informational note to the check result.}
+{Any.}
+{\noExpl}
+{\singleEx}{(def-test known-bug (:info "Known bug" (:eql 3)) 4)}
+
+\kwdCriteriaDoc{pass}{:pass}
+{A trivial test, which always passes.}
+{Any.}
+{\noExpl}
+{\singleEx}{(def-test passing-test :pass 3 4 "sd")}
+
+\kwdCriteriaDoc{fail}{(:fail FORMAT ARG ...\ ARG)}
+{A trivial test, which always fails.  The format string and arguments
+should be suitable for the Lisp \texttt{format} function.}
+{Any.}
+{\noExpl}
+{\singleEx}{(def-test fails (:fail "Expected a \~{}a" "string") 312)}
+
+\kwdCriteriaDoc{warn}{(:warn FORMAT ARG ...\ ARG)}
+{Issue a warning.  The format string and arguments should be suitable for
+ the Lisp \texttt{format} function.}
+{Any.}
+{\noExpl}
+{\singleEx}{(:warn "\~{}d is not a perfect square" 5)}
+
+\kwdCriteriaDoc{dump-forms}{(:dump-forms FORMAT)}
+{For debugging NST criteria: fails after writes the current forms to
+standard output.}
+{Arbitrarily many values, compatible with the given string for the
+Lisp \texttt{format} function.}
+{\noExpl}{\noEx}{}
+
+\end{criteriaGroup}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "../manual/manual"
+%%% TeX-PDF-mode: t
+%%% End: 

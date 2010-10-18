@@ -1,0 +1,78 @@
+
+\section{Defining test criteria}
+The criteria used in test forms decide whether, when and how to use
+the forms under test and the forms and subcriteria provided to each
+test criterion.  Criteria receive their arguments as forms, and may
+examine them with or without evaluation, as the particular criterion
+requires.  NST provides two mechanisms for defining new criteria, and
+a number of support functions for use within these definitions.  The
+simpler, but more limited, way to define a new criterion is by
+specifying how it should be rewritten to another criterion.  The
+\texttt{def-criterion-alias} macro provides this mechanism, which we
+discuss in Section~\ref{sec:def-criterion-alias}.  The
+\texttt{def-criterion} macro provides the more general mechanism for
+criteria definition, where Lisp code produces a result report from the
+forms under test and criterion's forms and subcriteria.  We discuss
+\texttt{def-criterion} in Section~\ref{sec:def-criterion}.  We discuss
+the NST API for creating these result reports in
+Section~\ref{sec:criteria-forms-report}, and for recursive processing
+of subcriteria in Section~\ref{sec:subcriteria}.
+
+The functions and macros for defining new criteria are exported from
+package \texttt{nst-criteria-api}.
+
+\subsection{Aliases over criteria}
+\label{sec:def-criterion-alias}
+\input{../gen/def-criterion-alias_compiler-macro_nst-item-style}
+
+\subsection{Reporting forms}
+\label{sec:criteria-forms-report}
+NST provides functions both for building test reports, and for adding
+information to a report:
+\begin{itemize}
+\item
+  \input{../gen/make-success-report_function_nst-item-style}
+  \index{make-success-report@\texttt{make-success-report}}
+\item
+  \input{../gen/make-failure-report_function_nst-item-style}
+  \index{make-failure-report@\texttt{make-failure-report}}
+  \index{failure@\texttt{failure}}
+\item
+  \input{../gen/make-warning-report_function_nst-item-style}
+  \index{make-warning-report@\texttt{make-warning-report}}
+  \index{warning@\texttt{warning}}
+\item
+  \input{../gen/make-error-report_function_nst-item-style}
+  \index{make-error-report@\texttt{make-error-report}}
+  \index{error@\texttt{error}}
+\item
+  \input{../gen/add-error_function_nst-item-style}
+  \index{add-error@\texttt{add-error}}
+\item
+  \input{../gen/add-failure_function_nst-item-style}
+  \index{add-failure@\texttt{add-failure}}
+\item
+  \input{../gen/add-info_function_nst-item-style}
+  \index{add-info@\texttt{add-info}}
+\end{itemize}
+
+\subsection{Processing subcriteria}
+\label{sec:subcriteria}
+The criterion itself can contain \emph{subcriteria} which can be
+incorporated into the main criterion's assessment.  NST provides two
+functions which trigger testing by a subcriterion, each returning the
+check's result report.
+\par
+\input{../gen/check-criterion-on-value_function_nst-item-style}%
+\par
+\input{../gen/check-criterion-on-form_function_nst-item-style}%
+
+\subsection{General criteria definitions}
+\label{sec:def-criterion}
+\input{../gen/def-criterion_compiler-macro_nst-item-style}%
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual"
+%%% TeX-PDF-mode: t
+%%% End: 

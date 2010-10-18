@@ -1,0 +1,1652 @@
+
+;; Loading file inputs/clisp/init.lisp ...
+; loading system definition from /home/jm/.asdf-install-dir/systems/asdf-binary-locations.asd into #<PACKAGE
+;   ASDF0>
+;;  Loading file /home/jm/.asdf-install-dir/systems/asdf-binary-locations.asd ...
+; registering #<SYSTEM ASDF-BINARY-LOCATIONS #x000334028BD0> as ASDF-BINARY-LOCATIONS
+;;  Loaded file /home/jm/.asdf-install-dir/systems/asdf-binary-locations.asd
+;;  Loading file /home/jm/.asdf-install-dir/site/asdf-binary-locations/dev/main.lisp ...
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION OUTPUT-FILES> is
+         being modified, but has already been called.
+;;  Loaded file /home/jm/.asdf-install-dir/site/asdf-binary-locations/dev/main.lisp
+0 errors, 0 warnings
+;; Loaded file inputs/clisp/init.lisp
+; loading system definition from /home/jm/Lib/Lisp/nst/nst.asd into #<PACKAGE
+;   ASDF0>
+; registering #<SYSTEM :NST #x0003340A03D0> as NST
+; loading system definition from /home/jm/Lib/Lisp/nst/test/nst-test.asd into #<PACKAGE
+;   ASDF0>
+; loading system definition from /home/jm/Lib/Lisp/nst/asdf-nst.asd into #<PACKAGE
+;   ASDF1>
+; registering #<SYSTEM :ASDF-NST #x0003340290F8> as ASDF-NST
+;; Compiling file /home/jm/Lib/Lisp/nst/asdf/package.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/asdf/package.fas
+;; Compiling file /home/jm/Lib/Lisp/nst/asdf/globals.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/asdf/globals.fas
+;; Compiling file /home/jm/Lib/Lisp/nst/asdf/runnable.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/asdf/runnable.fas
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION COMPONENT-DEPENDS-ON>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION OPERATION-DONE-P> is
+         being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION PERFORM> is being
+         modified, but has already been called.
+;; Compiling file /home/jm/Lib/Lisp/nst/asdf/system.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/asdf/system.fas
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION COMPONENT-DEPENDS-ON>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION PERFORM> is being
+         modified, but has already been called.
+0 errors, 0 warnings
+; registering #<NST-TEST-HOLDER :NST-TEST #x0003340C2EC8> as NST-TEST
+; loading system definition from /home/jm/Lib/Lisp/SIFT/closer-mop/closer-mop.asd into #<PACKAGE
+;   ASDF0>
+; registering #<SYSTEM #:CLOSER-MOP #x0003340305F0> as CLOSER-MOP
+; loading system definition from /home/jm/Lib/Lisp/nst/test/direct/nst-simple-tests.asd into #<PACKAGE
+;   ASDF0>
+0 errors, 0 warnings
+; registering #<NST-TEST-HOLDER :NST-SIMPLE-TESTS #x0003340BA480> as NST-SIMPLE-TESTS
+; loading system definition from /home/jm/Lib/Lisp/nst/test/util/nst-selftest-utils.asd into #<PACKAGE
+;   ASDF0>
+; registering #<SYSTEM :NST-SELFTEST-UTILS #x0003340CF4E8> as NST-SELFTEST-UTILS
+; loading system definition from /home/jm/Lib/Lisp/nst/test/meta/nst-meta-tests.asd into #<PACKAGE
+;   ASDF0>
+0 errors, 0 warnings
+; registering #<NST-TEST-HOLDER :NST-META-TESTS #x000334050A68> as NST-META-TESTS
+;; Compiling file /home/jm/Lib/Lisp/SIFT/closer-mop/closer-mop-packages.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/SIFT/closer-mop/closer-mop-packages.fas
+;; Compiling file /home/jm/Lib/Lisp/SIFT/closer-mop/closer-mop-shared.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/SIFT/closer-mop/closer-mop-shared.fas
+WARNING: Redefining metaobject class
+          #<FUNCALLABLE-STANDARD-CLASS STANDARD-GENERIC-FUNCTION>
+         has no effect.
+;; Compiling file /home/jm/Lib/Lisp/SIFT/closer-mop/closer-clisp.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/SIFT/closer-mop/closer-clisp.fas
+;; Compiling file /home/jm/Lib/Lisp/nst/core/package.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/package.fas
+;; Compiling file /home/jm/Lib/Lisp/nst/core/utils.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/utils.fas
+;; Compiling file /home/jm/Lib/Lisp/nst/core/errors.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/errors.fas
+;; Compiling file /home/jm/Lib/Lisp/nst/core/globals.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/globals.fas
+WARNING: Redefining metaobject class #<STANDARD-CLASS SINGLETON-CLASS> has no
+         effect.
+;; Compiling file /home/jm/Lib/Lisp/nst/core/artifacts.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/artifacts.fas
+;; Compiling file /home/jm/Lib/Lisp/nst/core/pick.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/pick.fas
+;; Compiling file /home/jm/Lib/Lisp/nst/core/interrupt.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/interrupt.fas
+;; Compiling file /home/jm/Lib/Lisp/nst/core/check.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/check.fas
+;; Compiling file /home/jm/Lib/Lisp/nst/core/status.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/status.fas
+;; Compiling file /home/jm/Lib/Lisp/nst/core/runner.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/runner.fas
+;; Compiling file /home/jm/Lib/Lisp/nst/core/group.lisp ...
+WARNING in DEF-TEST-GROUP-1 in lines 75..248 :
+variable X is not used.
+Misspelled or missing IGNORE declaration?
+WARNING in DEF-TEST-GROUP-1 in lines 75..248 :
+variable TEST-NAMES is not used.
+Misspelled or missing IGNORE declaration?
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/group.fas
+WARNING: COMPILE-FILE warned while performing #<COMPILE-OP NIL #x000334020978>
+         on #<CL-SOURCE-FILE "group" #x0003340117A8>.
+;; Compiling file /home/jm/Lib/Lisp/nst/core/test-def.lisp ...
+WARNING in DEF-TEST-1 in lines 86..275 :
+variable CORE-RUN-BODY is not used.
+Misspelled or missing IGNORE declaration?
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/test-def.fas
+WARNING: COMPILE-FILE warned while performing #<COMPILE-OP NIL #x000334020978>
+         on #<CL-SOURCE-FILE "test-def" #x0003340119C8>.
+;; Compiling file /home/jm/Lib/Lisp/nst/core/fixture.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/fixture.fas
+WARNING: COMPILE-FILE warned while performing #<COMPILE-OP NIL #x000334020978>
+         on #<CL-SOURCE-FILE "fixture" #x000334011B10>.
+;; Compiling file /home/jm/Lib/Lisp/nst/core/permuter.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/permuter.fas
+WARNING: COMPILE-FILE warned while performing #<COMPILE-OP NIL #x000334020978>
+         on #<CL-SOURCE-FILE "permuter" #x000334011C58>.
+;; Compiling file /home/jm/Lib/Lisp/nst/core/criteria.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/criteria.fas
+WARNING: COMPILE-FILE warned while performing #<COMPILE-OP NIL #x000334020978>
+         on #<CL-SOURCE-FILE "criteria" #x000334011EE8>.
+;; Compiling file /home/jm/Lib/Lisp/nst/core/command.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/command.fas
+WARNING: COMPILE-FILE warned while performing #<COMPILE-OP NIL #x000334020978>
+         on #<CL-SOURCE-FILE "command" #x000334012030>.
+;; Compiling file /home/jm/Lib/Lisp/nst/core/junit.lisp ...
+WARNING: doc-string is not allowed here and will be ignored:
+          ("Writes string to stream with all character entities escaped."
+           (COERCE STRING 'SIMPLE-BASE-STRING)
+           (LOOP FOR CHAR ACROSS STRING FOR ESC =
+            (SVREF *CHAR-ESCAPES* (CHAR-CODE CHAR)) DO
+            (WRITE-SEQUENCE ESC STREAM)))
+
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/junit.fas
+WARNING: COMPILE-FILE warned while performing #<COMPILE-OP NIL #x000334020978>
+         on #<CL-SOURCE-FILE "junit" #x000334012178>.
+;; Compiling file /home/jm/Lib/Lisp/nst/core/sampling.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/sampling.fas
+WARNING: COMPILE-FILE warned while performing #<COMPILE-OP NIL #x000334020978>
+         on #<CL-SOURCE-FILE "sampling" #x0003340122C0>.
+;; Compiling file /home/jm/Lib/Lisp/nst/core/interfaces.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/core/interfaces.fas
+WARNING: COMPILE-FILE warned while performing #<COMPILE-OP NIL #x000334020978>
+         on #<CL-SOURCE-FILE "interfaces" #x000334012408>.
+;; Compiling file /home/jm/Lib/Lisp/nst/test/util/package.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/test/util/package.fas
+WARNING: COMPILE-FILE warned while performing #<COMPILE-OP NIL #x000334024D20>
+         on #<CL-SOURCE-FILE "package" #x000334024B98>.
+;; Compiling file /home/jm/Lib/Lisp/nst/test/direct/package.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/test/direct/package.fas
+WARNING: COMPILE-FILE warned while performing #<COMPILE-OP NIL #x000334023E48>
+         on #<CL-SOURCE-FILE "package" #x000334023B78>.
+;; Compiling file /home/jm/Lib/Lisp/nst/test/direct/builtins.lisp ...
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::BOUND-NAMES>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/test/direct/builtins.fas
+WARNING: COMPILE-FILE warned while performing #<COMPILE-OP NIL #x0003340221E8>
+         on #<CL-SOURCE-FILE "builtins" #x000334022060>.
+;; Compiling file /home/jm/Lib/Lisp/nst/test/meta/packages.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/test/meta/packages.fas
+WARNING: COMPILE-FILE warned while performing #<COMPILE-OP NIL #x000334023E60>
+         on #<CL-SOURCE-FILE "packages" #x0003340237B8>.
+;; Compiling file /home/jm/Lib/Lisp/nst/test/meta/reflect.lisp ...
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/test/meta/reflect.fas
+WARNING: COMPILE-FILE warned while performing #<COMPILE-OP NIL #x000334023E60>
+         on #<CL-SOURCE-FILE "reflect" #x000334023900>.
+;; Compiling file /home/jm/Lib/Lisp/nst/test/meta/caching.lisp ...
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::BOUND-NAMES>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-FIXTURE-CLASS-NAMES>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::BOUND-NAMES>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::CACHED-VALUES>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::BOUND-NAMES>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::CACHED-VALUES>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::BOUND-NAMES>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/test/meta/caching.fas
+WARNING: COMPILE-FILE warned while performing #<COMPILE-OP NIL #x000334023E60>
+         on #<CL-SOURCE-FILE "caching" #x000334023A48>.
+;; Compiling file /home/jm/Lib/Lisp/nst/test/meta/faildata.lisp ...
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::BOUND-NAMES>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::BOUND-NAMES>
+         is being modified, but has already been called.
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/test/meta/faildata.fas
+WARNING: COMPILE-FILE warned while performing #<COMPILE-OP NIL #x0003340239B8>
+         on #<CL-SOURCE-FILE "faildata" #x0003340236E8>.
+;; Compiling file /home/jm/Lib/Lisp/nst/test/meta/selftest.lisp ...
+WARNING: The generic function #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-LIST>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-NAME>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-FIXTURE-CLASS-NAMES>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-FIXTURE-CLASS-NAMES>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-FIXTURE-CLASS-NAMES>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION (SETF SIFT.NST::TEST-LIST)>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::GROUP-FIXTURE-CLASS-NAMES>
+         is being modified, but has already been called.
+WARNING: The generic function
+          #<STANDARD-GENERIC-FUNCTION SIFT.NST::TEST-NAME-LOOKUP>
+         is being modified, but has already been called.
+;; Wrote file /home/jm/Lib/Lisp/fasl/clisp/clisp-2.44.1-unix-i386/var/cache/common-lisp-controller/1000/clisp/local/home/jm/Lib/Lisp/nst/test/meta/selftest.fas
+WARNING: COMPILE-FILE warned while performing #<COMPILE-OP NIL #x0003340239B8>
+         on #<CL-SOURCE-FILE "selftest" #x000334023830>.
+debug-args (:NST-SET ((:DEBUG-ON-ERROR T) (:DEBUG-ON-FAIL T) (:VERBOSE :TRACE)))
+debug-protect NIL
+Running package "NST-SIMPLE-TESTS" (groups NST-SIMPLE-TESTS::TEST-ADDER 
+NST-SIMPLE-TESTS::A-SETUP-CLEANUP NST-SIMPLE-TESTS::EACH-SETUP-CLEANUP 
+NST-SIMPLE-TESTS::SETUP-CLEANUP NST-SIMPLE-TESTS::Z-SETUP-CLEANUP 
+NST-SIMPLE-TESTS::CORE-CHECKS NST-SIMPLE-TESTS::EQL-G NST-SIMPLE-TESTS::H1 
+NST-SIMPLE-TESTS::G4 NST-SIMPLE-TESTS::G3A NST-SIMPLE-TESTS::G2A 
+NST-SIMPLE-TESTS::G1A1 NST-SIMPLE-TESTS::G1A NST-SIMPLE-TESTS::G1)
+Running group NST-SIMPLE-TESTS::TEST-ADDER
+ - Executing test NST-SIMPLE-TESTS::GIVEN1
+   Check GIVEN1 (group TEST-ADDER) passed
+ - Executing test NST-SIMPLE-TESTS::GIVEN2
+   Check GIVEN2 (group TEST-ADDER) passed
+ - Executing test NST-SIMPLE-TESTS::GIVEN3
+   Check GIVEN3 (group TEST-ADDER) passed
+ - Executing test NST-SIMPLE-TESTS::GIVEN4
+   Check GIVEN4 (group TEST-ADDER) passed
+Running group NST-SIMPLE-TESTS::A-SETUP-CLEANUP
+ - Executing test NST-SIMPLE-TESTS::A-VERIFY-SETUP-CLEANUP
+   Check A-VERIFY-SETUP-CLEANUP (group A-SETUP-CLEANUP) passed
+Running group NST-SIMPLE-TESTS::EACH-SETUP-CLEANUP
+ - Executing test NST-SIMPLE-TESTS::A-SC-FOR-SETUP-2
+   Check A-SC-FOR-SETUP-2 (group EACH-SETUP-CLEANUP) passed
+ - Executing test NST-SIMPLE-TESTS::SC-FOR-SETUP-3
+   Check SC-FOR-SETUP-3 (group EACH-SETUP-CLEANUP) passed
+ - Executing test NST-SIMPLE-TESTS::Z-SC-FOR-SETUP-2
+   Check Z-SC-FOR-SETUP-2 (group EACH-SETUP-CLEANUP) passed
+Running group NST-SIMPLE-TESTS::SETUP-CLEANUP
+ - Executing test NST-SIMPLE-TESTS::A-SC-FOR-SETUP-1
+   Check A-SC-FOR-SETUP-1 (group SETUP-CLEANUP) passed
+ - Executing test NST-SIMPLE-TESTS::SC-FOR-SETUP-2
+   Check SC-FOR-SETUP-2 (group SETUP-CLEANUP) passed
+ - Executing test NST-SIMPLE-TESTS::Z-SC-FOR-SETUP-1
+   Check Z-SC-FOR-SETUP-1 (group SETUP-CLEANUP) passed
+Running group NST-SIMPLE-TESTS::Z-SETUP-CLEANUP
+ - Executing test NST-SIMPLE-TESTS::Z-VERIFY-SETUP-CLEANUP
+   Check Z-VERIFY-SETUP-CLEANUP (group Z-SETUP-CLEANUP) passed
+Running group NST-SIMPLE-TESTS::CORE-CHECKS
+ - Executing test NST-SIMPLE-TESTS::ODDPOS-1
+   Check ODDPOS-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::ODDPOS-2
+   Check ODDPOS-2 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::PASS-1
+   Check PASS-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::FAIL-1
+   Check FAIL-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::WARN-1
+   Check WARN-1 (group CORE-CHECKS) passed with warnings
+ - Executing test NST-SIMPLE-TESTS::ALL-1
+   Check ALL-1 (group CORE-CHECKS) passed with warnings
+ - Executing test NST-SIMPLE-TESTS::EQ-1
+   Check EQ-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::INFO-1
+   Check INFO-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::EQL-1
+   Check EQL-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::SYMBOL-1
+   Check SYMBOL-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::SYMBOL-2-FAILS
+   Check SYMBOL-2-FAILS (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::APPLY-1
+   Check APPLY-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::APPLY-2
+   Check APPLY-2 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::PRED-1
+   Check PRED-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::PRED-2
+   Check PRED-2 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::FORMS-EQ-1
+   Check FORMS-EQ-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::FORMS-EQL-1
+   Check FORMS-EQL-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::FORMS-EQUAL-1
+   Check FORMS-EQUAL-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::ERR-1
+   Check ERR-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::ERR-2
+   Check ERR-2 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::ANY-1
+   Check ANY-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::ANY-2
+   Check ANY-2 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::ANY-3
+   Check ANY-3 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::PERF-1
+   Check PERF-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::PERF-2
+   Check PERF-2 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::PROGN-1
+   Check PROGN-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::PROGN-2
+   Check PROGN-2 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::EACH1
+   Check EACH1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::SEQ-1
+   Check SEQ-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::PERMUTE1
+   Check PERMUTE1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::PERMUTE2
+   Check PERMUTE2 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::PERMUTE2A
+   Check PERMUTE2A (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::PERMUTE2B
+   Check PERMUTE2B (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::NO-VALUES1
+   Check NO-VALUES1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::VALUES-DROP1
+   Check VALUES-DROP1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::VALUES-DROP3
+   Check VALUES-DROP3 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::VALUE-LIST1
+   Check VALUE-LIST1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::VALUES1
+   Check VALUES1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::ACROSS-1
+   Check ACROSS-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::SLOT0
+   Check SLOT0 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::SLOT1
+   Check SLOT1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::CHECK-ERR1
+   Check CHECK-ERR1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::PROJ-1
+   Check PROJ-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::TWO-FIXTURES-2
+   Check TWO-FIXTURES-2 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::SAMPLE-1
+   Check SAMPLE-1 (group CORE-CHECKS) passed
+ - Executing test NST-SIMPLE-TESTS::SAMPLE-2
+   
+Check SAMPLE-2 (group CORE-CHECKS) failed: Errors:
+ - Error  #<SYSTEM::SIMPLE-FLOATING-POINT-OVERFLOW #x0003342EE138>for case:NST-SIMPLE-TESTS::X  (NST-SIMPLE-TESTS::X)
+ in context: checking (:SAMPLE :DOMAINS ((NST-SIMPLE-TESTS::X
+      REAL)) :WHERE (> NST-SIMPLE-TESTS::X 1) :VERIFY
+     (< (SQRT NST-SIMPLE-TESTS::X)
+     NST-SIMPLE-TESTS::X) :SAMPLE-SIZE 10 :MAX-TRIES 12) on the result of 
+   evaluating (DOMAINS
+    ((X REAL)) WHERE (> X 1) VERIFY (< (SQRT X) X) SAMPLE-SIZE 10 MAX-TRIES 12)
+ stack: (checking (:SAMPLE :DOMAINS ((NST-SIMPLE-TESTS::X
+      REAL)) :WHERE (> NST-SIMPLE-TESTS::X 1) :VERIFY (<
+     (SQRT NST-SIMPLE-TESTS::X) NST-SIMPLE-TESTS::X) :SAMPLE-SIZE 10 :MAX-TRIES
+    12) on the result of evaluating (DOMAINS
+    ((X REAL)) WHERE (> X 1) VERIFY (< (SQRT X) X) SAMPLE-SIZE 10 MAX-TRIES 12))
+ - Error  #<SYSTEM::SIMPLE-FLOATING-POINT-OVERFLOW #x0003342EC5F8>for case:NST-SIMPLE-TESTS::X  (NST-SIMPLE-TESTS::X)
+ in context: checking (:SAMPLE :DOMAINS ((NST-SIMPLE-TESTS::X
+      REAL)) :WHERE (> NST-SIMPLE-TESTS::X 1) :VERIFY
+     (< (SQRT NST-SIMPLE-TESTS::X)
+     NST-SIMPLE-TESTS::X) :SAMPLE-SIZE 10 :MAX-TRIES 12) on the result of 
+   evaluating (DOMAINS
+    ((X REAL)) WHERE (> X 1) VERIFY (< (SQRT X) X) SAMPLE-SIZE 10 MAX-TRIES 12)
+ stack: (checking (:SAMPLE :DOMAINS ((NST-SIMPLE-TESTS::X
+      REAL)) :WHERE (> NST-SIMPLE-TESTS::X 1) :VERIFY (<
+     (SQRT NST-SIMPLE-TESTS::X) NST-SIMPLE-TESTS::X) :SAMPLE-SIZE 10 :MAX-TRIES
+    12) on the result of evaluating (DOMAINS
+    ((X REAL)) WHERE (> X 1) VERIFY (< (SQRT X) X) SAMPLE-SIZE 10 MAX-TRIES 12))
+Running group NST-SIMPLE-TESTS::EQL-G
+ - Executing test NST-SIMPLE-TESTS::EQL-1
+   Check EQL-1 (group EQL-G) passed
+Running group NST-SIMPLE-TESTS::H1
+ - Executing test NST-SIMPLE-TESTS::TWO-FIXTURES
+   Check TWO-FIXTURES (group H1) passed
+Running group NST-SIMPLE-TESTS::G4
+ - Executing test NST-SIMPLE-TESTS::FIX1
+   Check FIX1 (group G4) passed
+ - Executing test NST-SIMPLE-TESTS::FIX2
+   Check FIX2 (group G4) passed
+Running group NST-SIMPLE-TESTS::G3A
+ - Executing test NST-SIMPLE-TESTS::FIX1
+   Check FIX1 (group G3A) passed
+ - Executing test NST-SIMPLE-TESTS::FIX2
+   Check FIX2 (group G3A) passed
+Running group NST-SIMPLE-TESTS::G2A
+ - Executing test NST-SIMPLE-TESTS::USING-C
+   Check USING-C (group G2A) passed
+Running group NST-SIMPLE-TESTS::G1A1
+ - Executing test NST-SIMPLE-TESTS::FIX1
+   Check FIX1 (group G1A1) passed
+Running group NST-SIMPLE-TESTS::G1A
+ - Executing test NST-SIMPLE-TESTS::FIX0
+   Check FIX0 (group G1A) passed
+Running group NST-SIMPLE-TESTS::G1
+ - Executing test NST-SIMPLE-TESTS::TRIV
+   Check TRIV (group G1) passed
+
+Summary of results for system nst-simple-tests:
+Package NST-SIMPLE-TESTS: 67 of 68 passed
+ - Group G1: 1 of 1 passed
+ - Group G1A: 1 of 1 passed
+ - Group G1A1: 1 of 1 passed
+ - Group G2A: 1 of 1 passed
+ - Group G3A: 2 of 2 passed
+ - Group G4: 2 of 2 passed
+ - Group H1: 1 of 1 passed
+ - Group EQL-G: 1 of 1 passed
+ - Group CORE-CHECKS: 45 of 46 passed
+   - Check SAMPLE-2 failed: Errors:
+    - Error     #<SYSTEM::SIMPLE-FLOATING-POINT-OVERFLOW #x0003342EE138>for case:NST-SIMPLE-TESTS::X     (NST-SIMPLE-TESTS::X)
+    in context: checking (:SAMPLE :DOMAINS ((NST-SIMPLE-TESTS::X
+         REAL)) :WHERE (> NST-SIMPLE-TESTS::X 1) :VERIFY
+        (< (SQRT NST-SIMPLE-TESTS::X)
+        NST-SIMPLE-TESTS::X) :SAMPLE-SIZE 10 :MAX-TRIES 12) on the result of 
+      evaluating (DOMAINS
+       ((X REAL)) WHERE (> X 1) VERIFY (< (SQRT X) X) SAMPLE-SIZE 10 MAX-TRIES 12)
+    stack: (checking (:SAMPLE :DOMAINS ((NST-SIMPLE-TESTS::X
+         REAL)) :WHERE (> NST-SIMPLE-TESTS::X 1) :VERIFY (<
+        (SQRT NST-SIMPLE-TESTS::X) NST-SIMPLE-TESTS::X) :SAMPLE-SIZE 10
+       :MAX-TRIES 12) on the result of evaluating (DOMAINS
+       ((X REAL)) WHERE (> X 1) VERIFY (< (SQRT X) X) SAMPLE-SIZE 10 MAX-TRIES 12))
+    - Error     #<SYSTEM::SIMPLE-FLOATING-POINT-OVERFLOW #x0003342EC5F8>for case:NST-SIMPLE-TESTS::X     (NST-SIMPLE-TESTS::X)
+    in context: checking (:SAMPLE :DOMAINS ((NST-SIMPLE-TESTS::X
+         REAL)) :WHERE (> NST-SIMPLE-TESTS::X 1) :VERIFY
+        (< (SQRT NST-SIMPLE-TESTS::X)
+        NST-SIMPLE-TESTS::X) :SAMPLE-SIZE 10 :MAX-TRIES 12) on the result of 
+      evaluating (DOMAINS
+       ((X REAL)) WHERE (> X 1) VERIFY (< (SQRT X) X) SAMPLE-SIZE 10 MAX-TRIES 12)
+    stack: (checking (:SAMPLE :DOMAINS ((NST-SIMPLE-TESTS::X
+         REAL)) :WHERE (> NST-SIMPLE-TESTS::X 1) :VERIFY (<
+        (SQRT NST-SIMPLE-TESTS::X) NST-SIMPLE-TESTS::X) :SAMPLE-SIZE 10
+       :MAX-TRIES 12) on the result of evaluating (DOMAINS
+       ((X REAL)) WHERE (> X 1) VERIFY (< (SQRT X) X) SAMPLE-SIZE 10 MAX-TRIES 12))
+   - Check ALL-1 passed with warnings
+   - Check WARN-1 passed with warnings
+ - Group Z-SETUP-CLEANUP: 1 of 1 passed
+ - Group SETUP-CLEANUP: 3 of 3 passed
+ - Group EACH-SETUP-CLEANUP: 3 of 3 passed
+ - Group A-SETUP-CLEANUP: 1 of 1 passed
+ - Group TEST-ADDER: 4 of 4 passed
+TOTAL: 67 of 68 passed (0 failed, 1 error, 2 warnings)
+debug-args (:NST-SET ((:DEBUG-ON-ERROR T) (:DEBUG-ON-FAIL T) (:VERBOSE :TRACE)))
+debug-protect NIL
+Running package "NST-META" (groups NST-META::NIL-USE-FIXTURES 
+NST-META::CACHING-FIXTURES-1 NST-META::PERMUTING-EMPTY-LISTS 
+NST-META::M-A-SETUP-CLEANUP NST-META::FAILURE-CATCHERS)
+Running group NST-META::NIL-USE-FIXTURES
+ - Executing test NST-META::NIL-FIX
+Running group NST-META-SOURCES::USE-FIXTURE-WITH-NIL
+ - Executing test NST-META-SOURCES::TN1
+   Check TN1 (group USE-FIXTURE-WITH-NIL) passed
+ - Executing test NST-META-SOURCES::TN2
+   Check TN2 (group USE-FIXTURE-WITH-NIL) passed
+   Check NIL-FIX (group NIL-USE-FIXTURES) passed
+Running group NST-META::CACHING-FIXTURES-1
+ - Executing test NST-META::CFIX0
+Running group NST-META-SOURCES::GROUP-FIXTURES-CACHE-NONE
+ - Executing test NST-META-SOURCES::Z-FIXTURES-CACHE-NONE-A
+   Check Z-FIXTURES-CACHE-NONE-A (group GROUP-FIXTURES-CACHE-NONE) passed
+ - Executing test NST-META-SOURCES::Z-FIXTURES-CACHE-NONE-B
+   Check Z-FIXTURES-CACHE-NONE-B (group GROUP-FIXTURES-CACHE-NONE) passed
+Running group NST-META-SOURCES::GROUP-FIXTURES-CACHE-NONE
+ - Executing test NST-META-SOURCES::Z-FIXTURES-CACHE-NONE-A
+   Check Z-FIXTURES-CACHE-NONE-A (group GROUP-FIXTURES-CACHE-NONE) passed
+ - Executing test NST-META-SOURCES::Z-FIXTURES-CACHE-NONE-B
+   Check Z-FIXTURES-CACHE-NONE-B (group GROUP-FIXTURES-CACHE-NONE) passed
+   Check CFIX0 (group CACHING-FIXTURES-1) passed
+ - Executing test NST-META::CFIX1
+Running group NST-META-SOURCES::GROUP-FIXTURES-CACHE-ALL
+ - Executing test NST-META-SOURCES::Z-FIXTURES-CACHE-ALL-A
+   Check Z-FIXTURES-CACHE-ALL-A (group GROUP-FIXTURES-CACHE-ALL) passed
+ - Executing test NST-META-SOURCES::Z-FIXTURES-CACHE-ALL-B
+   Check Z-FIXTURES-CACHE-ALL-B (group GROUP-FIXTURES-CACHE-ALL) passed
+Running group NST-META-SOURCES::GROUP-FIXTURES-CACHE-ALL
+ - Executing test NST-META-SOURCES::Z-FIXTURES-CACHE-ALL-A
+   Check Z-FIXTURES-CACHE-ALL-A (group GROUP-FIXTURES-CACHE-ALL) passed
+ - Executing test NST-META-SOURCES::Z-FIXTURES-CACHE-ALL-B
+   Check Z-FIXTURES-CACHE-ALL-B (group GROUP-FIXTURES-CACHE-ALL) passed
+   Check CFIX1 (group CACHING-FIXTURES-1) passed
+ - Executing test NST-META::CFIX2
+Running group NST-META-SOURCES::GROUP-FIXTURES-CACHE-ONE
+ - Executing test NST-META-SOURCES::Z-FIXTURES-CACHE-ONE-A
+   Check Z-FIXTURES-CACHE-ONE-A (group GROUP-FIXTURES-CACHE-ONE) passed
+ - Executing test NST-META-SOURCES::Z-FIXTURES-CACHE-ONE-B
+   Check Z-FIXTURES-CACHE-ONE-B (group GROUP-FIXTURES-CACHE-ONE) passed
+Running group NST-META-SOURCES::GROUP-FIXTURES-CACHE-ONE
+ - Executing test NST-META-SOURCES::Z-FIXTURES-CACHE-ONE-A
+   Check Z-FIXTURES-CACHE-ONE-A (group GROUP-FIXTURES-CACHE-ONE) passed
+ - Executing test NST-META-SOURCES::Z-FIXTURES-CACHE-ONE-B
+   Check Z-FIXTURES-CACHE-ONE-B (group GROUP-FIXTURES-CACHE-ONE) passed
+   Check CFIX2 (group CACHING-FIXTURES-1) passed
+ - Executing test NST-META::CFIX3
+Running group NST-META-SOURCES::GROUP-FIXTURES-CACHE-OVERRIDE-T
+ - Executing test NST-META-SOURCES::Z-FIXTURES-CACHE-OVERRIDE-T-A
+   Check Z-FIXTURES-CACHE-OVERRIDE-T-A (group GROUP-FIXTURES-CACHE-OVERRIDE-T) passed
+ - Executing test NST-META-SOURCES::Z-FIXTURES-CACHE-OVERRIDE-T-B
+   Check Z-FIXTURES-CACHE-OVERRIDE-T-B (group GROUP-FIXTURES-CACHE-OVERRIDE-T) passed
+Running group NST-META-SOURCES::GROUP-FIXTURES-CACHE-OVERRIDE-T
+ - Executing test NST-META-SOURCES::Z-FIXTURES-CACHE-OVERRIDE-T-A
+   Check Z-FIXTURES-CACHE-OVERRIDE-T-A (group GROUP-FIXTURES-CACHE-OVERRIDE-T) passed
+ - Executing test NST-META-SOURCES::Z-FIXTURES-CACHE-OVERRIDE-T-B
+   Check Z-FIXTURES-CACHE-OVERRIDE-T-B (group GROUP-FIXTURES-CACHE-OVERRIDE-T) passed
+   Check CFIX3 (group CACHING-FIXTURES-1) passed
+Running group NST-META::PERMUTING-EMPTY-LISTS
+ - Executing test NST-META::VERIFY-PERMUTE-NIL-G
+Running group NST-META-SOURCES::PERMUTE-NIL-G
+ - Executing test NST-META-SOURCES::PASS-THOUGH-NO-CANDS-0
+   Check PASS-THOUGH-NO-CANDS-0 (group PERMUTE-NIL-G) passed
+ - Executing test NST-META-SOURCES::FAIL-FOR-NO-CANDS-1
+   Check FAIL-FOR-NO-CANDS-1 (group PERMUTE-NIL-G) failed
+ - Executing test NST-META-SOURCES::FAIL-FOR-NO-CANDS-2
+   Check FAIL-FOR-NO-CANDS-2 (group PERMUTE-NIL-G) failed
+   Check VERIFY-PERMUTE-NIL-G (group PERMUTING-EMPTY-LISTS) passed
+Running group NST-META::M-A-SETUP-CLEANUP
+ - Executing test NST-META::RUNNER
+Running group NST-META-SOURCES::SIMPLE-PASS
+ - Executing test NST-META-SOURCES::SP
+   Check SP (group SIMPLE-PASS) passed
+   Check RUNNER (group M-A-SETUP-CLEANUP) passed
+ - Executing test NST-META::VERIFY-SIMPLE-CHECKPOINTS
+Running group NST-META-SOURCES::SIMPLE-CHECKPOINTS
+ - Executing test NST-META-SOURCES::CHECK-PASS-1
+   Check CHECK-PASS-1 (group SIMPLE-CHECKPOINTS) passed
+ - Executing test NST-META-SOURCES::CHECK-PASS-2
+   Check CHECK-PASS-2 (group SIMPLE-CHECKPOINTS) passed
+ - Executing test NST-META-SOURCES::CHECK-PASS-3
+   Check CHECK-PASS-3 (group SIMPLE-CHECKPOINTS) passed
+ - Executing test NST-META-SOURCES::CHECK-PASS-4
+   Check CHECK-PASS-4 (group SIMPLE-CHECKPOINTS) passed
+ - Executing test NST-META-SOURCES::CHECK-FAIL-1
+   Check CHECK-FAIL-1 (group SIMPLE-CHECKPOINTS) failed
+ - Executing test NST-META-SOURCES::CHECK-FAIL-2
+   Check CHECK-FAIL-2 (group SIMPLE-CHECKPOINTS) failed
+ - Executing test NST-META-SOURCES::CHECK-FAIL-3
+   Check CHECK-FAIL-3 (group SIMPLE-CHECKPOINTS) failed
+ - Executing test NST-META-SOURCES::CHECK-ERROR-1
+   Check VERIFY-SIMPLE-CHECKPOINTS (group M-A-SETUP-CLEANUP) passed
+Running group NST-META::FAILURE-CATCHERS
+ - Executing test NST-META::GROUP-FIXTURE-ERROR
+Running group NST-META-SOURCES::BOOM-GROUP-FIXTURE
+   Check GROUP-FIXTURE-ERROR (group FAILURE-CATCHERS) passed
+ - Executing test NST-META::GROUP-SETUP-ERROR
+Running group NST-META-SOURCES::BOOM-GROUP-SETUP
+   Check GROUP-SETUP-ERROR (group FAILURE-CATCHERS) passed
+ - Executing test NST-META::GROUP-CLEANUP-ERROR
+Running group NST-META-SOURCES::BOOM-GROUP-CLEANUP
+ - Executing test NST-META-SOURCES::BGC1
+   Check BGC1 (group BOOM-GROUP-CLEANUP) passed
+ - Executing test NST-META-SOURCES::BGC2
+   Check BGC2 (group BOOM-GROUP-CLEANUP) passed
+ - Executing test NST-META-SOURCES::BGC3
+   Check BGC3 (group BOOM-GROUP-CLEANUP) passed
+ - Executing test NST-META-SOURCES::BGC4
+   Check BGC4 (group BOOM-GROUP-CLEANUP) passed
+   Check GROUP-CLEANUP-ERROR (group FAILURE-CATCHERS) passed
+ - Executing test NST-META::TEST-FIXTURE-ERROR
+Running group NST-META-SOURCES::BOOM-TEST-FIXTURE
+ - Executing test NST-META-SOURCES::BF1
+   Check BF1 (group BOOM-TEST-FIXTURE) passed
+ - Executing test NST-META-SOURCES::BF3
+   Check BF3 (group BOOM-TEST-FIXTURE) passed
+ - Executing test NST-META-SOURCES::BF4
+   Check BF4 (group BOOM-TEST-FIXTURE) passed
+   Check TEST-FIXTURE-ERROR (group FAILURE-CATCHERS) passed
+ - Executing test NST-META::TEST-SETUP-ERROR
+Running group NST-META-SOURCES::BOOM-TEST-SETUP
+ - Executing test NST-META-SOURCES::BTS1
+   Check BTS1 (group BOOM-TEST-SETUP) passed
+ - Executing test NST-META-SOURCES::BTS3
+   Check BTS3 (group BOOM-TEST-SETUP) passed
+ - Executing test NST-META-SOURCES::BTS4
+   Check BTS4 (group BOOM-TEST-SETUP) passed
+   Check TEST-SETUP-ERROR (group FAILURE-CATCHERS) passed
+ - Executing test NST-META::TEST-CLEANUP-ERROR
+Running group NST-META-SOURCES::BOOM-TEST-CLEANUP
+ - Executing test NST-META-SOURCES::BTC1
+   Check BTC1 (group BOOM-TEST-CLEANUP) passed
+ - Executing test NST-META-SOURCES::BTC2
+   Check BTC2 (group BOOM-TEST-CLEANUP) passed
+ - Executing test NST-META-SOURCES::BTC3
+   Check BTC3 (group BOOM-TEST-CLEANUP) passed
+ - Executing test NST-META-SOURCES::BTC4
+   Check BTC4 (group BOOM-TEST-CLEANUP) passed
+   Check TEST-CLEANUP-ERROR (group FAILURE-CATCHERS) passed
+
+Summary of results for system nst-meta-tests:
+Package NST-META: 14 of 14 passed
+ - Group FAILURE-CATCHERS: 6 of 6 passed
+ - Group M-A-SETUP-CLEANUP: 2 of 2 passed
+ - Group PERMUTING-EMPTY-LISTS: 1 of 1 passed
+ - Group CACHING-FIXTURES-1: 4 of 4 passed
+ - Group NIL-USE-FIXTURES: 1 of 1 passed
+TOTAL: 14 of 14 passed (0 failed, 0 errors, 0 warnings)
+debug-args (:NST-SET ((:DEBUG-ON-ERROR T) (:DEBUG-ON-FAIL T) (:VERBOSE :TRACE)))
+debug-protect NIL
+
+Summary of results for system nst-test:
+Package NST-META: 14 of 14 passed
+ - Group FAILURE-CATCHERS: 6 of 6 passed
+ - Group M-A-SETUP-CLEANUP: 2 of 2 passed
+ - Group PERMUTING-EMPTY-LISTS: 1 of 1 passed
+ - Group CACHING-FIXTURES-1: 4 of 4 passed
+ - Group NIL-USE-FIXTURES: 1 of 1 passed
+Package NST-SIMPLE-TESTS: 67 of 68 passed
+ - Group G1: 1 of 1 passed
+ - Group G1A: 1 of 1 passed
+ - Group G1A1: 1 of 1 passed
+ - Group G2A: 1 of 1 passed
+ - Group G3A: 2 of 2 passed
+ - Group G4: 2 of 2 passed
+ - Group H1: 1 of 1 passed
+ - Group EQL-G: 1 of 1 passed
+ - Group CORE-CHECKS: 45 of 46 passed
+   - Check SAMPLE-2 failed: Errors:
+    - Error     #<SYSTEM::SIMPLE-FLOATING-POINT-OVERFLOW #x0003342CEF60>for case:NST-SIMPLE-TESTS::X     (NST-SIMPLE-TESTS::X)
+    in context: checking (:SAMPLE :DOMAINS ((NST-SIMPLE-TESTS::X
+         REAL)) :WHERE (> NST-SIMPLE-TESTS::X 1) :VERIFY
+        (< (SQRT NST-SIMPLE-TESTS::X)
+        NST-SIMPLE-TESTS::X) :SAMPLE-SIZE 10 :MAX-TRIES 12) on the result of 
+      evaluating (DOMAINS
+       ((X REAL)) WHERE (> X 1) VERIFY (< (SQRT X) X) SAMPLE-SIZE 10 MAX-TRIES 12)
+    stack: (checking (:SAMPLE :DOMAINS ((NST-SIMPLE-TESTS::X
+         REAL)) :WHERE (> NST-SIMPLE-TESTS::X 1) :VERIFY (<
+        (SQRT NST-SIMPLE-TESTS::X) NST-SIMPLE-TESTS::X) :SAMPLE-SIZE 10
+       :MAX-TRIES 12) on the result of evaluating (DOMAINS
+       ((X REAL)) WHERE (> X 1) VERIFY (< (SQRT X) X) SAMPLE-SIZE 10 MAX-TRIES 12))
+    - Error     #<SYSTEM::SIMPLE-FLOATING-POINT-OVERFLOW #x0003342CEE50>for case:NST-SIMPLE-TESTS::X     (NST-SIMPLE-TESTS::X)
+    in context: checking (:SAMPLE :DOMAINS ((NST-SIMPLE-TESTS::X
+         REAL)) :WHERE (> NST-SIMPLE-TESTS::X 1) :VERIFY
+        (< (SQRT NST-SIMPLE-TESTS::X)
+        NST-SIMPLE-TESTS::X) :SAMPLE-SIZE 10 :MAX-TRIES 12) on the result of 
+      evaluating (DOMAINS
+       ((X REAL)) WHERE (> X 1) VERIFY (< (SQRT X) X) SAMPLE-SIZE 10 MAX-TRIES 12)
+    stack: (checking (:SAMPLE :DOMAINS ((NST-SIMPLE-TESTS::X
+         REAL)) :WHERE (> NST-SIMPLE-TESTS::X 1) :VERIFY (<
+        (SQRT NST-SIMPLE-TESTS::X) NST-SIMPLE-TESTS::X) :SAMPLE-SIZE 10
+       :MAX-TRIES 12) on the result of evaluating (DOMAINS
+       ((X REAL)) WHERE (> X 1) VERIFY (< (SQRT X) X) SAMPLE-SIZE 10 MAX-TRIES 12))
+   - Check ALL-1 passed with warnings
+   - Check WARN-1 passed with warnings
+ - Group Z-SETUP-CLEANUP: 1 of 1 passed
+ - Group SETUP-CLEANUP: 3 of 3 passed
+ - Group EACH-SETUP-CLEANUP: 3 of 3 passed
+ - Group A-SETUP-CLEANUP: 1 of 1 passed
+ - Group TEST-ADDER: 4 of 4 passed
+TOTAL: 81 of 82 passed (0 failed, 1 error, 2 warnings)
+The following functions were used but are deprecated:
+
+ GENTEMP - This function creates symbols that cannot be garbage-collected. Use GENSYM instead.
+0 errors, 3 warnings
