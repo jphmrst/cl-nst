@@ -1,5 +1,18 @@
-
 (in-package :defdoc)
+
+;;;(defun get-doc-tags (name type)
+;;;  (let ((tags-hash (get-doc-tags-type-hash type)))
+;;;    (gethash name tags-hash)))
+;;;
+;;;(define-setf-expander get-doc-tags (name type)
+;;;  (let ((store (gensym))
+;;;        (tags-hash (gensym)))
+;;;    (values nil
+;;;            nil
+;;;            `(,store)
+;;;            `(let ((,tags-hash (get-doc-tags-type-hash ,type)))
+;;;               (setf (gethash ,name ,tags-hash) ,store))
+;;;            `(get-doc-tags ,name ,type))))
 
 (defgeneric format-tag (style package tag stream)
   (:method (style package tag stream)

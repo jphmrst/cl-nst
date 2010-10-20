@@ -23,7 +23,7 @@
 
 ;;; Documentation generator for criteria.
 
-(defdoc:def-doctype criterion ())
+(defdoc:def-target-type criterion ())
 
 ;;; Built-in basic testing criteria.
 

@@ -24,12 +24,22 @@
     (:documentation "Structured documentation definition")
     (:nicknames :ddoc)
     (:use :common-lisp)
-    (:export #:def-documentation
-             #:def-doctype
+    (:export #:*docstring-style*
+
+             #:def-documentation
+             #:def-element
+
+             #:def-target-type
+             #:standard-doc-target
+             #:get-doc-target-types
+             #:get-target-type
+
+
+
+
              #:def-spec-format
              #:def-doc-tag
 
-             #:get-doctypes
              #:format-docspec #:format-docspec-element
              #:write-doctype-latex
              #:write-spec-latex
@@ -47,7 +57,6 @@
              #:standard-docstring-style
              #:latex-style
              #:package-list-latex-mixin
-             #:*docstring-style*
              #:*defdoc-latex-default-directory*))
 
 (defun defdoc::make-package-documentation ()
