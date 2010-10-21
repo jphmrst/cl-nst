@@ -37,7 +37,7 @@
                                         ; number) should be
                                         ; incremented immediately
                                         ; after a version is shipped.
-    :version "0.0.1"
+    :version "0.0.2"
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :defdoc-test)))
@@ -46,26 +46,36 @@
                  ;; and documentation generation.
                  (:file "package")
 
-                 ;; Standard comment formats.
+                 ;; Global settings
                  (:file "globals"  :depends-on ("package"))
-
-                 ;; Standard comment formats.
-                 (:file "components"  :depends-on ("package"))
-
-                 ;; Standard comment formats.
-                 (:file "tag"  :depends-on ("package"))
-
-                 ;; Things we give documentation to.
-                 (:file "type"  :depends-on ("components"))
-
-                 ;; Standard comment formats.
-                 (:file "specs"  :depends-on ("components"))
 
                  ;; Generics for the output API.
                  (:file "format"  :depends-on ("package"))
 
-                 ;; Error declarations.
-                 (:file "macro"  :depends-on ("components" "format"))
+                 ;; Storage for the actual documentation objects.
+                 (:file "storage"  :depends-on ("package"))
+
+                 ;; Declaring different documentation targets.
+                 (:file "targetdef"  :depends-on ("package" "storage"))
+
+                 ;; Things we give documentation to.
+                 (:file "targets"  :depends-on ("targetdef" "globals" "format"))
+
+                 ;; Standard representation of a specification
+                 (:file "spec"  :depends-on ("package"))
+
+                 ;; Scheme for defining document elements.
+                 (:file "elementdef" :depends-on ("package"))
+
+                 ;; Standard document element definition.
+                 (:file "elements" :depends-on ("elementdef" "package"))
+
+;;; Add tags back in later (tag.lisp copied in)
+                 ;; Standard comment formats.
+                 (:file "tag"  :depends-on ("package"))
+
+                 ;; The main defdoc macro.
+                 (:file "macro"  :depends-on ("spec"))
 
                  ;; Decoding the callspec forms.
                  (:file "callspec"  :depends-on ("package"))
@@ -74,14 +84,17 @@
                  (:file "block"  :depends-on ("package"))
 
                  ;; Converting specs to plain text.
-                 (:file "plaintext"  :depends-on ("specs" "callspec" "block"))
+                 (:file "plaintext"  :depends-on ("spec" "elements"
+                                                  "callspec" "block"))
 
                  ;; Converting specs to LaTeX.
-                 (:file "latex"  :depends-on ("globals"
-                                              "specs" "callspec" "tag"))
+                 (:file "latex"  :depends-on ("globals" "plaintext" "spec"
+                                              "elements" "callspec" "tag"))
 
                  ;; Documentation in def-doc of def-doc.
                  (:file "auto"  :depends-on ("globals"
-                                             "block" "components" "format"
-                                             "latex" "macro" "plaintext"
-                                             "type"))))
+                                             "format" "storage" "targetdef"
+                                             "spec" "elementdef" "elements"
+                                             "tag" "macro" "callspec" "block"
+                                             "plaintext" "latex"))
+                 ))
