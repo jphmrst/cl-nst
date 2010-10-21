@@ -24,31 +24,102 @@
     (:documentation "Structured documentation definition")
     (:nicknames :ddoc)
     (:use :common-lisp)
-    (:export #:def-documentation
-             #:def-doctype
-             #:def-spec-format
+    (:export #:*docstring-style* ; globals.lisp
+             #:*latex-verbatim-width*
+
+             ;; format.lisp
+             #:format-docspec-element
+
+             ;; storage.lisp
+             #:get-doc-spec
+
+             ;; targetdef.lisp
+             #:standard-doc-target
+             #:get-doc-target-types
+             #:get-target-types
+             #:def-target-type
+
+             ;; spec.lisp
+             #:*spec-class*
+             #:doc-spec
+             #:docspec-self
+             #:docspec-target-type
+             #:docspec-tags
+             #:standard-doc-spec
+             #:docspec-descriptive
+             #:docspec-intro
+             #:docspec-short
+             #:docspec-full
+             #:docspec-params
+             #:docspec-callspecs
+             #:docspec-deprecated
+             #:with-unpacked-standard-spec
+
+             ;; elementdef.lisp
+             #:*default-element-class*
+             #:standard-doc-element
+             #:def-element
+
+             ;; elements.lisp
+             #:standard-plain-text
+             #:text-element-text
+             #:standard-latex
+             #:latex-element-latex
+             #:standard-paragraph-list
+             #:paragraphlist-element-items
+             #:standard-sequence
+             #:sequence-element-items
+             #:standard-code
+             #:code-element-string
+             #:standard-simple-list-environment
+             #:list-element-specs
+             #:list-element-options
+             #:list-element-env-tag
+             #:standard-itemize
+             #:standard-enumerate
+
+             ;; tag.lisp
+             #:def-doc-tags
              #:def-doc-tag
 
-             #:get-doctypes
-             #:format-docspec #:format-docspec-element
-             #:write-doctype-latex
-             #:write-spec-latex
-             #:write-package-specs-latex
+             ;; macro.lisp
+             #:def-documentation
 
-             #:spec-to-lines
-             #:indent-by #:bracket-with #:width #:flow
+             ;; callspec.lisp
+             #:standard-callspec
+             #:callspec-sequence-of
+             #:callspec-optional
+             #:callspec-keyheaded
+             #:callspec-keyarg
 
-             #:latex-style-adjust-spec-element
-             #:package-list-entry
-             #:package-list-group-header
-             #:package-list-overall-header
-             #:get-latex-output-file-name
+             ;; block.lisp
+             #:indent-by
+             #:bracket-with
+             #:width
+             #:flow
 
+             ;; plaintext.lisp
              #:standard-docstring-style
+             #:format-docspec
+             #:callspec-to-lines
+             #:callspec-item-to-lines
+             #:output-lines
+
+             ;; latex.lisp
+             #:*defdoc-latex-default-directory*
+             #:*latex-full-package-item-header-macro*
+             #:get-latex-output-file-name
              #:latex-style
+             #:latex-style-adjust-spec-element
+             #:full-package-latex-style-mixin
+             #:package-list-overall-header
+             #:package-list-group-header
+             #:package-list-entry
              #:package-list-latex-mixin
-             #:*docstring-style*
-             #:*defdoc-latex-default-directory*))
+                                        ; Top-level LaTeX invocation.
+             #:write-spec-latex
+             #:write-doctype-latex
+             #:write-package-specs-latex))
 
 (defun defdoc::make-package-documentation ()
   "Write documentation for this package, using system package-doc."

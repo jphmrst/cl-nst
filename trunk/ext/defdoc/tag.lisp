@@ -1,5 +1,8 @@
-
 (in-package :defdoc)
+
+(defun get-doc-tags (name type)
+  (let ((spec (get-doc-spec name type)))
+    (docspec-tags spec)))
 
 (defgeneric format-tag (style package tag stream)
   (:method (style package tag stream)

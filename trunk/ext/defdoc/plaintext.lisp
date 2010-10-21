@@ -2,111 +2,112 @@
 (in-package :defdoc)
 
 (defclass standard-docstring-style () ())
-(defmethod format-docspec (stream (style standard-docstring-style) spec type
-                                  &key &allow-other-keys)
+(defmethod format-docspec (stream (style standard-docstring-style) spec type)
   (declare (ignore type))
   (format stream "~{~a~^~%~}" (spec-to-lines spec 79)))
 
 ;;; -----------------------------------------------------------------
 
 (defvar *tags* 0)
-(defun callspec-to-lines (spec width &optional (calling nil)
-                          &aux (tag *tags*))
-  (declare (ignorable tag))
-  (let ((*tags* (+ 1 *tags*)))
-    (when (and (stringp calling) (< 0 (length calling)))
-      (setf calling (concatenate 'string calling " ")))
-    (when (null calling)
-      (setf calling ""))
-    (when (symbolp calling)
-      (setf calling (concatenate 'string
-                      (if (eq (symbol-package calling)
-                              (find-package :keyword))
-                          ":" "")
-                      (symbol-name calling) " ")))
+(defgeneric callspec-to-lines (spec width &optional calling)
+  (:method ((spec standard-callspec) width &optional (calling nil)
+                 ;; &aux (tag *tags*)
+                 )
+     (let () ;; ((*tags* (+ 1 *tags*)))
+       (when (and (stringp calling) (< 0 (length calling)))
+         (setf calling (concatenate 'string calling " ")))
+       (when (null calling)
+         (setf calling ""))
+       (when (symbolp calling)
+         (setf calling (concatenate 'string
+                         (if (eq (symbol-package calling)
+                                 (find-package :keyword))
+                           ":" "")
+                         (symbol-name calling) " ")))
 
-    (let ((prefix-len (+ 1 (length calling))))
-      (multiple-value-bind (mandatory optional optional-supp
-                            keyword keyword-supp body body-supp)
-          (destructure-callspec spec)
-        (declare (ignorable body-supp optional-supp))
-        (setf mandatory (nconc mandatory
-                               (loop for opt in optional collect `(:opt ,opt))))
+       (let ((prefix-len (+ 1 (length calling))))
+         (with-accessors ((mandatory mandatory)
+                          (optional optional)
+                          (optional-supp optional-supp)
+                          (keyword key)
+                          (keyword-supp key-supp)
+                          (body body)
+                          (body-supp body-supp))
+             spec
+           (declare (ignorable body-supp optional-supp))
+           (setf mandatory (nconc mandatory
+                                  (loop for opt in optional collect `(:opt ,opt))))
 
-        (let* ((man-lines
-                (when mandatory
-                  (flow #'callspec-item-to-lines mandatory (- width prefix-len
-                                                              1))))
+           (let* ((man-lines
+                   (when mandatory
+                     (flow #'callspec-item-to-lines mandatory (- width prefix-len
+                                                                 1))))
 
-               (key-lines
-                (when keyword-supp
-                  (flow #'keyargspec-to-lines keyword (- width prefix-len 1))))
+                  (key-lines
+                   (when keyword-supp
+                     (flow #'keyargspec-to-lines keyword (- width prefix-len 1))))
 
-               (regular-arg-lines (append man-lines key-lines))
+                  (regular-arg-lines (append man-lines key-lines))
 
-               (body-arg-lines
-                (loop for spec in body
-                    append (callspec-item-to-lines spec (- width 3) t)))
+                  (body-arg-lines
+                   (loop for spec in body
+                       append (callspec-item-to-lines spec (- width 3) t)))
 
-               (prefix (concatenate 'string "(" calling)))
+                  (prefix (concatenate 'string "(" calling)))
 
-          (cond
-           ((and regular-arg-lines body-arg-lines)
-            (bracket-with (append (bracket-with regular-arg-lines prefix nil)
-                                  (indent-by body-arg-lines 2))
-                          "" ")"))
+             (cond
+              ((and regular-arg-lines body-arg-lines)
+               (bracket-with (append (bracket-with regular-arg-lines prefix nil)
+                                     (indent-by body-arg-lines 2))
+                             "" ")"))
 
-           (regular-arg-lines
-            (bracket-with regular-arg-lines prefix ")"))
+              (regular-arg-lines
+               (bracket-with regular-arg-lines prefix ")"))
 
-           ((not body-arg-lines)
-            (list (concatenate 'string prefix ")")))
+              ((not body-arg-lines)
+               (list (concatenate 'string prefix ")")))
 
-           ((eql (length calling) 0)   ; (and body-arg-lines ...)
-            (bracket-with body-arg-lines prefix ")"))
+              ((eql (length calling) 0) ; (and body-arg-lines ...)
+               (bracket-with body-arg-lines prefix ")"))
 
-           (t                           ; (and body-arg-lines (not ABOVE))
-            (cons prefix
-                  (indent-by (bracket-with body-arg-lines "" ")") 2)))))))))
+              (t                        ; (and body-arg-lines (not ABOVE))
+               (cons prefix
+                     (indent-by (bracket-with body-arg-lines "" ")") 2))))))))))
 
-(defun callspec-item-to-lines (item max &optional stack)
-  (let ((result
-         (cond
-          ((symbolp item)
-           (list (symbol-name item)))
-
-          ((and (listp item) (eq (car item) :seq))
-           (cond
-             (stack (let ((block-lines (flow #'callspec-item-to-lines
-                                             (cdr item) max)))
-                      (append block-lines (cons "..." block-lines))))
-             (t (flow #'callspec-item-to-lines
-                      `(,@(cdr item) ,(intern "...") ,@(cdr item))
-                      max))))
-
-          ((and (listp item) (eq (car item) :key-head))
-           (destructuring-bind (token key-head . args) item
-             (declare (ignore token))
-             (let* ((key-head-string (format nil "(:~a " key-head))
-                    (items (flow #'callspec-item-to-lines args
-                                 (- max (length key-head-string) 1))))
-               (bracket-with items key-head-string ")"))))
-
-          ((and (listp item) (eq (car item) :opt))
-           (let* ((items (callspec-item-to-lines (cadr item) (- max 4))))
-             (bracket-with items "[ " " ]")))
-
-          ((listp item)
-           (callspec-to-lines item max))
-
-          (t (error "Unrecognized callspec item ~w" item)))))
-
-    result))
+(defgeneric callspec-item-to-lines (item max &optional stack)
+  (:method ((item symbol) max &optional stack)
+     (declare (ignore stack max))
+     (list (symbol-name item)))
+  (:method ((item callspec-sequence-of) max &optional stack)
+     (cond
+      (stack (let ((block-lines (flow #'callspec-item-to-lines
+                                      (repeated item) max)))
+               (append block-lines (cons "..." block-lines))))
+      (t (flow #'callspec-item-to-lines
+               `(,@(repeated item) ,(intern "...") ,@(repeated item))
+               max))))
+  (:method ((item callspec-optional) max &optional stack)
+     (declare (ignore stack))
+     (let* ((items (callspec-item-to-lines (car (option item)) (- max 4))))
+       (bracket-with items "[ " " ]")))
+  (:method ((item callspec-keyheaded) max &optional stack)
+     (declare (ignore stack))
+     (with-accessors ((key-head key) (args forms)) item
+       (let* ((key-head-string (format nil "(:~a " key-head))
+              (items (flow #'callspec-item-to-lines args
+                           (- max (length key-head-string) 1))))
+         (bracket-with items key-head-string ")"))))
+  (:method ((item standard-callspec) max &optional stack)
+     (declare (ignore stack))
+     (callspec-to-lines item max))
+  (:method (item max &optional stack)
+     (declare (ignore stack max))
+     (error "Unrecognized callspec item ~w" item)))
 
 (defun keyargspec-to-lines (spec max)
-  (let* ((key (car spec))
+  (let* ((key (key spec))
          (prefix (concatenate 'string "[ :" (symbol-name key) " "))
-         (form (cadr spec)))
+         (form (arg spec)))
     (bracket-with (callspec-item-to-lines form (- max 2 (length prefix)))
                   prefix " ]")))
 
@@ -147,67 +148,63 @@
 ;;; -----------------------------------------------------------------
 
 (defun spec-to-lines (spec width)
-  (output-lines (car spec) (cdr spec) width))
+  (output-lines spec width))
 
-(defgeneric output-lines (spec-head spec width))
+(defgeneric output-lines (spec-head spec))
 
-(defmethod output-lines ((in (eql :spec)) spec-args width)
-  (destructuring-bind (&key self
-                            (intro nil intro-supp-p)
-                            (params nil params-supp-p)
-                            (short nil short-supp-p)
-                            (full nil full-supp-p)
-                            callspec
-                            &allow-other-keys) spec-args
-    (cond
-     ((or intro-supp-p full-supp-p)
-      (nconc
-       (when intro-supp-p (spec-to-lines intro width))
-       (loop for cspec in callspec
-             append (cons ""
-                          (loop for line
-                                in (callspec-to-lines cspec (- width 2) self)
-                                collect (concatenate 'string "  " line))))
-       (when params-supp-p
-         (nconc
+(defmethod output-lines ((doc standard-doc-spec) width)
+  (with-unpacked-standard-spec (self intro intro-supp-p params params-supp-p
+                                     short short-supp-p full full-supp-p
+                                     callspec) doc
+     (cond
+      ((or intro-supp-p full-supp-p)
+       (nconc
+        (when intro-supp-p (spec-to-lines intro width))
+        (loop for cspec in callspec
+            append (cons ""
+                         (loop for line
+                             in (callspec-to-lines cspec (- width 2) self)
+                             collect (concatenate 'string "  " line))))
+        (when params-supp-p
+          (nconc
+           (loop for (name subspec) in params
+               append
+                 (list* ""
+                        (format nil "  ~a" name)
+                        (loop for line in (spec-to-lines subspec (- width 4))
+                            collect (concatenate 'string "    " line))))
+           (list "")))
+        (when full-supp-p (spec-to-lines full width))))
+      (short-supp-p
+       (nconc
+        (spec-to-lines short width)
+        (loop for cspec in callspec
+            append (cons ""
+                         (loop for line
+                             in (callspec-to-lines cspec (- width 2) self)
+                             collect (concatenate 'string "  " line))))
+        (when params-supp-p
           (loop for (name subspec) in params
               append
                 (list* ""
                        (format nil "  ~a" name)
                        (loop for line in (spec-to-lines subspec (- width 4))
-                             collect (concatenate 'string "    " line))))
-          (list "")))
-       (when full-supp-p (spec-to-lines full width))))
-     (short-supp-p
-      (nconc
-       (spec-to-lines short width)
-       (loop for cspec in callspec
-             append (cons ""
-                          (loop for line
-                              in (callspec-to-lines cspec (- width 2) self)
-                              collect (concatenate 'string "  " line))))
-       (when params-supp-p
-         (loop for (name subspec) in params
-               append
-               (list* ""
-                      (format nil "  ~a" name)
-                      (loop for line in (spec-to-lines subspec (- width 4))
-                          collect (concatenate 'string "    " line)))))))
-     (params-supp-p
-      (nconc
-       (loop for cspec in callspec
-             append (loop for line in (callspec-to-lines cspec (- width 2) self)
-                          collect (concatenate 'string "  " line)))
-       (loop for (name subspec) in params
-           append
-             (list* ""
-                    (format nil "  ~a" name)
-                    (loop for line in (spec-to-lines subspec (- width 4))
-                        collect (concatenate 'string "    " line))))))
-     (t nil))))
+                           collect (concatenate 'string "    " line)))))))
+      (params-supp-p
+       (nconc
+        (loop for cspec in callspec
+            append (loop for line in (callspec-to-lines cspec (- width 2) self)
+                       collect (concatenate 'string "  " line)))
+        (loop for (name subspec) in params
+            append
+              (list* ""
+                     (format nil "  ~a" name)
+                     (loop for line in (spec-to-lines subspec (- width 4))
+                         collect (concatenate 'string "    " line))))))
+      (t nil))))
 
-(defmethod output-lines ((in (eql :plain)) spec-args width)
-  (destructuring-bind (string) spec-args
+(defmethod output-lines ((doc standard-plain-text) width)
+  (with-accessors ((string text-element-text)) doc
     (loop while (< 0 (length string))
           for (last-of-first first-of-rest)
             = (get-first-break-edges string width)
@@ -220,11 +217,13 @@
           end
           finally (return-from output-lines lines))))
 
-(defmethod output-lines ((in (eql :latex)) spec-args width)
-  (destructuring-bind (orig-string) spec-args
+(defmethod output-lines ((doc standard-latex) width)
+  (with-accessors ((orig-string latex-element-latex)) doc
     (let ((string-chars (loop for spot from (- (length orig-string) 1) downto 0
                               collect (elt orig-string spot))))
-      (output-lines :plain `(,(reassemble-latex-strip string-chars)) width))))
+      (output-lines (make-instance 'standard-plain-text
+                      :text (reassemble-latex-strip string-chars))
+                    width))))
 
 (defun reassemble-latex-strip (input &aux output)
   (loop while input for this = (pop input) do
@@ -278,20 +277,19 @@
          scanner))
       (t output-stack))))
 
-(defmethod output-lines ((in (eql :paragraphs)) spec-args width)
-  (destructuring-bind (&rest paragraph-specs) spec-args
+(defmethod output-lines ((doc standard-paragraph-list) width)
+  (with-accessors ((paragraph-specs paragraphlist-element-items)) doc
     (loop for (spec . other-specs) on paragraph-specs
         append (nconc (spec-to-lines spec width)
                       (when other-specs (list ""))))))
 
-(defmethod output-lines ((in (eql :seq)) spec-args width)
-  (destructuring-bind (&rest paragraph-specs) spec-args
-    (loop for spec in paragraph-specs
-        append (spec-to-lines spec width))))
+(defmethod output-lines ((doc standard-sequence) width)
+  (with-accessors ((specs sequence-element-items)) doc
+    (loop for spec in specs append (spec-to-lines spec width))))
 
-(defmethod output-lines ((in (eql :code)) args width)
+(defmethod output-lines ((doc standard-code) width)
   (declare (ignore width))
-  (destructuring-bind (string) args
+  (with-accessors ((string code-element-string)) doc
     (let ((scan 0) (max (length string)))
       (loop for point = (position #\Newline string :start scan)
           while point
@@ -305,8 +303,9 @@
                  (nconc lines (list (subseq string scan))))
                 (t lines)))))))
 
-(defmethod output-lines ((in (eql :itemize)) spec-args width)
-  (destructuring-bind (options &rest items) spec-args
+(defmethod output-lines ((doc standard-itemize) width)
+  (with-accessors ((options list-element-options)
+                   (items list-element-specs)) doc
     (declare (ignore options))
     (loop for item in items
           for i from 1
@@ -316,8 +315,9 @@
                                  (if (> j 0) "    " "  * ")
                                  block-line)))))
 
-(defmethod output-lines ((in (eql :enumerate)) spec-args width)
-  (destructuring-bind (options &rest items) spec-args
+(defmethod output-lines ((doc standard-enumerate) width)
+  (with-accessors ((options list-element-options)
+                   (items list-element-specs)) doc
     (declare (ignore options))
     (loop for item in items for i from 1
           append (let* ((prefix (format nil " ~d. " i))
@@ -357,40 +357,3 @@
          (list (+ 1 last-nonspace) (+ 1 rightmost-space))))
       (t
        (list width width)))))
-
-;;;(defgeneric output-text (spec-head spec))
-;;;
-;;;(defmethod output-text ((in (eql :spec)) spec-args)
-;;;  (destructuring-bind (&key self
-;;;                            (intro nil intro-supp-p)
-;;;                            (params nil params-supp-p)
-;;;                            (short nil short-supp-p)
-;;;                            (full nil full-supp-p) &allow-other-keys) spec-args
-;;;    (let ((result ""))
-;;;      (cond
-;;;        ((or intro-supp-p full-supp-p)
-;;;         (when intro-supp-p
-;;;           (setf result (spec-to-text intro)))
-;;;         (when params-supp-p
-;;;           (loop for (name subspec) in params do
-;;;             (setf result (format nil "~a~%~%  ~a~%  ~a"
-;;;                            result name (spec-to-text subspec)))))
-;;;         (when full-supp-p
-;;;           (setf result (format nil "~a~%~%~a~%"
-;;;                          result (spec-to-text full)))))
-;;;        (short-supp-p
-;;;         (setf result (spec-to-text short))
-;;;         (when params-supp-p
-;;;           (loop for (name subspec) in params do
-;;;             (setf result (format nil "~a~%~%  ~a~%  ~a~%"
-;;;                            result name (spec-to-text subspec))))))
-;;;        (params-supp-p
-;;;         (loop for (name subspec) in params do
-;;;           (setf result (format nil "~a~%~%  ~a~%  ~a~%"
-;;;                          result name (spec-to-text subspec)))))
-;;;        (t nil))
-;;;      result)))
-;;;
-;;;(defmethod output-text ((in (eql :plain)) spec-args)
-;;;  (car spec-args))
-
