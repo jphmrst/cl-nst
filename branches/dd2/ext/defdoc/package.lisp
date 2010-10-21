@@ -55,8 +55,7 @@
              #:docspec-deprecated
              #:with-unpacked-standard-spec
 
-
-             #::accessor;; elementdef.lisp
+             ;; elementdef.lisp
              #:*default-element-class*
              #:standard-doc-element
              #:def-element

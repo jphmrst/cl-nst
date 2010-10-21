@@ -209,7 +209,7 @@
 (defmethod format-docspec-element ((style full-package-latex-style-mixin)
                                    (target-type (eql 'package))
                                    (spec standard-doc-spec) stream)
-  (with-accessors ((docspec-self self)) spec
+  (with-accessors ((self docspec-self)) spec
     (call-next-method)
     (do-external-symbols (var (find-package self))
       (format stream "~a{~a}" *latex-full-package-item-header-macro* var)
