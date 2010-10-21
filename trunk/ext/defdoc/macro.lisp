@@ -8,7 +8,9 @@
       `(let ((,spec (compile-spec ',name ',target-type ',spec-args ',body)))
          (setf (get-doc-spec ',name ',target-type) ,spec)
          (funcall (docstring-installer (get-target-type ',target-type))
-                  ',name ,spec)))))
+                  ',name ,spec)
+         (format t "SPEC for ~s:~%~s~%" ',name ,spec)
+         ))))
 
 (defun decode-defdoc-spec (name-or-spec)
   (cond

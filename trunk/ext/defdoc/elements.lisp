@@ -2,7 +2,7 @@
 
 (def-element :plain (standard-plain-text :class standard-doc-element
                                          :args (text))
-    ((text :initarg :text :accessor text-element-text))
+    ((text :initarg :text :reader text-element-text))
   (make-instance 'standard-plain-text :text text))
 (set-pprint-dispatch 'standard-plain-text
   #'(lambda (stream spec)
@@ -17,7 +17,7 @@
 
 (def-element :latex (standard-latex :class standard-doc-element
                                     :args (text))
-     ((latex :initarg :latex :accessor latex-element-latex))
+     ((latex :initarg :latex :reader latex-element-latex))
   (make-instance 'standard-latex :latex text))
 (set-pprint-dispatch 'standard-latex
   #'(lambda (stream spec)
@@ -33,7 +33,7 @@
 (def-element :paragraphs (standard-paragraph-list :class standard-doc-element
                                                   :package package :spec spec
                                                   :arg-list args)
-    ((paragraphs :initarg :paragraphs :accessor paragraphlist-element-items))
+    ((paragraphs :initarg :paragraphs :reader paragraphlist-element-items))
   (make-instance 'standard-paragraph-list
     :paragraphs (mapcar #'(lambda (x)
                             (compile-element package spec x))
@@ -52,7 +52,7 @@
 (def-element :seq (standard-sequence :class standard-doc-element
                                      :package package :spec spec
                                      :arg-list args)
-     ((elements :initarg :elements :accessor sequence-element-items))
+     ((elements :initarg :elements :reader sequence-element-items))
   (make-instance 'standard-sequence
     :elements (mapcar #'(lambda (x)
                           (compile-element package spec x))
@@ -69,7 +69,7 @@
         (format stream " ]"))))
 
 (def-element :code (standard-code :class standard-doc-element :args (string))
-    ((code :initarg :code :accessor code-element-string))
+    ((code :initarg :code :reader code-element-string))
   (make-instance 'standard-code :code string))
 (set-pprint-dispatch 'standard-code
   #'(lambda (stream spec)
@@ -83,9 +83,9 @@
         (format stream " ]"))))
 
 (defclass standard-simple-list-environment (standard-doc-element)
-    ((specs :initarg :specs :accessor list-element-specs)
-     (options :initarg :options :accessor list-element-options)
-     (env-tag :initarg :env-tag :accessor list-element-env-tag)))
+    ((specs :initarg :specs :reader list-element-specs)
+     (options :initarg :options :reader list-element-options)
+     (env-tag :initarg :env-tag :reader list-element-env-tag)))
 (set-pprint-dispatch 'standard-simple-list-environment
   #'(lambda (stream spec)
       (pprint-logical-block (stream '(1))

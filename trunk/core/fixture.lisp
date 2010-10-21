@@ -294,7 +294,7 @@ macro:\\index{def-fixtures@\\texttt{def-fixtures}}")
                                  (export-bound-names FLAG))
                            &body
                            (:seq ( (:opt (&key (cache FLAG))) NAME FORM))))
-  (:params (fixture-name (:plain "The name to be associated with this set of fixtures."))
+  (:params (fixture-name "The name to be associated with this set of fixtures.")
            (inner (:plain "List of declarations to be made inside the let-binding of names of any use of this fixture.  Do not include the \"declare\" keyword here; NST adds these declarations to others, including a special declaration of all bound names."))
            (outer (:plain "List of declarations to be made outside the let-binding of names of any use of this fixture."))
            (documentation (:plain "A documentation string for the fixture set."))

@@ -91,11 +91,10 @@
          ((:deprecated)  (setf (docspec-deprecated spec) (car form-args)))
          ((:descriptive) (setf (docspec-descriptive spec) (car form-args)))
          ((:tags) (setf (docspec-tags spec) form-args))
-         ((:params) (setf (docspec-params spec)
-                          (loop for (id forms) in form-args
-                                collect (list id
-                                              (compile-element package
-                                                      spec forms)))))
+         ((:params)
+          (setf (docspec-params spec)
+                (loop for (id forms) in form-args
+                  collect (list id (compile-element package spec forms)))))
          ((:intro)       (setting-accessor docspec-intro))
          ((:short)       (setting-accessor docspec-short))
          ((:full)        (setting-accessor docspec-full))
