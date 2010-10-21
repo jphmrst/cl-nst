@@ -13,7 +13,6 @@
   (:method ((spec standard-callspec) width &optional (calling nil)
                  ;; &aux (tag *tags*)
                  )
-     (declare (ignorable tag))
      (let () ;; ((*tags* (+ 1 *tags*)))
        (when (and (stringp calling) (< 0 (length calling)))
          (setf calling (concatenate 'string calling " ")))
