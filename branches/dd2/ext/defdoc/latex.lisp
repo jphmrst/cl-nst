@@ -4,6 +4,9 @@
 ;;; -----------------------------------------------------------------
 ;;; Top-level LaTeX generation APIs.
 
+(defvar *defdoc-latex-default-directory* "./")
+(defvar *latex-full-package-item-header-macro* "\\paragraph")
+
 (defgeneric get-latex-output-file-name (style usage name)
   (:method ((style symbol) usage name)
            (concatenate 'string
@@ -13,7 +16,7 @@
   (:method (style usage name)
      (get-latex-output-file-name (type-of style) usage name)))
 
-(defun write-spec-latex (name usage &key
+(defun write-spec-latex (name target-type &key
                               (style 'latex-style)
                               (directory *defdoc-latex-default-directory*)
                               (file nil file-supp-p))
@@ -22,7 +25,7 @@
     (setf style (make-instance style)))
 
   (unless file-supp-p
-    (setf file (get-latex-output-file-name style usage name)))
+    (setf file (get-latex-output-file-name style target-type name)))
 
   #+(or sbcl lispworks)
   (setf file (block quote-wild
@@ -49,15 +52,15 @@
     (with-open-file (out file-spec
                      :direction :output :if-exists :supersede
                      :if-does-not-exist :create)
-      (format-doc out style (get-doc-spec name usage)))))
+      (format-doc out style (get-doc-spec name target-type)))))
 
 (defun write-doctype-latex (doctype &key (echo nil echo-supp)
-                                    (directory *defdoc-latex-default-directory*)
+                                    (dir *defdoc-latex-default-directory*)
                                     (style 'latex-style))
   (loop for name being the hash-keys of (gethash doctype +defdocs+) do
     (when echo-supp
       (funcall echo :name name :type doctype))
-    (write-spec-latex name doctype :directory directory :style style)))
+    (write-spec-latex name doctype :directory dir :style style)))
 
 (defun write-package-specs-latex (package-specifier
                                   &key (echo nil echo-supp)
@@ -67,7 +70,7 @@
                                   include-doctypes)
   (let ((package (find-package package-specifier)))
     (do-external-symbols (sym package)
-      (loop for form in (get-doctypes) do
+      (loop for form in (get-doc-target-types) do
         (when (get-doc-spec sym form)
           (when echo-supp
             (funcall echo :name sym :type form))
@@ -97,28 +100,24 @@
 
 (defclass latex-style () ())
 
-(defmethod format-docspec-element ((style latex-style) spec-type
-                                   (in (eql :spec)) stream spec-args)
-  (destructuring-bind (&key self
-                            (intro nil intro-supp-p)
-                            (params nil params-supp-p)
-                            (short nil short-supp-p)
-                            (full nil full-supp-p)
-                            (callspec nil callspec-supp-p)
-                       &allow-other-keys) spec-args
+(defmethod format-docspec-element ((style latex-style) target-type
+                                   (spec standard-doc-spec) stream)
+  (with-unpacked-standard-spec (self intro intro-supp-p params params-supp-p
+                                     short short-supp-p full full-supp-p
+                                     callspec) spec
     (cond
      (intro-supp-p
       (format-docspec stream style
-                      (latex-style-adjust-spec-element style spec-type in
-                                                       :intro spec-args intro)
-                      spec-type))
+                      (latex-style-adjust-spec-element style target-type spec
+                                                       :intro intro)
+                      target-type))
      ((and short-supp-p (not full-supp-p))
       (format-docspec stream style
-                      (latex-style-adjust-spec-element style spec-type in
-                                                       :short spec-args short)
-                      spec-type)))
+                      (latex-style-adjust-spec-element style target-type spec
+                                                       :short short)
+                      target-type)))
 
-    (when callspec-supp-p
+    (when callspec
       (princ " \\begin{verbatim}" stream)
       (loop for (cs . others) on callspec do
         (loop for line in (callspec-to-lines cs *latex-verbatim-width* self) do
@@ -130,29 +129,28 @@
       (princ "\\begin{description}" stream)
       (loop for (name subspec) in params do
         (format stream "\\item[~a] " name)
-        (format-docspec stream style
-                        (latex-style-adjust-spec-element style spec-type in
-                              :subspec spec-args subspec)
-                        spec-type))
+        (format-docspec stream
+               style (latex-style-adjust-spec-element style target-type
+                           spec :params subspec)
+                        target-type))
       (princ "\\end{description}" stream))
 
     (when full-supp-p
       (format-docspec stream style
-                      (latex-style-adjust-spec-element style spec-type in
-                                                       :full spec-args full)
-                      spec-type))))
+                      (latex-style-adjust-spec-element style target-type spec
+                                                       :full full)
+                      target-type))))
 
-(defgeneric latex-style-adjust-spec-element (style spec-type spec-head element
-                                                   spec-args datum)
-  (:method (style spec-type spec-head element
-                  spec-args datum)
-     (declare (ignore style spec-type spec-head element spec-args))
+(defgeneric latex-style-adjust-spec-element (style target-type spec
+                                                   element datum)
+  (:method (style target-type spec element datum)
+     (declare (ignore style target-type spec element))
      datum))
 
-(defmethod format-docspec-element ((style latex-style) spec-type
-                                   (in (eql :plain)) stream args)
-  (declare (ignore spec-type))
-  (destructuring-bind (string) args
+(defmethod format-docspec-element ((style latex-style) target-type
+                                   (spec standard-plain-text) stream)
+  (declare (ignore target-type))
+  (with-accessors ((string text)) spec
     (let ((was-space t))
       (loop for char across string
           append (let ((next-space nil))
@@ -172,48 +170,37 @@
           into characters
           finally (princ (coerce characters 'string) stream)))))
 
-(defmethod format-docspec-element ((style latex-style) spec-type
-                                   (in (eql :latex)) stream spec-args)
-  (declare (ignore spec-type))
-  (princ (car spec-args) stream))
+(defmethod format-docspec-element ((style latex-style) target-type
+                                   (spec standard-latex) stream)
+  (declare (ignore target-type))
+  (princ (latex spec) stream))
 
-(defmethod format-docspec-element ((style latex-style) spec-type (in (eql :seq))
-                                   stream spec-args)
-  (loop for (p-spec . other-specs) on spec-args do
-    (format-docspec stream style p-spec spec-type)
+(defmethod format-docspec-element ((style latex-style) target-type
+                                   (spec standard-paragraph-list) stream)
+  (loop for (p-spec . other-specs) on (paragraphs spec) do
+    (format-docspec stream style p-spec target-type)
+    (when other-specs (princ "\\par " stream))))
+
+(defmethod format-docspec-element ((style latex-style) target-type
+                                   (spec standard-sequence) stream)
+  (loop for (p-spec . other-specs) on (elements spec) do
+    (format-docspec stream style p-spec target-type)
     (when other-specs (princ " " stream))))
 
 
-(defmethod format-docspec-element ((style latex-style) spec-type
-                                   (in (eql :code)) stream args)
-  (declare (ignore spec-type))
-  (destructuring-bind (string) args
-    (format stream "\\begin{verbatim}~a\\end{verbatim}" string)))
+(defmethod format-docspec-element ((style latex-style) target-type
+                                   (spec standard-code) stream)
+  (declare (ignore target-type))
+  (format stream "\\begin{verbatim}~a\\end{verbatim}" (code spec)))
 
-(defmethod format-docspec-element ((style latex-style) spec-type
-                                   (in (eql :paragraphs)) stream args)
-  (loop for (p-spec . other-specs) on args do
-    (format-docspec stream style p-spec spec-type)
-    (when other-specs (princ "\\par " stream))))
-
-(defmethod format-docspec-element ((style latex-style) spec-type
-                                   (in (eql :enumerate)) stream args)
-  (let ((options (pop args)))
-    (declare (ignore options))
-    (format-latex-list stream style spec-type "enumerate" args)))
-
-(defmethod format-docspec-element ((style latex-style) spec-type
-                                   (in (eql :itemize)) stream args)
-  (let ((options (pop args)))
-    (declare (ignore options))
-    (format-latex-list stream style spec-type "itemize" args)))
-
-(defun format-latex-list (stream style spec-type list-tag specs)
-  (format stream "\\begin{~a}" list-tag)
-  (loop for spec in specs do
+(defmethod format-docspec-element ((style latex-style) target-type
+                                   (spec standard-simple-list-environment)
+                                   stream)
+  (format stream "\\begin{~a}" (env-tag spec))
+  (loop for spec in (specs spec) do
     (princ "\\item " stream)
-    (format-docspec stream style spec spec-type))
-  (format stream "\\end{~a}" list-tag))
+    (format-docspec stream style spec target-type))
+  (format stream "\\end{~a}" (env-tag spec)))
 
 ;;; -----------------------------------------------------------------
 ;;; Mixin for a full description of packages.
@@ -221,15 +208,15 @@
 (defclass full-package-latex-style-mixin () ())
 
 (defmethod format-docspec-element ((style full-package-latex-style-mixin)
-                                   (spec-type (eql 'package)) (in (eql :spec))
-                                   stream spec-args)
-  (destructuring-bind (&key self &allow-other-keys) spec-args
+                                   (target-type (eql 'package))
+                                   (spec standard-doc-spec) stream)
+  (with-accessors ((self self)) spec
     (call-next-method)
-    (do-external-symbols (var self)
+    (do-external-symbols (var (find-package self))
       (format stream "~a{~a}" *latex-full-package-item-header-macro* var)
-      (loop for var-type in (get-symbol-doctypes var) do
+      (loop for target-type in (get-doc-target-types var) do
         (format-docspec stream style
-                               (get-doc-spec var var-type) spec-type)))))
+                               (get-doc-spec var target-type) target-type)))))
 
 ;;; -----------------------------------------------------------------
 ;;; Style for a sectioned listing of the symbols exported in a
@@ -238,33 +225,29 @@
 (defgeneric package-list-overall-header (style spec stream)
   (:method (style spec stream)
      (declare (ignore style))
-     (destructuring-bind (&key descriptive &allow-other-keys) (cdr spec)
-       (format stream "\\section{The ~a API}~%" descriptive))))
+     (format stream "\\section{The ~a API}~%" (defdoc::descriptive spec))))
 (defgeneric package-list-group-header (style spec group stream)
   (:method (style spec group stream)
-     (declare (ignore style))
      (princ "\\subsection{" stream)
-     (destructuring-bind (&key self &allow-other-keys) (cdr spec)
-       ;; (format t "~s ~s~%" self group)
-       (format-tag style (find-package self) group stream))
+     ;; (format t "~s ~s~%" self group)
+     (format-tag style (find-package (defdoc::self spec)) group stream)
      (format stream "}~%")))
 (defgeneric package-list-entry (style spec group entry stream)
   (:method (style spec group entry stream)
      (declare (ignore style spec group))
-     (destructuring-bind (&key self &allow-other-keys) (cdr entry)
-       (format stream "\\texttt{~a}~%~%" self))))
+     (format stream "\\texttt{~a}~%~%" (defdoc::self entry))))
 
 (defclass package-list-latex-mixin () ())
 
 (defmethod format-docspec-element ((style package-list-latex-mixin)
-                                   (spec-type (eql 'package)) (in (eql :spec))
-                                   stream spec-args)
-  (destructuring-bind (&key self &allow-other-keys) spec-args
+                                   (target-type (eql 'package))
+                                   (spec standard-doc-spec) stream)
+  (with-accessors ((self self)) spec
     (let ((actual-package (find-package self))
           (tag-sort (make-hash-table :test 'eq))
-          (pspec (get-doc-spec self spec-type)))
+          (pspec (get-doc-spec self target-type)))
       (do-external-symbols (sym self)
-        (loop for type in (get-symbol-doctypes sym) do
+        (loop for type in (get-doc-target-types sym) do
           (loop for tag in (get-doc-tags sym type) do
             (let ((tag-hash (gethash tag tag-sort)))
               (unless tag-hash

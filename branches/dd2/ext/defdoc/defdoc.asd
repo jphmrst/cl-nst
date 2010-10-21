@@ -84,11 +84,12 @@
                  (:file "block"  :depends-on ("package"))
 
                  ;; Converting specs to plain text.
-                 (:file "plaintext"  :depends-on ("spec" "callspec" "block"))
+                 (:file "plaintext"  :depends-on ("spec" "elements"
+                                                  "callspec" "block"))
 
-;;;                 ;; Converting specs to LaTeX.
-;;;                 (:file "latex"  :depends-on ("globals"
-;;;                                              "specs" "callspec" "tag"))
+                 ;; Converting specs to LaTeX.
+                 (:file "latex"  :depends-on ("globals" "plaintext" "spec"
+                                              "elements" "callspec" "tag"))
 
 ;;;                 ;; Documentation in def-doc of def-doc.
 ;;;                 (:file "auto"  :depends-on ("globals"

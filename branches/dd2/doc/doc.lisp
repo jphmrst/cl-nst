@@ -130,27 +130,30 @@
                      (symbol-name usage) "_"
                      (symbol-name (type-of style)) ".tex")))
 (defmethod defdoc:latex-style-adjust-spec-element ((style nst-item-style)
-                                                   spec-type spec-head
+                                                   target-type spec
                                                    (element (eql :intro))
-                                                   spec-args datum)
-  (declare (ignore datum spec-head spec-type))
-  (destructuring-bind (&key self &allow-other-keys) spec-args
-  `(:seq (:latex ,(format nil "\\label{~a:primary}" self))
-         ,(call-next-method))))
+                                                   datum)
+  (declare (ignore datum target-type))
+  (with-accessors ((self defdoc::self)) spec
+    (make-instance 'defdoc:standard-sequence
+      :elements (list (make-instance 'defdoc:standard-latex
+                        :latex (format nil "\\label{~a:primary}" self))
+                      (call-next-method)))))
 (defmethod defdoc:latex-style-adjust-spec-element ((style nst-item-style)
-                                                   spec-type spec-head
+                                                   target-type spec
                                                    (element (eql :short))
-                                                   spec-args datum)
-  (declare (ignore datum spec-head spec-type))
-  (destructuring-bind (&key self &allow-other-keys) spec-args
-  `(:seq (:latex ,(format nil "\\label{~a:primary}" self))
-         ,(call-next-method))))
+                                                   datum)
+  (declare (ignore datum target-type))
+  (with-accessors ((self defdoc::self)) spec
+    (make-instance 'defdoc:standard-sequence
+      :elements (list (make-instance 'defdoc:standard-latex
+                        :latex (format nil "\\label{~a:primary}" self))
+                      (call-next-method)))))
 
 (defmethod format-docspec-element ((style nst-item-style)
-                                   (spec-type (eql 'nst::criterion))
-                                   (in (eql :spec))
-                                   stream spec-args)
-  (destructuring-bind (&key self &allow-other-keys) spec-args
+                                   (target-type (eql 'nst::criterion))
+                                   (spec defdoc::standard-doc-spec) stream)
+  (with-accessors ((self defdoc::self)) spec
     (format stream "\\subsubsection{The \\texttt{~s} criterion}" self)
     (call-next-method)))
 
@@ -162,7 +165,7 @@
 (defmethod defdoc:package-list-entry ((style nst-package-list-latex-style)
                                       spec group entry stream)
      (declare (ignore spec group))
-     (destructuring-bind (&key self &allow-other-keys) (cdr entry)
+     (let ((self (defdoc::self entry)))
        (format stream
            "\\texttt{~a} --- \\S\\ref{~:*~a:primary}, p.\\,\\pageref{~:*~a:primary}.~%~%"
          self)))
@@ -177,27 +180,25 @@
                      (symbol-name name) "_"
                      (symbol-name usage) "_"
                      (symbol-name (type-of style)) ".tex")))
-(defmethod format-docspec-element ((style nst-quickref) spec-type
-                                   (in (eql :spec)) stream spec-args)
-  (destructuring-bind (&key self
-                            (intro nil intro-supp-p)
-                            (params nil params-supp-p)
-                            (short nil short-supp-p)
-                            (callspec nil callspec-supp-p)
-                       &allow-other-keys) spec-args
+(defmethod format-docspec-element ((style nst-quickref) target-type
+                                   (spec defdoc::standard-doc-spec) stream)
+  (defdoc::with-unpacked-standard-spec (self intro intro-supp-p params params-supp-p
+                                     short short-supp-p full full-supp-p
+                                     callspec) spec
+    ;;(declare (ignore full full-supp-p))
     (cond
      (short-supp-p
       (format-docspec stream style
-                      (latex-style-adjust-spec-element style spec-type in
-                                                       :intro spec-args short)
-                      spec-type))
+                      (latex-style-adjust-spec-element style target-type spec
+                                                       :intro short)
+                      target-type))
      (intro-supp-p
       (format-docspec stream style
-                      (latex-style-adjust-spec-element style spec-type in
-                                                       :intro spec-args intro)
-                      spec-type)))
+                      (latex-style-adjust-spec-element style target-type spec
+                                                       :intro intro)
+                      target-type)))
 
-    (when callspec-supp-p
+    (when callspec
       (princ " \\begin{verbatim}" stream)
       (loop for (cs . others) on callspec do
         (loop for line
@@ -212,7 +213,7 @@
       (loop for (name subspec) in params do
         (format stream "\\item[~a] " name)
         (format-docspec stream style
-                        (latex-style-adjust-spec-element style spec-type in
-                              :subspec spec-args subspec)
-                        spec-type))
+                        (latex-style-adjust-spec-element style target-type spec
+                              :subspec subspec)
+                        target-type))
       (princ "\\end{description}" stream))))

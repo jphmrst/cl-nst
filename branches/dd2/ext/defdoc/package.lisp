@@ -34,8 +34,12 @@
              #:get-doc-target-types
              #:get-target-type
 
-
-
+             #:standard-plain-text
+             #:standard-latex
+             #:standard-paragraph-list
+             #:standard-sequence
+             #:standard-code
+             #:standard-itemize
 
              #:def-spec-format
              #:def-doc-tag

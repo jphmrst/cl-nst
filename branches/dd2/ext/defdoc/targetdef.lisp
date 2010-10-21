@@ -11,7 +11,7 @@
   (:documentation "The information we store about each target type."))
 
 (defvar +doc-target-types+ (make-hash-table :test 'eq)
-  "Master global hashtable of all documentation targetspecifiers.")
+  "Master global hashtable of all documentation target specifiers.")
 
 (defun get-doc-target-types (&optional (sym nil sym-supp-p))
   (cond
@@ -60,25 +60,5 @@
     ((fboundp name) 'function)
     ((boundp name) 'variable)
     (t (error "Cannot determine name use for documentation of ~s" name))))
-
-;;; -----------------------------------------------------------------
-
-;;;(defun get-doc-spec (name type)
-;;;  (let ((type-hash (get-doc-spec-type-hash type)))
-;;;    (gethash name type-hash)))
-;;;
-;;;(define-setf-expander get-doc-spec (name type)
-;;;  (let ((store (gensym))
-;;;        (type-hash (gensym)))
-;;;    (values nil
-;;;            nil
-;;;            `(,store)
-;;;            `(let ((,type-hash (get-doc-spec-type-hash ,type)))
-;;;               (setf (gethash ,name ,type-hash) ,store))
-;;;            `(get-doc-spec ,name ,type))))
-;;;
-;;;(defmacro def-spec-format (name-or-name-and-options formals &rest body)
-;;;  (declare (ignore name-or-name-and-options formals body))
-;;;  nil)
 
 ;;; -----------------------------------------------------------------

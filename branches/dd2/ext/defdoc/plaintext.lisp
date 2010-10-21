@@ -2,8 +2,7 @@
 (in-package :defdoc)
 
 (defclass standard-docstring-style () ())
-(defmethod format-docspec (stream (style standard-docstring-style) spec type
-                                  &key &allow-other-keys)
+(defmethod format-docspec (stream (style standard-docstring-style) spec type)
   (declare (ignore type))
   (format stream "~{~a~^~%~}" (spec-to-lines spec 79)))
 
@@ -154,73 +153,56 @@
 
 (defgeneric output-lines (spec-head spec))
 
-(defmacro with-possibly-unbound-slotaccessors (specs inst &body body)
-  (let ((results body)
-        (o (gensym)))
-    (loop for (var accessor bound) in specs do
-      (setf results `((let (,var ,bound)
-                        (when (slot-boundp ,o ',accessor)
-                          (setf ,var (,accessor ,o) ,bound t))
-                        ,@results))))
-    (cond
-      (specs `(let ((,o ,inst)) ,@results))
-      ((null results) nil)
-      ((eql 1 (length results)) (car results))
-      (t `(progn ,@results)))))
-
 (defmethod output-lines ((doc standard-doc-spec) width)
-  (with-accessors ((self self)
-                   (callspec callspecs)) doc
-    (with-possibly-unbound-slotaccessors ((full full full-supp-p)
-                                          (intro intro intro-supp-p)
-                                          (params params params-supp-p)
-                                          (short short short-supp-p)) doc
-      (cond
-       ((or intro-supp-p full-supp-p)
-        (nconc
-         (when intro-supp-p (spec-to-lines intro width))
-         (loop for cspec in callspec
-             append (cons ""
-                          (loop for line
-                              in (callspec-to-lines cspec (- width 2) self)
-                              collect (concatenate 'string "  " line))))
-         (when params-supp-p
-           (nconc
-            (loop for (name subspec) in params
-                append
-                  (list* ""
-                         (format nil "  ~a" name)
-                         (loop for line in (spec-to-lines subspec (- width 4))
-                             collect (concatenate 'string "    " line))))
-            (list "")))
-         (when full-supp-p (spec-to-lines full width))))
-       (short-supp-p
-        (nconc
-         (spec-to-lines short width)
-         (loop for cspec in callspec
-             append (cons ""
-                          (loop for line
-                              in (callspec-to-lines cspec (- width 2) self)
-                              collect (concatenate 'string "  " line))))
-         (when params-supp-p
+  (with-unpacked-standard-spec (self intro intro-supp-p params params-supp-p
+                                     short short-supp-p full full-supp-p
+                                     callspec) doc
+     (cond
+      ((or intro-supp-p full-supp-p)
+       (nconc
+        (when intro-supp-p (spec-to-lines intro width))
+        (loop for cspec in callspec
+            append (cons ""
+                         (loop for line
+                             in (callspec-to-lines cspec (- width 2) self)
+                             collect (concatenate 'string "  " line))))
+        (when params-supp-p
+          (nconc
            (loop for (name subspec) in params
                append
                  (list* ""
                         (format nil "  ~a" name)
                         (loop for line in (spec-to-lines subspec (- width 4))
-                            collect (concatenate 'string "    " line)))))))
-       (params-supp-p
-        (nconc
-         (loop for cspec in callspec
-             append (loop for line in (callspec-to-lines cspec (- width 2) self)
-                        collect (concatenate 'string "  " line)))
-         (loop for (name subspec) in params
-             append
-               (list* ""
-                      (format nil "  ~a" name)
-                      (loop for line in (spec-to-lines subspec (- width 4))
-                          collect (concatenate 'string "    " line))))))
-       (t nil)))))
+                            collect (concatenate 'string "    " line))))
+           (list "")))
+        (when full-supp-p (spec-to-lines full width))))
+      (short-supp-p
+       (nconc
+        (spec-to-lines short width)
+        (loop for cspec in callspec
+            append (cons ""
+                         (loop for line
+                             in (callspec-to-lines cspec (- width 2) self)
+                             collect (concatenate 'string "  " line))))
+        (when params-supp-p
+          (loop for (name subspec) in params
+              append
+                (list* ""
+                       (format nil "  ~a" name)
+                       (loop for line in (spec-to-lines subspec (- width 4))
+                           collect (concatenate 'string "    " line)))))))
+      (params-supp-p
+       (nconc
+        (loop for cspec in callspec
+            append (loop for line in (callspec-to-lines cspec (- width 2) self)
+                       collect (concatenate 'string "  " line)))
+        (loop for (name subspec) in params
+            append
+              (list* ""
+                     (format nil "  ~a" name)
+                     (loop for line in (spec-to-lines subspec (- width 4))
+                         collect (concatenate 'string "    " line))))))
+      (t nil))))
 
 (defmethod output-lines ((doc standard-plain-text) width)
   (with-accessors ((string text)) doc
