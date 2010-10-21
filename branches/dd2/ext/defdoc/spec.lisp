@@ -86,14 +86,14 @@
                   `(setf (,acc spec)
                          (compile-element package spec form-args))))
        (case form-head
-         ((:deprecated) (setf (deprecated spec) (car form-args)))
+         ((:deprecated)  (setf (deprecated spec) (car form-args)))
+         ((:descriptive) (setf (descriptive spec) (car form-args)))
          ((:tags) (setf (tags spec) form-args))
          ((:params) (setf (params spec)
                           (loop for (id forms) in form-args
                                 collect (list id
                                               (compile-element package
                                                       spec forms)))))
-         ((:descriptive) (setting-accessor descriptive))
          ((:intro)       (setting-accessor intro))
          ((:short)       (setting-accessor short))
          ((:full)        (setting-accessor full))
