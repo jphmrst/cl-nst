@@ -7,7 +7,7 @@
 (defgeneric format-tag (style package tag stream)
   (:method (style package tag stream)
      (declare (ignore style package))
-     (format t "DFT for: ~a~%" tag)
+     ;; (format t "DFT for: ~a~%" tag)
      (format stream "~a" tag)))
 
 (defgeneric tag-sort (style package tag)

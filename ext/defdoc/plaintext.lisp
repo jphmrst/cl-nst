@@ -204,7 +204,7 @@
       (t nil))))
 
 (defmethod output-lines ((doc standard-plain-text) width)
-  (with-accessors ((string text-element-text)) doc
+  (let ((string (text-element-text doc)))
     (loop while (< 0 (length string))
           for (last-of-first first-of-rest)
             = (get-first-break-edges string width)
@@ -218,7 +218,7 @@
           finally (return-from output-lines lines))))
 
 (defmethod output-lines ((doc standard-latex) width)
-  (with-accessors ((orig-string latex-element-latex)) doc
+  (let ((orig-string (latex-element-latex doc)))
     (let ((string-chars (loop for spot from (- (length orig-string) 1) downto 0
                               collect (elt orig-string spot))))
       (output-lines (make-instance 'standard-plain-text
@@ -278,18 +278,18 @@
       (t output-stack))))
 
 (defmethod output-lines ((doc standard-paragraph-list) width)
-  (with-accessors ((paragraph-specs paragraphlist-element-items)) doc
+  (let ((paragraph-specs (paragraphlist-element-items doc)))
     (loop for (spec . other-specs) on paragraph-specs
         append (nconc (spec-to-lines spec width)
                       (when other-specs (list ""))))))
 
 (defmethod output-lines ((doc standard-sequence) width)
-  (with-accessors ((specs sequence-element-items)) doc
+  (let ((specs (sequence-element-items doc)))
     (loop for spec in specs append (spec-to-lines spec width))))
 
 (defmethod output-lines ((doc standard-code) width)
   (declare (ignore width))
-  (with-accessors ((string code-element-string)) doc
+  (let ((string (code-element-string doc)))
     (let ((scan 0) (max (length string)))
       (loop for point = (position #\Newline string :start scan)
           while point
@@ -304,8 +304,8 @@
                 (t lines)))))))
 
 (defmethod output-lines ((doc standard-itemize) width)
-  (with-accessors ((options list-element-options)
-                   (items list-element-specs)) doc
+  (let ((options (list-element-options doc))
+                   (items (list-element-specs doc)))
     (declare (ignore options))
     (loop for item in items
           for i from 1
@@ -316,8 +316,8 @@
                                  block-line)))))
 
 (defmethod output-lines ((doc standard-enumerate) width)
-  (with-accessors ((options list-element-options)
-                   (items list-element-specs)) doc
+  (let ((options (list-element-options doc))
+                   (items (list-element-specs doc)))
     (declare (ignore options))
     (loop for item in items for i from 1
           append (let* ((prefix (format nil " ~d. " i))
