@@ -1,7 +1,7 @@
 (in-package :defdoc)
 
 (defun format-doc (stream style spec)
-  (let ((target-type (target-type spec)))
+  (let ((target-type (docspec-target-type spec)))
     (format-docspec stream style spec target-type)))
 
 (defgeneric format-docspec (stream style spec type)

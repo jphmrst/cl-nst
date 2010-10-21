@@ -134,7 +134,7 @@
                                                    (element (eql :intro))
                                                    datum)
   (declare (ignore datum target-type))
-  (with-accessors ((self defdoc::self)) spec
+  (with-accessors ((self defdoc:docspec-self)) spec
     (make-instance 'defdoc:standard-sequence
       :elements (list (make-instance 'defdoc:standard-latex
                         :latex (format nil "\\label{~a:primary}" self))
@@ -144,7 +144,7 @@
                                                    (element (eql :short))
                                                    datum)
   (declare (ignore datum target-type))
-  (with-accessors ((self defdoc::self)) spec
+  (with-accessors ((self defdoc:docspec-self)) spec
     (make-instance 'defdoc:standard-sequence
       :elements (list (make-instance 'defdoc:standard-latex
                         :latex (format nil "\\label{~a:primary}" self))
@@ -152,8 +152,8 @@
 
 (defmethod format-docspec-element ((style nst-item-style)
                                    (target-type (eql 'nst::criterion))
-                                   (spec defdoc::standard-doc-spec) stream)
-  (with-accessors ((self defdoc::self)) spec
+                                   (spec defdoc:standard-doc-spec) stream)
+  (with-accessors ((self defdoc:docspec-self)) spec
     (format stream "\\subsubsection{The \\texttt{~s} criterion}" self)
     (call-next-method)))
 
@@ -165,7 +165,7 @@
 (defmethod defdoc:package-list-entry ((style nst-package-list-latex-style)
                                       spec group entry stream)
      (declare (ignore spec group))
-     (let ((self (defdoc::self entry)))
+     (let ((self (defdoc:docspec-self entry)))
        (format stream
            "\\texttt{~a} --- \\S\\ref{~:*~a:primary}, p.\\,\\pageref{~:*~a:primary}.~%~%"
          self)))
@@ -181,8 +181,8 @@
                      (symbol-name usage) "_"
                      (symbol-name (type-of style)) ".tex")))
 (defmethod format-docspec-element ((style nst-quickref) target-type
-                                   (spec defdoc::standard-doc-spec) stream)
-  (defdoc::with-unpacked-standard-spec (self intro intro-supp-p params params-supp-p
+                                   (spec defdoc:standard-doc-spec) stream)
+  (defdoc:with-unpacked-standard-spec (self intro intro-supp-p params params-supp-p
                                      short short-supp-p full full-supp-p
                                      callspec) spec
     ;;(declare (ignore full full-supp-p))
@@ -202,7 +202,7 @@
       (princ " \\begin{verbatim}" stream)
       (loop for (cs . others) on callspec do
         (loop for line
-              in (defdoc::callspec-to-lines cs defdoc::*latex-verbatim-width* self)
+              in (defdoc:callspec-to-lines cs defdoc:*latex-verbatim-width* self)
               do
            (format stream "  ~a~%" line))
         (when others (format stream "~%")))

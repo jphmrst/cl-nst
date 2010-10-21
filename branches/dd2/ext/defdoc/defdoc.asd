@@ -91,9 +91,10 @@
                  (:file "latex"  :depends-on ("globals" "plaintext" "spec"
                                               "elements" "callspec" "tag"))
 
-;;;                 ;; Documentation in def-doc of def-doc.
-;;;                 (:file "auto"  :depends-on ("globals"
-;;;                                             "block" "components" "format"
-;;;                                             "latex" "macro" "plaintext"
-;;;                                             "type"))
+                 ;; Documentation in def-doc of def-doc.
+                 (:file "auto"  :depends-on ("globals"
+                                             "format" "storage" "targetdef"
+                                             "spec" "elementdef" "elements"
+                                             "tag" "macro" "callspec" "block"
+                                             "plaintext" "latex"))
                  ))

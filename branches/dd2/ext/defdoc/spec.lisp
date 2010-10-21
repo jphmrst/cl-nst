@@ -7,25 +7,25 @@
      *spec-class*))
 
 (defclass doc-spec ()
-     ((tags :initarg :tags :accessor tags)
-      (target-type :initarg :target-type :reader target-type)))
+     ((self :initarg :self :reader docspec-self)
+      (target-type :initarg :target-type :reader docspec-target-type)
+      (tags :initarg :tags :accessor docspec-tags)))
 
 (defclass standard-doc-spec (doc-spec)
-     ((self :initarg :self :accessor self)
-      (descriptive :initarg :descriptive :accessor descriptive)
-      (intro  :initarg :intro  :accessor intro)
-      (short  :initarg :short  :accessor short)
-      (full   :initarg :full   :accessor full)
-      (params :initarg :params :accessor params)
-      (callspecs :initarg :callspecs :initform nil :accessor callspecs)
-      (deprecated :initarg :deprecated :accessor deprecated)))
+     ((descriptive :initarg :descriptive :accessor docspec-descriptive)
+      (intro  :initarg :intro  :accessor docspec-intro)
+      (short  :initarg :short  :accessor docspec-short)
+      (full   :initarg :full   :accessor docspec-full)
+      (params :initarg :params :accessor docspec-params)
+      (callspecs :initarg :callspecs :initform nil :accessor docspec-callspecs)
+      (deprecated :initarg :deprecated :accessor docspec-deprecated)))
 
 (defmacro with-possibly-unbound-slotaccessors (specs inst &body body)
   (let ((results body)
         (o (gensym)))
-    (loop for (var accessor bound) in specs do
-      (setf results `((let (,var ,bound)
-                        (when (slot-boundp ,o ',accessor)
+    (loop for (var bound accessor slot) in specs do
+      (setf results `((let ((,var nil) (,bound nil))
+                        (when (slot-boundp ,o ',slot)
                           (setf ,var (,accessor ,o) ,bound t))
                         ,@results))))
     (cond
@@ -40,11 +40,13 @@
                                              full full-supp-p
                                              callspec)
                                        instance &body forms)
-  `(let ((,self (self ,instance)) (,callspec (callspecs ,instance)))
-     (with-possibly-unbound-slotaccessors ((,intro  intro  ,intro-supp-p)
-                                           (,params params ,params-supp-p)
-                                           (,short  short  ,short-supp-p)
-                                           (,full   full   ,full-supp-p))
+  `(let ((,self (docspec-self ,instance))
+         (,callspec (docspec-callspecs ,instance)))
+     (with-possibly-unbound-slotaccessors
+         ((,intro  ,intro-supp-p  docspec-intro  intro)
+          (,params ,params-supp-p docspec-params params)
+          (,short  ,short-supp-p  docspec-short  short)
+          (,full   ,full-supp-p   docspec-full   full))
          ,instance
        ,@forms)))
 
@@ -86,18 +88,18 @@
                   `(setf (,acc spec)
                          (compile-element package spec form-args))))
        (case form-head
-         ((:deprecated)  (setf (deprecated spec) (car form-args)))
-         ((:descriptive) (setf (descriptive spec) (car form-args)))
-         ((:tags) (setf (tags spec) form-args))
-         ((:params) (setf (params spec)
+         ((:deprecated)  (setf (docspec-deprecated spec) (car form-args)))
+         ((:descriptive) (setf (docspec-descriptive spec) (car form-args)))
+         ((:tags) (setf (docspec-tags spec) form-args))
+         ((:params) (setf (docspec-params spec)
                           (loop for (id forms) in form-args
                                 collect (list id
                                               (compile-element package
                                                       spec forms)))))
-         ((:intro)       (setting-accessor intro))
-         ((:short)       (setting-accessor short))
-         ((:full)        (setting-accessor full))
-         ((:callspec) (setf (callspecs spec)
+         ((:intro)       (setting-accessor docspec-intro))
+         ((:short)       (setting-accessor docspec-short))
+         ((:full)        (setting-accessor docspec-full))
+         ((:callspec) (setf (docspec-callspecs spec)
                             (mapcar #'(lambda (x)
                                         (get-compiled-callspec package spec x))
                                     form-args)))

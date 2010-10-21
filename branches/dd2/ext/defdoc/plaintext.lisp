@@ -205,7 +205,7 @@
       (t nil))))
 
 (defmethod output-lines ((doc standard-plain-text) width)
-  (with-accessors ((string text)) doc
+  (with-accessors ((string text-element-text)) doc
     (loop while (< 0 (length string))
           for (last-of-first first-of-rest)
             = (get-first-break-edges string width)
@@ -219,7 +219,7 @@
           finally (return-from output-lines lines))))
 
 (defmethod output-lines ((doc standard-latex) width)
-  (with-accessors ((orig-string latex)) doc
+  (with-accessors ((orig-string latex-element-latex)) doc
     (let ((string-chars (loop for spot from (- (length orig-string) 1) downto 0
                               collect (elt orig-string spot))))
       (output-lines (make-instance 'standard-plain-text
@@ -279,18 +279,18 @@
       (t output-stack))))
 
 (defmethod output-lines ((doc standard-paragraph-list) width)
-  (with-accessors ((paragraph-specs paragraphs)) doc
+  (with-accessors ((paragraph-specs paragraphlist-element-items)) doc
     (loop for (spec . other-specs) on paragraph-specs
         append (nconc (spec-to-lines spec width)
                       (when other-specs (list ""))))))
 
 (defmethod output-lines ((doc standard-sequence) width)
-  (with-accessors ((specs elements)) doc
+  (with-accessors ((specs sequence-element-items)) doc
     (loop for spec in specs append (spec-to-lines spec width))))
 
 (defmethod output-lines ((doc standard-code) width)
   (declare (ignore width))
-  (with-accessors ((string code)) doc
+  (with-accessors ((string code-element-string)) doc
     (let ((scan 0) (max (length string)))
       (loop for point = (position #\Newline string :start scan)
           while point
@@ -305,7 +305,8 @@
                 (t lines)))))))
 
 (defmethod output-lines ((doc standard-itemize) width)
-  (with-accessors ((options options) (items specs)) doc
+  (with-accessors ((options list-element-options)
+                   (items list-element-specs)) doc
     (declare (ignore options))
     (loop for item in items
           for i from 1
@@ -316,7 +317,8 @@
                                  block-line)))))
 
 (defmethod output-lines ((doc standard-enumerate) width)
-  (with-accessors ((options options) (items specs)) doc
+  (with-accessors ((options list-element-options)
+                   (items list-element-specs)) doc
     (declare (ignore options))
     (loop for item in items for i from 1
           append (let* ((prefix (format nil " ~d. " i))
@@ -356,40 +358,3 @@
          (list (+ 1 last-nonspace) (+ 1 rightmost-space))))
       (t
        (list width width)))))
-
-;;;(defgeneric output-text (spec-head spec))
-;;;
-;;;(defmethod output-text ((in (eql :spec)) spec-args)
-;;;  (destructuring-bind (&key self
-;;;                            (intro nil intro-supp-p)
-;;;                            (params nil params-supp-p)
-;;;                            (short nil short-supp-p)
-;;;                            (full nil full-supp-p) &allow-other-keys) spec-args
-;;;    (let ((result ""))
-;;;      (cond
-;;;        ((or intro-supp-p full-supp-p)
-;;;         (when intro-supp-p
-;;;           (setf result (spec-to-text intro)))
-;;;         (when params-supp-p
-;;;           (loop for (name subspec) in params do
-;;;             (setf result (format nil "~a~%~%  ~a~%  ~a"
-;;;                            result name (spec-to-text subspec)))))
-;;;         (when full-supp-p
-;;;           (setf result (format nil "~a~%~%~a~%"
-;;;                          result (spec-to-text full)))))
-;;;        (short-supp-p
-;;;         (setf result (spec-to-text short))
-;;;         (when params-supp-p
-;;;           (loop for (name subspec) in params do
-;;;             (setf result (format nil "~a~%~%  ~a~%  ~a~%"
-;;;                            result name (spec-to-text subspec))))))
-;;;        (params-supp-p
-;;;         (loop for (name subspec) in params do
-;;;           (setf result (format nil "~a~%~%  ~a~%  ~a~%"
-;;;                          result name (spec-to-text subspec)))))
-;;;        (t nil))
-;;;      result)))
-;;;
-;;;(defmethod output-text ((in (eql :plain)) spec-args)
-;;;  (car spec-args))
-

@@ -150,7 +150,7 @@
 (defmethod format-docspec-element ((style latex-style) target-type
                                    (spec standard-plain-text) stream)
   (declare (ignore target-type))
-  (with-accessors ((string text)) spec
+  (with-accessors ((string text-element-text)) spec
     (let ((was-space t))
       (loop for char across string
           append (let ((next-space nil))
@@ -173,34 +173,33 @@
 (defmethod format-docspec-element ((style latex-style) target-type
                                    (spec standard-latex) stream)
   (declare (ignore target-type))
-  (princ (latex spec) stream))
+  (princ (latex-element-latex spec) stream))
 
 (defmethod format-docspec-element ((style latex-style) target-type
                                    (spec standard-paragraph-list) stream)
-  (loop for (p-spec . other-specs) on (paragraphs spec) do
+  (loop for (p-spec . other-specs) on (paragraphlist-element-items spec) do
     (format-docspec stream style p-spec target-type)
     (when other-specs (princ "\\par " stream))))
 
 (defmethod format-docspec-element ((style latex-style) target-type
                                    (spec standard-sequence) stream)
-  (loop for (p-spec . other-specs) on (elements spec) do
+  (loop for (p-spec . other-specs) on (sequence-element-items spec) do
     (format-docspec stream style p-spec target-type)
     (when other-specs (princ " " stream))))
-
 
 (defmethod format-docspec-element ((style latex-style) target-type
                                    (spec standard-code) stream)
   (declare (ignore target-type))
-  (format stream "\\begin{verbatim}~a\\end{verbatim}" (code spec)))
+  (format stream "\\begin{verbatim}~a\\end{verbatim}" (code-element-string spec)))
 
 (defmethod format-docspec-element ((style latex-style) target-type
                                    (spec standard-simple-list-environment)
                                    stream)
-  (format stream "\\begin{~a}" (env-tag spec))
-  (loop for spec in (specs spec) do
+  (format stream "\\begin{~a}" (list-element-env-tag spec))
+  (loop for spec in (list-element-specs spec) do
     (princ "\\item " stream)
     (format-docspec stream style spec target-type))
-  (format stream "\\end{~a}" (env-tag spec)))
+  (format stream "\\end{~a}" (list-element-env-tag spec)))
 
 ;;; -----------------------------------------------------------------
 ;;; Mixin for a full description of packages.
@@ -210,7 +209,7 @@
 (defmethod format-docspec-element ((style full-package-latex-style-mixin)
                                    (target-type (eql 'package))
                                    (spec standard-doc-spec) stream)
-  (with-accessors ((self self)) spec
+  (with-accessors ((docspec-self self)) spec
     (call-next-method)
     (do-external-symbols (var (find-package self))
       (format stream "~a{~a}" *latex-full-package-item-header-macro* var)
@@ -225,24 +224,24 @@
 (defgeneric package-list-overall-header (style spec stream)
   (:method (style spec stream)
      (declare (ignore style))
-     (format stream "\\section{The ~a API}~%" (defdoc::descriptive spec))))
+     (format stream "\\section{The ~a API}~%" (docspec-descriptive spec))))
 (defgeneric package-list-group-header (style spec group stream)
   (:method (style spec group stream)
      (princ "\\subsection{" stream)
      ;; (format t "~s ~s~%" self group)
-     (format-tag style (find-package (defdoc::self spec)) group stream)
+     (format-tag style (find-package (docspec-self spec)) group stream)
      (format stream "}~%")))
 (defgeneric package-list-entry (style spec group entry stream)
   (:method (style spec group entry stream)
      (declare (ignore style spec group))
-     (format stream "\\texttt{~a}~%~%" (defdoc::self entry))))
+     (format stream "\\texttt{~a}~%~%" (docspec-self entry))))
 
 (defclass package-list-latex-mixin () ())
 
 (defmethod format-docspec-element ((style package-list-latex-mixin)
                                    (target-type (eql 'package))
                                    (spec standard-doc-spec) stream)
-  (with-accessors ((self self)) spec
+  (with-accessors ((self docspec-self)) spec
     (let ((actual-package (find-package self))
           (tag-sort (make-hash-table :test 'eq))
           (pspec (get-doc-spec self target-type)))
