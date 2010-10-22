@@ -75,26 +75,38 @@
                  (:file "tag"  :depends-on ("package"))
 
                  ;; The main defdoc macro.
-                 (:file "macro"  :depends-on ("spec"))
+                 (:file "macro"  :depends-on ("spec"
+                                              ;; the one below are to
+                                              ;; be able to use defdoc
+                                              ;; in things that depend
+                                              ;; on macro.
+                                              "tag" "elements" "elementdef"
+                                              "targets" "targetdef"
+                                              ))
 
                  ;; Decoding the callspec forms.
-                 (:file "callspec"  :depends-on ("package"))
+                 (:file "callspec"  :depends-on ("package"
+                                                 "macro"))
 
                  ;; Operations on blocks of lines.
-                 (:file "block"  :depends-on ("package"))
+                 (:file "block"  :depends-on ("package"
+                                                 "macro"))
 
                  ;; Converting specs to plain text.
                  (:file "plaintext"  :depends-on ("spec" "elements"
-                                                  "callspec" "block"))
+                                                  "callspec" "block"
+                                                  "macro"))
 
                  ;; Converting specs to LaTeX.
-                 (:file "latex"  :depends-on ("globals" "plaintext" "spec"
+                 (:file "latex"  :depends-on ("globals"
+                                              "macro" "plaintext" "spec"
                                               "elements" "callspec" "tag"))
 
                  ;; Documentation in def-doc of def-doc.
-                 (:file "auto"  :depends-on ("globals"
-                                             "format" "storage" "targetdef"
-                                             "spec" "elementdef" "elements"
-                                             "tag" "macro" "callspec" "block"
-                                             "plaintext" "latex"))
+                 (:file "coredoc"  :depends-on ("globals"
+                                                "macro"
+                                                "format" "storage" "targetdef"
+                                                "spec" "elementdef" "elements"
+                                                "tag" "macro" "callspec" "block"
+                                                "plaintext" "latex"))
                  ))

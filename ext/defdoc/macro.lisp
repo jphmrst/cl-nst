@@ -9,7 +9,7 @@
          (setf (get-doc-spec ',name ',target-type) ,spec)
          (funcall (docstring-installer (get-target-type ',target-type))
                   ',name ,spec)
-         (format t "SPEC for ~s:~%~s~%" ',name ,spec)
+         ;; (format t "SPEC for ~s:~%~s~%" ',name ,spec)
          ))))
 
 (defun decode-defdoc-spec (name-or-spec)
