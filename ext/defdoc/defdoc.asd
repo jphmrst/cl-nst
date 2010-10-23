@@ -49,9 +49,6 @@
                  ;; Global settings
                  (:file "globals"  :depends-on ("package"))
 
-                 ;; Generics for the output API.
-                 (:file "format"  :depends-on ("package"))
-
                  ;; Storage for the actual documentation objects.
                  (:file "storage"  :depends-on ("package"))
 
