@@ -6,6 +6,7 @@
 
 (defvar *defdoc-latex-default-directory* "./")
 (defvar *latex-full-package-item-header-macro* "\\paragraph")
+(defvar *latex-verbatim-width* 65)
 
 (defgeneric get-latex-output-file-name (style usage name)
   (:method ((style symbol) usage name)
