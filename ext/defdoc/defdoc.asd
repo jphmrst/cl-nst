@@ -56,7 +56,7 @@
                  (:file "targetdef"  :depends-on ("package" "storage"))
 
                  ;; Things we give documentation to.
-                 (:file "targets"  :depends-on ("targetdef" "globals" "format"))
+                 (:file "targets"  :depends-on ("targetdef" "globals"))
 
                  ;; Standard representation of a specification
                  (:file "spec"  :depends-on ("package"))
@@ -102,7 +102,7 @@
                  ;; Documentation in def-doc of def-doc.
                  (:file "coredoc"  :depends-on ("globals"
                                                 "macro"
-                                                "format" "storage" "targetdef"
+                                                "storage" "targetdef"
                                                 "spec" "elementdef" "elements"
                                                 "tag" "macro" "callspec" "block"
                                                 "plaintext" "latex"))
