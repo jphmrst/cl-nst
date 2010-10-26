@@ -103,5 +103,5 @@
                                         (get-compiled-callspec package spec x))
                                     form-args)))
          (otherwise
-          (error "Unrecognized form (~a~{ ~a~}) in docspec body for ~s"
+          (error "Unrecognized form (~s~{ ~s~}) in docspec body for ~s"
                  form-head form-args target-name))))))

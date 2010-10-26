@@ -67,7 +67,7 @@
                                   &key (echo nil echo-supp)
                                   (directory *defdoc-latex-default-directory*)
                                   (style 'latex-style)
-                                  (package-style 'full-package-latex-style)
+                                  (package-style 'latex-style)
                                   include-doctypes)
   (let ((package (find-package package-specifier)))
     (do-external-symbols (sym package)

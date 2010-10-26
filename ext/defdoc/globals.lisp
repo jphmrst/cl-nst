@@ -14,4 +14,4 @@
   (:method (stream style spec type)
      (format-docspec-element style type spec stream)))
 
-(defgeneric format-docspec-element (style target-type spec stream))
+(defgeneric format-docspec-element (style target-type element stream))
