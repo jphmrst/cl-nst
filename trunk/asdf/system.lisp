@@ -73,7 +73,13 @@
 
 (defmethod asdf::component-depends-on :around ((op load-op)
                                                (sys nst-test-holder))
-  (cons (list 'asdf:load-op :nst) (call-next-method)))
+  "When loading this system, also load any systems which NST-testing this
+system also tests.  This is not strictly necessary to any test-op, but is
+convenient and harmless."
+  `((asdf:load-op :nst)
+    ,@(call-next-method)
+    ,@(loop for sub in (nst-systems sys)
+            collect `(asdf:load-op ,sub))))
 
 (defmethod asdf::component-depends-on :around ((op test-op)
                                                (sys nst-test-holder))

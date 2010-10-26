@@ -76,17 +76,6 @@ other contributors to the to-do list, so we include those tasks via
                      (asdf:test-op ,sub)))
     ,@(call-next-method)))
 
-(defmethod asdf::component-depends-on :around ((op load-op)
-                                               (sys nst-test-runner))
-  "To test this system, we\'ll need to have loaded NST, and we\'ll need to have
-loaded and tested the systems actually holding our unit tests.  There may be
-other contributors to the to-do list, so we include those tasks via
-\(call-next-method\)."
-  `((asdf:load-op :nst)
-    ,@(loop for sub in (nst-systems sys)
-            collect `(asdf:load-op ,sub))
-    ,@(call-next-method)))
-
 (defmethod all-nst-tested ((nst-test-runner nst-test-runner)
                            &optional
                            (all-packages (make-hash-table :test 'eq))

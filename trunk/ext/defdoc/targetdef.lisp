@@ -7,8 +7,7 @@
 (defclass standard-doc-target ()
      ((name :initarg :name :accessor name)
       (docstring-installer :initarg :docstring-installer
-                           :accessor docstring-installer))
-  (:documentation "The information we store about each target type."))
+                           :accessor docstring-installer)))
 
 (defvar +doc-target-types+ (make-hash-table :test 'eq)
   "Master global hashtable of all documentation target specifiers.")

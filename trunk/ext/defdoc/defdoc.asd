@@ -67,9 +67,11 @@
                  ;; Standard document element definition.
                  (:file "elements" :depends-on ("elementdef" "package"))
 
-;;; Add tags back in later (tag.lisp copied in)
-                 ;; Standard comment formats.
-                 (:file "tag"  :depends-on ("package"))
+                 ;; First cut at a tagging scheme.  Will be replaced
+                 ;; by the labels/values scheme below.
+                 (:file "tag" :depends-on ("package"))
+
+                 ;; (:file "values" :depends-on ("package"))
 
                  ;; The main defdoc macro.
                  (:file "macro"  :depends-on ("spec"
@@ -101,8 +103,7 @@
 
                  ;; Documentation in def-doc of def-doc.
                  (:file "coredoc"  :depends-on ("globals"
-                                                "macro"
-                                                "storage" "targetdef"
+                                                "macro" "storage" "targetdef"
                                                 "spec" "elementdef" "elements"
                                                 "tag" "macro" "callspec" "block"
                                                 "plaintext" "latex"))
