@@ -21,6 +21,7 @@
 (in-package :sift.asdf-nst)
 
 
+
 (defclass nst-test-runner (system)
      ((nst-systems :initarg :nst-systems
                    :reader nst-systems
@@ -65,11 +66,25 @@
 loaded and tested the systems actually holding our unit tests.  There may be
 other contributors to the to-do list, so we include those tasks via
 \(call-next-method\)."
-  `((asdf:load-op ,sys)
+  `((asdf:load-op ,sys)                 ;note that ASDF 2 will make this a
+                                        ;standard dependency.  But it's not a
+                                        ;big deal to have an
+                                        ;extra... [2010/10/25:rpg]
     (asdf:load-op :nst)
     ,@(loop for sub in (nst-systems sys)
             append `((asdf:load-op ,sub)
                      (asdf:test-op ,sub)))
+    ,@(call-next-method)))
+
+(defmethod asdf::component-depends-on :around ((op load-op)
+                                               (sys nst-test-runner))
+  "To test this system, we\'ll need to have loaded NST, and we\'ll need to have
+loaded and tested the systems actually holding our unit tests.  There may be
+other contributors to the to-do list, so we include those tasks via
+\(call-next-method\)."
+  `((asdf:load-op :nst)
+    ,@(loop for sub in (nst-systems sys)
+            collect `(asdf:load-op ,sub))
     ,@(call-next-method)))
 
 (defmethod all-nst-tested ((nst-test-runner nst-test-runner)
