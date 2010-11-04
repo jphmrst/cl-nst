@@ -63,9 +63,30 @@
 
   (:documentation "Class of ASDF systems that use NST for their test-op."))
 
+(defmethod all-nst-testers ((sys nst-test-holder))
+  (multiple-value-bind (packages groups tests) (call-next-method)
+    (let ((local-packages (if (nst-package sys)
+                              (list (nst-package sys))
+                              (nst-packages sys)))
+           (local-groups (if (nst-group sys)
+                             (list (nst-group sys))
+                             (nst-groups sys)))
+           (local-tests (if (nst-test sys)
+                            (list (nst-test sys))
+                            (nst-tests sys))))
+      (values (append packages local-packages)
+              (append groups local-groups)
+              (append tests local-tests)))))
+
+(defun report-system (system &optional (stream nil stream-supp-t))
+  (multiple-value-bind (packages groups tests) (all-nst-testers system)
+    (apply (symbol-function (intern '#:report-multiple
+                                    (find-package '#:nst-control-api)))
+           packages groups tests
+           (when stream-supp-t `(:stream ,stream)))))
+
 (defclass nst-testable (nst-test-holder) ()
   (:documentation "The once-and-future actual class."))
-
 
 (defmethod asdf::component-depends-on :around ((op compile-op)
                                                (sys nst-test-holder))
