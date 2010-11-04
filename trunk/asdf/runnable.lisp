@@ -60,6 +60,28 @@
 
   (:documentation "Class of ASDF systems that use NST for their test-op."))
 
+(defgeneric all-nst-testers (system)
+  (:documentation "Returns three values:
+1.  A set of PACKAGES,
+2.  A set of NST GROUP NAMES
+3.  A set of NST TEST specifiers (pairs)
+that should be tested while testing SYSTEM.")
+  (:method ((sym symbol))
+     (let ((system (asdf:find-system sym)))
+       (cond
+        (system (get-test-artifacts system))
+        (t (error "NST subsystem ~a not found" sym)))))
+
+  (:method ((s nst-test-runner))
+     (loop for subsystem in (nst-systems s)
+           for (this-packages this-groups this-tests)
+             = (multiple-value-list (get-test-artifacts subsystem))
+           append this-packages into packages
+           append this-groups into groups
+           append this-tests into tests
+           finally (return-from all-nst-testers
+                     (values packages groups tests)))))
+
 (defmethod asdf::component-depends-on :around ((op test-op)
                                                (sys nst-test-runner))
   "To test this system, we\'ll need to have loaded NST, and we\'ll need to have

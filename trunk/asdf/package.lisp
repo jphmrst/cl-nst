@@ -23,7 +23,8 @@
 (defpackage :sift.asdf-nst
     (:documentation "Unit and regression testing for Common Lisp")
     (:nicknames :asdf-nst)
-    (:use :common-lisp :asdf))
+    (:use :common-lisp :asdf)
+    (:export #:report-system))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (import '(asdf::nst-test-holder) (find-package :sift.asdf-nst))
