@@ -265,6 +265,7 @@ to each test.  Groups can be associated with fixture sets, stateful initiatizati
                    (:key-head :finish (:seq FORM))
                    (:key-head :each-setup (:seq FORM))
                    (:key-head :each-cleanup (:seq FORM))
+                   (:key-head :include-groups (:seq GROUP))
                    (:key-head :documentation STRING)
                    (:seq TEST)))
   (:params (group-name "Name of the test group being defined")
@@ -276,4 +277,5 @@ to each test.  Groups can be associated with fixture sets, stateful initiatizati
            (finish (:latex "These forms are run once, after all of the individual tests, and after the scope of the bindings to fixture names.\\index{cleanup@\\texttt{:cleanup}}"))
            (each-setup (:latex "These forms are run before each individual test.\\index{setup@\\texttt{:setup}}"))
            (each-cleanup (:latex "These forms are run after each individual test.\\index{cleanup@\\texttt{:cleanup}}"))
+           (include-group (:latex "The test groups named in this form will be run (respectively reported) anytime this group is run (reported)."))
            (documentation "Docstring for the class.")))
