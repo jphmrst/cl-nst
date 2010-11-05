@@ -103,6 +103,23 @@
   (def-test tN2 (:eq 'asdfg) d))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Testing include-groups
+
+(def-test-group base-include ()
+  (:include-groups included-1 included-2)
+  (def-test inc1 (:each (:symbol a)) '(a a a a a))
+  (def-test inc2 (:seq (:symbol a) (:eql 2) (:eq 'b)) '(a 2 b)))
+
+(def-test-group included-1 ()
+  (def-test inc1-1 (:each (:symbol a)) '(a a a a a))
+  (def-test inc1-2 (:seq (:symbol a) (:eql 2) (:eq 'b)) '(a 2 b)))
+
+(def-test-group included-2 ()
+  (def-test inc2-1 (:each (:symbol a)) '(a a a a a))
+  (def-test inc2-2 (:seq (:symbol a) (:eql 2) (:eq 'b)) '(a 2 b)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Testing export of names.
 
 (in-package :mnst-src-1)
