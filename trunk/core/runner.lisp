@@ -50,23 +50,33 @@ REPL macros require the dynamic configuration provided by those wrappers."
       (t
        (error 'no-nst-groups-in-package :package package-or-name)))))
 
+(defvar *implicit-group-choice* nil)
 (defun run-group (group-class)
   "Run a group by its user-given name.    Note that this is /not/ an
 interactive function --- certain behaviors provided by e.g. the ASDF extension
 or REPL macros require the dynamic configuration provided by those wrappers."
   ;; Print a message at the appropriate level of verbosity.
-  (format-at-verbosity 0 "Running group ~s~%" group-class)
 
   (unless group-class (error 'no-such-nst-group :group group-class))
   (run-group-inst (make-instance group-class)))
 
 (defun run-group-inst (group-inst)
-  (format-at-verbosity 4 "Called (run-group-inst ~s)~%" group-inst)
+  (cond
+    (*implicit-group-choice*
+     (format-at-verbosity 1 "Also running included group ~s~%"
+       (group-name group-inst)))
+    (t (format-at-verbosity 0 "Running group ~s~%"
+         (group-name group-inst))))
   (let ((test-lookups (test-name-lookup group-inst)))
-    (note-artifact-choice (group-name group-inst) group-inst)
+    (unless *implicit-group-choice*
+      (note-artifact-choice (group-name group-inst) group-inst))
     (run-group-tests group-inst
                      (loop for test-name in (test-names group-inst)
-                         collect (gethash test-name test-lookups)))))
+                         collect (gethash test-name test-lookups))))
+  (let ((*implicit-group-choice* t))
+    (declare (special *implicit-group-choice*))
+    (loop for included-group in (group-include-groups group-inst) do
+      (run-group included-group))))
 
 (defun run-test-inst (test-inst)
   (format-at-verbosity 4 "Called (run-test-inst ~s)~%" test-inst)

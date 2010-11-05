@@ -38,7 +38,8 @@
         (finish nil) (finish-supp-p nil)
         (each-setup nil) (each-setup-supp-p nil)
         (each-cleanup nil) (each-cleanup-supp-p nil)
-        (docstring nil) (docstring-supp-p nil))
+        (docstring nil) (docstring-supp-p nil)
+        (include-groups nil))
     (loop for form in forms do
       (case (car form)
         (:setup (setf setup (cdr form) setup-supp-p t))
@@ -53,6 +54,7 @@
          (setf finish (cdr form)  finish-supp-p t))
         (:startup (setf startup (cdr form) startup-supp-p t))
         (:finish  (setf finish (cdr form)  finish-supp-p t))
+        (:include-groups (setf include-groups (cdr form)))
         (:each-setup   (setf each-setup (cdr form)   each-setup-supp-p t))
         (:each-cleanup (setf each-cleanup (cdr form) each-cleanup-supp-p t))
         (:documentation (setf docstring (cadr form) docstring-supp-p t))
@@ -61,7 +63,8 @@
             setup setup-supp-p      cleanup cleanup-supp-p
             startup startup-supp-p  finish finish-supp-p
             each-setup each-setup-supp-p each-cleanup each-cleanup-supp-p
-            docstring docstring-supp-p)))
+            docstring docstring-supp-p
+            include-groups)))
 
 (defclass nst-group-record ()
   ((%group-name :reader group-name :initarg :group-name)
@@ -75,7 +78,8 @@
    (%withfixtures-setup-thunk :reader group-withfixtures-setup-thunk)
    (%withfixtures-cleanup-thunk :reader group-withfixtures-cleanup-thunk)
    (%eachtest-setup-thunk :reader group-eachtest-setup-thunk)
-   (%eachtest-cleanup-thunk :reader group-eachtest-cleanup-thunk))
+   (%eachtest-cleanup-thunk :reader group-eachtest-cleanup-thunk)
+   (%include-groups :reader group-include-groups))
   (:documentation "Superclass of NST group definitions."))
 
 (defmethod test-names ((group nst-group-record))
@@ -113,7 +117,8 @@
                                       fixtures-cleanup fixtures-cleanup-supp-p
                                       each-setup each-setup-supp-p
                                       each-cleanup each-cleanup-supp-p
-                                      docstring docstring-supp-p)
+                                      docstring docstring-supp-p
+                                      include-groups)
         (separate-group-subforms forms)
 
       ;; Get the package where the public group name symbol lives.
@@ -227,7 +232,8 @@
                                    `#'(lambda ()
                                         (declare (special ,@fixture-names))
                                         ,@each-cleanup))
-                                  (t `#'no-effect))))
+                                  (t `#'no-effect)))
+                     (set-slot '%include-groups ',include-groups))
 
                    ;; Record name usage.
                    (record-name-use :group ',group-name

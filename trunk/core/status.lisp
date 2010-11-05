@@ -222,6 +222,8 @@
         (multiple-value-bind (code total passed erred failed warned)
             (result-summary gr)
           (declare (ignorable erred failed warned))
+          (when (group-record-p name)
+            (setf name (group-name name)))
           (let ((tests
                  (loop for check being the hash-keys of checks collect check))
                 (*nst-group-shown* t))
@@ -641,6 +643,13 @@ six-value summary of the results:
     (gethash (check-group-name test-inst) +results-record+)))
 
 (defun multiple-report (packages groups tests &key system)
+  (let ((group-source (copy-seq groups)))
+    (setf groups nil)
+    (loop while group-source do
+      (let ((g (pop group-source)))
+        (push g groups)
+        (loop for add in (group-include-groups g) do
+          (push (make-instance add) group-source)))))
   (let* ((package-reports (loop for p in packages collect (package-report p)))
          (group-reports (loop for g in groups collect (group-report g)))
          (test-reports

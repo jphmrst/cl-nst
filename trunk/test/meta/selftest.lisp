@@ -210,3 +210,14 @@
       (:progn (setf nst-meta-sources-1::*test-exec-counter* 0)
               (--nst-group nst-meta-sources-1::counter-tests
                 (:true-form (eql nst-meta-sources-1::*test-exec-counter* 1))))))
+
+(def-test-group group-includes-tests ()
+  (:documentation "These tests validate the :include-groups feature."))
+(def-test (group-includes-1 :group group-includes-tests)
+    (--nst-group mnst-src::base-include
+      (---test-passes mnst-src::base-include mnst-src::inc1)
+      (---test-passes mnst-src::base-include mnst-src::inc2)
+      (---test-passes mnst-src::included-1 mnst-src::inc1-1)
+      (---test-passes mnst-src::included-1 mnst-src::inc1-2)
+      (---test-passes mnst-src::included-2 mnst-src::inc2-1)
+      (---test-passes mnst-src::included-2 mnst-src::inc2-2)))

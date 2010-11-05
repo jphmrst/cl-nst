@@ -218,3 +218,12 @@
 
 (def-test (given3 :group test-adder) (:predicate numberp) 3)
 (def-test (given4 :group test-adder) (:proj (0 2) :forms-eq) 'a 3 (car '(a b)))
+
+(def-test-group includer ()
+  (:include-groups included)
+  (def-test ib1 (:each (:symbol a)) '(a a a a a))
+  (def-test ib2 (:seq (:symbol a) (:eql 2) (:eq 'b)) '(a 2 b)))
+
+(def-test-group included ()
+  (def-test ig1 (:each (:symbol a)) '(a a a a a))
+  (def-test ig2 (:seq (:symbol a) (:eql 2) (:eq 'b)) '(a 2 b)))
