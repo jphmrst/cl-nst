@@ -80,7 +80,7 @@
 
 (defun report-system (system &optional (stream nil stream-supp-t))
   (multiple-value-bind (packages groups tests) (all-nst-testers system)
-    (apply (symbol-function (intern '#:report-multiple
+    (apply (symbol-function (intern (symbol-name '#:report-multiple)
                                     (find-package '#:nst-control-api)))
            packages groups tests
            (when stream-supp-t `(:stream ,stream)))))
