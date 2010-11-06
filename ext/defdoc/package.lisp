@@ -33,9 +33,11 @@
 
              ;; storage.lisp
              #:get-doc-spec
+             #:get-doc-specs
 
              ;; targetdef.lisp
              #:standard-doc-target
+             #:get-target-type-docspecs
              #:get-doc-target-types
              #:get-target-types
              #:def-target-type
@@ -46,6 +48,8 @@
              #:docspec-self
              #:docspec-target-type
              #:docspec-tags
+             #:set-docspec-property
+             #:get-docspec-property
              #:standard-doc-spec
              #:docspec-descriptive
              #:docspec-intro
@@ -105,6 +109,8 @@
              #:callspec-to-lines
              #:callspec-item-to-lines
              #:output-lines
+             #:callspec-prefix
+             #:callspec-suffix
 
              ;; latex.lisp
              #:*defdoc-latex-default-directory*

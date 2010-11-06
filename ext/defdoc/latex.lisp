@@ -121,8 +121,11 @@
     (when callspec
       (princ " \\begin{verbatim}" stream)
       (loop for (cs . others) on callspec do
-        (loop for line in (callspec-to-lines cs *latex-verbatim-width* self) do
-          (format stream "  ~a~%" line))
+        (loop for line
+              in (callspec-to-lines style target-type cs
+                          *latex-verbatim-width* self)
+              do
+           (format stream "  ~a~%" line))
         (when others (format stream "~%")))
       (princ "\\end{verbatim}" stream))
 

@@ -19,14 +19,15 @@
 (defun width (lines)
   (loop for line in lines maximizing (length line)))
 
-(defun flow (formatter artifacts max)
+(defun flow (formatter style target-type artifacts max)
   (let ((results nil))
     (loop while (and artifacts (null results)) do
-      (setf results (nreverse (funcall formatter (pop artifacts) max))))
+      (setf results (nreverse (funcall formatter style target-type
+                                       (pop artifacts) max))))
     (when artifacts
       (loop for art in artifacts do
         (let* ((last (pop results))
-               (full-block (funcall formatter art max))
+               (full-block (funcall formatter style target-type art max))
                (last-needs-length (+ 1 (length last)))
                (space-on-last (- max last-needs-length)))
           (when full-block
@@ -44,7 +45,8 @@
                 (loop for line in full-block do (push line results)))
 
                (t
-                (let* ((short-block (funcall formatter art space-on-last))
+                (let* ((short-block (funcall formatter style target-type
+                                             art space-on-last))
                        (short-width (width short-block))
                        (short-height (length short-block)))
                   (cond

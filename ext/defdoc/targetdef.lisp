@@ -12,6 +12,11 @@
 (defvar +doc-target-types+ (make-hash-table :test 'eq)
   "Master global hashtable of all documentation target specifiers.")
 
+(defun get-target-type-docspecs (sym)
+  (when (gethash sym +defdocs+)
+    (loop for spec being the hash-values of (gethash sym +defdocs+)
+          collect spec)))
+
 (defun get-doc-target-types (&optional (sym nil sym-supp-p))
   (cond
    (sym-supp-p

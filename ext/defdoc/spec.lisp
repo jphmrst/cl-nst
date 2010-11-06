@@ -9,7 +9,15 @@
 (defclass doc-spec ()
      ((self :initarg :self :reader docspec-self)
       (target-type :initarg :target-type :reader docspec-target-type)
-      (tags :initarg :tags :accessor docspec-tags)))
+      (tags :initarg :tags :accessor docspec-tags)
+      (properties :initform (make-hash-table :test 'eq)
+                  :reader docspec-properties)))
+
+(defun get-docspec-property (spec name)
+  (gethash name (docspec-properties spec)))
+
+(defun set-docspec-property (spec name value)
+  (gethash name (docspec-properties spec) value))
 
 (defclass standard-doc-spec (doc-spec)
      ((descriptive :initarg :descriptive :accessor docspec-descriptive)
@@ -102,6 +110,8 @@
                             (mapcar #'(lambda (x)
                                         (get-compiled-callspec package spec x))
                                     form-args)))
+         ((:properties) (loop for (name value) in form-args do
+                          (set-docspec-property spec name value)))
          (otherwise
           (error "Unrecognized form (~s~{ ~s~}) in docspec body for ~s"
                  form-head form-args target-name))))))
