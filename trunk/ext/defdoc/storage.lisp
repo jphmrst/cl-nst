@@ -13,6 +13,11 @@
   (let ((type-hash (get-doc-hash-of-target-type type)))
     (gethash name type-hash)))
 
+(defun get-doc-specs (name)
+  (loop for hash being the hash-values of +defdocs+
+        for spec = (gethash name hash)
+        if spec collect spec))
+
 (define-setf-expander get-doc-spec (name type)
   (let ((store (gensym))
         (type-hash (gensym)))

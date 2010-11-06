@@ -18,11 +18,11 @@
   (:groups fixtures groups tests criteria)
 
   ;; Where the contents come from.  These are disjunctive; could
-  ;; specify conjunctions one level in as:
+  ;; specify conjunctions one level.
   ;;
-  (:with-sets manual-criteria)
+  (:with-sets manual-criteria) ; This one NOT covered by select-docspecs
   (:exported-symbols package)
-                                        ; (:target-type (function :package :nst))
+                                        ; (:target-type (function (:package :nst)))
                                         ; (:documented-symbols package)
                                         ; (:all-symbols package)
                                         ; (:target-type criterion)
