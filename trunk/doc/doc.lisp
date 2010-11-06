@@ -33,7 +33,7 @@
                   (format t "Writing ~a ~a for manual...~%" type name))
         :directory gen-dir
         :style 'nst-item-style
-        :include-doctypes '(nst::criterion)
+        :include-doctypes '(nst::criterion nst::command)
         :package-style 'nst-package-list-latex-style)
     (defdoc:write-package-specs-latex :nst
         :echo #'(lambda (&key name type)
@@ -120,6 +120,27 @@
                      (symbol-name (type-of style)) ".tex")))
 
 ;;; --------------------------------------------------
+;;; Formatting callspecs of NST interactive commands
+
+(defmethod defdoc:callspec-prefix (style (target-type (eql 'nst::command))
+                                         spec width (calling string))
+  (declare (ignore style spec width))
+  (cond
+   ((< 0 (length calling))
+    (concatenate 'string ":nst " calling " "))
+   (t calling)))
+
+(defmethod defdoc:callspec-prefix (style (target-type (eql 'nst::command))
+                                         spec width (calling null))
+  (declare (ignore style spec width))
+  ":nst")
+
+(defmethod defdoc:callspec-suffix (style (target-type (eql 'nst::command))
+                                         spec width calling)
+  (declare (ignore style spec width calling))
+  "")
+
+;;; --------------------------------------------------
 ;;; Style for the manual.
 
 (defclass nst-item-style (defdoc:latex-style) ())
@@ -202,7 +223,8 @@
       (princ " \\begin{verbatim}" stream)
       (loop for (cs . others) on callspec do
         (loop for line
-              in (defdoc:callspec-to-lines cs defdoc:*latex-verbatim-width* self)
+              in (defdoc:callspec-to-lines style target-type cs
+                        defdoc:*latex-verbatim-width* self)
               do
            (format stream "  ~a~%" line))
         (when others (format stream "~%")))

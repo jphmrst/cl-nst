@@ -23,7 +23,13 @@
 ;;; This file defines the interactive REPL commands.
 
 ;;; ----------------------------------------------------------------------
+;;; Documentation generator for interactive commands and session
+;;; flags.
 
+(defdoc:def-target-type command ())
+(defdoc:def-target-type switch ())
+
+;;; ----------------------------------------------------------------------
 ;;; Function version of the command-line interpreter.  The main logic
 ;;; is here; further below we define platform-specific command-line
 ;;; interfaces.
@@ -229,6 +235,10 @@ available from compile-time forward.")
              particular command.~%~%Without an explicit command, :nst repeats ~
              the last interesting command~%(currently, ~s~{ ~s~})"
     :nst *last-repl-call*))
+(def-documentation (command :help)
+  (:callspec ())
+  (:short "Print a list of commands.")
+  (:intro (:latex "The \\texttt{:help} command gives a complete inventory ofruntime system commands.")))
 
 (def-nst-interactive-command
     (:debug :short-help "Activate NST debugging."
@@ -240,6 +250,10 @@ available from compile-time forward.")
     (*nst-debug*  (format t "Deactivated NST debugging.~%"))
     (t            (format t "NST debugging is already deactivated.~%")))
   (setf *nst-debug* val))
+(def-documentation (command :debug)
+  (:callspec (bool))
+  (:short "Activate NST debugging")
+  (:intro (:latex "The \\texttt{:debug} command activates a system-configurable debugging mode for test operations.  The mode includes, but is not limited to, disabling error-catching over the orms under test.")))
 
 (def-nst-interactive-command
     (:open :short-help "Inject fixtures into the current name space."
@@ -249,6 +263,10 @@ available from compile-time forward.")
       (declare (special *open-via-repl*))
       (loop for fixture in fixtures do
         (open-fixture fixture))))
+(def-documentation (command :open)
+  (:callspec ((:seq fixture)))
+  (:short "Inject fixtures into the current name space.")
+  (:intro (:latex "The \\texttt{:open} command injects the binding given by the \\textt{fixture}s into the current package.")))
 
 (def-nst-interactive-command
     (:run-package :short-help "Run all NST tests stored in the given packages."
@@ -265,6 +283,10 @@ available from compile-time forward.")
             (run-package package) )
            (t (format t "No such package ~a~%" package))))
        (report-multiple (nreverse ran-packages) nil nil))))
+(def-documentation (command :run-package)
+  (:callspec ((:seq package)))
+  (:short "Run tests stored in groups in the given package.")
+  (:intro (:latex "The \\texttt{:run-package} command executes all tests associated with groups in the named packages, and reports the test results afterwards.")))
 
 (def-nst-interactive-command
     (:run-group :short-help "Run all NST tests in the given groups."
@@ -273,6 +295,10 @@ available from compile-time forward.")
   (apply-default-debug-options
    (loop for group in groups do (run-group group))
    (report-multiple nil groups nil)))
+(def-documentation (command :run-group)
+  (:callspec ((:seq group)))
+  (:short "Run tests stored in the given groups")
+  (:intro (:latex "The \\texttt{:run-group} command executes all tests associated with the name groups, and reports the test results afterwards. The group name should be package-qualified.")))
 
 (def-nst-interactive-command
     (:run-test :short-help "Run a single NST test."
@@ -281,6 +307,10 @@ available from compile-time forward.")
   (apply-default-debug-options
    (run-test group test)
    (report-multiple nil nil (list (cons group test)))))
+(def-documentation (command :run-test)
+  (:callspec (group test))
+  (:short "Run a single test.")
+  (:intro (:latex "The \\texttt{:run-test} command executes the given test.  Both the group and test name should be package-qualified.")))
 
 (def-nst-interactive-command
     (:run :short-help "Run NST packages, groups and tests."
@@ -328,6 +358,10 @@ available from compile-time forward.")
                   interp))))))))
      (when (or report-packages report-groups report-tests)
        (report-multiple report-packages report-groups report-tests)))))
+(def-documentation (command :run)
+  (:callspec (name))
+  (:short "Run a test, group or package.")
+  (:intro (:latex "The \\texttt{:run} command executes all tests in the named package, or in the named group, or runs the named test. It is not necessary to prefix the name with a package prefix.  The name does not need to be prefix-qualified, but if the name is ambiguous then \\texttt{:run} will simply report the possible interpretations.")))
 
 (def-nst-interactive-command
     (:report :short-help "Show a summary of test results."
@@ -341,6 +375,10 @@ The last form summarizes all interesting results."
                               (test nil test-supp-p))
              :repeatable nil)
   (report-summary group-or-package gp-supp-p test test-supp-p))
+(def-documentation (command :report)
+  (:callspec () (package) (group) (group test))
+  (:short "Summarize test, group or package results.")
+  (:intro (:latex "The \\texttt{:report} command summarizes successes, failures and errors in tests.  It reports either for the named artifact, or for all recently-run tests.")))
 
 (def-nst-interactive-command
     (:detail :short-help "Show detailed test results."
@@ -354,12 +392,20 @@ The last form shows all interesting results."
                               (test nil test-supp-p))
              :repeatable nil)
   (report-details group-or-package gp-supp-p test test-supp-p))
+(def-documentation (command :detail)
+  (:callspec () (package) (group) (group test))
+  (:short "Detail test, group or package results.")
+  (:intro (:latex "The \\texttt{:report} command gives detailed information about individual test results.")))
 
 (def-nst-interactive-command
     (:clear :short-help "Clear test results."
             :args ())
   (clrhash +results-record+)
   (format *standard-output* "Results cleared."))
+(def-documentation (command :clear)
+  (:callspec ())
+  (:short "Clear test results.")
+  (:intro (:latex "The \\texttt{:clear} command empties NST's store of test results.")))
 
 (def-nst-interactive-command
     (:set :short-help "Set or show an NST property."
@@ -372,6 +418,10 @@ The last form shows all interesting results."
     (cond
       (value-supp-p (set-nst-property name value))
       (t (show-nst-property name))))
+(def-documentation (command :set)
+  (:callspec () (package) (group) (group test))
+  (:short "Set or show a property value setting.")
+  (:intro (:latex "The \\texttt{:set} command assigns or displays the values of NST runtime switches.")))
 
 (def-nst-interactive-command
     (:undef :short-help "Un-define an NST group or test"
@@ -394,10 +444,18 @@ The last form shows all interesting results."
              ;; TO DO
              )
             (t (format t "No such group ~s.~%" group)))))))
+(def-documentation (command :undef)
+  (:callspec (group) (group test))
+  (:short "Erase the definition of an NST group or test.")
+  (:intro (:latex "The \\texttt{:undef} command retracts the definition of an NST group or test.")))
 
 (def-nst-interactive-command
     (:unset :short-help "Clear an NST property." :args (name))
     (set-nst-property name nil))
+(def-documentation (command :unset)
+  (:callspec (name))
+  (:short "Clear an NST runtime property value setting.")
+  (:intro (:latex "The \\texttt{:unset} command clears the values of NST runtime switches.")))
 
 (def-nst-interactive-command
     (:whatis :short-help "Query what NST artifacts a name denotes" :args (name))
@@ -408,11 +466,19 @@ The last form shows all interesting results."
         (t (format t "There are ~d uses of ~s:~%~{ - ~a~%~}"
              (length usage) name usage)))
       nil))
+(def-documentation (command :whatis)
+  (:callspec (name))
+  (:short "Describe how a name is used in NST artifacts.")
+  (:intro (:latex "The \\texttt{:whatis} command prints the uses to which a particular name has been applied in an NST session.")))
 
 (def-nst-interactive-command
     (:apply :short-help "Apply a criterion to forms"
             :args (criterion &rest forms))
     (format t "~w~%" (check-criterion-on-form criterion `(list ,@forms))))
+(def-documentation (command :apply)
+  (:callspec (name))
+  (:short "Apply a criterion to forms.")
+  (:intro (:latex "The \\texttt{:apply} command assesses whether a test criterion prints the uses to which a particular name has been applied in an NST session.")))
 
 (defun run-nst-command (&rest args)
   (cond
