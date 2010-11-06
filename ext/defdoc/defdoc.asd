@@ -52,6 +52,9 @@
                  ;; Storage for the actual documentation objects.
                  (:file "storage"  :depends-on ("package"))
 
+                 ;; Properties associated with labels.
+                 (:file "labels"  :depends-on ("package"))
+
                  ;; Declaring different documentation targets.
                  (:file "targetdef"  :depends-on ("package" "storage"))
 
@@ -70,6 +73,9 @@
                  ;; First cut at a tagging scheme.  Will be replaced
                  ;; by the labels/values scheme below.
                  (:file "tag" :depends-on ("package"))
+
+                 ;; Selecting a set of specs.
+                 (:file "select" :depends-on ("spec"))
 
                  ;; (:file "values" :depends-on ("package"))
 
