@@ -4,62 +4,73 @@ running tests, and debugging failing and erring tests.
 \input{../gen/nst-cmd_compiler-macro_nst-item-style} 
 For the sake of brevity we use this shorthand below.
 
-The \texttt{:help} command gives a complete inventory of runtime
-system commands:\index{help@\texttt{:help}}
-\begin{verbatim}
- :nst :help
- (nst-cmd :help)
-\end{verbatim}
+\input{../gen/help_command_nst-item-style}}
+%The \texttt{:help} command gives a complete inventory of runtime
+%system commands:\index{help@\texttt{:help}}
+%\begin{verbatim}
+% :nst :help
+% (nst-cmd :help)
+%\end{verbatim}
 
 There are a number of commands for running tests, but most of the time
 only one will be needed:
-\begin{itemize}
-\item\texttt{:nst :run {\itshape name}}\index{run@\texttt{:run}}
-  \par Run all tests in the named package, or in the named group, or
-  run the named test.  It is not necessary to prefix the name with a
-  package prefix.
-\end{itemize}
-When a name corresponds to several different types of entities, or to
-different entities in different packages, it is necessary to use a
-more specific instruction:
-\begin{itemize}
-\item\texttt{:nst :run-package {\itshape name} {\itshape name} \ldots\ {\itshape name}}\index{run-package@\texttt{:run-package}}
-  \par Run all tests defined in groups in the named packages.  If no
-  packages are given, then the current value of \texttt{*package*} is
-  used.
-\item\texttt{:nst :run-group {\itshape group-name}}\index{run-group@\texttt{:run-group}}
-  \par Run all tests in the given group.  Where appropriate, the name
-  should be package-prefixed.
-\item\texttt{:nst :run-test {\itshape group-name} {\itshape test-name}}\index{run-test@\texttt{:run-test}}
-  \par Run the named test.  Where appropriate, the names should be
-  package-prefixed.
-\end{itemize}
+\input{../gen/run_command_nst-item-style}}
+% \begin{itemize}
+% \item\texttt{:nst :run {\itshape name}}\index{run@\texttt{:run}}
+%   \par Run all tests in the named package, or in the named group, or
+%   run the named test.  It is not necessary to prefix the name with a
+%   package prefix.
+% \end{itemize}
+% When a name corresponds to several different types of entities, or to
+% different entities in different packages, it is necessary to use a
+% more specific instruction:
+\input{../gen/run-package_command_nst-item-style}}
+\input{../gen/run-group_command_nst-item-style}}
+\input{../gen/run-test_command_nst-item-style}}
+% \begin{itemize}
+% \item\texttt{:nst :run-package {\itshape name} {\itshape name} \ldots\ {\itshape name}}\index{run-package@\texttt{:run-package}}
+%   \par Run all tests defined in groups in the named packages.  If no
+%   packages are given, then the current value of \texttt{*package*} is
+%   used.
+% \item\texttt{:nst :run-group {\itshape group-name}}\index{run-group@\texttt{:run-group}}
+%   \par Run all tests in the given group.  Where appropriate, the name
+%   should be package-prefixed.
+% \item\texttt{:nst :run-test {\itshape group-name} {\itshape test-name}}\index{run-test@\texttt{:run-test}}
+%   \par Run the named test.  Where appropriate, the names should be
+%   package-prefixed.
+% \end{itemize}
+\par
 One further command for running a test is useful when writing and
 debugging the tests themselves:
-\begin{itemize}
-\item\texttt{:nst :apply {\itshape criterion} {\itshape form} {\itshape form} $\cdots$ {\itshape form}}\index{apply@\texttt{:apply}}
-  \par Test the {\itshape form}s against the given {\itshape
-    criterion}.  The test proceeds just as if the criterion and forms
-  were given in a \texttt{def-test} and that test run.  Of course, any
-  fixtures expected in one of the {\itshape form}s would not
-  necessarily be present in the runtime environment; fixtures may need
-  to be \texttt{open}ed.
-\end{itemize}
+\input{../gen/apply_command_nst-item-style}}
+% \begin{itemize}
+% \item\texttt{:nst :apply {\itshape criterion} {\itshape form} {\itshape form} $\cdots$ {\itshape form}}\index{apply@\texttt{:apply}}
+%   \par Test the {\itshape form}s against the given {\itshape
+%     criterion}.  The test proceeds just as if the criterion and forms
+%   were given in a \texttt{def-test} and that test run.  Of course, any
+%   fixtures expected in one of the {\itshape form}s would not
+%   necessarily be present in the runtime environment; fixtures may need
+%   to be \texttt{open}ed.
+% \end{itemize}
 
 There are two commands for (re)printing the results of tests:
 \begin{itemize}
-\item\texttt{:nst :report}\index{report@\texttt{:report}}
-\\ \texttt{:nst :report {\itshape package-name}}
-\\ \texttt{:nst :report {\itshape group-name}}
-\\ \texttt{:nst :report {\itshape group-name} {\itshape test-name}}
-\item\texttt{:nst :detail}\index{detail@\texttt{:detail}}
-\\ \texttt{:nst :detail {\itshape package-name}}
-\\ \texttt{:nst :detail {\itshape group-name}}
-\\ \texttt{:nst :detail {\itshape group-name} {\itshape test-name}}
+\item
+\input{../gen/report_command_nst-item-style}}
+% \texttt{:nst :report}\index{report@\texttt{:report}}
+% \\ \texttt{:nst :report {\itshape package-name}}
+% \\ \texttt{:nst :report {\itshape group-name}}
+% \\ \texttt{:nst :report {\itshape group-name} {\itshape test-name}}
+\item
+\input{../gen/detail_command_nst-item-style}}
+% \texttt{:nst :detail}\index{detail@\texttt{:detail}}
+% \\ \texttt{:nst :detail {\itshape package-name}}
+% \\ \texttt{:nst :detail {\itshape group-name}}
+% \\ \texttt{:nst :detail {\itshape group-name} {\itshape test-name}}
 \end{itemize}
-The \texttt{:report} command summarizes successes, failures and
-errors; the \texttt{:detail} command gives more detailed information
-about individual tests.
+% The \texttt{:report} command summarizes successes, failures and
+% errors; the \texttt{:detail} command gives more detailed information
+% about individual tests.
 
 The \texttt{:undef} command cancels the definition of a group or test:
 \begin{quotation}\noindent

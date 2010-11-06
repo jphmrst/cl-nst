@@ -279,3 +279,4 @@ to each test.  Groups can be associated with fixture sets, stateful initiatizati
            (each-cleanup (:latex "These forms are run after each individual test.\\index{cleanup@\\texttt{:cleanup}}"))
            (include-group (:latex "The test groups named in this form will be run (respectively reported) anytime this group is run (reported)."))
            (documentation "Docstring for the class.")))
+
