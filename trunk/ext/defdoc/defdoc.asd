@@ -89,6 +89,10 @@
                                               "targets" "targetdef"
                                               ))
 
+                 ;; Generic output framework specifications.
+                 (:file "output"  :depends-on ("package"
+                                               "labels" "targets" "elements"))
+
                  ;; Decoding the callspec forms.
                  (:file "callspec"  :depends-on ("package"
                                                  "macro"))
@@ -113,4 +117,16 @@
                                                 "spec" "elementdef" "elements"
                                                 "tag" "macro" "callspec" "block"
                                                 "plaintext" "latex"))
-                 ))
+
+                 ;; Programmatic API
+                 (:file "interfaces"  :depends-on ("storage"
+                                                   "targetdef"
+                                                   "spec"
+                                                   "elementdef"
+                                                   "elements"
+                                                   "labels"
+                                                   "tag"
+                                                   "callspec"
+                                                   "block"
+                                                   "plaintext"
+                                                   "latex"))))
