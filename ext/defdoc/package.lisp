@@ -28,101 +28,24 @@
              #:*latex-verbatim-width*
              ;; globals.lisp
 
-             ;; format.lisp
-             #:format-docspec-element
-
-             ;; storage.lisp
-             #:get-doc-spec
-             #:get-doc-specs
-
              ;; targetdef.lisp
-             #:standard-doc-target
-             #:get-target-type-docspecs
-             #:get-doc-target-types
-             #:get-target-types
              #:def-target-type
 
-             ;; spec.lisp
-             #:*spec-class*
-             #:doc-spec
-             #:docspec-self
-             #:docspec-target-type
-             #:docspec-tags
-             #:set-docspec-property
-             #:get-docspec-property
-             #:standard-doc-spec
-             #:docspec-descriptive
-             #:docspec-intro
-             #:docspec-short
-             #:docspec-full
-             #:docspec-params
-             #:docspec-callspecs
-             #:docspec-deprecated
-             #:with-unpacked-standard-spec
-
              ;; elementdef.lisp
-             #:*default-element-class*
-             #:standard-doc-element
              #:def-element
 
-             ;; elements.lisp
-             #:standard-plain-text
-             #:text-element-text
-             #:standard-latex
-             #:latex-element-latex
-             #:standard-paragraph-list
-             #:paragraphlist-element-items
-             #:standard-sequence
-             #:sequence-element-items
-             #:standard-code
-             #:code-element-string
-             #:standard-simple-list-environment
-             #:list-element-specs
-             #:list-element-options
-             #:list-element-env-tag
-             #:standard-itemize
-             #:standard-enumerate
+             ;; labels.lisp
+             #:def-property-label
 
              ;; tag.lisp
-             #:def-doc-tags
              #:def-doc-tag
 
              ;; macro.lisp
              #:def-documentation
 
-             ;; callspec.lisp
-             #:standard-callspec
-             #:callspec-sequence-of
-             #:callspec-optional
-             #:callspec-keyheaded
-             #:callspec-keyarg
-
-             ;; block.lisp
-             #:indent-by
-             #:bracket-with
-             #:width
-             #:flow
-
-             ;; plaintext.lisp
-             #:standard-docstring-style
-             #:format-docspec
-             #:callspec-to-lines
-             #:callspec-item-to-lines
-             #:output-lines
-             #:callspec-prefix
-             #:callspec-suffix
-
              ;; latex.lisp
              #:*defdoc-latex-default-directory*
              #:*latex-full-package-item-header-macro*
-             #:get-latex-output-file-name
-             #:latex-style
-             #:latex-style-adjust-spec-element
-             #:full-package-latex-style-mixin
-             #:package-list-overall-header
-             #:package-list-group-header
-             #:package-list-entry
-             #:package-list-latex-mixin
                                         ; Top-level LaTeX invocation.
              #:write-spec-latex
              #:write-doctype-latex

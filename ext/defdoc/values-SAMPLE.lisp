@@ -1,11 +1,11 @@
 (in-package :defdoc)
 
-(def-label nst-manual (spec package)
+(def-property-label nst-manual (spec package)
   (:sort nst-manual-section)
   (:default-subsort nst-manual-subsection)
   )
 
-(def-doc-output-set manual
+(def-output-framework manual
     ;; Set the style to be associated with this output set.
     ;;
     ;; (:style style-class)
@@ -22,14 +22,15 @@
   ;;
   (:with-sets manual-criteria) ; This one NOT covered by select-docspecs
   (:exported-symbols package)
-                                        ; (:target-type (function (:package :nst)))
+                                        ; (:target-type (function
+                                        ;                 (:package :nst)))
                                         ; (:documented-symbols package)
                                         ; (:all-symbols package)
                                         ; (:target-type criterion)
 
   )
 
-(def-doc-output-set manual-criteria
+(def-output-framework manual-criteria
   (:labels (nst-manual criteria))
 
   (:grouping-label nst-criteria-group)
