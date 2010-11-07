@@ -110,9 +110,9 @@
 ;;; --------------------------------------------------
 ;;; Style for criteria --- prob. deprecated
 
-(defclass nst-criterion-style (defdoc:latex-style
-                               defdoc:package-list-latex-mixin) ())
-(defmethod defdoc:get-latex-output-file-name ((style nst-criterion-style)
+(defclass nst-criterion-style (defdoc-control-api:latex-style
+                               defdoc-control-api:package-list-latex-mixin) ())
+(defmethod defdoc-control-api:get-latex-output-file-name ((style nst-criterion-style)
                                               usage name)
   (string-downcase (concatenate 'string
                      (symbol-name name) "_"
@@ -122,7 +122,7 @@
 ;;; --------------------------------------------------
 ;;; Formatting callspecs of NST interactive commands
 
-(defmethod defdoc:callspec-prefix (style (target-type (eql 'nst::command))
+(defmethod defdoc-control-api:callspec-prefix (style (target-type (eql 'nst::command))
                                          spec width (calling string))
   (declare (ignore style spec width))
   (cond
@@ -130,12 +130,12 @@
     (concatenate 'string ":nst " calling " "))
    (t calling)))
 
-(defmethod defdoc:callspec-prefix (style (target-type (eql 'nst::command))
+(defmethod defdoc-control-api:callspec-prefix (style (target-type (eql 'nst::command))
                                          spec width (calling null))
   (declare (ignore style spec width))
   ":nst")
 
-(defmethod defdoc:callspec-suffix (style (target-type (eql 'nst::command))
+(defmethod defdoc-control-api:callspec-suffix (style (target-type (eql 'nst::command))
                                          spec width calling)
   (declare (ignore style spec width calling))
   "")
@@ -143,50 +143,50 @@
 ;;; --------------------------------------------------
 ;;; Style for the manual.
 
-(defclass nst-item-style (defdoc:latex-style) ())
-(defmethod defdoc:get-latex-output-file-name ((style nst-item-style)
+(defclass nst-item-style (defdoc-control-api:latex-style) ())
+(defmethod defdoc-control-api:get-latex-output-file-name ((style nst-item-style)
                                               usage name)
   (string-downcase (concatenate 'string
                      (symbol-name name) "_"
                      (symbol-name usage) "_"
                      (symbol-name (type-of style)) ".tex")))
-(defmethod defdoc:latex-style-adjust-spec-element ((style nst-item-style)
+(defmethod defdoc-control-api:latex-style-adjust-spec-element ((style nst-item-style)
                                                    target-type spec
                                                    (element (eql :intro))
                                                    datum)
   (declare (ignore datum target-type))
-  (with-accessors ((self defdoc:docspec-self)) spec
-    (make-instance 'defdoc:standard-sequence
-      :elements (list (make-instance 'defdoc:standard-latex
+  (with-accessors ((self defdoc-control-api:docspec-self)) spec
+    (make-instance 'defdoc-control-api:standard-sequence
+      :elements (list (make-instance 'defdoc-control-api:standard-latex
                         :latex (format nil "\\label{~a:primary}" self))
                       (call-next-method)))))
-(defmethod defdoc:latex-style-adjust-spec-element ((style nst-item-style)
+(defmethod defdoc-control-api:latex-style-adjust-spec-element ((style nst-item-style)
                                                    target-type spec
                                                    (element (eql :short))
                                                    datum)
   (declare (ignore datum target-type))
-  (with-accessors ((self defdoc:docspec-self)) spec
-    (make-instance 'defdoc:standard-sequence
-      :elements (list (make-instance 'defdoc:standard-latex
+  (with-accessors ((self defdoc-control-api:docspec-self)) spec
+    (make-instance 'defdoc-control-api:standard-sequence
+      :elements (list (make-instance 'defdoc-control-api:standard-latex
                         :latex (format nil "\\label{~a:primary}" self))
                       (call-next-method)))))
 
-(defmethod format-docspec-element ((style nst-item-style)
+(defmethod defdoc-control-api:format-docspec-element ((style nst-item-style)
                                    (target-type (eql 'nst::criterion))
-                                   (spec defdoc:standard-doc-spec) stream)
-  (with-accessors ((self defdoc:docspec-self)) spec
+                                   (spec defdoc-control-api:standard-doc-spec) stream)
+  (with-accessors ((self defdoc-control-api:docspec-self)) spec
     (format stream "\\subsubsection{The \\texttt{~s} criterion}" self)
     (call-next-method)))
 
 ;;; --------------------------------------------------
 ;;; Style for the manual's package list.
 
-(defclass nst-package-list-latex-style (defdoc:package-list-latex-mixin
-                                        defdoc:latex-style) ())
-(defmethod defdoc:package-list-entry ((style nst-package-list-latex-style)
+(defclass nst-package-list-latex-style (defdoc-control-api:package-list-latex-mixin
+                                        defdoc-control-api:latex-style) ())
+(defmethod defdoc-control-api:package-list-entry ((style nst-package-list-latex-style)
                                       spec group entry stream)
      (declare (ignore spec group))
-     (let ((self (defdoc:docspec-self entry)))
+     (let ((self (defdoc-control-api:docspec-self entry)))
        (format stream
            "\\texttt{~a} --- \\S\\ref{~:*~a:primary}, p.\\,\\pageref{~:*~a:primary}.~%~%"
          self)))
@@ -194,18 +194,20 @@
 ;;; --------------------------------------------------
 ;;; Style for the quickref card.
 
-(defclass nst-quickref (defdoc:latex-style) ())
-(defmethod defdoc:get-latex-output-file-name ((style nst-quickref)
+(defclass nst-quickref (defdoc-control-api:latex-style) ())
+(defmethod defdoc-control-api:get-latex-output-file-name ((style nst-quickref)
                                               usage name)
   (string-downcase (concatenate 'string
                      (symbol-name name) "_"
                      (symbol-name usage) "_"
                      (symbol-name (type-of style)) ".tex")))
-(defmethod format-docspec-element ((style nst-quickref) target-type
-                                   (spec defdoc:standard-doc-spec) stream)
-  (defdoc:with-unpacked-standard-spec (self intro intro-supp-p params params-supp-p
-                                     short short-supp-p full full-supp-p
-                                     callspec) spec
+(defmethod defdoc-control-api:format-docspec-element
+    ((style nst-quickref) target-type
+     (spec defdoc-control-api:standard-doc-spec) stream)
+  (defdoc-control-api:with-unpacked-standard-spec
+      (self intro intro-supp-p params params-supp-p
+            short short-supp-p full full-supp-p
+            callspec) spec
     ;;(declare (ignore full full-supp-p))
     (cond
      (short-supp-p
@@ -222,20 +224,20 @@
     (when callspec
       (princ " \\begin{verbatim}" stream)
       (loop for (cs . others) on callspec do
-        (loop for line
-              in (defdoc:callspec-to-lines style target-type cs
-                        defdoc:*latex-verbatim-width* self)
-              do
-           (format stream "  ~a~%" line))
-        (when others (format stream "~%")))
+            (loop for line
+                in (defdoc-control-api:callspec-to-lines style target-type cs
+                                                         defdoc:*latex-verbatim-width* self)
+                do
+                  (format stream "  ~a~%" line))
+            (when others (format stream "~%")))
       (princ "\\end{verbatim}" stream))
 
     (when params-supp-p
       (princ "\\begin{description}" stream)
       (loop for (name subspec) in params do
-        (format stream "\\item[~a] " name)
-        (format-docspec stream style
-                        (latex-style-adjust-spec-element style target-type spec
-                              :subspec subspec)
-                        target-type))
+            (format stream "\\item[~a] " name)
+            (format-docspec stream style
+                            (latex-style-adjust-spec-element style target-type spec
+                                                             :subspec subspec)
+                            target-type))
       (princ "\\end{description}" stream))))
