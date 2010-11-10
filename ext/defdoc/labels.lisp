@@ -20,6 +20,28 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :defdoc)
 
+(defclass labeled ()
+     ((label-values :initform (make-hash-table :test 'eq)
+                  :reader label-values)))
+
+(defgeneric label-value (labeled name)
+  (:method ((labeled labeled) name)
+     (gethash name (label-values labeled))))
+
+(define-setf-expander label-value (labeled-object label-name)
+  (let ((store (gensym)))
+    (values nil
+            nil
+            `(,store)
+            `(setf (gethash ,label-name (label-values ,labeled-object)) ,store)
+            `(label-value ,labeled-object ,label-name))))
+
+(defgeneric set-label-value (labeled name value)
+  (:method ((labeled labeled) name value)
+     (setf (gethash name (label-values labeled)) value)))
+
+;;; -----------------------------------------------------------------
+
 (defvar +label-defs+ (make-hash-table :test 'eq))
 
 (defgeneric get-compiled-labeldef (package name options forms))
