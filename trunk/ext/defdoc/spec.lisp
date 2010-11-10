@@ -1,3 +1,23 @@
+;;; File spec.lisp
+;;;
+;;; This file is part of the DefDoc documentation support package.
+;;;
+;;; Copyright (c) 2010 Smart Information Flow Technologies.
+;;; Written by John Maraist.
+;;;
+;;; NST is free software: you can redistribute it and/or modify it
+;;; under the terms of the GNU Lesser General Public License as
+;;; published by the Free Software Foundation, either version 3 of the
+;;; License, or (at your option) any later version.
+;;;
+;;; NST is distributed in the hope that it will be useful, but WITHOUT
+;;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+;;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General
+;;; Public License for more details.
+;;;
+;;; You should have received a copy of the GNU Lesser General Public
+;;; License along with NST.  If not, see
+;;; <http://www.gnu.org/licenses/>.
 (in-package :defdoc)
 
 (defvar *spec-class* 'standard-doc-spec)
@@ -6,18 +26,13 @@
      (declare (ignore package name forms))
      *spec-class*))
 
-(defclass doc-spec ()
+(defclass doc-spec (labeled)
      ((self :initarg :self :reader docspec-self)
       (target-type :initarg :target-type :reader docspec-target-type)
-      (tags :initarg :tags :accessor docspec-tags)
-      (properties :initform (make-hash-table :test 'eq)
-                  :reader docspec-properties)))
+      (tags :initarg :tags :accessor docspec-tags)))
 
-(defun get-docspec-property (spec name)
-  (gethash name (docspec-properties spec)))
-
-(defun set-docspec-property (spec name value)
-  (gethash name (docspec-properties spec) value))
+(defmethod format-doc (stream style (spec doc-spec))
+  (format-docspec stream style spec (docspec-target-type spec)))
 
 (defclass standard-doc-spec (doc-spec)
      ((descriptive :initarg :descriptive :accessor docspec-descriptive)
@@ -62,6 +77,18 @@
   #'(lambda (stream spec)
       (pprint-logical-block (stream '(1))
         (format stream "[ standard-doc-spec")
+        (let ((props (label-values spec)))
+          (when (< 0 (hash-table-count props))
+            (format stream "~:@_  - properties:~:@_    ")
+            (pprint-logical-block (stream
+                                   (loop for label being the hash-keys of props
+                                         collect label))
+              (loop for label = (pprint-pop)
+                    for value = (gethash label props)
+                    do
+                 (format stream "~s ~s" label value)
+                 (pprint-exit-if-list-exhausted)
+                 (pprint-newline :mandatory)))))
         (loop for slot in '(tags
                             target-type self descriptive intro short full
                             params callspecs deprecated)
@@ -111,7 +138,7 @@
                                         (get-compiled-callspec package spec x))
                                     form-args)))
          ((:properties) (loop for (name value) in form-args do
-                          (set-docspec-property spec name value)))
+                          (setf (label-value spec name) value)))
          (otherwise
           (error "Unrecognized form (~s~{ ~s~}) in docspec body for ~s"
                  form-head form-args target-name))))))

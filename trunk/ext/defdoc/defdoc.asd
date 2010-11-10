@@ -1,6 +1,6 @@
 ;;; File defdoc.asd
 ;;;
-;;; This file is part of the NST unit/regression testing system.
+;;; This file is part of the DefDoc documentation support package.
 ;;;
 ;;; Copyright (c) 2010 Smart Information Flow Technologies.
 ;;; Written by John Maraist.
@@ -49,8 +49,11 @@
                  ;; Global settings
                  (:file "globals"  :depends-on ("package"))
 
+                 ;; Collectable objects with properties.
+                 (:file "collect"  :depends-on ("package"))
+
                  ;; Storage for the actual documentation objects.
-                 (:file "storage"  :depends-on ("package"))
+                 (:file "storage"  :depends-on ("globals" "collect"))
 
                  ;; Properties associated with labels.
                  (:file "labels"  :depends-on ("package"))
@@ -91,7 +94,8 @@
 
                  ;; Generic output framework specifications.
                  (:file "output"  :depends-on ("package"
-                                               "labels" "targets" "elements"))
+                                               "labels" "targets" "elements"
+                                               "collect"))
 
                  ;; Decoding the callspec forms.
                  (:file "callspec"  :depends-on ("package"

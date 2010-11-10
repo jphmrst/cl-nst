@@ -12,7 +12,7 @@
 
     ;; Labels and values of this set.
     ;;
-    ;; (:labels (nst-volume 1))
+    ;; (:property-values (nst-volume 1))
 
   (:grouping-label nst-manual)
   (:groups fixtures groups tests criteria)
@@ -31,7 +31,7 @@
   )
 
 (def-output-framework manual-criteria
-  (:labels (nst-manual criteria))
+  (:property-values (nst-manual criteria))
 
   (:grouping-label nst-criteria-group)
   (:groups )
@@ -40,8 +40,8 @@
   )
 
 (def-documentation (function blah)
-    (:labels (nst-manual fixtures)
-             (nst-manual-section 0)
-             (nst-quickref user-macros)
-             (nst-quickref-section 2)))
+    (:properties (nst-manual fixtures)
+                 (nst-manual-section 0)
+                 (nst-quickref user-macros)
+                 (nst-quickref-section 2)))
 

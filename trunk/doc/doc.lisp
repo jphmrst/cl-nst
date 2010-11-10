@@ -1,4 +1,4 @@
-;;; File package.lisp
+;;; File doc.lisp
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
@@ -241,3 +241,53 @@
                                                              :subspec subspec)
                             target-type))
       (princ "\\end{description}" stream))))
+
+;;; -----------------------------------------------------------------
+;;; Starting to debug/use output document specs.
+
+(defdoc:def-output-framework package-api
+    ;; Set the style to be associated with this output set.
+    ;;
+    ;; (:style style-class)
+
+  (:exported-symbols :nst :nst-control-api)
+  (:grouping-label nst::api-summary)
+
+  ;; Where the contents come from.  These are disjunctive; could
+  ;; specify conjunctions one level.
+  ;;
+
+;;;  ;; Labels and values of this set.
+;;;  (:property-values (nst-volume 1))
+;;;  (:with-sets nst::criterion)
+;;;  (:target-type (function (:package :nst)))
+;;;  (:documented-symbols package)
+;;;  (:all-symbols package)
+;;;  (:target-type criterion)
+
+  )
+
+(defdoc:def-output-framework the-manual
+    ;; Set the style to be associated with this output set.
+    ;;
+    ;; (:style style-class)
+
+  (:exported-symbols :nst)
+  (:target-type nst::criterion nst::command nst::switch)
+
+  (:grouping-label nst-manual)
+  (:groups fixtures groups tests criteria)
+
+  ;; Where the contents come from.  These are disjunctive; could
+  ;; specify conjunctions one level.
+  ;;
+
+;;;  ;; Labels and values of this set.
+;;;  (:property-values (nst-volume 1))
+;;;  (:with-sets nst::criterion)
+;;;  (:target-type (function (:package :nst)))
+;;;  (:documented-symbols package)
+;;;  (:all-symbols package)
+;;;  (:target-type criterion)
+
+  )

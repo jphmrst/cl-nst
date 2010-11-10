@@ -1,6 +1,6 @@
 ;;; File package.lisp
 ;;;
-;;; This file is part of the NST unit/regression testing system.
+;;; This file is part of the DefDoc documentation support package.
 ;;;
 ;;; Copyright (c) 2010 Smart Information Flow Technologies.
 ;;; Written by John Maraist.
@@ -42,6 +42,9 @@
 
              ;; macro.lisp
              #:def-documentation
+
+             ;; output.lisp
+             #:def-output-framework
 
              ;; latex.lisp
              #:*defdoc-latex-default-directory*

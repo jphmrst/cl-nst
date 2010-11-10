@@ -37,7 +37,8 @@
 (defvar *current-compound-structure-depth* 0)
 (defvar *max-compound-structure-depth* 4)
 (def-documentation (variable *max-compound-structure-depth*)
-    (:tags sample)
+  (:tags sample)
+  (:properties (api-summary sample))
     (:short (:latex "The \\texttt{*max-compound-structure-depth*} variable sets the maximum nesting depth of compound data structures: beyond that depth, \\texttt{scalar} rather than \\texttt{t} is the default element generator.  This restriction does not apply to explicitly specified element types, only to the use of defaults.")))
 
 (defmacro compound-structure (&body forms)
@@ -45,7 +46,8 @@
           (+ 1 *current-compound-structure-depth*)))
      ,@forms))
 (def-documentation (compiler-macro compound-structure)
-    (:tags sample)
+  (:tags sample)
+  (:properties (api-summary sample))
     (:short (:latex "The \\texttt{compound-structure} macro wraps substructure which should be considered compound for the limits set by \\texttt{*max-compound-structure-depth*}.")))
 
 (defgeneric arbitrary (typ)
@@ -54,7 +56,8 @@
   (:method (other)
      (arbitrary-by-spec other)))
 (def-documentation (function arbitrary)
-    (:tags sample)
+  (:tags sample)
+  (:properties (api-summary sample))
     (:intro (:latex "This function takes a single argument, which determines the type of the value to be generated.  For simple types, the name of the type (or the class object, such as returned by \\texttt{find-class}) by itself is a complete specification.  For more complicated types, \\texttt{arbitrary} can also take a list argument, where the first element gives the type and the remaining elements are keyword argument providing additional requirements for the generated value.")))
 
 
@@ -100,7 +103,8 @@
            `((setf (gethash ,type-spec +scalar-generable-types+) t)))
        (setf (gethash ,type-spec +arbitrary-generable-types+) t))))
 (def-documentation (compiler-macro def-arbitrary-instance-type)
-    (:tags sample)
+  (:tags sample)
+  (:properties (api-summary sample))
     (:intro (:latex "New type specifications for invariant-testing. are defined with the \\texttt{def-arbitrary-instance-type}\\indexLisp{def-arbitrary-instance-type} macro."))
   (:callspec ((spec-name &key (params formals) (scalar bool) (key key))
               &body (:seq form)))
