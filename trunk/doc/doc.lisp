@@ -33,7 +33,7 @@
                   (format t "Writing ~a ~a for manual...~%" type name))
         :directory gen-dir
         :style 'nst-item-style
-        :include-doctypes '(nst::criterion nst::command)
+        :include-doctypes '(nst::criterion nst::command nst::switch)
         :package-style 'nst-package-list-latex-style)
     (defdoc:write-package-specs-latex :nst
         :echo #'(lambda (&key name type)
@@ -107,7 +107,7 @@
           )
     (warn "Documentation building not fully implemented on this system" manual-dir)))
 
-;;; --------------------------------------------------
+;;; -----------------------------------------------------------------
 ;;; Style for criteria --- prob. deprecated
 
 (defclass nst-criterion-style (defdoc-control-api:latex-style
@@ -119,8 +119,16 @@
                      (symbol-name usage) "_"
                      (symbol-name (type-of style)) ".tex")))
 
-;;; --------------------------------------------------
-;;; Formatting callspecs of NST interactive commands
+;;; -----------------------------------------------------------------
+;;; Formatting callspecs of NST interactive commands and properties.
+
+(defmethod defdoc-control-api:callspec-prefix (style (target-type (eql 'nst::switch))
+                                         spec width (calling string))
+  (declare (ignore style spec width))
+  (cond
+   ((< 0 (length calling))
+    (concatenate 'string ":nst :set " calling " "))
+   (t calling)))
 
 (defmethod defdoc-control-api:callspec-prefix (style (target-type (eql 'nst::command))
                                          spec width (calling string))
@@ -136,6 +144,11 @@
   ":nst")
 
 (defmethod defdoc-control-api:callspec-suffix (style (target-type (eql 'nst::command))
+                                         spec width calling)
+  (declare (ignore style spec width calling))
+  "")
+
+(defmethod defdoc-control-api:callspec-suffix (style (target-type (eql 'nst::switch))
                                          spec width calling)
   (declare (ignore style spec width calling))
   "")
@@ -156,10 +169,14 @@
                                                    datum)
   (declare (ignore datum target-type))
   (with-accessors ((self defdoc-control-api:docspec-self)) spec
-    (make-instance 'defdoc-control-api:standard-sequence
-      :elements (list (make-instance 'defdoc-control-api:standard-latex
-                        :latex (format nil "\\label{~a:primary}" self))
-                      (call-next-method)))))
+    (cond
+      ((eq target-type 'nst::criterion)
+       (call-next-method))
+      (t
+       (make-instance 'defdoc-control-api:standard-sequence
+         :elements (list (make-instance 'defdoc-control-api:standard-latex
+                           :latex (format nil "\\label{~a:primary}" self))
+                         (call-next-method)))))))
 (defmethod defdoc-control-api:latex-style-adjust-spec-element ((style nst-item-style)
                                                    target-type spec
                                                    (element (eql :short))

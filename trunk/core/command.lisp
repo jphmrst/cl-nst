@@ -192,12 +192,25 @@ available from compile-time forward.")
        (push ,name +nst-repl-properties+))))
 
 (defun flag-filter (x) (if x t nil))
+
 (def-nst-property :debug-on-error *debug-on-error*
   :doc "When non-nil, break into the debugger when NST encounters an error."
   :filter flag-filter)
+(def-documentation (switch :debug-on-error)
+  (:callspec (flag))
+  (:intro (:latex "The \\texttt{:debug-on-error} switch controls NST's behavior on errors.  When non-nil, NST will break into the debugger when it encounters an error."))
+  (:full (:latex "The \\texttt{:debug} command is a short-cut for setting this property.\\index{debug@\\texttt{:debug}}")))
+
 (def-nst-property :debug-on-fail *debug-on-fail*
   :doc "When non-nil, break into the debugger when NST encounters an error."
   :filter flag-filter)
+(def-documentation (switch :debug-on-fail)
+  (:callspec (flag))
+  (:intro (:latex "The \\texttt{:debug-on-error} switch controls NST's behavior when a test fails  When non-nil, NST will break into the debugger when it encounters a failing test."))
+  (:full (:latex "This behavior is less useful than it may seem; by the time the results of the test are examined for failure, the stack from the actual form evaluation will usually have been released.  Still, this switch is useful for inspecting the environment in which a failing test was run.")
+         (:latex "Note that both \\texttt{:debug-on-error} and \\texttt{:debug-on-fail} apply in the case of an error; if the latter is set but the former is not, then the debugger will be entered after an erring test completes.")
+         (:latex "The \\texttt{:debug} command is a short-cut for setting this property.\\index{debug@\\texttt{:debug}}")))
+
 (def-nst-property :verbose *nst-verbosity*
   :doc "Valid settings: :silent (aka nil), :quiet (aka :default), :verbose, ~
         (aka t), :vverbose"
@@ -216,6 +229,11 @@ available from compile-time forward.")
                 ((eql x 2) :verbose)
                 ((eql x 3) :vverbose)
                 ((> x 3)   :trace))))
+(def-documentation (switch :verbose)
+  (:callspec (setting))
+  (:intro (:latex "The \\texttt{:verbosity} switch controls the level of NST's output."))
+  (:full (:latex "Valid settings are:\\begin{tightlist}\\item\\texttt{:silent} (aka \\texttt{nil})\\item\\texttt{:quiet} (aka \\texttt{:default})\\item\\texttt{:verbose} (aka \\texttt{t})\\item\\texttt{:vverbose}\\item\\texttt{:trace}\\end{tightlist}")
+         (:latex "The \\texttt{:report} and \\texttt{:detail} commands operate by setting minimum levels of verbosity.")))
 
 #+allegro
 (def-nst-property :backtraces *generate-backtraces*
@@ -223,6 +241,11 @@ available from compile-time forward.")
   "When non-nil, attempts to capture the Lisp backtrace of errors in tests."
   :filter   (lambda (x) (if x t nil))
   :unfilter (lambda (x) (if x t nil)))
+(def-documentation (switch :backtraces)
+  (:callspec (flag))
+  (:intro (:latex "The \\texttt{:backtraces} switch, when non-\\texttt{nil}, directs NST to attempt to capture the Lisp backtrace of errors in tests."))
+  (:full (:latex "This property is only available on platform which allow programmatic examination of backtraces, which is not standardized in Common Lisp; currently we have implemented this feature on Allegro only.")
+         (:latex "This property has a complicated default setting.  Firstly, if the symbol \\texttt{'common-lisp-user::*nst-generate-backtraces*} is bound when NST loads, NST will use its value as the initial value for this property.  Otherwise by default, on MacOS systems the property initializes to \\texttt{nil} because of a known error on that system, but this setting can be overriden by the property \\texttt{:nst-unsafe-allegro-backtraces}.  Finally, if none of these issues apply, the initial value is \\texttt t.")))
 
 (def-nst-interactive-command (:help :short-help "Print a list of commands."
                                     :long-help "Print this help message.")

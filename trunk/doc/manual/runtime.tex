@@ -92,48 +92,17 @@ configuration.
 There are currently three properties which can be manipulated by
 \texttt{:set}\,:
 \begin{itemize}
-\item\texttt{:verbose}\index{verbose@\texttt{:verbose}}~~ Controls the
-  level of output at various points of NST.  Valid settings are:
-  \begin{tightlist}
-  \item\texttt{:silent} (aka \texttt{nil})
-  \item\texttt{:quiet} (aka \texttt{:default})
-  \item\texttt{:verbose} (aka \texttt{t})
-  \item\texttt{:vverbose}
-  \end{tightlist}
-
-  The \texttt{:report} and \texttt{:detail} commands operate by
-  setting minimum levels of verbosity.
+\item\texttt{:verbose}\index{verbose@\texttt{:verbose}}~~
+  \input{../gen/verbose_switch_nst-item-style}
 
 \item\texttt{:debug-on-error}\index{debug-on-error@\texttt{:debug-on-error}}~~
-  When this property has a non-nil value, NST will exit into the
-  debugger when it catches an error.
+  \input{../gen/debug-on-error_switch_nst-item-style}
 
 \item\texttt{:debug-on-fail}\index{debug-on-fail@\texttt{:debug-on-fail}}~~
-  When this property has a non-nil value, NST will exit into the
-  debugger whenever a test fails.  This test is useful for inspecting
-  the environment in which a test is run.  Note that both
-  \texttt{:debug-on-error} and \texttt{:debug-on-fail} apply in the
-  case of an error; if the latter is set but the former is not, then
-  the debugger will be entered after an erring test completes.
-
-  The \texttt{:debug} command is a short-cut for setting this
-  two properties.\index{debug@\texttt{:debug}}
+  \input{../gen/debug-on-fail_switch_nst-item-style}
 
 \item\texttt{:backtraces}\index{backtraces@\texttt{:backtraces}}~~
-  When this property has a non-nil value, NST attempts to capture
-  attempts the Lisp backtrace when a test throws an error.  This
-  property is only available on platform which allow programmatic
-  examination of backtraces, which is not standardized in Common Lisp;
-  currently we have implemented this feature on Allegro only.
-
-  This property has a complicated default setting.  Firstly, if the
-  symbol \texttt{'common-lisp-user::*nst-generate-backtraces*} is
-  bound when NST loads, NST will use its value as the initial value
-  for this property.  Otherwise by default, on MacOS systems the
-  property initializes to \texttt{nil} because of a known error on
-  that system, but this setting can be overriden by the property
-  \texttt{:nst-unsafe-allegro-backtraces}.  Finally, if none of these
-  issues apply, the initial value is \texttt t.
+  \input{../gen/backtraces_switch_nst-item-style}
 \end{itemize}
 
 The above NST commands are governed by a number of global variables.
