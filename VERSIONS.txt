@@ -1,6 +1,10 @@
 
 3.0.1 - 
- 
+ Execution of one group can now be triggered by another group, as a 
+   (directed) hierarchy of groups.
+ Ticket 220: The new setup etc. hooks on fixtures were working only for
+   attachment to groups, not to tests.
+ Documentation and defdoc improvements.
 
 3.0.0 - public release, October 11, 2010
  This release was planned as 2.1.2, but contains enough extensions to
