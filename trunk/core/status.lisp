@@ -650,7 +650,7 @@ six-value summary of the results:
     (loop while group-source do
       (let ((g (pop group-source)))
         (push g groups)
-        (loop for add in (group-include-groups (make-instance g)) do
+        (loop for add in (group-include-groups g) do
           (push (make-instance add) group-source)))))
   (let* ((package-reports (loop for p in packages collect (package-report p)))
          (group-reports (loop for g in groups collect (group-report g)))
