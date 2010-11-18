@@ -113,7 +113,8 @@
                  ;; Converting specs to LaTeX.
                  (:file "latex"  :depends-on ("globals"
                                               "macro" "plaintext" "spec"
-                                              "elements" "callspec" "tag"))
+                                              "elements" "callspec" "tag"
+                                              "output"))
 
                  ;; Documentation in def-doc of def-doc.
                  (:file "coredoc"  :depends-on ("globals"
@@ -132,5 +133,6 @@
                                                    "tag"
                                                    "callspec"
                                                    "block"
+                                                   "output"
                                                    "plaintext"
                                                    "latex"))))

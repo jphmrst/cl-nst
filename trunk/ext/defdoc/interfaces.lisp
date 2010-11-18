@@ -29,9 +29,10 @@
 
 (def-bundle-package :defdoc-control-api
     ((:defdoc
-         ;; globals.lisp
-         #:format-docspec
-         #:format-docspec-element
+       ;; globals.lisp
+       #:format-docspec
+       #:format-docspec-element
+
 
        ;; storage.lisp
        #:get-doc-spec
@@ -48,11 +49,6 @@
        #:label-value
 
        ;; spec.lisp
-       #:*spec-class*
-       #:doc-spec
-       #:docspec-self
-       #:docspec-target-type
-       #:docspec-tags
        #:standard-doc-spec
        #:docspec-descriptive
        #:docspec-intro
@@ -62,10 +58,15 @@
        #:docspec-callspecs
        #:docspec-deprecated
        #:with-unpacked-standard-spec
+       #:*spec-class*
+       #:doc-spec
+       #:docspec-self
+       #:docspec-target-type
+       #:docspec-tags
 
        ;; elementdef.lisp
-       #:*default-element-class*
        #:standard-doc-element
+       #:*default-element-class*
 
        ;; elements.lisp
        #:standard-plain-text
@@ -95,11 +96,17 @@
        #:process-standard-labeldef-form
 
        ;; output.lisp
+       #:standard-output-framework
+       #:format-output-pregroup
+       #:format-output-prespec
+       #:format-output-postspec
+       #:format-output-spec-sep
+       #:format-output-postgroup
+       #:format-output-group-sep
        #:get-output-framework
        #:get-output-framework-class
        #:output-framework
        #:output-framework-name
-       #:standard-output-framework
        #:get-compiled-output-framework
        #:process-standard-output-framework-form
 
@@ -107,6 +114,11 @@
        #:get-doc-tags
 
        ;; callspec.lisp
+       #:standard-callspec
+       #:callspec-sequence-of
+       #:callspec-optional
+       #:callspec-keyheaded
+       #:callspec-keyarg
        #:standard-callspec
        #:callspec-sequence-of
        #:callspec-optional
@@ -126,14 +138,13 @@
        #:output-lines
        #:callspec-prefix
        #:callspec-suffix
+       #:standard-docstring-style
+       #:callspec-to-lines
+       #:callspec-item-to-lines
+       #:output-lines
+       #:callspec-prefix
+       #:callspec-suffix
 
        ;; latex.lisp
-       #:get-latex-output-file-name
-       #:latex-style
-       #:latex-style-adjust-spec-element
-       #:full-package-latex-style-mixin
-       #:package-list-overall-header
-       #:package-list-group-header
-       #:package-list-entry
-       #:package-list-latex-mixin))
+       #:latex-style))
   (:documentation "Programmatic control of document generation."))

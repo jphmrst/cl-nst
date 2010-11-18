@@ -34,3 +34,16 @@
      (format-docspec-element style type spec stream)))
 
 (defgeneric format-docspec-element (style target-type element stream))
+
+(define-condition option-without-required-option (warning)
+  ((given :initarg :given :reader given)
+   (missing :initarg :missing :reader missing)
+   (def-type :initarg :def-type :reader def-type)
+   (name :initarg :name :reader name))
+  (:report
+   (lambda (warning stream)
+     (with-accessors ((given given) (missing missing)
+                      (def-type def-type) (name name)) warning
+       (format stream
+           "Option ~s ~:_but ~:_not ~:_option ~:_~s ~:_given ~:_in ~:_~a ~s"
+         given missing def-type name)))))

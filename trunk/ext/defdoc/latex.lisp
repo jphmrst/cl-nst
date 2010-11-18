@@ -7,6 +7,10 @@
 (defvar *defdoc-latex-default-directory* "./")
 (defvar *latex-full-package-item-header-macro* "\\paragraph")
 (defvar *latex-verbatim-width* 65)
+(defvar *latex-default-header-matter*
+    "\\documentclass{article}
+\\usepackage{times}
+\\usepackage{helvet}")
 
 (defgeneric get-latex-output-file-name (style usage name)
   (:method ((style symbol) usage name)
@@ -16,6 +20,57 @@
              (symbol-name style) ".tex"))
   (:method (style usage name)
      (get-latex-output-file-name (type-of style) usage name)))
+
+(defgeneric format-latex-standalone-header (style stream out)
+  (:method (style stream (out standard-output-framework))
+     (declare (ignore style))
+     (format stream "~a" *latex-default-header-matter*)
+     (let ((title-supp (standard-output-framework-doc-title-supp-p out))
+           (author-supp (standard-output-framework-doc-author-supp-p out)))
+       (when (or title-supp author-supp)
+         (cond
+          (title-supp
+           (format stream "\\title{~a}~%"
+             (standard-output-framework-doc-title out)))
+          (t
+           (format stream "\\title{}~%")))
+         (cond
+          (author-supp
+           (format stream "\\author{~a}~%"
+             (standard-output-framework-doc-author out)))
+          (t
+           (format stream "\\author{}~%"))))
+       (format stream "\\begin{document}~%")
+       (when (or title-supp author-supp)
+         (format stream "\\maketitle~%")))))
+
+(defgeneric format-latex-standalone-footer (style stream out)
+  (:method (style stream (out standard-output-framework))
+     (declare (ignore style out))
+     (format stream "\\end{document}~%")))
+
+(defun write-latex-output (name &key
+                                (echo #'(lambda ()))
+                                (style 'latex-style)
+                                (directory #p"./")
+                                (file nil file-supp-p)
+                                standalone)
+  (let ((output-framework (get-output-framework name)))
+    (unless output-framework
+      (error "No such output framework ~s" name))
+    (unless file-supp-p
+      (setf file (format nil "~a_~a.tex" name style)))
+
+    (funcall echo)
+    (let ((file-spec (merge-pathnames file directory)))
+      (with-open-file (out file-spec :direction :output :if-exists :supersede
+                       :if-does-not-exist :create)
+        (when standalone
+          (format-latex-standalone-header style out output-framework))
+        (format-doc out style output-framework)
+        (when standalone
+          (format-latex-standalone-footer style out output-framework)
+          (format out "\\end{document}~%"))))))
 
 (defun write-spec-latex (name target-type &key
                               (style 'latex-style)
@@ -278,5 +333,59 @@
                 (loop for type in type-list do
                   (package-list-entry style
                           pspec tag (get-doc-spec name type) stream)))))))))
+
+;;; -----------------------------------------------------------------
+
+(defun process-latex-document (directory-path bare-name &key bibtex index)
+  (flet ((set-dir ()
+           #+allegro (excl:chdir directory-path)
+           #+sbcl (sb-posix:chdir directory-path)
+           #+clozure (setf (current-directory) directory-path)
+           #+clisp (ext:cd directory-path)
+           #+lispworks (hcl:change-directory directory-path)
+           #-(or allegro sbcl clozure
+                 clisp lispworks) (error "Not implemented on this system."))
+         (run-latex ()
+           #+allegro (excl:run-shell-command
+                      (format nil "pdflatex ~a.tex" bare-name))
+           #+sbcl (sb-ext:run-program "pdflatex" (list (format nil "~a.tex"
+                                                         bare-name))
+                                      :wait t :search t :output nil :error t)
+;;;           #+clozure (run-program "pdflatex" (list (format nil "~a.tex"
+;;;                                                     bare-name))
+;;;                                  :wait t :search t :output nil :error t)
+;;;           #+clisp (ext:shell (format nil "pdflatex ~a.tex" bare-name))
+;;;           #+lispworks (system:call-system
+;;;                        (format nil "pdflatex ~a.tex" bare-name))
+           #-(or allegro sbcl) (error "Not implemented on this system."))
+         (run-bibtex ()
+           #+allegro (excl:run-shell-command
+                      (format nil "bibtex ~a" bare-name))
+           #+sbcl (sb-ext:run-program "bibtex" (list bare-name)
+                                      :wait t :search t :output nil :error t)
+;;;           #+clozure (run-program "bibtex" (list bare-name)
+;;;                                  :wait t :search t :output nil :error t)
+;;;           #+clisp (ext:shell (format nil "bibtex ~a" bare-name))
+;;;           #+lispworks (system:call-system
+;;;                        (format nil "bibtex ~a" bare-name))
+           #-(or allegro sbcl) (error "Not implemented on this system."))
+         (run-makeindex ()
+           #+allegro (excl:run-shell-command
+                      (format nil "makeindex ~a" bare-name))
+           #+sbcl (sb-ext:run-program "makeindex" (list bare-name)
+                                      :wait t :search t :output nil :error t)
+;;;           #+clozure (run-program "makeindex" (list bare-name)
+;;;                                  :wait t :search t :output nil :error t)
+;;;           #+clisp (ext:shell (format nil "makeindex ~a" bare-name))
+;;;           #+lispworks (system:call-system
+;;;                        (format nil "makeindex ~a" bare-name))
+           #-(or allegro sbcl) (error "Not implemented on this system.")))
+
+    (set-dir)
+    (run-latex)
+    (when bibtex (run-bibtex))
+    (when index (run-makeindex))
+    (when (or bibtex index) (run-latex))
+    (run-latex)))
 
 ;;; -----------------------------------------------------------------

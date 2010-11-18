@@ -20,6 +20,8 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :defdoc)
 
+(defgeneric label-values (labeled-entity))
+
 (defvar +all-specs-collectors+ (make-hash-table :test 'eq))
 (defun all-specs-collector (&optional (result (make-hash-table :test 'eq)))
   (loop for c being the hash-keys of +all-specs-collectors+
@@ -33,14 +35,16 @@
               do (setf (gethash spec result) t))
       result))
 
-(defmacro collector-unitef (base-collection new-collection)
+(defmacro collector-unitef (base-collection new-collection-form)
   (let ((prev (gensym))
+        (addl (gensym))
         (result (gensym)))
-    `(let ((,prev ,base-collection))
+    `(let ((,prev ,base-collection)
+           (,addl ,new-collection-form))
        (setf ,base-collection
          #'(lambda (&optional (,result (make-hash-table :test 'eq)))
              (funcall ,prev ,result)
-             (funcall ,new-collection ,result)
+             (funcall ,addl ,result)
              ,result)))))
 
 (defmacro collectors-unitef (base-collection new-collections)
