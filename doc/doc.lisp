@@ -42,70 +42,18 @@
         :style 'nst-quickref
         :include-doctypes '(nst::criterion)
         :package-style nil)
+    (defdoc:write-latex-output 'package-api
+        :echo #'(lambda (&key &allow-other-keys)
+                  (format t "Writing package-api document spec~%"))
+        :directory gen-dir
+        :standalone t
+        :style 'nst-item-style)
 
-    ;; Run LaTeX to build the manual
+    ;; Run LaTeX.
     (format t "Generating PDF manual from LaTeX...~%")
-    #+allegro (progn
-                 (excl:chdir manual-dir)
-                 (excl:run-shell-command "pdflatex manual.tex")
-                 (excl:run-shell-command "makeindex manual")
-                 (excl:run-shell-command "pdflatex manual.tex")
-                 (excl:run-shell-command "pdflatex manual.tex")
-                 (excl:chdir quickref-dir)
-                 (excl:run-shell-command "pdflatex quickref")
-                 (excl:run-shell-command "pdflatex quickref"))
-
-    #+sbcl (progn
-             (sb-posix:chdir manual-dir)
-             (sb-ext:run-program "pdflatex" '("manual.tex")
-                                 :wait t :search t :output nil :error t)
-             (sb-ext:run-program "makeindex" '("manual")
-                                 :wait t :search t :output nil :error t)
-             (sb-ext:run-program "pdflatex" '("manual.tex")
-                                 :wait t :search t :output nil :error t)
-             (sb-ext:run-program "pdflatex" '("manual.tex")
-                                 :wait t :search t :output nil :error t)
-             (sb-posix:chdir quickref-dir)
-             (sb-ext:run-program "pdflatex" '("quickref.tex")
-                                 :wait t :search t :output nil :error t)
-             (sb-ext:run-program "pdflatex" '("quickref.tex")
-                                 :wait t :search t :output nil :error t))
-
-;;;    #+clozure (progn
-;;;                (setf (current-directory) manual-dir)
-;;;                (run-program "pdflatex" '("manual.tex")
-;;;                             :wait t :search t :output nil :error t)
-;;;                (run-program "makeindex" '("manual")
-;;;                             :wait t :search t :output nil :error t)
-;;;                (run-program "pdflatex" '("manual.tex")
-;;;                             :wait t :search t :output nil :error t)
-;;;                (run-program "pdflatex" '("manual.tex")
-;;;                             :wait t :search t :output nil :error t)
-;;;                (setf (current-directory) quickref-dir)
-;;;                (run-program "pdflatex" '("quickref.tex")
-;;;                             :wait t :search t :output nil :error t))
-
-;;;    #+clisp (progn
-;;;              (ext:cd manual-dir)
-;;;              (ext:shell "pdflatex manual.tex")
-;;;              (ext:shell "makeindex manual")
-;;;              (ext:shell "pdflatex manual.tex")
-;;;              (ext:shell "pdflatex manual.tex")
-;;;              (ext:cd quickref-dir)
-;;;              (ext:shell "pdflatex quickref.tex"))
-
-;;;    #+lispworks (progn
-;;;                  (hcl:change-directory manual-dir)
-;;;                  (system:call-system "pdflatex manual.tex")
-;;;                  (system:call-system "makeindex manual")
-;;;                  (system:call-system "pdflatex manual.tex")
-;;;                  (system:call-system "pdflatex manual.tex")
-;;;                  (hcl:change-directory quickref-dir)
-;;;                  (system:call-system "pdflatex quickref.tex"))
-
-    #-(or allegro sbcl ;; clozure clisp lispworks
-          )
-    (warn "Documentation building not fully implemented on this system" manual-dir)))
+    (defdoc:process-latex-document manual-dir "manual" :index t)
+    (format t "Generating quickref from LaTeX...~%")
+    (defdoc:process-latex-document quickref-dir "quickref")))
 
 ;;; -----------------------------------------------------------------
 ;;; Style for criteria --- prob. deprecated
@@ -267,7 +215,9 @@
     ;;
     ;; (:style style-class)
 
-  (:exported-symbols :nst :nst-control-api)
+    (:target-type (function :package :nst)
+                  (function :package :nst-control-api))
+  ;; (:exported-symbols :nst :nst-control-api)
   (:grouping-label nst::api-summary)
 
   ;; Where the contents come from.  These are disjunctive; could

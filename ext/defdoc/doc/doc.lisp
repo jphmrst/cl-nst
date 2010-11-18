@@ -20,86 +20,34 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :defdoc-doc)
 
+(defdoc:def-output-framework defdoc-manual
+    ;; Set the style to be associated with this output set.
+    ;;
+    ;; (:style style-class)
+
+  (:exported-symbols :defdoc)
+  (:exported-symbols :defdoc-control-api)
+
+  (:doc-title "DefDoc user manual")
+  (:doc-author "John Maraist")
+
+;;;  (:grouping-label nst-manual)
+;;;  (:groups fixtures groups tests criteria)
+  )
+
+(defclass manual-style (defdoc-control-api:latex-style) ())
+
 (defun build-defdoc-docs ()
   "Write documentation for this package, using system package-doc."
-  (let* ((doc-root-dir (asdf:system-relative-pathname (asdf:find-system :nst)
+  (let* ((doc-root-dir (asdf:system-relative-pathname (asdf:find-system :defdoc)
                                                       "doc/"))
-         (gen-dir (merge-pathnames #p"gen/" doc-root-dir))
-;;;         (manual-dir (merge-pathnames #p"manual/" doc-root-dir))
-;;;         (quickref-dir (merge-pathnames #p"quickref/" doc-root-dir))
-         )
+         (gen-dir (merge-pathnames #p"gen/" doc-root-dir)))
     (format t "Creating documentation in ~a~%" doc-root-dir)
-    (defdoc:write-package-specs-latex :defdoc
-        :echo #'(lambda (&key name type)
-                  (format t "Writing ~a ~a~%" type name))
+    (defdoc:write-latex-output 'defdoc-manual
+        :echo #'(lambda (&key &allow-other-keys)
+                  (format t "Writing manual~%"))
         :directory gen-dir
-        ;; :style 'nst-item-style
-        ;; :include-doctypes '(nst::criterion)
-        ;; :package-style 'nst-package-list-latex-style
-        )
-
-;;;    ;; Run LaTeX to build the manual
-;;;    (format t "Generating PDF manual from LaTeX...~%")
-
-;;;    #+allegro (progn
-;;;                 (excl:chdir manual-dir)
-;;;                 (excl:run-shell-command "pdflatex manual.tex")
-;;;                 (excl:run-shell-command "makeindex manual")
-;;;                 (excl:run-shell-command "pdflatex manual.tex")
-;;;                 (excl:run-shell-command "pdflatex manual.tex")
-;;;                 (excl:chdir quickref-dir)
-;;;                 (excl:run-shell-command "pdflatex quickref")
-;;;                 (excl:run-shell-command "pdflatex quickref"))
-
-;;;    #+sbcl (progn
-;;;             (sb-posix:chdir manual-dir)
-;;;             (sb-ext:run-program "pdflatex" '("manual.tex")
-;;;                                 :wait t :search t :output nil :error t)
-;;;             (sb-ext:run-program "makeindex" '("manual")
-;;;                                 :wait t :search t :output nil :error t)
-;;;             (sb-ext:run-program "pdflatex" '("manual.tex")
-;;;                                 :wait t :search t :output nil :error t)
-;;;             (sb-ext:run-program "pdflatex" '("manual.tex")
-;;;                                 :wait t :search t :output nil :error t)
-;;;             (sb-posix:chdir quickref-dir)
-;;;             (sb-ext:run-program "pdflatex" '("quickref.tex")
-;;;                                 :wait t :search t :output nil :error t)
-;;;             (sb-ext:run-program "pdflatex" '("quickref.tex")
-;;;                                 :wait t :search t :output nil :error t))
-
-;;;    #+clozure (progn
-;;;                (setf (current-directory) manual-dir)
-;;;                (run-program "pdflatex" '("manual.tex")
-;;;                             :wait t :search t :output nil :error t)
-;;;                (run-program "makeindex" '("manual")
-;;;                             :wait t :search t :output nil :error t)
-;;;                (run-program "pdflatex" '("manual.tex")
-;;;                             :wait t :search t :output nil :error t)
-;;;                (run-program "pdflatex" '("manual.tex")
-;;;                             :wait t :search t :output nil :error t)
-;;;                (setf (current-directory) quickref-dir)
-;;;                (run-program "pdflatex" '("quickref.tex")
-;;;                             :wait t :search t :output nil :error t))
-
-;;;    #+clisp (progn
-;;;              (ext:cd manual-dir)
-;;;              (ext:shell "pdflatex manual.tex")
-;;;              (ext:shell "makeindex manual")
-;;;              (ext:shell "pdflatex manual.tex")
-;;;              (ext:shell "pdflatex manual.tex")
-;;;              (ext:cd quickref-dir)
-;;;              (ext:shell "pdflatex quickref.tex"))
-
-;;;    #+lispworks (progn
-;;;                  (hcl:change-directory manual-dir)
-;;;                  (system:call-system "pdflatex manual.tex")
-;;;                  (system:call-system "makeindex manual")
-;;;                  (system:call-system "pdflatex manual.tex")
-;;;                  (system:call-system "pdflatex manual.tex")
-;;;                  (hcl:change-directory quickref-dir)
-;;;                  (system:call-system "pdflatex quickref.tex"))
-
-;;;    #-(or allegro sbcl ;; clozure clisp lispworks
-;;;          )
-;;;    (warn "Documentation building not fully implemented on this system" manual-dir)
-    ))
+        :standalone t
+        :style 'manual-style)
+    (defdoc:process-latex-document gen-dir "defdoc-manual_manual-style"
+                                   :index t)))

@@ -52,7 +52,9 @@
                                         ; Top-level LaTeX invocation.
              #:write-spec-latex
              #:write-doctype-latex
-             #:write-package-specs-latex))
+             #:write-package-specs-latex
+             #:write-latex-output
+             #:process-latex-document))
 
 (defun defdoc::make-package-documentation ()
   "Write documentation for this package, using system package-doc."
