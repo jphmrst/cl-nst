@@ -66,6 +66,11 @@
             docstring docstring-supp-p
             include-groups)))
 
+(defgeneric anon-fixture-forms (group-record)
+  (:method ((s symbol)) (anon-fixture-forms (make-instance s))))
+(defgeneric group-include-groups (group-record)
+  (:method ((s symbol)) (group-include-groups (make-instance s))))
+
 (defclass nst-group-record ()
   ((%group-name :reader group-name :initarg :group-name)
    (anon-fixture-forms :reader anon-fixture-forms)
