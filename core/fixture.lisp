@@ -182,6 +182,8 @@
                      (declare (ignorable ,t-param)
                               ,@(when external-special
                                   `((special ,@external-special))))
+                     (format-at-verbosity 4
+                         "Called do-group-fixture-assignment :around ~s~%" ',name)
                      ,@(when startup-supp-p (list startup))
                      (prog1
                          (let* ,bindings-with-tracking
@@ -201,11 +203,19 @@
                        :around ((,t-param ,name))
                      ,@(when external-special
                          `((declare (special ,@external-special))))
-                     (let* ,bindings-with-tracking
-                       ,@(when bound-names
-                           `((declare (special ,@bound-names))))
-                       (setf *binding-variable* nil)
-                       (call-next-method)))
+                     (format-at-verbosity 4
+                         "Called do-test-fixture-assignment :around ~s~%" ',name)
+                     ,@(when startup-supp-p (list startup))
+                     (prog1
+                         (let* ,bindings-with-tracking
+                           ,@(when bound-names
+                               `((declare (special ,@bound-names))))
+                           (setf *binding-variable* nil)
+                           ,@(when setup-supp-p (list setup))
+                           (prog1
+                               (call-next-method)
+                             ,@(when cleanup-supp-p (list cleanup))))
+                       ,@(when finish-supp-p (list finish))))
 
                    ;; Function for expanding names into the current namespace.
                    (defmethod open-fixture ((f ,name)
