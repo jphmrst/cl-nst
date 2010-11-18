@@ -244,7 +244,8 @@ configuration provided by those wrappers."
    "Fixture declarations translate to an :around method making let* bindings
 for the group application class.")
   (:method (group-obj test-objs)
-     (format-at-verbosity 4 "Called (do-group-fixture-assignment ~s ~s)~%"
+     (format-at-verbosity 4
+         "Called do-group-fixture-assignment principal on ~s ~s~%"
        group-obj test-objs)
      (with-nst-control-handlers
          ((e flag
@@ -410,7 +411,7 @@ for the group application class.")
    "Fixture declarations translate to an :around method making let* bindings
 for the test application class.")
   (:method (test-obj)
-     (format-at-verbosity 4 "Called (do-test-fixture-assignment ~s)~%"
+     (format-at-verbosity 4 "Called do-test-fixture-assignment principal method ~s~%"
        test-obj)
      (with-nst-control-handlers
          ((e flag
