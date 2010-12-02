@@ -260,7 +260,7 @@ first element is that symbol and whose remaining elements are options."
                     (documentation STRING) )
               criterion &body (:seq FORM))
              (NAME criterion &body (:seq FORM)))
-  (:full (:latex "The \\texttt{SETUP}, \\texttt{CLEANUP}, \\texttt{STARTUP},
+  (:details (:latex "The \\texttt{SETUP}, \\texttt{CLEANUP}, \\texttt{STARTUP},
 \\texttt{FINISH} and \\texttt{FIXTURES} are just as for fixtures and
 test groups, but apply only to the one test.  The \\texttt{CRITERION}
 is a list or symbol specifying the properties which should hold for

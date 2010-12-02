@@ -127,7 +127,7 @@
                          (call-next-method)))))))
 (defmethod defdoc-control-api:latex-style-adjust-spec-element ((style nst-item-style)
                                                    target-type spec
-                                                   (element (eql :short))
+                                                   (element (eql :blurb))
                                                    datum)
   (declare (ignore datum target-type))
   (with-accessors ((self defdoc-control-api:docspec-self)) spec

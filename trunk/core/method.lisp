@@ -45,7 +45,7 @@
   (:tags object)
   (:properties (api-summary object))
   (:intro (:latex "NST defines a method combination \\texttt{nst-results} as the default method combination for functions defined by \\texttt{def-test-generic}.  This combination runs \\emph{all} applicable methods, and combines all of their results into a single NST result record."))
-  (:full (:latex "This default can be overridden by specifying \\texttt{t} as the method combination in the intial declaration.")
+  (:details (:latex "This default can be overridden by specifying \\texttt{t} as the method combination in the intial declaration.")
          (:code "(nst:def-test-generic overridden
     (:method-combination t))
 (nst:def-test-method-criterion overridden mid-cls
@@ -79,7 +79,7 @@
   (:properties (api-summary object))
     (:intro (:latex "The \\texttt{def-test-generic} declares a generic test function."))
     (:callspec (function-name))
-    (:full (:latex "For example,")
+    (:details (:latex "For example,")
            (:code "(nst:def-test-generic for-clses)")))
 
 (defun decode-def-test-generic-body (forms)
@@ -162,7 +162,7 @@
     (:params (function-name (:latex "The name of the test function for which we are defining a method."))
              (test-value (:latex "Formal parameter to which the value under test will be bound."))
              (class-name (:latex "The class for which we are defining a method.")))
-    (:full (:latex "The method body should return a test result report, constructed with \\texttt{make-success-result}, etc.")
+    (:details (:latex "The method body should return a test result report, constructed with \\texttt{make-success-result}, etc.")
            (:latex "For example:")
            (:code "(nst:def-test-method for-clses (o mid-cls)
   (with-slots (mc1 mc2) o
@@ -193,7 +193,7 @@
     (:params (function-name (:latex "The name of the test function for which we are defining a method."))
              (class-name (:latex "The class for which we are defining a method."))
              (criterion (:latex "The criterion to be applied to members of the class.")))
-    (:full (:latex "For example:")
+    (:details (:latex "For example:")
            (:code "(nst:def-test-method-criterion for-clses top-cls
       (:predicate (lambda (tc) (< (tc1 tc) (tc2 tc)))))")))
 
@@ -212,7 +212,7 @@
   (invoke-test-methods object))
 (defdoc:def-documentation (criterion :methods)
   (:intro (:latex "The \\texttt{:methods} criterion runs the test functions applicable to the value under test."))
-  (:full (:seq
+  (:details (:seq
           (:plain " For example:")
           (:code "(def-test-group method-tests ()
   (def-test t-p :methods (make-instance 'top-cls :tc1 0 :tc2 2))

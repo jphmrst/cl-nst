@@ -37,8 +37,8 @@
 (defclass standard-doc-spec (doc-spec)
      ((descriptive :initarg :descriptive :accessor docspec-descriptive)
       (intro  :initarg :intro  :accessor docspec-intro)
-      (short  :initarg :short  :accessor docspec-short)
-      (full   :initarg :full   :accessor docspec-full)
+      (blurb  :initarg :blurb  :accessor docspec-blurb)
+      (details   :initarg :details   :accessor docspec-details)
       (params :initarg :params :accessor docspec-params)
       (callspecs :initarg :callspecs :initform nil :accessor docspec-callspecs)
       (deprecated :initarg :deprecated :accessor docspec-deprecated)))
@@ -59,8 +59,8 @@
 
 (defmacro with-unpacked-standard-spec ((self intro intro-supp-p
                                              params params-supp-p
-                                             short short-supp-p
-                                             full full-supp-p
+                                             blurb blurb-supp-p
+                                             details details-supp-p
                                              callspec)
                                        instance &body forms)
   `(let ((,self (docspec-self ,instance))
@@ -68,8 +68,8 @@
      (with-possibly-unbound-slotaccessors
          ((,intro  ,intro-supp-p  docspec-intro  intro)
           (,params ,params-supp-p docspec-params params)
-          (,short  ,short-supp-p  docspec-short  short)
-          (,full   ,full-supp-p   docspec-full   full))
+          (,blurb  ,blurb-supp-p  docspec-blurb  blurb)
+          (,details   ,details-supp-p   docspec-details   details))
          ,instance
        ,@forms)))
 
@@ -90,7 +90,7 @@
                  (pprint-exit-if-list-exhausted)
                  (pprint-newline :mandatory)))))
         (loop for slot in '(tags
-                            target-type self descriptive intro short full
+                            target-type self descriptive intro blurb details
                             params callspecs deprecated)
               do
            (cond
@@ -131,8 +131,8 @@
                 (loop for (id forms) in form-args
                   collect (list id (compile-element package spec forms)))))
          ((:intro)       (setting-accessor docspec-intro))
-         ((:short)       (setting-accessor docspec-short))
-         ((:full)        (setting-accessor docspec-full))
+         ((:blurb)       (setting-accessor docspec-blurb))
+         ((:details)        (setting-accessor docspec-details))
          ((:callspec) (setf (docspec-callspecs spec)
                             (mapcar #'(lambda (x)
                                         (get-compiled-callspec package spec x))

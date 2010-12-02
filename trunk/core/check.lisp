@@ -81,7 +81,7 @@ as errors arising from within the ."
   (:tags criteria)
   (:properties (api-summary criteria))
     (:intro (:latex "The \\texttt{check-criterion-on-value} function can be called from within a criterion body to verify that a value adheres to a criterion."))
-    (:short "This function verifies that the value adheres to the criterion.")
+    (:blurb "This function verifies that the value adheres to the criterion.")
     (:callspec (criterion value)))
 (defun check-criterion-on-form (criterion form)
   (unless (listp criterion)
@@ -91,7 +91,7 @@ as errors arising from within the ."
   (:tags criteria)
   (:properties (api-summary criteria))
     (:intro (:latex "The \\texttt{check-criterion-on-form} function verifies that an unevaluated form adheres to a criterion."))
-    (:short
+    (:blurb
      "This function verifies that the values return by evaluating the form adheres to the criterion.")
     (:callspec (criterion form)))
 
@@ -252,7 +252,7 @@ as errors arising from within the ."
            (values-lambda-list "Lambda list for the forms under test.  Optionally, the first element of the list is a symbol specifying the parameter-passing semantics for the criterion arguments: \\texttt{:values} for call-by-value (the default), or \\texttt{:form} for call-by-name.  In the former case, the list may include the keywords \\texttt{\\&key}, \\texttt{\\&optional}, \\texttt{\\&body} and \\texttt{\\&rest}, but not \\texttt{\\&whole} or \\texttt{\\&environment}; apart from that restriction, list may be any ordinary lambda list as for \\texttt{defun}.  In the latter case, the remainder of the list must contain exactly one symbol, to which a form which would evaluate to the values under test will be bound.")
            (documentation "An optional documentation string for the criterion.")
            (form "The body of the criterion definition should return a test result report contructed with the \\texttt{make-success-report}, etc.\\ functions."))
-  (:full (:seq
+  (:details (:seq
           (:latex "Examples:")
           (:code "(def-criterion (:true () (bool))
   (if bool
@@ -297,7 +297,7 @@ as errors arising from within the ."
   (:properties (api-summary deprecated))
   (:deprecated t)
   (:intro (:latex "The \\texttt{def-criterion-unevaluated} macro is deprecated as of NST 2.1.2.  It was consolidated into the \\texttt{def-criterion} macro."))
-  (:full (:seq (:latex " Replace:")
+  (:details (:seq (:latex " Replace:")
                (:code "(def-criterion-unevaluated name (pattern ... pattern) name
   BODY)")
                (:plain "with:")
@@ -311,7 +311,7 @@ as errors arising from within the ."
 ;;;and whether to evaluate them."))
 ;;;  (:callspec ((name criterion-lambda-list forms-arg) &body
 ;;;              (:opt documentation) (:seq form)))
-;;;  (:full (:seq (:latex "Example:")
+;;;  (:details (:seq (:latex "Example:")
 ;;;               (:code "  (def-form-criterion (:apply (transform criterion) forms)
 ;;;    (continue-check criterion
 ;;;                  `(multiple-value-list (apply #',transform ,forms))))
@@ -359,7 +359,7 @@ as errors arising from within the ."
   (:tags deprecated)
   (:properties (api-summary deprecated))
     (:deprecated t)
-    (:short (:latex "The \\texttt{def-values-criterion} macro was deprecated as of NST 1.3.0. For new criteria, use \\texttt{def-criterion} instead.  In the short term, code using \texttt{def-values-criterion} should continue to work as before.")))
+    (:blurb (:latex "The \\texttt{def-values-criterion} macro was deprecated as of NST 1.3.0. For new criteria, use \\texttt{def-criterion} instead.  In the short term, code using \texttt{def-values-criterion} should continue to work as before.")))
 
 
 #+allegro (excl::define-simple-parser def-form-criterion caadr :nst-criterion)
@@ -374,7 +374,7 @@ as errors arising from within the ."
   (:tags deprecated)
   (:properties (api-summary deprecated))
     (:deprecated t)
-    (:short (:latex "The \\texttt{def-form-criterion} macro was deprecated as of NST 1.3.0. \\emph{Code using \\texttt{def-form-criterion} in any but the simplest ways is very likely to fail.} Use \\texttt{def-criterion} instead.")))
+    (:blurb (:latex "The \\texttt{def-form-criterion} macro was deprecated as of NST 1.3.0. \\emph{Code using \\texttt{def-form-criterion} in any but the simplest ways is very likely to fail.} Use \\texttt{def-criterion} instead.")))
 
 (defmacro def-criterion-alias ((name . args-formals) docstring-or-form
                                &optional (form nil form-supp-p))
@@ -397,7 +397,7 @@ as errors arising from within the ."
 defining one criterion to rewrite as another using
 \\texttt{def-criterion-alias}:\\index{def-criterion-alias@\\texttt{def-criterion-alias}}"))
     (:callspec ((name (:seq arg)) &body (:opt documentation) expansion))
-    (:full (:latex "The body of the expansion should be a Lisp form which, when evaluated, returns an S-expression quoting the new criterion which the rewrite should produce.  The \\texttt{arg}s are passed as for Lisp macros: they are not evaluated and are most typically comma-inserted into a backquoted result.  For example:")
+    (:details (:latex "The body of the expansion should be a Lisp form which, when evaluated, returns an S-expression quoting the new criterion which the rewrite should produce.  The \\texttt{arg}s are passed as for Lisp macros: they are not evaluated and are most typically comma-inserted into a backquoted result.  For example:")
            (:code "  (def-criterion-alias (:forms-eq) `(:predicate eq))
   (def-criterion-alias (:symbol name) `(:eq ',name))")))
 
@@ -410,7 +410,7 @@ defining one criterion to rewrite as another using
   (:tags deprecated)
   (:properties (api-summary deprecated))
   (:deprecated t)
-  (:short "Deprecated: use def-criterion instead"))
+  (:blurb "Deprecated: use def-criterion instead"))
 
 #+allegro (excl::define-simple-parser def-control-check caadr :nst-criterion)
 (defmacro def-control-check (&rest args)
@@ -421,7 +421,7 @@ defining one criterion to rewrite as another using
   (:tags deprecated)
   (:properties (api-summary deprecated))
   (:deprecated t)
-  (:short "Deprecated: use def-criterion instead"))
+  (:blurb "Deprecated: use def-criterion instead"))
 
 #+allegro (excl::define-simple-parser def-check-alias caadr :nst-criterion)
 (defmacro def-check-alias (&rest args)
@@ -432,4 +432,4 @@ defining one criterion to rewrite as another using
   (:tags deprecated)
   (:properties (api-summary deprecated))
   (:deprecated t)
-  (:short "Deprecated: use def-criterion-alias instead"))
+  (:blurb "Deprecated: use def-criterion-alias instead"))

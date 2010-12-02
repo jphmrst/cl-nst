@@ -891,7 +891,7 @@ six-value summary of the results:
   (:properties (api-summary criteria))
     (:intro (:latex "Function \\texttt{make-warning-report} is like \\texttt{make-failure-report}, but provides supplimentary information as a warning."))
   (:callspec (&key (format format-string) (args arg-form-list)))
-  (:full (:latex "The \\texttt{emit-warning} function is an older, deprecated version of this function.")))
+  (:details (:latex "The \\texttt{emit-warning} function is an older, deprecated version of this function.")))
 
 (defmacro emit-warning (&rest args)
   (warn 'nst-soft-deprecation :old-name 'emit-warning
@@ -901,7 +901,7 @@ six-value summary of the results:
   (:tags deprecated)
   (:properties (api-summary deprecated))
   (:deprecated t)
-  (:short (:latex "The \\texttt{emit-warning} function is deprecated; use \\texttt{make-warning-report} instead.")))
+  (:blurb (:latex "The \\texttt{emit-warning} function is deprecated; use \\texttt{make-warning-report} instead.")))
 
 (defun make-failure-report (&key format args info)
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
@@ -915,7 +915,7 @@ six-value summary of the results:
   (:properties (api-summary criteria))
     (:intro (:latex "The \\texttt{make-failure-report} function returns a report of test failure."))
   (:callspec (&key (format format-string) (args arg-form-list)))
-  (:full (:latex "The \\texttt{format-string} and \\texttt{args} are as to the Common Lisp function \\texttt{format}.  The \\texttt{emit-failure} function is an older, deprecated version of this function.")))
+  (:details (:latex "The \\texttt{format-string} and \\texttt{args} are as to the Common Lisp function \\texttt{format}.  The \\texttt{emit-failure} function is an older, deprecated version of this function.")))
 
 (defmacro emit-failure (&rest args)
   (warn 'nst-soft-deprecation :old-name 'emit-failure
@@ -925,7 +925,7 @@ six-value summary of the results:
   (:tags deprecated)
   (:properties (api-summary deprecated))
   (:deprecated t)
-  (:short (:latex "The \\texttt{emit-failure} function is deprecated; use \\texttt{make-failure-report} instead.")))
+  (:blurb (:latex "The \\texttt{emit-failure} function is deprecated; use \\texttt{make-failure-report} instead.")))
 
 (defun make-success-report (&rest args &key warnings info)
   (declare (ignore warnings info))
@@ -935,7 +935,7 @@ six-value summary of the results:
   (:properties (api-summary criteria))
     (:intro (:latex "The \\texttt{make-success-report} function indicates a successful test result."))
   (:callspec ())
-  (:full (:latex "Note that some older examples show \\texttt{(make-check-result)}, \\texttt{(emit-success)} or \\texttt{(check-result)}.  The former is an internal function and should not be used from outside the core NST files.  The latter two are deprecated.")))
+  (:details (:latex "Note that some older examples show \\texttt{(make-check-result)}, \\texttt{(emit-success)} or \\texttt{(check-result)}.  The former is an internal function and should not be used from outside the core NST files.  The latter two are deprecated.")))
 
 (defmacro emit-success (&rest args)
   (warn 'nst-soft-deprecation :old-name 'emit-success
@@ -945,7 +945,7 @@ six-value summary of the results:
   (:tags deprecated)
   (:properties (api-summary deprecated))
   (:deprecated t)
-  (:short (:latex "The \\texttt{emit-success} function is deprecated; use \\texttt{make-success-report} instead.")))
+  (:blurb (:latex "The \\texttt{emit-success} function is deprecated; use \\texttt{make-success-report} instead.")))
 
 (defun add-failure (result &key format args)
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
@@ -956,7 +956,7 @@ six-value summary of the results:
 (def-documentation (function add-failure)
   (:tags criteria)
   (:properties (api-summary criteria))
-    (:short (:latex
+    (:blurb (:latex
              "For use within user-defined NST criteria: add a failure to a result."))
     (:intro (:latex
              "The \\texttt{add-failure} function adds a failure note to a result record."))
@@ -972,7 +972,7 @@ six-value summary of the results:
 (def-documentation (function add-error)
   (:tags criteria)
   (:properties (api-summary criteria))
-    (:short (:latex "For use within user-defined NST criteria: add an error to a result."))
+    (:blurb (:latex "For use within user-defined NST criteria: add an error to a result."))
     (:intro (:latex
              "The \\texttt{add-error} function adds an error note to a result record."))
     (:callspec (result-report &key
@@ -991,7 +991,7 @@ six-value summary of the results:
 (def-documentation (function add-info)
   (:tags criteria)
   (:properties (api-summary criteria))
-    (:short "For use within user-defined NST criteria: add an info note to a result.")
+    (:blurb "For use within user-defined NST criteria: add an info note to a result.")
     (:intro (:latex
              "The \\texttt{add-info} function adds auxiliary information to a result record."))
     (:callspec (result-report info-item)))

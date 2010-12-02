@@ -21,6 +21,7 @@
 (in-package :defdoc)
 
 (defvar *docstring-style* 'standard-docstring-style)
+(defvar *sectioning-level* 1)
 
 (defgeneric format-doc (stream style spec))
 
@@ -47,3 +48,18 @@
        (format stream
            "Option ~s ~:_but ~:_not ~:_option ~:_~s ~:_given ~:_in ~:_~a ~s"
          given missing def-type name)))))
+
+(defmacro def-slot-supp-predicates (class slot-and-function-specs)
+  `(progn
+     ,@(loop for (fname slot) in slot-and-function-specs
+             collect
+             `(defgeneric ,fname (o)
+                (:method (o) (declare (ignore o)) nil)
+                (:method ((o ,class)) (slot-boundp o ',slot))))))
+
+(defvar *defdoc-debuggable* t)
+(defvar *defdoc-debug* nil)
+(defmacro defdoc-debug (format &rest args)
+  (when *defdoc-debuggable*
+    `(when *defdoc-debug*
+       (format t ,format ,@args))))

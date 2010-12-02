@@ -32,7 +32,7 @@
   (make-success-report))
 (defdoc:def-documentation (criterion :pass)
   (:intro (:latex "A trivial test, which always passes."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(def-test passing-test :pass 3 4 \"sd\")"))))
 
@@ -42,7 +42,7 @@
 (defdoc:def-documentation (criterion :fail)
   (:callspec (format-string (:seq form)))
   (:intro (:latex "A trivial test, which always fails.  The format string and arguments should be suitable for the Lisp \\texttt{format} function."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code
            "(def-test fails (:fail \"Expected a \~{}a\" \"string\") 312)"))))
@@ -53,7 +53,7 @@
 (defdoc:def-documentation (criterion :warn)
   (:callspec (format-string (:seq form)))
   (:intro (:latex "Issue a warning.  The format string and arguments should be suitable for the Lisp \\texttt{format} function."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(:warn \"\~{}d is not a perfect square\" 5)"))))
 
@@ -66,7 +66,7 @@
 (defdoc:def-documentation (criterion :true-form)
   (:callspec (bool))
   (:intro (:latex ""))
-;;;  (:full (:seq
+;;;  (:details (:seq
 ;;;          (:plain "Example:")
 ;;;          (:code "")
 ;;;          (:plain "A example of a test which fails:")
@@ -81,7 +81,7 @@
 (defdoc:def-documentation (criterion :true)
   (:callspec ())
   (:intro "Expects one form, which is evaluated at testing time; the criterion requires the result to be non-nil.")
-;;;  (:full (:seq
+;;;  (:details (:seq
 ;;;          (:plain "Example:")
 ;;;          (:code "")
 ;;;          (:plain "A example of a test which fails:")
@@ -96,14 +96,14 @@
 (defdoc:def-documentation (criterion :eq)
   (:callspec (target))
   (:intro (:latex "The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \\texttt{eq}."))
-  (:full (:seq (:plain "Example:")
+  (:details (:seq (:plain "Example:")
                (:code "(def-test eq1 (:eq 'b) (cadr '(a b c)))"))))
 
 (def-criterion-alias (:symbol name) `(:eq ',name))
 (defdoc:def-documentation (criterion :symbol)
   (:callspec (name))
   (:intro (:latex "The form under test is evaluated at testing time.  The criterion requires that the result be a symbol which is \\texttt{eq} to the symbol name given as the criterion argument."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(def-test sym1  (:symbol a) (car '(a b c)))")
           (:plain "A example of a test which fails:")
@@ -117,7 +117,7 @@
 (defdoc:def-documentation (criterion :eql)
   (:callspec (target))
   (:intro (:latex "The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \\texttt{eql}."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(def-test eql1 (:eql 2) (cadr '(1 2 3)))"))))
 
@@ -143,14 +143,14 @@
 (defdoc:def-documentation (criterion :forms-eq)
   (:callspec ())
   (:intro (:latex "The two forms under test are both evaluated at testing time; the criterion requires that the results be \\texttt{eq}."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(def-test eqforms1 :forms-eq (cadr '(a b c)) (caddr '(a c b)))"))))
 (def-criterion-alias (:forms-eql)   `(:predicate eql))
 (defdoc:def-documentation (criterion :forms-eql)
   (:callspec ())
   (:intro (:latex "The two forms under test are both evaluated at testing time; the criterion requires that the results be \\texttt{eql}."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(def-test eqlforms1 :forms-eql (cadr '(a 3 c)) (caddr '(a c 3)))"))))
 (def-criterion-alias (:forms-equal) `(:predicate equal))
@@ -170,7 +170,7 @@
 (defdoc:def-documentation (criterion :predicate)
   (:callspec (pred))
   (:intro (:latex "The criterion argument is a symbol (unquoted) or a lambda expression; at testing time, the forms under test are evaluated and passed to the denoted function.  The criterion expects that the result of the function is non-nil."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(def-test pred1 (:predicate numberp) 3)")
           (:plain "A example of a test which fails:")
@@ -197,7 +197,7 @@
 (defdoc:def-documentation (criterion :info)
   (:callspec (string subcriterion))
   (:intro (:latex "Add an informational note to the check result."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(def-test known-bug (:info \"Known bug\" (:eql 3)) 4)"))))
 
@@ -227,7 +227,7 @@
 (defdoc:def-documentation (criterion :err)
   (:callspec (&key (type CLASS)))
   (:intro (:latex "At testing time, evaluates the form under test, expecting the evaluation to raise some condition.  If the \\textit{CLASS} argument is supplied, the criterion expects the raised condition to be a subclass.  Note that the name of the type should \\emph{not} be quoted; it is not evaluated."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Examples:")
           (:code "(def-test err1 (:err :type error) (error \"this should be caught\"))")
           (:code "(def-test err2 (:err) (error \"this should be caught\"))"))))
@@ -259,7 +259,7 @@
 (defdoc:def-documentation (criterion :perf)
   (:callspec (&key (ms MILLISECS) (sec SECONDS) (min MINUTES)))
   (:intro (:latex "Evaluates the forms under test at testing time, and expects the evaluation to complete within the given time limit."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(def-test perf1 (:perf :min 2) (ack 3 5))"))))
 
@@ -274,7 +274,7 @@
 (defdoc:def-documentation (criterion :not)
   (:callspec (subcriterion))
   (:intro (:latex "Passes when testing according to \\texttt{subcriterion} fails (but does not throw an error)."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(def-test not1 (:not (:symbol b)) 'a)"))))
 
@@ -294,7 +294,7 @@
 (defdoc:def-documentation (criterion :all)
   (:callspec ((:seq subcriterion)))
   (:intro (:latex "This criterion brings several other criteria under one check, and verifies that they all pass."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(def-check not1 ()
     (:all (:predicate even-p)
@@ -326,7 +326,7 @@
 (defdoc:def-documentation (criterion :any)
   (:callspec ((:seq subcriterion)))
   (:intro (:latex "Passes when any of the subordinate criteria pass."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(def-check not1 ()
     (:any (:predicate even-p)
@@ -339,7 +339,7 @@
 (defdoc:def-documentation (criterion :apply)
   (:callspec (FUNCTION CRITERION))
   (:intro (:latex "At testing time, first evaluates the forms under test, applying \\texttt{FUNCTION} to them.  The overall criterion passes or fails exactly when the subordinate \\texttt{CRITERION} with the application's multiple result values."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(def-test applycheck (:apply cadr (:eql 10)) '(0 10 20))"))))
 
@@ -358,7 +358,7 @@
 (defdoc:def-documentation (criterion :check-err)
   (:callspec (criterion))
   (:intro (:latex "Like \\texttt{:err}, but proceeds according to the subordinate criterion rather than simply evaluating the input forms."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(def-test check-err1
     (:check-err :forms-eq)
@@ -372,7 +372,7 @@
 (defdoc:def-documentation (criterion :progn)
   (:callspec ((:seq form) subcriterion))
   (:intro (:latex "At testing time, first evaluates the \\texttt{FORM}s in order, and then proceeds with evaluation of the forms under test according to the subordinate criterion."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(def-test form1 (:progn (setf zz 3) (:eql 3)) zz)"))))
 
@@ -382,7 +382,7 @@
 (defdoc:def-documentation (criterion :proj)
   (:callspec (indices criterion))
   (:intro (:latex "Rearranges the forms under test by selecting a new list according to the index numbers into the old list.  Checking of the reorganized forms continues according to the subordinate criterion."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(def-test proj-1
     (:proj (0 2) :forms-eq)
@@ -415,7 +415,7 @@
 (defdoc:def-documentation (criterion :each)
   (:callspec (criterion))
   (:intro (:latex "At testing time, evaluates the form under test, expecting to find a list as a result.  Expects that each argument of the list according to the subordinate \\texttt{criterion}, and passes when all of these checks pass."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(def-test each1 (:each (:symbol a)) '(a a a a a))"))))
 
@@ -442,7 +442,7 @@
 (defdoc:def-documentation (criterion :seq)
   (:callspec ((:seq subcriterion)))
   (:intro (:latex "Evaluates its input form, checks each of its elements according to the respective subordinate criterion, and passes when all of them pass."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(def-check seqcheck
     (:seq (:predicate symbolp) (:eql 1) (:symbol d))
@@ -462,7 +462,7 @@
 (defdoc:def-documentation (criterion :permute)
   (:callspec (criterion))
   (:intro (:latex "At testing time, evaluates the form under test, expecting to find a list as a result.  The criterion expects to find that some permutation of this list will satisfy the subordinate criterion."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Examples:")
           (:code "(def-test permute1 (:permute (:each (:eq 'a))) '(a a))")
           (:code "(def-check permute2
@@ -494,7 +494,7 @@
 (defdoc:def-documentation (criterion :across)
   (:callspec ((:seq subcriterion)))
   (:intro (:latex "Like \\texttt{:seq}, but for a vector instead of a list."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(def-check across1
     (:across (:predicate symbolp) (:eql 1))
@@ -521,7 +521,7 @@
 (defdoc:def-documentation (criterion :slots)
   (:callspec ((:seq (slot-name subcriterion))))
   (:intro (:latex "Evaluates its input form, and passes when the value at each given slot satisfies the corresponding subordinate constraint."))
-  (:full (:seq
+  (:details (:seq
           (:plain "Example:")
           (:code "(defclass classcheck ()
   ((s1 :initarg :s1 :reader get-s1)

@@ -159,7 +159,7 @@ argument should be a string of just spaces."))
 (def-documentation (function nst-junit-dump)
   (:tags control)
   (:properties (api-summary control))
-    (:short (:latex "Function \\texttt{nst-junit-dump} pushes the entire NST state to a JUnit XML file whose stream is specified by its argument.")))
+    (:blurb (:latex "Function \\texttt{nst-junit-dump} pushes the entire NST state to a JUnit XML file whose stream is specified by its argument.")))
 
 (defmethod nst-junit-dump ((stream stream))
   (junit-header stream)
@@ -256,7 +256,7 @@ argument should be a string of just spaces."))
                      (stream stream)
                      (if-dir-does-not-exist bool)
                      (if-file-exists bool)))
-    (:full (:latex "Either \\texttt{:dir} and \\texttt{:file} options, or the \\texttt{:stream} option, but not both, should be used to specify the target for XML output; if none of the three options are given, the function will write to \\texttt{*standard-output*}.")))
+    (:details (:latex "Either \\texttt{:dir} and \\texttt{:file} options, or the \\texttt{:stream} option, but not both, should be used to specify the target for XML output; if none of the three options are given, the function will write to \\texttt{*standard-output*}.")))
 
 ;;; The following three definitions are Copyright (c) 2003, Miles Egan
 ;;; All rights reserved.

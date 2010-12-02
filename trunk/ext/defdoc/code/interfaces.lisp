@@ -47,13 +47,14 @@
        ;; label.lisp
        #:labeled
        #:label-value
+       #:get-label-symbol-value-translation
 
        ;; spec.lisp
        #:standard-doc-spec
        #:docspec-descriptive
        #:docspec-intro
-       #:docspec-short
-       #:docspec-full
+       #:docspec-blurb
+       #:docspec-details
        #:docspec-params
        #:docspec-callspecs
        #:docspec-deprecated
@@ -67,6 +68,8 @@
        ;; elementdef.lisp
        #:standard-doc-element
        #:*default-element-class*
+       #:string-implicit-symbol-head
+       #:compile-string-element
 
        ;; elements.lisp
        #:standard-plain-text
@@ -126,8 +129,10 @@
        #:callspec-keyarg
 
        ;; block.lisp
-       #:indent-by
        #:bracket-with
+       #:indent-with
+       #:indent-by
+       #:adjoin-blocks
        #:width
        #:flow
 
@@ -146,5 +151,12 @@
        #:callspec-suffix
 
        ;; latex.lisp
-       #:latex-style))
+       #:package-list-latex-mixin
+       #:get-latex-output-file-name
+       #:latex-style
+       #:latex-style-adjust-spec-element
+       #:full-package-latex-style-mixin
+       #:package-list-overall-header
+       #:package-list-group-header
+       #:package-list-entry))
   (:documentation "Programmatic control of document generation."))
