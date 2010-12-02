@@ -21,10 +21,14 @@
   (:method (style usage name)
      (get-latex-output-file-name (type-of style) usage name)))
 
-(defgeneric format-latex-standalone-header (style stream out)
-  (:method (style stream (out standard-output-framework))
+(defgeneric format-latex-standalone-header (style stream out &optional
+                                                  contents index)
+  (:method (style stream (out standard-output-framework)
+                  &optional contents index)
      (declare (ignore style))
      (format stream "~a" *latex-default-header-matter*)
+     (when index
+       (format stream "\\usepackage{makeidx}~%\\makeindex~%"))
      (let ((title-supp (standard-output-framework-doc-title-supp-p out))
            (author-supp (standard-output-framework-doc-author-supp-p out)))
        (when (or title-supp author-supp)
@@ -42,35 +46,42 @@
            (format stream "\\author{}~%"))))
        (format stream "\\begin{document}~%")
        (when (or title-supp author-supp)
-         (format stream "\\maketitle~%")))))
+         (format stream "\\maketitle~%"))
+       (when contents
+         (format stream "\\tableofcontents~%")))))
 
-(defgeneric format-latex-standalone-footer (style stream out)
-  (:method (style stream (out standard-output-framework))
-     (declare (ignore style out))
+(defgeneric format-latex-standalone-footer (style stream out &optional index)
+  (:method (style stream (out standard-output-framework) &optional index)
+     (declare (ignore style))
+     (when index (format stream "\\printindex~%"))
      (format stream "\\end{document}~%")))
 
 (defun write-latex-output (name &key
+                                (table-of-contents nil)
+                                (index nil)
                                 (echo #'(lambda ()))
                                 (style 'latex-style)
                                 (directory #p"./")
                                 (file nil file-supp-p)
                                 standalone)
+  (when (symbolp style)
+    (setf style (make-instance style)))
   (let ((output-framework (get-output-framework name)))
     (unless output-framework
       (error "No such output framework ~s" name))
     (unless file-supp-p
-      (setf file (format nil "~a_~a.tex" name style)))
+      (setf file (format nil "~a_~a.tex" name (type-of style))))
 
     (funcall echo)
     (let ((file-spec (merge-pathnames file directory)))
       (with-open-file (out file-spec :direction :output :if-exists :supersede
                        :if-does-not-exist :create)
         (when standalone
-          (format-latex-standalone-header style out output-framework))
+          (format-latex-standalone-header style out output-framework
+                                          table-of-contents index))
         (format-doc out style output-framework)
         (when standalone
-          (format-latex-standalone-footer style out output-framework)
-          (format out "\\end{document}~%"))))))
+          (format-latex-standalone-footer style out output-framework index))))))
 
 (defun write-spec-latex (name target-type &key
                               (style 'latex-style)
@@ -159,7 +170,7 @@
 (defmethod format-docspec-element ((style latex-style) target-type
                                    (spec standard-doc-spec) stream)
   (with-unpacked-standard-spec (self intro intro-supp-p params params-supp-p
-                                     short short-supp-p full full-supp-p
+                                     blurb blurb-supp-p details details-supp-p
                                      callspec) spec
     (cond
      (intro-supp-p
@@ -167,10 +178,10 @@
                       (latex-style-adjust-spec-element style target-type spec
                                                        :intro intro)
                       target-type))
-     ((and short-supp-p (not full-supp-p))
+     ((and blurb-supp-p (not details-supp-p))
       (format-docspec stream style
                       (latex-style-adjust-spec-element style target-type spec
-                                                       :short short)
+                                                       :blurb blurb)
                       target-type)))
 
     (when callspec
@@ -194,10 +205,10 @@
                         target-type))
       (princ "\\end{description}" stream))
 
-    (when full-supp-p
+    (when details-supp-p
       (format-docspec stream style
                       (latex-style-adjust-spec-element style target-type spec
-                                                       :full full)
+                                                       :details details)
                       target-type))))
 
 (defgeneric latex-style-adjust-spec-element (style target-type spec
@@ -259,6 +270,28 @@
     (princ "\\item " stream)
     (format-docspec stream style spec target-type))
   (format stream "\\end{~a}" (list-element-env-tag spec)))
+
+(defgeneric format-latex-sectioning-level (style stream sectioning-level body)
+  (:method (style stream level body)
+     (declare (ignore style))
+     (format stream
+         (case level
+           ((1) "\\section{~a}")
+           ((2) "\\subsection{~a}")
+           ((3) "\\subsubsection{~a}")
+           ((4) "\\paragraph{~a}")
+           ((5) "\\subparagraph{~a}")
+           (otherwise (error "Too deeply grouped.")))
+       body)))
+
+(defmethod format-output-pregroup ((style latex-style)
+                                   stream output label group)
+  (let ((oname (output-framework-name output)))
+    (when (get-label-section-title-supp-p label style group oname)
+      (format-latex-sectioning-level style stream *sectioning-level*
+                                     (get-label-section-title label style
+                                                              group oname))))
+  (call-next-method))
 
 ;;; -----------------------------------------------------------------
 ;;; Mixin for a full description of packages.

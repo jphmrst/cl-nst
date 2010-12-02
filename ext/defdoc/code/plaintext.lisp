@@ -92,6 +92,22 @@
                    (indent-by (bracket-with body-arg-lines "" suffix)
                               2)))))))))
 
+(defun callspec-items-to-alts (style target-type items max stack)
+  (cond
+   (stack
+    (let ((first-item-lines (callspec-item-to-lines style target-type
+                                                    (car items) max nil))
+          (rest-item-lines (loop for i in (cdr items)
+                               append (bracket-with (callspec-item-to-lines
+                                                     style target-type
+                                                     i (- max 3) nil)
+                                              " | " ""))))
+      (append first-item-lines rest-item-lines)))
+   (t (flow #'callspec-item-to-lines
+            style target-type
+            `(,(car items) ,@(loop for i in (cdr items)
+                                   append (list (intern " | ") i))) max))))
+
 (defgeneric callspec-item-to-lines (style target-type item max &optional stack)
   (:method (style target-type (item symbol) max &optional stack)
      (declare (ignore style target-type stack max))
@@ -106,6 +122,14 @@
                 style target-type
                `(,@(repeated item) ,(intern "...") ,@(repeated item))
                max))))
+  (:method (style target-type (item callspec-one-of) max &optional stack)
+     (with-accessors ((items items)) item
+       (bracket-with (callspec-items-to-alts style target-type items max stack)
+                     "[ " " ] ")))
+  (:method (style target-type (item callspec-bag-of) max &optional stack)
+     (with-accessors ((items items)) item
+       (bracket-with (callspec-items-to-alts style target-type items max stack)
+                     "[ " " ]* ")))
   (:method (style target-type (item callspec-optional) max &optional stack)
      (declare (ignore stack))
      (let* ((items (callspec-item-to-lines style target-type
@@ -129,7 +153,8 @@
   (let* ((key (key spec))
          (prefix (concatenate 'string "[ :" (symbol-name key) " "))
          (form (arg spec)))
-    (bracket-with (callspec-item-to-lines style target-type form (- max 2 (length prefix)))
+    (bracket-with (callspec-item-to-lines style target-type form
+                                          (- max 2 (length prefix)))
                   prefix " ]")))
 
 (defun fill-words (word-list length &optional (first-line-prefix ""))
@@ -175,10 +200,10 @@
 
 (defmethod output-lines (style target-type (doc standard-doc-spec) width)
   (with-unpacked-standard-spec (self intro intro-supp-p params params-supp-p
-                                     short short-supp-p full full-supp-p
+                                     blurb blurb-supp-p details details-supp-p
                                      callspec) doc
      (cond
-      ((or intro-supp-p full-supp-p)
+      ((or intro-supp-p details-supp-p)
        (nconc
         (when intro-supp-p (spec-to-lines style target-type intro width))
         (loop for cspec in callspec
@@ -193,13 +218,14 @@
                append
                  (list* ""
                         (format nil "  ~a" name)
-                        (loop for line in (spec-to-lines style target-type subspec (- width 4))
-                            collect (concatenate 'string "    " line))))
+                        (loop for line in (spec-to-lines style target-type
+                                               subspec (- width 4))
+                              collect (concatenate 'string "    " line))))
            (list "")))
-        (when full-supp-p (spec-to-lines style target-type full width))))
-      (short-supp-p
+        (when details-supp-p (spec-to-lines style target-type details width))))
+      (blurb-supp-p
        (nconc
-        (spec-to-lines style target-type short width)
+        (spec-to-lines style target-type blurb width)
         (loop for cspec in callspec
             append (cons ""
                          (loop for line
@@ -211,7 +237,8 @@
               append
                 (list* ""
                        (format nil "  ~a" name)
-                       (loop for line in (spec-to-lines style target-type subspec (- width 4))
+                       (loop for line in (spec-to-lines style target-type
+                                              subspec (- width 4))
                            collect (concatenate 'string "    " line)))))))
       (params-supp-p
        (nconc
@@ -223,7 +250,8 @@
             append
               (list* ""
                      (format nil "  ~a" name)
-                     (loop for line in (spec-to-lines style target-type subspec (- width 4))
+                     (loop for line in (spec-to-lines style target-type
+                                            subspec (- width 4))
                          collect (concatenate 'string "    " line))))))
       (t nil))))
 
@@ -335,7 +363,8 @@
     (declare (ignore options))
     (loop for item in items
           for i from 1
-          append (loop for block-line in (spec-to-lines style target-type item (- width 4))
+          append (loop for block-line in (spec-to-lines style target-type
+                                              item (- width 4))
                        for j from 0
                        collect (concatenate 'string
                                  (if (> j 0) "    " "  * ")

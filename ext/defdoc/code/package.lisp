@@ -36,6 +36,7 @@
 
              ;; labels.lisp
              #:def-property-label
+             #:def-label-config
 
              ;; tag.lisp
              #:def-doc-tag

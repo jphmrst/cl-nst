@@ -42,97 +42,99 @@
     :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :defdoc-test)))
     :depends-on ( :closer-mop )
-    :components (;; The DEFDOC package, plus internal packages
-                 ;; and documentation generation.
-                 (:file "package")
+    :components
+    ((:module "code" :components
+              (;; The DEFDOC package, plus internal packages and
+               ;; documentation generation.
+               (:file "package")
 
-                 ;; Global settings
-                 (:file "globals"  :depends-on ("package"))
+               ;; Global settings
+               (:file "globals"  :depends-on ("package"))
 
-                 ;; Collectable objects with properties.
-                 (:file "collect"  :depends-on ("package"))
+               ;; Collectable objects with properties.
+               (:file "collect"  :depends-on ("package"))
 
-                 ;; Storage for the actual documentation objects.
-                 (:file "storage"  :depends-on ("globals" "collect"))
+               ;; Storage for the actual documentation objects.
+               (:file "storage"  :depends-on ("globals" "collect"))
 
-                 ;; Properties associated with labels.
-                 (:file "labels"  :depends-on ("package"))
+               ;; Properties associated with labels.
+               (:file "labels"  :depends-on ("package"))
 
-                 ;; Declaring different documentation targets.
-                 (:file "targetdef"  :depends-on ("package" "storage"))
+               ;; Declaring different documentation targets.
+               (:file "targetdef"  :depends-on ("package" "storage"))
 
-                 ;; Things we give documentation to.
-                 (:file "targets"  :depends-on ("targetdef" "globals"))
+               ;; Things we give documentation to.
+               (:file "targets"  :depends-on ("targetdef" "globals"))
 
-                 ;; Standard representation of a specification
-                 (:file "spec"  :depends-on ("package"))
+               ;; Standard representation of a specification
+               (:file "spec"  :depends-on ("package"))
 
-                 ;; Scheme for defining document elements.
-                 (:file "elementdef" :depends-on ("package"))
+               ;; Scheme for defining document elements.
+               (:file "elementdef" :depends-on ("package"))
 
-                 ;; Standard document element definition.
-                 (:file "elements" :depends-on ("elementdef" "package"))
+               ;; Standard document element definition.
+               (:file "elements" :depends-on ("elementdef" "package"))
 
-                 ;; First cut at a tagging scheme.  Will be replaced
-                 ;; by the labels/values scheme below.
-                 (:file "tag" :depends-on ("package"))
+               ;; First cut at a tagging scheme.  Will be replaced
+               ;; by the labels/values scheme below.
+               (:file "tag" :depends-on ("package"))
 
-                 ;; Selecting a set of specs.
-                 (:file "select" :depends-on ("spec"))
+               ;; Selecting a set of specs.
+               (:file "select" :depends-on ("spec"))
 
-                 ;; (:file "values" :depends-on ("package"))
+               ;; (:file "values" :depends-on ("package"))
 
-                 ;; The main defdoc macro.
-                 (:file "macro"  :depends-on ("spec"
-                                              ;; the one below are to
-                                              ;; be able to use defdoc
-                                              ;; in things that depend
-                                              ;; on macro.
-                                              "tag" "elements" "elementdef"
-                                              "targets" "targetdef"
-                                              ))
+               ;; The main defdoc macro.
+               (:file "macro"  :depends-on ("spec"
+                                            ;; the one below are to be
+                                            ;; able to use defdoc in
+                                            ;; things that depend on
+                                            ;; macro.
+                                            "tag" "elements" "elementdef"
+                                            "targets" "targetdef"
+                                            ))
 
-                 ;; Generic output framework specifications.
-                 (:file "output"  :depends-on ("package"
-                                               "labels" "targets" "elements"
-                                               "collect"))
+               ;; Generic output framework specifications.
+               (:file "output"  :depends-on ("package"
+                                             "labels" "targets" "elements"
+                                             "collect"))
 
-                 ;; Decoding the callspec forms.
-                 (:file "callspec"  :depends-on ("package"
-                                                 "macro"))
+               ;; Decoding the callspec forms.
+               (:file "callspec"  :depends-on ("package"
+                                               "macro"))
 
-                 ;; Operations on blocks of lines.
-                 (:file "block"  :depends-on ("package"
-                                                 "macro"))
+               ;; Operations on blocks of lines.
+               (:file "block"  :depends-on ("package"
+                                            "macro"))
 
-                 ;; Converting specs to plain text.
-                 (:file "plaintext"  :depends-on ("spec" "elements"
-                                                  "callspec" "block"
-                                                  "macro"))
+               ;; Converting specs to plain text.
+               (:file "plaintext"  :depends-on ("spec" "elements"
+                                                       "callspec" "block"
+                                                       "macro"))
 
-                 ;; Converting specs to LaTeX.
-                 (:file "latex"  :depends-on ("globals"
-                                              "macro" "plaintext" "spec"
-                                              "elements" "callspec" "tag"
-                                              "output"))
+               ;; Converting specs to LaTeX.
+               (:file "latex"  :depends-on ("globals"
+                                            "macro" "plaintext" "spec"
+                                            "elements" "callspec" "tag"
+                                            "output"))
 
-                 ;; Documentation in def-doc of def-doc.
-                 (:file "coredoc"  :depends-on ("globals"
-                                                "macro" "storage" "targetdef"
-                                                "spec" "elementdef" "elements"
-                                                "tag" "macro" "callspec" "block"
-                                                "plaintext" "latex"))
+               ;; Documentation in def-doc of def-doc.
+               (:file "coredoc"  :depends-on ("globals"
+                                              "macro" "storage" "targetdef"
+                                              "spec" "elementdef" "elements"
+                                              "tag" "macro" "callspec" "block"
+                                              "plaintext" "latex"))
 
-                 ;; Programmatic API
-                 (:file "interfaces"  :depends-on ("storage"
-                                                   "targetdef"
-                                                   "spec"
-                                                   "elementdef"
-                                                   "elements"
-                                                   "labels"
-                                                   "tag"
-                                                   "callspec"
-                                                   "block"
-                                                   "output"
-                                                   "plaintext"
-                                                   "latex"))))
+               ;; Programmatic API
+               (:file "interfaces"  :depends-on ("storage"
+                                                 "targetdef"
+                                                 "spec"
+                                                 "elementdef"
+                                                 "elements"
+                                                 "labels"
+                                                 "tag"
+                                                 "callspec"
+                                                 "block"
+                                                 "output"
+                                                 "plaintext"
+                                                 "latex"))))))

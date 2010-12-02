@@ -67,13 +67,13 @@
 (def-documentation (variable *debug-on-error*)
   (:tags control)
   (:properties (api-summary control))
-    (:short (:latex "User variable \\texttt{*debug-on-error*}: if non-nil, will break into the Lisp REPL debugger upon encountering an unexpected error.  If nil, will record the error and continue with other tests.")))
+    (:blurb (:latex "User variable \\texttt{*debug-on-error*}: if non-nil, will break into the Lisp REPL debugger upon encountering an unexpected error.  If nil, will record the error and continue with other tests.")))
 
 (defvar *debug-on-fail* nil)
 (def-documentation (variable *debug-on-fail*)
   (:tags control)
   (:properties (api-summary control))
-    (:short (:latex "User variable \\texttt{*debug-on-fail*}: if non-nil, will break into the Lisp REPL debugger upon encountering a test which fails.  If nil, will record the failure and continue with other tests.  This variable is useful inspecting the dynamic environment under which a test was evaluated.")))
+    (:blurb (:latex "User variable \\texttt{*debug-on-fail*}: if non-nil, will break into the Lisp REPL debugger upon encountering a test which fails.  If nil, will record the failure and continue with other tests.  This variable is useful inspecting the dynamic environment under which a test was evaluated.")))
 
 (defvar *generate-backtraces*
     (cond
@@ -104,7 +104,7 @@
 (def-documentation (variable *default-report-verbosity*)
   (:tags control)
   (:properties (api-summary control))
-    (:short (:latex "User variable \\texttt{*default-report-verbosity*} determines the default value for *nst-verbosity* when printing reports (2 by default).")))
+    (:blurb (:latex "User variable \\texttt{*default-report-verbosity*} determines the default value for *nst-verbosity* when printing reports (2 by default).")))
 
 (defvar *nst-debug* nil
   "User variable: apply customizable debugging settings.")

@@ -39,7 +39,7 @@
 (def-documentation (variable *max-compound-structure-depth*)
   (:tags sample)
   (:properties (api-summary sample))
-    (:short (:latex "The \\texttt{*max-compound-structure-depth*} variable sets the maximum nesting depth of compound data structures: beyond that depth, \\texttt{scalar} rather than \\texttt{t} is the default element generator.  This restriction does not apply to explicitly specified element types, only to the use of defaults.")))
+    (:blurb (:latex "The \\texttt{*max-compound-structure-depth*} variable sets the maximum nesting depth of compound data structures: beyond that depth, \\texttt{scalar} rather than \\texttt{t} is the default element generator.  This restriction does not apply to explicitly specified element types, only to the use of defaults.")))
 
 (defmacro compound-structure (&body forms)
   `(let ((*current-compound-structure-depth*
@@ -48,7 +48,7 @@
 (def-documentation (compiler-macro compound-structure)
   (:tags sample)
   (:properties (api-summary sample))
-    (:short (:latex "The \\texttt{compound-structure} macro wraps substructure which should be considered compound for the limits set by \\texttt{*max-compound-structure-depth*}.")))
+    (:blurb (:latex "The \\texttt{compound-structure} macro wraps substructure which should be considered compound for the limits set by \\texttt{*max-compound-structure-depth*}.")))
 
 (defgeneric arbitrary (typ)
   (:method ((spec cons))
@@ -534,7 +534,7 @@
             (:latex "A condition which determines the validity of the input argument.  For example, the condition would assert that a number is positive in an application where a negative value would be known to cause a failure.  The default value is \\texttt{t}, allowing any values."))
            (sample-size
             (:latex "Gives the base specification of the number of value sets which will be generated.  Two further arguments have some bearing on the number of generation attempts when the \\texttt{where} argument is non-\\texttt{t}.  The \\texttt{qualifying-sample}\\indexKeyword{qualifying-sample} argument gives the minimum acceptable size of actual tested values, not counting sets rejected via the \\texttt{where} expression.  The \\texttt{max-tries}\\indexKeyword{max-tries} argument gives the maximum number of value sets to be generated.")))
-  (:full (:seq
+  (:details (:seq
           (:plain "Examples:")
           (:code
            "(:sample :sample-size 10

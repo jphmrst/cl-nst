@@ -67,7 +67,7 @@
              #:def-test-method-criterion))
 
 (defdoc:def-documentation (package :sift.nst)
-    (:short "NST unit testing package")
+    (:blurb "NST unit testing package")
   (:descriptive "NST"))
 
 (defdoc:def-doc-tag nst::primary (:package :nst)

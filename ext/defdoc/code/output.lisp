@@ -25,25 +25,26 @@
 (defgeneric get-compiled-output-framework (package name forms))
 (defvar *output-compiler* #'get-compiled-output-framework)
 
-(defgeneric format-output-pregroup (style stream group)
-  (:method (style stream group)
-     (declare (ignore style stream group))))
-(defgeneric format-output-prespec (style stream spec)
-  (:method (style stream spec)
-     (declare (ignore style stream spec))))
-(defgeneric format-output-postspec (style stream spec)
-  (:method (style stream spec)
-     (declare (ignore style stream spec))))
-(defgeneric format-output-spec-sep (style stream spec1 spec2)
-  (:method (style stream spec1 spec2)
-     (declare (ignore style spec1 spec2))
+(defgeneric format-output-pregroup (style stream output-framework label group)
+  (:method (style stream output-framework label group)
+     (declare (ignore style stream output-framework label group))))
+(defgeneric format-output-prespec (style stream output-framework spec)
+  (:method (style stream output-framework spec)
+     (declare (ignore style stream output-framework spec))))
+(defgeneric format-output-postspec (style stream output-framework spec)
+  (:method (style stream output-framework spec)
+     (declare (ignore style stream output-framework spec))))
+(defgeneric format-output-spec-sep (style stream output-framework spec1 spec2)
+  (:method (style stream output-framework spec1 spec2)
+     (declare (ignore style output-framework spec1 spec2))
      (format stream "\\par ")))
-(defgeneric format-output-postgroup (style stream group)
-  (:method (style stream group)
-     (declare (ignore style stream group))))
-(defgeneric format-output-group-sep (style stream group1 group2)
-  (:method (style stream group1 group2)
-     (declare (ignore style group1 group2))
+(defgeneric format-output-postgroup (style stream output-framework group)
+  (:method (style stream output-framework group)
+     (declare (ignore style stream output-framework group))))
+(defgeneric format-output-group-sep (style stream output-framework
+                                           group1 group2)
+  (:method (style stream output-framework group1 group2)
+     (declare (ignore style output-framework group1 group2))
      (format stream "\\par ")))
 
 (defmacro def-output-framework (name &body body)
@@ -58,7 +59,7 @@
          (warn 'option-without-required-option
                :given :groups :missing :grouping-label
                :def-type 'def-output-framework :name ',name))
-        ',name)))
+       ',name)))
 
 (defun get-output-framework (name)
   (gethash name +output-frameworks+))
@@ -91,24 +92,16 @@
                  :accessor standard-output-framework-collector)
       (grouping-label :reader standard-output-framework-grouping-label)
       (groups :reader standard-output-framework-groups)
+      (default-group :reader standard-output-framework-default-group)
       (doc-title  :reader standard-output-framework-doc-title)
       (doc-author :reader standard-output-framework-doc-author)))
-(defgeneric standard-output-framework-grouping-label-supp-p (o)
-  (:method (o) (declare (ignore o)) nil)
-  (:method ((o standard-output-framework))
-     (slot-boundp o 'grouping-label)))
-(defgeneric standard-output-framework-groups-supp-p (o)
-  (:method (o) (declare (ignore o)) nil)
-  (:method ((o standard-output-framework))
-     (slot-boundp o 'groups)))
-(defgeneric standard-output-framework-doc-title-supp-p (o)
-  (:method (o) (declare (ignore o)) nil)
-  (:method ((o standard-output-framework))
-     (slot-boundp o 'doc-title)))
-(defgeneric standard-output-framework-doc-author-supp-p (o)
-  (:method (o) (declare (ignore o)) nil)
-  (:method ((o standard-output-framework))
-     (slot-boundp o 'doc-author)))
+
+(def-slot-supp-predicates standard-output-framework
+    ((standard-output-framework-grouping-label-supp-p grouping-label)
+     (standard-output-framework-groups-supp-p         groups)
+     (standard-output-framework-doc-title-supp-p      doc-title)
+     (standard-output-framework-doc-author-supp-p     doc-author)
+     (standard-output-framework-default-group-supp-p  default-group)))
 
 (defun invoke-collector (output)
   (loop for spec being the hash-keys
@@ -116,8 +109,11 @@
         collect spec))
 
 (defmethod format-doc (stream style
-                       (output-framework standard-output-framework))
-  (let ((contents (invoke-collector output-framework)))
+                              (output-framework standard-output-framework))
+  (defdoc-debug "format-doc on output-framework ~s~%" output-framework)
+
+  (let ((contents (invoke-collector output-framework))
+        (oname (output-framework-name output-framework)))
 
     ;; Are we going to group or sort the contents?
     (cond
@@ -125,18 +121,31 @@
      ((standard-output-framework-grouping-label-supp-p output-framework)
 
       ;; Set up the groups.
-      (let ((grouping-label (standard-output-framework-grouping-label
-                             output-framework))
-            (group-hash (make-hash-table :test 'eq)))
+      (let* ((grouping-label (standard-output-framework-grouping-label
+                              output-framework))
+             (grouping-label-def (get-labeldef grouping-label))
+             (group-hash (make-hash-table :test 'eq)))
+        (defdoc-debug "Organizing output doc groups~%")
         (loop for item in contents do
-              (let ((this-group (label-value item grouping-label)))
-                (push item (gethash this-group group-hash))))
+          (let ((this-group (label-value item grouping-label)))
+            (when (and (null this-group)
+                       (standard-output-framework-default-group-supp-p
+                        output-framework))
+              (setf this-group (standard-output-framework-default-group
+                                output-framework)))
+            (push item (gethash this-group group-hash))
+            (defdoc-debug " - ~s --> Group ~s~%"
+                (docspec-self item) this-group)))
 
         ;; If we have a list of groups, prune any that aren't included.
         (when (standard-output-framework-groups-supp-p output-framework)
           (let ((allowed (standard-output-framework-groups output-framework)))
             (loop for group-name being the hash-keys of group-hash do
                   (unless (member group-name allowed :test 'eq)
+                    (defdoc-debug "Dropping unused group ~s~%" group-name)
+                    (when (gethash group-name group-hash)
+                      (warn "Group ~s nonempty, but excluded from output"
+                            group-name))
                     (remhash group-name group-hash)))))
 
         ;; Extract the actual list of group names.
@@ -161,23 +170,40 @@
             ;; Otherwise we just leave it alone.
             )
 
-          ;; Should we sort the contents of each group?
-          ;;
-          ;; FILL IN
-
           ;; Groups are set up, so go through them and print them.
           (loop for (group . next-groups) on group-name-list do
-            (format-output-pregroup style stream group)
-            (loop for (spec . other-specs) on (gethash group group-hash) do
-              (format-output-prespec style stream spec)
-              (format-doc stream style spec)
-              (format-output-postspec style stream spec)
-              (when other-specs
-                (format-output-spec-sep style stream
-                                        spec (car other-specs))))
-            (format-output-postgroup style stream group)
+            (format-output-pregroup style stream output-framework
+                   grouping-label-def group)
+            (let ((*sectioning-level* (+ 1 *sectioning-level*)))
+              ;; Should we sort the contents of each group?
+              (when (get-label-section-order-supp-p grouping-label-def
+                                                    style group oname)
+                (let ((elements (gethash group group-hash))
+                      (item-order (get-label-section-order grouping-label-def
+                                                           style group oname)))
+                  (setf (gethash group group-hash)
+                        (sort elements
+                              #'(lambda (x y)
+                                  (let ((xp (position (docspec-self x)
+                                                      item-order :test 'eq))
+                                        (yp (position (docspec-self y)
+                                                      item-order :test 'eq)))
+                                    (cond
+                                     ((and (numberp xp) (numberp yp))
+                                      (< xp yp))
+                                     ((and (numberp xp) (null yp)) t)
+                                     (t nil))))))))
+
+              (loop for (spec . other-specs) on (gethash group group-hash) do
+                (format-output-prespec style stream output-framework spec)
+                (format-doc stream style spec)
+                (format-output-postspec style stream output-framework spec)
+                (when other-specs
+                  (format-output-spec-sep style stream output-framework
+                                          spec (car other-specs)))))
+            (format-output-postgroup style stream output-framework group)
             (when next-groups
-              (format-output-group-sep style stream
+              (format-output-group-sep style stream output-framework
                                        group (car next-groups)))))))
 
      ;; Just sort them, but not group.
@@ -257,6 +283,11 @@
             (output-framework standard-output-framework) package form-args)
      (declare (ignore package))
      (set-single-assign-slot output-framework 'groups form-args))
+
+  (:method ((form-head (eql :default-group))
+            (output-framework standard-output-framework) package form-args)
+     (declare (ignore package))
+     (set-single-assign-slot output-framework 'default-group form-args))
 
   (:method ((form-head (eql :doc-title))
             (output-framework standard-output-framework) package form-args)

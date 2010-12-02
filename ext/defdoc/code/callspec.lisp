@@ -61,6 +61,10 @@
          :key (nreverse keyword) :key-supp keyword-supp
          :body (nreverse body)   :body-supp body-supp))))
 
+(defclass callspec-items-holder ()
+     ((items :initarg :items :reader items)))
+(defclass callspec-bag-of (callspec-items-holder) ())
+(defclass callspec-one-of (callspec-items-holder) ())
 (defclass callspec-sequence-of ()
      ((repeated :initarg :repeated :reader repeated)))
 (defclass callspec-optional ()
@@ -79,6 +83,16 @@
           :repeated (loop for sub in (cdr item)
                         collect (get-compiled-callspec-simple-item
                                  package target-type sub))))
+       ((:bag)
+        (make-instance 'callspec-bag-of
+          :items (loop for sub in (cdr item)
+                     collect (get-compiled-callspec-simple-item
+                              package target-type sub))))
+       ((:alt)
+        (make-instance 'callspec-one-of
+          :items (loop for sub in (cdr item)
+                     collect (get-compiled-callspec-simple-item
+                              package target-type sub))))
        ((:opt)
         (make-instance 'callspec-optional
           :option (loop for sub in (cdr item)

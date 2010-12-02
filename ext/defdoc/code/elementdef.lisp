@@ -25,7 +25,14 @@
 
 (defgeneric compile-string-element (package spec string)
   (:method (package spec string)
-     (compile-symbol-headed-element :plain package spec (list string))))
+     (compile-symbol-headed-element (string-implicit-symbol-head package
+                                                                 spec string)
+                                    package spec (list string))))
+
+(defgeneric string-implicit-symbol-head (package spec string)
+  (:method (package spec string)
+     (declare (ignore package spec string))
+     :plain))
 
 (defgeneric get-element-aggregation (package spec elements)
   (:method (package spec elements)
