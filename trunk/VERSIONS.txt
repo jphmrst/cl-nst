@@ -152,3 +152,4 @@
  Code improvements for compile/load-time improvements.
 
 1.1.1 - First public release, June 2009.
+
