@@ -90,7 +90,11 @@
             (t                          ; (and body-arg-lines (not ABOVE))
              (cons prefix
                    (indent-by (bracket-with body-arg-lines "" suffix)
-                              2)))))))))
+                              2))))))))
+  (:method (style target-type (spec macrolist-callspec) width
+                  &optional calling)
+     (declare (ignore style target-type width calling))
+     (bracket-with (call-next-method) "(" ")" t)))
 
 (defun callspec-items-to-alts (style target-type items max stack)
   (cond
