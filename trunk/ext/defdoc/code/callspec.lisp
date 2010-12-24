@@ -11,8 +11,12 @@
       (body :initarg :body :accessor body)
       (body-supp :initarg :body-supp :accessor body-supp)))
 
-(defgeneric get-compiled-callspec (package target-type callspec)
-  (:method (package target-type callspec)
+(defclass macrolist-callspec (standard-callspec) ())
+
+(defgeneric get-compiled-callspec (package target-type callspec
+                                           &optional actual-class)
+  (:method (package target-type callspec
+                    &optional (actual-class 'standard-callspec))
      (let ((mandatory nil)
            (keyword nil)
            (optional nil)
@@ -55,7 +59,7 @@
                (push (get-compiled-callspec-simple-item package
                                                         target-type form)
                      body))))))
-       (make-instance 'standard-callspec
+       (make-instance actual-class
          :mandatory (nreverse mandatory)
          :optional (nreverse optional) :optional-supp optional-supp
          :key (nreverse keyword) :key-supp keyword-supp
@@ -104,7 +108,8 @@
           :forms (loop for sub in (cddr item)
                      collect (get-compiled-callspec-simple-item
                               package target-type sub))))
-       (otherwise (get-compiled-callspec package target-type item))))
+       (otherwise (get-compiled-callspec package target-type item
+                                         'macrolist-callspec))))
     (t (error "Unrecognized lambda list element ~s" item))))
 
 (defclass callspec-keyarg ()
