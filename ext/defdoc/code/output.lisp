@@ -69,7 +69,7 @@
       (loop for name-or-spec in names do
         (with-name-and-filters (name filters name-or-spec)
           (let ((spec (get-output-framework name)))
-            (when (funcall (get-collector-filter-predicate filters) spec)
+            (when (funcall (get-filter-predicate filters) spec)
               (setf (gethash spec result) t)))))
       result))
 
@@ -93,14 +93,14 @@
       (grouping-label :reader standard-output-framework-grouping-label)
       (groups :reader standard-output-framework-groups)
       (default-group :reader standard-output-framework-default-group)
-      (doc-title  :reader standard-output-framework-doc-title)
-      (doc-author :reader standard-output-framework-doc-author)))
+      (title  :reader standard-output-framework-title)
+      (author :reader standard-output-framework-author)))
 
 (def-slot-supp-predicates standard-output-framework
     ((standard-output-framework-grouping-label-supp-p grouping-label)
      (standard-output-framework-groups-supp-p         groups)
-     (standard-output-framework-doc-title-supp-p      doc-title)
-     (standard-output-framework-doc-author-supp-p     doc-author)
+     (standard-output-framework-title-supp-p          title)
+     (standard-output-framework-author-supp-p         author)
      (standard-output-framework-default-group-supp-p  default-group)))
 
 (defun invoke-collector (output)
@@ -214,7 +214,8 @@
 (set-pprint-dispatch 'standard-output-framework
   #'(lambda (stream output)
       (pprint-logical-block (stream '(1))
-        (format stream "[ standard-output-framework ~s"
+        (format stream "[ ~s ~s"
+          (type-of output)
           (output-framework-name output))
         (let ((props (label-values output)))
           (when (< 0 (hash-table-count props))
@@ -289,17 +290,17 @@
      (declare (ignore package))
      (set-single-assign-slot output-framework 'default-group form-args))
 
-  (:method ((form-head (eql :doc-title))
+  (:method ((form-head (eql :title))
             (output-framework standard-output-framework) package form-args)
      (declare (ignore package))
      (destructuring-bind (title-string) form-args
-       (set-single-assign-slot output-framework 'doc-title title-string)))
+       (set-single-assign-slot output-framework 'title title-string)))
 
-  (:method ((form-head (eql :doc-author))
+  (:method ((form-head (eql :author))
             (output-framework standard-output-framework) package form-args)
      (declare (ignore package))
      (destructuring-bind (author-string) form-args
-       (set-single-assign-slot output-framework 'doc-author author-string)))
+       (set-single-assign-slot output-framework 'author author-string)))
 
   (:method ((form-head (eql :with-output))
             (output-framework standard-output-framework) package form-args)
@@ -316,7 +317,7 @@
   (:method ((form-head (eql :target-type))
             (output-framework standard-output-framework) package form-args)
      (declare (ignore package))
-     ;; (format t "** A ** :target-type (~{~s~^ ~})~%" form-args)
+     (format t "** A ** :target-type (~{~s~^ ~})~%" form-args)
      (collector-unitef (standard-output-framework-collector output-framework)
                        (get-target-types-collector form-args)))
 
@@ -334,8 +335,7 @@
 
 (defgeneric process-standard-output-framework-form (output-framework package
                                                     form-head form-args)
-  (:method ((output-framework standard-output-framework)
-            package form-head form-args)
+  (:method (output-framework package form-head form-args)
      (default-standard-output-framework-form-processor
          form-head output-framework package form-args)))
 
@@ -346,3 +346,291 @@
       (process-standard-output-framework-form result package
                                                      (car form) (cdr form)))
     result))
+
+;;; -----------------------------------------------------------------
+
+(defgeneric get-specs-for-output-framework (spec)
+  (:method (other)
+     (declare (ignore other))
+     nil)
+  (:method ((spec symbol))
+     (get-specs-for-output-framework (make-instance spec))))
+
+(defgeneric finalize-output-framework (spec)
+  (:method (spec)
+     (declare (ignore spec))))
+
+(defun get-output-framework-forms (label-name forms
+                                              &rest keyvals &key
+                                              (package nil)
+                                              (class 'grouped-output-framework)
+                                              &allow-other-keys)
+;;;  (unless package-supp-p
+;;;    (setf package (symbol-package label-name)))
+  `((defclass ,label-name (,class) ())
+    (defmethod initialize-instance :after ((spec ,label-name)
+                                           &key &allow-other-keys)
+      (setf (slot-value spec 'name) ',label-name)
+      ,@(loop while keyvals
+            append (let ((key (pop keyvals))
+                         (val (pop keyvals)))
+                     (unless (eq key :class)
+                       `((process-standard-output-framework-form
+                          spec ,package ,key (list ,val))))))
+      (finalize-output-framework spec))
+    ,@(block from-forms
+        (loop for form in forms
+              for (collect-call init-forms) = (multiple-value-list (eval form))
+              collect collect-call into append-arg-forms
+              append init-forms into additional-toplevel
+              finally
+           (return-from from-forms
+             `(,@additional-toplevel
+               (defmethod get-specs-for-output-framework
+                   ((spec ,label-name))
+                 ,(cond
+                   ((eql 1 (length append-arg-forms))
+                    (car append-arg-forms))
+                   (t `(append ,@(loop for form in append-arg-forms
+                                     collect (eval form))))))))))))
+
+(defmacro new-def-output-framework ((label-name &rest keyvals
+                                                &key &allow-other-keys)
+                                    &body forms)
+  `(progn ,@(apply #'get-output-framework-forms label-name forms keyvals)))
+
+;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(defclass grouped-output-framework (standard-output-framework)
+     ((group-specs-supp-p :initarg :group-specs-supp-p
+                          :reader group-specs-supp-p)
+      (group-specs      :initarg :group-specs      :reader group-specs)
+      (base-label       :initarg :base-label       :reader base-label)
+      (generating-thunk :initarg :generating-thunk :reader generating-thunk)))
+
+(defgeneric format-grouped-output-sep (style stream spec obj1 obj2)
+  (:method (style stream spec obj1 obj2)
+     (declare (ignore style stream spec obj1 obj2))))
+
+(defmethod format-doc (stream style (grouper grouped-output-framework))
+
+  (let ((contents (get-specs-for-output-framework grouper)))
+    (loop for (group . next-groups) on contents do
+      (format-doc stream style group)
+      (when next-groups
+        (format-grouped-output-sep style stream grouper
+                                   group (car next-groups))))))
+
+(defmethod get-specs-for-output-framework ((output-framework
+                                            grouped-output-framework))
+  (let ((contents (funcall (generating-thunk output-framework))))
+    ;;; TO DO --- adapt the code in the format-doc above (the first
+    ;;; block, for grouping) to here, debug with the
+    ;;; new-def-output-framework in doc.lisp.
+    ;;;
+    ;;; THEN --- transform this code to directly expand into the macro
+    ;;; below, and get rid of this defclass/defmethod.
+
+    (with-accessors ((grouping-label base-label)
+                     (group-specs group-specs)
+                     (groups-supp-p  group-specs-supp-p)) output-framework
+      (let* ((allowed nil)
+             (group-order-spec (make-hash-table :test 'eq))
+             (grouping-label-def (get-labeldef grouping-label))
+             (group-hash (make-hash-table :test 'eq)))
+        (loop for group-spec in group-specs do
+          (cond ((symbolp group-spec) (push group-spec allowed))
+                ((listp group-spec)
+                 (let ((name (pop group-spec)))
+                   (push name allowed)
+                   (destructuring-bind (&key (order nil order-supp-p)
+                                             &allow-other-keys) group-spec
+                     (when order-supp-p
+                       (setf (gethash name group-order-spec) order)))))
+                (t (error "Expected symbol or list: ~s" group-spec))))
+        (setf allowed (reverse allowed))
+        (defdoc-debug "Organizing output doc groups~%")
+        (loop for item in contents do
+          (let ((this-group (label-value item grouping-label)))
+            (when (and (null this-group)
+                       (standard-output-framework-default-group-supp-p
+                        output-framework))
+              (setf this-group (standard-output-framework-default-group
+                                output-framework)))
+            (push item (gethash this-group group-hash))
+            (defdoc-debug " - ~s --> Group ~s~%"
+                item ; (docspec-self item) ; item
+              this-group)))
+
+        ;; If we have a list of groups, prune any that aren't included.
+        (when groups-supp-p
+          (loop for group-name being the hash-keys of group-hash do
+            (unless (member group-name allowed :test 'eq)
+              (defdoc-debug "Dropping unused group ~s~%" group-name)
+              (when (gethash group-name group-hash)
+                (warn "Group ~s nonempty, but excluded from output"
+                      group-name))
+              (remhash group-name group-hash))))
+
+        ;; Extract the actual list of group names.
+        (let ((group-name-list (loop for group-name being the hash-keys
+                                   of group-hash collect group-name)))
+          (defdoc-debug "Group-name-list [1] ~s~%" group-name-list)
+
+          ;; Should we sort the groups?
+          (cond
+
+           ;; If we have an explicit sorter, apply it.
+           ;;
+           ;; FILL IN
+
+           ;; If we have a group list specified, mimic it.
+           (groups-supp-p
+            (setf group-name-list
+              (loop for g in allowed
+                  if (member g group-name-list)
+                  collect g)))
+
+           ;; Otherwise we just leave it alone.
+           )
+
+          (defdoc-debug "Group-name-list [2] ~s~%" group-name-list)
+
+          (loop for group in group-name-list
+              collect
+              (let ((spec-list (gethash group group-hash))
+                    (item-order (gethash group group-order-spec)))
+                (when item-order
+                  (setf spec-list
+                    (sort spec-list
+                          #'(lambda (x y)
+                              (let ((xp (position (docspec-self x)
+                                                  item-order :test 'eq))
+                                    (yp (position (docspec-self y)
+                                                  item-order :test 'eq)))
+                                (cond
+                                 ((and (numberp xp) (numberp yp))
+                                  (< xp yp))
+                                 ((and (numberp xp) (null yp)) t)
+                                 (t nil)))))))
+                (defdoc-debug " --> group ~s ~s~%" group spec-list)
+
+                (make-instance 'grouped-subframework
+                  :labeldef grouping-label-def :group group
+                  :spec-list spec-list))))))))
+
+(defun default-compile-grouper (label-name groups groups-supp-p
+                                           package package-supp-p forms)
+  (let ((adjusted-groups
+         (cond
+           (package-supp-p
+            (loop for g in groups
+                  collect (cond
+                            ((and (symbolp g)
+                                  (eq *package* (symbol-package g)))
+                             (intern (symbol-name g) package))
+                            ((and (consp g)
+                                  (car g)
+                                  (symbolp (car g))
+                                  (not (keywordp (car g)))
+                                  (eq *package* (symbol-package (car g))))
+                             (cons (intern (symbol-name (car g)) package)
+                                   (cdr g)))
+                            (t g))))
+           (t groups))))
+    `(get-specs-for-output-framework
+      (make-instance 'grouped-output-framework
+        :group-specs ,groups
+        :group-specs-supp-p ,groups-supp-p
+        :base-label ',label-name
+        :generating-thunk #'(lambda ()
+                              ,(case (length forms)
+                                 ((1) (car forms))
+                                 (otherwise
+                                  `(append ,@(loop for form in forms
+                                                 collect (eval form))))))))))
+
+(defvar *grouping-compiler* #'default-compile-grouper)
+
+(defmacro collect-groups-by-label ((label-name &key
+                                               (package nil package-supp-p)
+                                               (groups nil groups-supp-p)
+                                               &allow-other-keys) &body forms)
+  (let ()
+    `(values ',(funcall *grouping-compiler* label-name
+                        groups groups-supp-p
+                        package package-supp-p
+                        forms)
+             nil)))
+
+;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(defclass grouped-subframework ()
+     ((labeldef :initarg :labeldef :reader labeldef)
+      (group :initarg :group :reader group)
+      (spec-list :initarg :spec-list :reader spec-list)))
+
+(defmethod format-doc (stream style (group-inst grouped-subframework))
+
+  (with-accessors ((labeldef labeldef)
+                   (group group)
+                   (spec-list spec-list)) group-inst
+    (format-output-pregroup style stream group-inst labeldef group)
+    (let ((*sectioning-level* (+ 1 *sectioning-level*)))
+      (loop for (spec . other-specs) on spec-list do
+            (format-output-prespec style stream group-inst spec)
+            (format-doc stream style spec)
+            (format-output-postspec style stream group-inst spec)
+            (when other-specs
+              (format-output-spec-sep style stream group-inst
+                                      spec (car other-specs)))))
+    (format-output-postgroup style stream group-inst group)))
+
+;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(defun collect-target-type (target-name &rest filters)
+  (values `(get-specs-by-target-type ',target-name
+                                     ,(get-filter-predicate filters))
+          nil))
+
+(defun collect-exported-symbols (package &rest filters)
+  (values
+   `(get-specs-by-package-export ',package ,(get-filter-predicate filters))
+   nil))
+
+(defun collect-documented-symbols (package &rest filters)
+  (values
+   `(get-specs-by-package-allsymbols ',package
+                                     ,(get-filter-predicate filters) nil)
+   nil))
+
+(defun collect-all-symbols (package &rest filters)
+  (values
+   `(get-specs-by-package-allsymbols ',package
+                                     ,(get-filter-predicate filters) t)
+   nil))
+
+(defun collect-output (name-or-spec &rest forms)
+  (let ((name) (options))
+    (cond (;; There's just a bare symbol.
+           (symbolp name-or-spec)
+           (setf name name-or-spec options nil))
+
+          ;; There's an output set name with options.
+          ((and name-or-spec (listp name-or-spec)
+                (car name-or-spec)
+                (symbolp (car name-or-spec))
+                (not (keywordp (car name-or-spec))))
+           (setf name (car name-or-spec) options (cdr name-or-spec)))
+
+          ;; There's output set options, but no name.
+          ((and name-or-spec (listp name-or-spec)
+                (car name-or-spec)
+                (keywordp (car name-or-spec)))
+           (setf name (gensym) options name-or-spec)))
+    (values `(list (make-instance ',name))
+            (apply #'get-output-framework-forms name forms options))))
+
+(defun collect-named-output (name)
+  (values `(list (make-instance ',name)) nil))
+

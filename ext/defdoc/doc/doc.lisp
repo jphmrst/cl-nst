@@ -34,8 +34,20 @@
            defdoc::standard-model defdoc::output-model defdoc::plaintext
            defdoc::latex defdoc::deprecated)
 
-  (:doc-title "DefDoc user manual")
-  (:doc-author "John Maraist"))
+  (:title "DefDoc user manual")
+  (:author "John Maraist"))
+
+(defdoc::new-def-output-framework
+    (new-defdoc-manual :title "DefDoc user manual"
+      :author "John Maraist")
+
+  (defdoc::collect-groups-by-label
+      (defdoc::manual-section :package :defdoc
+                      :groups '(defdoc::docspecs defdoc::outspec defdoc::doc-gen defdoc::control defdoc::targets defdoc::model
+                               defdoc::label-model defdoc::elements defdoc::standard-model defdoc::output-model
+                                defdoc::plaintext defdoc::latex defdoc::deprecated))
+    (defdoc::collect-exported-symbols :defdoc)
+    (defdoc::collect-exported-symbols :defdoc-control-api)))
 
 (defclass manual-style (defdoc-control-api:latex-style) ())
 
@@ -70,5 +82,21 @@
         :index t :table-of-contents t
         :style 'manual-style)
     (defdoc:process-latex-document gen-dir "defdoc-manual_manual-style"
-                                   :index t)))
+                                   :index t)
 
+    (new-output-build)))
+
+(defun new-output-build ()
+  (let* ((doc-root-dir (asdf:system-relative-pathname (asdf:find-system :defdoc)
+                                                      "doc/"))
+         (gen-dir (merge-pathnames #p"gen/" doc-root-dir)))
+
+    (defdoc::new-write-latex-output 'new-defdoc-manual
+        :echo #'(lambda (&key &allow-other-keys)
+                  (format t "Writing manual~%"))
+        :directory gen-dir
+        :standalone t
+        :index t :table-of-contents t
+        :style 'manual-style)
+    (defdoc:process-latex-document gen-dir "new-defdoc-manual_manual-style"
+                                   :index t)))

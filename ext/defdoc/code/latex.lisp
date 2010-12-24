@@ -29,19 +29,19 @@
      (format stream "~a" *latex-default-header-matter*)
      (when index
        (format stream "\\usepackage{makeidx}~%\\makeindex~%"))
-     (let ((title-supp (standard-output-framework-doc-title-supp-p out))
-           (author-supp (standard-output-framework-doc-author-supp-p out)))
+     (let ((title-supp (standard-output-framework-title-supp-p out))
+           (author-supp (standard-output-framework-author-supp-p out)))
        (when (or title-supp author-supp)
          (cond
           (title-supp
            (format stream "\\title{~a}~%"
-             (standard-output-framework-doc-title out)))
+             (standard-output-framework-title out)))
           (t
            (format stream "\\title{}~%")))
          (cond
           (author-supp
            (format stream "\\author{~a}~%"
-             (standard-output-framework-doc-author out)))
+             (standard-output-framework-author out)))
           (t
            (format stream "\\author{}~%"))))
        (format stream "\\begin{document}~%")
@@ -67,6 +67,33 @@
   (when (symbolp style)
     (setf style (make-instance style)))
   (let ((output-framework (get-output-framework name)))
+    (unless output-framework
+      (error "No such output framework ~s" name))
+    (unless file-supp-p
+      (setf file (format nil "~a_~a.tex" name (type-of style))))
+
+    (funcall echo)
+    (let ((file-spec (merge-pathnames file directory)))
+      (with-open-file (out file-spec :direction :output :if-exists :supersede
+                       :if-does-not-exist :create)
+        (when standalone
+          (format-latex-standalone-header style out output-framework
+                                          table-of-contents index))
+        (format-doc out style output-framework)
+        (when standalone
+          (format-latex-standalone-footer style out output-framework index))))))
+
+(defun new-write-latex-output (name &key
+                                    (table-of-contents nil)
+                                    (index nil)
+                                    (echo #'(lambda ()))
+                                    (style 'latex-style)
+                                    (directory #p"./")
+                                    (file nil file-supp-p)
+                                    standalone)
+  (when (symbolp style)
+    (setf style (make-instance style)))
+  (let ((output-framework (make-instance name)))
     (unless output-framework
       (error "No such output framework ~s" name))
     (unless file-supp-p
@@ -286,11 +313,12 @@
 
 (defmethod format-output-pregroup ((style latex-style)
                                    stream output label group)
-  (let ((oname (output-framework-name output)))
-    (when (get-label-section-title-supp-p label style group oname)
+  (let (;; (oname (output-framework-name output))
+        )
+    (when (get-label-section-title-supp-p label style group output)
       (format-latex-sectioning-level style stream *sectioning-level*
                                      (get-label-section-title label style
-                                                              group oname))))
+                                                              group output))))
   (call-next-method))
 
 ;;; -----------------------------------------------------------------
