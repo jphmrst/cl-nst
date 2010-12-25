@@ -13,33 +13,196 @@
 (def-property-label manual-section ())
 
 ;;; -----------------------------------------------------------------
+;;; Standard documentation elements
+
+(def-target-type doc-element ())
+
+(def-documentation (doc-element :plain)
+ (:intro "A \\texttt{:plain} element should have one other element in the list, a string of plain text, with no backend-specific formatting.")
+ (:callspec (string)))
+
+(def-documentation (doc-element :latex)
+ (:intro "A \\texttt{:latex} element should have one other element in the list, a string of \\LaTeX\\ source.")
+ (:callspec (string)))
+
+(def-documentation (doc-element :paragraphs)
+ (:intro "A \\texttt{:paragraphs} element represents a sequence of paragraphs corresponding to the rest of the list.")
+ (:callspec ( (:seq string-or-docspec))))
+
+(def-documentation (doc-element :seq)
+ (:intro "A \\texttt{:seq} element will combine the rest of the element's list into a single paragraph.")
+ (:callspec ( (:seq string-or-docspec))))
+
+(def-documentation (doc-element :code)
+ (:intro "A \\texttt{:code} element should have one other element in the list, a string of plain text, possibly including line breaks, which will be rendered exactly as it is as an example of code.")
+ (:callspec (string)))
+
+(def-documentation (doc-element :itemize)
+ (:intro "The list items after an \\texttt{:itemize} element (and its second argument, which specifies optional keyword arguments about the list itself) are taken as the contents of an itemized list.")
+ (:callspec (() (:seq string-or-docspec))))
+
+(def-documentation (doc-element :enumerate)
+                (:intro "The list items after an \\texttt{:enumerate} element (and its second argument, which specifies optional keyword arguments about the list itself) are taken as the contents of a numbered list.")
+                (:callspec (() (:seq string-or-docspec))))
+
+(def-output-framework doc-elements
+  (:target-type doc-element))
+
+;;; -----------------------------------------------------------------
+;;; Special callspec list headers
+
+(def-target-type callspec-special ())
+
+(def-documentation (callspec-special :seq)
+  (:intro "The \\texttt{:seq} symbol indicates that the remaining specifiers of the list should be repeated in sequence.")
+  (:details "In the above example,"
+            (:code "  (:seq call-sequence)")
+            "would be rendered under the standard document style as:"
+            (:code "  call-sequence ... call-sequence")
+            "and"
+            (:code "  (:seq (name (:seq val)))")
+            "would be rendered as:"
+            (:code "  (name val ... val) ... (name val ... val)")))
+
+(def-documentation (callspec-special :bag)
+  (:intro "The \\texttt{:bag} symbol specifies usage of the following specifiers once or more each in any order.")
+  (:details "For example,"
+            (:code "  (:bag simple (less simple)
+        (rather (:seq less) simple))")
+            "could be rendered as:"
+            (:code " [ simple
+    | (less simple)
+    | (rather less ... less simple ]*")))
+
+(def-documentation (callspec-special :alt)
+  (:intro "The \\texttt{:alt} symbol indicates that exactly one of the list's specifiers should be satisfied, and the rest ignored.")
+  (:details "For example,"
+            (:code "  (:alt :light :medium :dark)")
+            "would be rendered as:"
+            (:code " [ :light | :medium | :dark ]")))
+
+(def-documentation (callspec-special :opt)
+  (:intro "The \\texttt{:opt} symbol specifies optional forms.")
+  (:details (:code "  (:opt (name (:seq val)))")
+            "would be rendered as:"
+            (:code "  [ (name val ... val) ]")))
+
+(def-documentation (callspec-special :key-head)
+  (:intro "The \\texttt{:key-head} symbol specifies a list headed by a keyword argument, and the form of the other values in that list.")
+  (:details "In the example above,"
+            (:code "  (:key-head blurb string-or-docspec)")
+            "would be rendered as:"
+            (:code "  (:blurb string-or-docspec)")
+            "The \\texttt{:key-head} specifier removes any ambiguity in the callspecs of macro forms such as the body forms of a \\texttt{defclass}."
+            (:code "  (:key-head seq item)")
+            "would render as:"
+            (:code "  (:seq item)")))
+
+(def-output-framework callspec-specials
+  (:target-type callspec-special))
+
+;;; -----------------------------------------------------------------
 ;;; Main macros
 
 
 (def-documentation (compiler-macro def-documentation)
   (:intro "The \\texttt{def-documentation} macro attaches user documentation to a function, macro, or other documentable entity.")
   (:callspec (name &body
-                   (:opt (:key-head :blurb string-or-docspec))
+                   (:opt (:key-head blurb string-or-docspec))
                    (:opt (:key-head :intro string-or-docspec))
                    (:opt (:key-head :params (:seq (name string-or-docspec))))
                    (:opt (:key-head :callspec (:seq call-sequence)))
-                   (:opt (:key-head :details string-or-docspec))))
-  (:params (blurb "Short version of the item's documentation.")
+                   (:opt (:key-head :details string-or-docspec))
+                   (:opt (:key-head :properties (:seq (prop-name value))))))
+  (:params (string-or-docspec
+            (:paragraphs
+             "Actual documentation can be given as either a \\emph{docspec element}, a list with a recognized keyword as its first value, or as a plain string.  The standard docspec elements are:"
+             (:itemize ()
+               (:seq
+                "A \\texttt{:plain} element should have one other element in the list, a string of plain text, with no backend-specific formatting."
+                (:code "(:plain string)"))
+               (:seq
+                "A \\texttt{:latex} element should have one other element in the list, a string of \\LaTeX\\ source."
+                (:code "(:latex string)"))
+               (:seq
+                "A \\texttt{:paragraphs} element represents a sequence of paragraphs corresponding to the rest of the list."
+                (:code "(:paragraphs string-or-docspec
+                           ... string-or-docspec)"))
+               (:seq
+                "A \\texttt{:seq} element will combine the rest of the element's list into a single paragraph."
+                (:code "(:seq string-or-docspec ... string-or-docspec)"))
+               (:seq
+                "A \\texttt{:code} element should have one other element in the list, a string of plain text, possibly including line breaks, which will be rendered exactly as it is as an example of code."
+                (:code "(:code string)"))
+               (:seq
+                "The list items after an \\texttt{:itemize} element (and its second argument, which specifies optional keyword arguments about the list itself) are taken as the contents of an itemized list."
+                (:code "(:itemize () string-or-docspec
+                           ... string-or-docspec)"))
+               (:seq
+                "The list items after an \\texttt{:enumerate} element (and its second argument, which specifies optional keyword arguments about the list itself) are taken as the contents of a numbered list."
+                (:code "(:enumerate () string-or-docspec
+                           ... string-or-docspec)")))
+             "Additional docspec keywords can be declared with the \\texttt{def-element} macro.  The interpretation of a plain string is set by methods of the \\texttt{string-implicit-symbol-head} function."))
+           (blurb "Short version of the item's documentation.  The blurb is exected to be a sentence fragment starting with a verb (``Provides support...'') rather than a complete sentence (``The \\texttt{give-support} function provides support...'').")
            (intro "Introductory section of the item's full documentation.  Generally, will be displayed before the usage specifications, parameter list and explanation body.")
            (params "Documentation of individual parameters.  Generally, the names used here should echo the names in the usage specifications.")
-           (callspec "Specification of how a function of macro should be used.  These usage specifications are intended to be more verbose and thus more useful than verbatim lambda lists.  To that end, usage specifications may contain a number of special constructs in the form of a list with a keyword element as its first element.")
-           (full "Discussion section of the item's full documentation.  Generally, will be displayed after the introduction, usage specifications and parameter list."))
+           (callspec (:paragraphs
+                      "Specification of how a function of macro should be used.  These usage specifications are intended to be more verbose and thus more useful than verbatim lambda lists.  To that end, usage specifications may contain a number of special constructs in the form of a list with a keyword element as its first element."
+                      (:seq
+                       "For example, the callspec of the \\texttt{def-documentation} macro rendered above is:"
+                       (:code "(name &body
+  (:opt (:key-head :blurb string-or-docspec))
+  (:opt (:key-head :intro string-or-docspec))
+  (:opt (:key-head :params
+                   (:seq (name string-or-docspec))))
+  (:opt (:key-head :callspec (:seq call-sequence)))
+  (:opt (:key-head :details string-or-docspec))
+  (:opt (:key-head :properties
+                   (:seq (prop-name value)))))"))
+                      "Symbols which, as the first element of a list, indicate a special construct are:"
+                      (:itemize ()
+                        ("The \\texttt{:seq} symbol indicates that the remaining specifiers of the list should be repeated in sequence.  In the above example,"
+                         (:code "  (:seq call-sequence)")
+                         "would be rendered under the standard document style as:"
+                         (:code "  call-sequence ... call-sequence")
+                         "and"
+                         (:code "  (:seq (name (:seq val)))")
+                         "would be rendered as:"
+                         (:code "  (name val ... val) ... (name val ... val)"))
+                        (:seq
+                         "The \\texttt{:bag} symbol specifies usage of the following specifiers once or more each in any order.  For example,"
+                         (:code "  (:bag simple (less simple)
+        (rather (:seq less) simple))")
+                         "could be rendered as:"
+                         (:code " [ simple
+    | (less simple)
+    | (rather less ... less simple ]*"))
+                        (:seq
+                         "The \\texttt{:alt} symbol indicates that exactly one of the list's specifiers should be satisfied, and the rest ignored.  For example,"
+                         (:code "  (:alt :light :medium :dark)")
+                         "would be rendered as:"
+                         (:code " [ :light | :medium | :dark ]"))
+                        ("The \\texttt{:opt} symbol specifies optional forms:"
+                         (:code "  (:opt (name (:seq val)))")
+                         "would be rendered as:"
+                         (:code "  [ (name val ... val) ]"))
+                        ("The \\texttt{:key-head} symbol specifies a list headed by a keyword argument, and the form of the other values in that list.  In the example above,"
+                         (:code "  (:key-head blurb string-or-docspec)")
+                         "would be rendered as:"
+                         (:code "  (:blurb string-or-docspec)")
+                         "The \\texttt{:key-head} specifier removes any ambiguity in the callspecs of macro forms such as the body forms of a \\texttt{defclass}."
+                         (:code "  (:key-head seq item)")
+                         "would render as:"
+                         (:code "  (:seq item)")))
+                      "Otherwise, lists in the callspec are taken to be a structured list argument, as for a macro lambda-list."))
+           (full "Discussion section of the item's full documentation.  Generally, will be displayed after the introduction, usage specifications and parameter list.")
+           (properties "List of property-value pairs to be associated with this documentation.  The property names should have be defined with the \\texttt{def-property-label} macro."))
   (:properties (manual-section docspecs)))
 
 (def-documentation (compiler-macro def-property-label)
-  (:intro "Compiler-macro \\texttt{def-property-label} declares a label for use in the \\texttt{:properties} of a documentation spec.")
+  (:intro "The \\texttt{def-property-label} macro declares a label for use in the \\texttt{:properties} of a documentation spec.")
   (:properties (manual-section docspecs))
   (:callspec (label-name () &body (:opt (:key-head :default-subsort name)))))
-
-(def-documentation (function string-implicit-symbol-head)
-  (:intro "The generic function \\texttt{string-implicit-symbol-head} directs how a bare string is converted into a documentation spec element.")
-  (:callspec (package doc-spec string))
-  (:properties (manual-section docspecs)))
 
 
 ;;; -----------------------------------------------------------------
@@ -85,6 +248,11 @@
 
 ;;; -----------------------------------------------------------------
 ;;; control
+
+(def-documentation (function string-implicit-symbol-head)
+  (:intro "The generic function \\texttt{string-implicit-symbol-head} directs how a bare string is converted into a documentation spec element.")
+  (:callspec (package doc-spec string))
+  (:properties (manual-section control)))
 
 (def-documentation (function get-doc-spec)
   (:intro "The \\texttt{get-doc-spec} function retrieves a docspec for an item of a particular target type.")
