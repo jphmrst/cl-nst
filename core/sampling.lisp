@@ -505,7 +505,8 @@
                                 names-only)
                       :args (list names-only))))
 
-                ))))))
+                )))))
+       finally (setf total-samples-run sample-num))
 
     (add-info result
       (format nil "Tested ~d cases of ~d generated: ~
