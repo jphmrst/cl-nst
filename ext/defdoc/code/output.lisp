@@ -317,7 +317,7 @@
   (:method ((form-head (eql :target-type))
             (output-framework standard-output-framework) package form-args)
      (declare (ignore package))
-     (format t "** A ** :target-type (~{~s~^ ~})~%" form-args)
+     ;; (format t "** A ** :target-type (~{~s~^ ~})~%" form-args)
      (collector-unitef (standard-output-framework-collector output-framework)
                        (get-target-types-collector form-args)))
 
