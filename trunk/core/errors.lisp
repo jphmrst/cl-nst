@@ -49,6 +49,18 @@
   (stream exp)
   (format stream "No such NST test ~s in group ~s" (test exp) (group exp)))
 
+(define-nst-error criterion-missing-mandatory-argument
+    ((criterion-name  :initarg :criterion-name  :reader criterion-name)
+     (required-keyarg :initarg :required-keyarg :reader required-keyarg))
+  (stream cnd) (format stream "Criterion ~s requires ~s argument"
+                 (criterion-name cnd) (required-keyarg cnd)))
+
+(define-nst-error not-expected-form
+    ((expected-form :initarg :expected-form :reader expected-form)
+     (actual-value :initarg :actual-value :reader actual-value))
+  (stream cnd) (format stream "Expected ~a, got ~s"
+                 (expected-form cnd) (actual-value cnd)))
+
 ;;; -----------------------------------------------------------------
 
 (define-condition nst-deprecation-warning-mixin ()

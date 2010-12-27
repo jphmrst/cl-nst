@@ -4,6 +4,8 @@
    (directed) hierarchy of groups.
  Ticket 220: The new setup etc. hooks on fixtures were working only for
    attachment to groups, not to tests.
+ Ticket 223: Spurious warnings from :sample criterion, and a facility for
+   adding declaration for a :sample's :where form.
  Documentation and defdoc improvements.
 
 3.0.0 - public release, October 11, 2010

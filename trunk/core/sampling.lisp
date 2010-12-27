@@ -61,12 +61,19 @@
     (:intro (:latex "This function takes a single argument, which determines the type of the value to be generated.  For simple types, the name of the type (or the class object, such as returned by \\texttt{find-class}) by itself is a complete specification.  For more complicated types, \\texttt{arbitrary} can also take a list argument, where the first element gives the type and the remaining elements are keyword argument providing additional requirements for the generated value.")))
 
 
+(define-nst-error unknown-arbitrary-domain
+    ((domain  :initarg :domain  :reader domain)
+     (keyword-args :initarg :keyword-args :reader keyword-args))
+  (stream cnd)
+  (format stream "Cannot generate an arbitrary value of type: ~s~{ ~s~}"
+    (domain cnd) (keyword-args cnd)))
+
 (defgeneric arbitrary-by-spec (name &key &allow-other-keys)
   (:documentation "Return an arbitrary value according to a spec")
 
   (:method (unknown &rest keyword-args)
-     (error "Cannot generate an arbitrary value of type: ~s~{ ~s~}"
-            unknown keyword-args))
+     (error 'unknown-arbitrary-domain
+       :domain unknown :keyword-args keyword-args))
 
   (:method ((other-named-spec symbol) &rest keyword-args &key &allow-other-keys)
      (apply #'arbitrary-by-spec (find-class other-named-spec) keyword-args))
@@ -87,7 +94,8 @@
                self param
                keyargs key
                scalar-p scalar)))
-     (t (error "Expected symbol or list, got ~s" type-expr)))
+     (t (error 'not-expected-form
+          :expected-form "symbol or list" :actual-value type-expr)))
 
     (let ((better-spec (find-class type-spec nil)))
       (when better-spec
@@ -415,6 +423,8 @@
 (def-criterion (:sample (:forms &key (values nil values-supp-p) ; deprecated
                                 (domains nil)
                                 (where t)
+                                (where-ignore nil)
+                                (where-declare nil where-declare-supp-p)
                                 (verify nil verify-supp-p)
                                 (sample-size 100)
                                 (qualifying-sample
@@ -426,18 +436,21 @@
     (warn 'nst-soft-keyarg-deprecation :old-name :values :replacement nil))
 
   (unless verify-supp-p
-    (error "criterion :sample requires :verify argument"))
+    (error 'criterion-missing-mandatory-argument
+      :criterion-name :sample :required-keyarg :verify))
 
   (when (not max-tries-supp-p)
-    (setf max-tries (* 3 sample-size)))
+        (setf max-tries (* 3 sample-size)))
 
-  #|(format t "[A]~%")|#
+  (when where-ignore
+    (setf where-declare-supp-p t)
+    (push `(ignore ,@where-ignore) where-declare))
+
   (let ((names-only (loop for d in domains
                           collect (cond ((symbolp d) d) (t (car d)))))
         (qualified 0)
         (total-samples-run 0)
         (result (make-success-report)))
-    #|(format t "[B]~%")|#
 
     (loop for sample-num from 0
           while (and (cond
@@ -459,54 +472,50 @@
                       ;; acceptably large sample
                       (t (< sample-num sample-size))))
           do
-       #|(format t "[C] sample-num ~d~%" sample-num)|#
-       (let ((this-sample (generate-sample domains)))
-         #|(format t "Sample ~d: ~@<~{~S~^~_~}~:>~%" sample-num
-                 (loop for name being the hash-keys of this-sample
-                       using (hash-value val) collect (list name val)))|#
-         (flet ((bind-and-eval (expr)
-                  "Evaluate an expression in the context of the name-values
-                    generated for this-sample."
-                  #|(format t "core expr: ~w~%" expr)|#
-                  (let ((full-expr `(let ,(loop for name
-                                              being the hash-keys of this-sample
-                                              using (hash-value value)
-                                              collect `(,name ',value))
-                                         #| ,(generate-sample-bindings domains) |#
-                                      ,expr)))
-                    #| (format t "full expr is: ~w~%" full-expr) |#
-                    (eval full-expr))))
-           (when (or (eq where t) (bind-and-eval where))
-             (incf qualified)
-             (block verify-once
-               (handler-bind-interruptable
-                ((error
-                  #'(lambda (e)
-                      (format-at-verbosity 4
-                          "Caught ~s in :sample criterion~%"
-                        e)
-                      (add-error result
-                        :format (format nil
-                                    "~~@<Error ~~s~~:@_for case:~{~~:@_~s ~~s~}~~:>"
-                                  names-only)
-                        ;; ******************************
-                        ;; "names-only" below is wrong
-                        ;; ******************************
-                        :args (list e names-only))
-                      (return-from verify-once))))
-
-                (let ((this-result (bind-and-eval verify)))
-                  (unless this-result
-                    (add-failure result
+       (let* ((this-sample (generate-sample domains))
+              (where-expr `(let ,(loop for name
+                                       being the hash-keys of this-sample
+                                       using (hash-value value)
+                                       collect `(,name ',value))
+                                   ,@(when where-declare-supp-p
+                                       `((declare ,@where-declare)))
+                                   ,where))
+              (verify-expr `(let ,(loop for name
+                                        being the hash-keys of this-sample
+                                        using (hash-value value)
+                                        collect `(,name ',value))
+                                    ,verify)))
+         (format-at-verbosity 4 "Running sample ~d: ~@<~{~S~^~_~}~:>~%"
+            sample-num
+            (loop for name being the hash-keys of this-sample
+                  using (hash-value val) collect (list name val)))
+         (when (or (eq where t) (eval where-expr))
+           (incf qualified)
+           (block verify-once
+             (handler-bind-interruptable
+              ((error
+                #'(lambda (e)
+                    (format-at-verbosity 4 "Caught ~s in :sample criterion~%" e)
+                    (add-error result
                       :format (format nil
-                                  "~~@<Failed for case:~{~~:@_~s ~~s~}~~:>"
-                                ;; ******************************
-                                ;; "names-only" below is wrong
-                                ;; ******************************
+                                  "~~@<Error ~~s~~:@_for case:~{~~:@_~s ~~s~}~~:>"
                                 names-only)
-                      :args (list names-only))))
+                      ;; ******************************
+                      ;; "names-only" below is wrong
+                      ;; ******************************
+                      :args (list e names-only))
+                    (return-from verify-once))))
 
-                )))))
+               (let ((this-result (eval verify-expr)))
+                (unless this-result
+                  (add-failure result
+                    :format (format nil
+                                "~~@<Failed for case:~{~~:@_~s ~~s~}~~:>"
+                              ;; ******************************
+                              ;; "names-only" below is wrong
+                              ;; ******************************
+                              names-only)
+                    :args (list names-only))))))))
        finally (setf total-samples-run sample-num))
 
     (add-info result
@@ -523,6 +532,8 @@
                    (value LAMBDA-LIST)
                    (domains (:seq (NAME SPEC)))
                    (where FORM)
+                   (where-ignore ((:seq NAME)))
+                   (where-declare ((:seq DECLARATION)))
                    (sample-size NUMBER)
                    (qualifying-sample NUMBER)
                    (max-tries NUMBER)))
@@ -534,6 +545,8 @@
             (:latex "A lambda list to which the values given by the argument form should be applied. The default value is \\texttt{nil}, denoting no such arguments."))
            (where
             (:latex "A condition which determines the validity of the input argument.  For example, the condition would assert that a number is positive in an application where a negative value would be known to cause a failure.  The default value is \\texttt{t}, allowing any values."))
+           (where-ignore
+            (:latex "List of domain variables which are not mentioned in the \\texttt{where} clause.  These names will be declared as ignored in appropriate bindings, suppressing warnings under Lisps which check for such things in interpreted expressions.  This list need not be given explicitly when no \\texttt{where} argument is given.  Similarly, the \\texttt{where-declare} argument accepts a list of declarations to be associated with the \\texttt{where} form."))
            (sample-size
             (:latex "Gives the base specification of the number of value sets which will be generated.  Two further arguments have some bearing on the number of generation attempts when the \\texttt{where} argument is non-\\texttt{t}.  The \\texttt{qualifying-sample}\\indexKeyword{qualifying-sample} argument gives the minimum acceptable size of actual tested values, not counting sets rejected via the \\texttt{where} expression.  The \\texttt{max-tries}\\indexKeyword{max-tries} argument gives the maximum number of value sets to be generated.")))
   (:details (:seq
@@ -554,15 +567,13 @@
     (loop for spec in domains do
       (cond
        ((symbolp spec)
-        (setf (gethash spec result) (arbitrary t))
-        #|(format t " - ~s <-- ~s~%" spec (gethash spec result))|#)
+        (setf (gethash spec result) (arbitrary t)))
 
        ((listp spec)
         (destructuring-bind (spec-name &optional (spec-type t)) spec
-          (setf (gethash spec-name result) (arbitrary spec-type))
-          #|(format t " - ~s ~s <-- ~s~%"
-            spec-type spec-name (gethash spec-name result))|#))
+          (setf (gethash spec-name result) (arbitrary spec-type))))
 
-       (t (error "Expected (NAME SPEC) but got ~s" spec))))
+       (t (error 'not-expected-form
+            :expected-form "(NAME SPEC)" :actual-value spec))))
 
     result))
