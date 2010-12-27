@@ -177,6 +177,13 @@
                :verify (< (sqrt x) x)
                :sample-size 10
                :max-tries 12))
+  (def-test sample-3
+      (:sample :domains ((x integer) (y integer))
+               :where (> x 0)
+               :where-ignore (y)
+               :verify (< y (+ y x))
+               :sample-size 10
+               :max-tries 12))
   )
 
 (defparameter for-setup 0
