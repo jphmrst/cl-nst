@@ -459,7 +459,7 @@
                       ;; acceptably large sample
                       (t (< sample-num sample-size))))
           do
-       #|(format t "[C]~%")|#
+       #|(format t "[C] sample-num ~d~%" sample-num)|#
        (let ((this-sample (generate-sample domains)))
          #|(format t "Sample ~d: ~@<~{~S~^~_~}~:>~%" sample-num
                  (loop for name being the hash-keys of this-sample
@@ -472,10 +472,11 @@
                                               being the hash-keys of this-sample
                                               using (hash-value value)
                                               collect `(,name ',value))
+                                         #| ,(generate-sample-bindings domains) |#
                                       ,expr)))
-                    #|(format t "full expr is: ~w~%" full-expr)|#
+                    #| (format t "full expr is: ~w~%" full-expr) |#
                     (eval full-expr))))
-           (when (bind-and-eval where)
+           (when (or (eq where t) (bind-and-eval where))
              (incf qualified)
              (block verify-once
                (handler-bind-interruptable
@@ -565,4 +566,3 @@
        (t (error "Expected (NAME SPEC) but got ~s" spec))))
 
     result))
-
