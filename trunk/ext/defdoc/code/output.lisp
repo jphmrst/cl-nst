@@ -20,11 +20,6 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :defdoc)
 
-(defvar +output-frameworks+ (make-hash-table :test 'eq))
-
-(defgeneric get-compiled-output-framework (package name forms))
-(defvar *output-compiler* #'get-compiled-output-framework)
-
 (defgeneric format-output-pregroup (style stream output-framework label group)
   (:method (style stream output-framework label group)
      (declare (ignore style stream output-framework label group))))
@@ -47,22 +42,70 @@
      (declare (ignore style output-framework group1 group2))
      (format stream "\\par ")))
 
-(defmacro def-output-framework (name &body body)
-  (let ((p (gensym))
-        (spec (gensym)))
-    ;; (format t "** X ** ~s~%" body)
-    `(let* ((,p (symbol-package ',name))
-            (,spec (funcall *output-compiler* ,p ',name ',body)))
-       (setf (gethash ',name +output-frameworks+) ,spec)
-       (when (and (standard-output-framework-groups-supp-p ,spec)
-                  (not (standard-output-framework-grouping-label-supp-p ,spec)))
-         (warn 'option-without-required-option
-               :given :groups :missing :grouping-label
-               :def-type 'def-output-framework :name ',name))
-       ',name)))
+(defgeneric is-output-framework-class (cls)
+  (:method (c) (declare (ignore c)) nil)
+  (:method ((sym symbol))
+    (let ((cls (find-class sym nil)))
+      (when cls (is-output-framework-class cls)))))
+(defgeneric is-output-framework (obj)
+  (:method (o) (declare (ignore o)) nil))
+
+;;; -----------------------------------------------------------------
+
+(defgeneric get-specs-for-output-framework (spec)
+  (:method (other)
+     (declare (ignore other))
+     nil)
+  (:method ((spec symbol))
+     (get-specs-for-output-framework (make-instance spec))))
+
+(defgeneric finalize-output-framework (spec)
+  (:method (spec)
+     (declare (ignore spec))))
+
+(defun get-output-framework-forms (label-name forms
+                                              &rest keyvals &key
+                                              (package nil)
+                                              (class 'grouped-output-framework)
+                                              &allow-other-keys)
+;;;  (unless package-supp-p
+;;;    (setf package (symbol-package label-name)))
+  `((defclass ,label-name (,class) ())
+    (defmethod is-output-framework-class ((cls (eql (find-class ',class)))) t)
+    (defmethod is-output-framework ((o ,class)) t)
+    (defmethod initialize-instance :after ((spec ,label-name)
+                                           &key &allow-other-keys)
+      (setf (slot-value spec 'name) ',label-name)
+      ,@(loop while keyvals
+            append (let ((key (pop keyvals))
+                         (val (pop keyvals)))
+                     (unless (eq key :class)
+                       `((process-standard-output-framework-form
+                          spec ,package ,key (list ,val))))))
+      (finalize-output-framework spec))
+    ,@(block from-forms
+        (loop for form in forms
+              for (collect-call init-forms) = (multiple-value-list (eval form))
+              collect collect-call into append-arg-forms
+              append init-forms into additional-toplevel
+              finally
+           (return-from from-forms
+             `(,@additional-toplevel
+               (defmethod get-specs-for-output-framework
+                   ((spec ,label-name))
+                 ,(cond
+                   ((eql 1 (length append-arg-forms))
+                    (car append-arg-forms))
+                   (t `(append ,@(loop for form in append-arg-forms
+                                     collect (eval form))))))))))))
+
+(defmacro def-output-framework ((label-name &rest keyvals
+                                                &key &allow-other-keys)
+                                    &body forms)
+  `(progn ,@(apply #'get-output-framework-forms label-name forms keyvals)))
 
 (defun get-output-framework (name)
-  (gethash name +output-frameworks+))
+  (when (find-class name nil) (make-instance name)))
 
 (defun get-output-frameworks-collector (names)
   #'(lambda (&optional (result (make-hash-table :test 'eq)))
@@ -92,6 +135,8 @@
                  :accessor standard-output-framework-collector)
       (grouping-label :reader standard-output-framework-grouping-label)
       (groups :reader standard-output-framework-groups)
+      (group-config-args :reader standard-output-framework-group-config-args
+                         :initform (make-hash-table :test 'eq))
       (default-group :reader standard-output-framework-default-group)
       (title  :reader standard-output-framework-title)
       (author :reader standard-output-framework-author)))
@@ -283,7 +328,20 @@
   (:method ((form-head (eql :groups))
             (output-framework standard-output-framework) package form-args)
      (declare (ignore package))
-     (set-single-assign-slot output-framework 'groups form-args))
+     (let ((group-names nil)
+           (args-hash
+            (standard-output-framework-group-config-args output-framework)))
+       (loop for arg in form-args do
+         (cond
+          ((and (consp arg) (symbolp (car arg)))
+           (let ((this-name (car arg)))
+             (push this-name group-names)
+             (setf (gethash this-name args-hash) (cdr arg))))
+          ((symbolp arg)
+           (push arg group-names)
+           (setf (gethash arg args-hash) nil))
+          (t (error "Expected symbol or symbol-headed list, got ~s" arg))))
+       (set-single-assign-slot output-framework 'groups (reverse group-names))))
 
   (:method ((form-head (eql :default-group))
             (output-framework standard-output-framework) package form-args)
@@ -338,66 +396,6 @@
   (:method (output-framework package form-head form-args)
      (default-standard-output-framework-form-processor
          form-head output-framework package form-args)))
-
-(defmethod get-compiled-output-framework (package name forms)
-  (let* ((use-class (get-output-framework-class package name forms))
-         (result (make-instance use-class :name name)))
-    (loop for form in forms do
-      (process-standard-output-framework-form result package
-                                                     (car form) (cdr form)))
-    result))
-
-;;; -----------------------------------------------------------------
-
-(defgeneric get-specs-for-output-framework (spec)
-  (:method (other)
-     (declare (ignore other))
-     nil)
-  (:method ((spec symbol))
-     (get-specs-for-output-framework (make-instance spec))))
-
-(defgeneric finalize-output-framework (spec)
-  (:method (spec)
-     (declare (ignore spec))))
-
-(defun get-output-framework-forms (label-name forms
-                                              &rest keyvals &key
-                                              (package nil)
-                                              (class 'grouped-output-framework)
-                                              &allow-other-keys)
-;;;  (unless package-supp-p
-;;;    (setf package (symbol-package label-name)))
-  `((defclass ,label-name (,class) ())
-    (defmethod initialize-instance :after ((spec ,label-name)
-                                           &key &allow-other-keys)
-      (setf (slot-value spec 'name) ',label-name)
-      ,@(loop while keyvals
-            append (let ((key (pop keyvals))
-                         (val (pop keyvals)))
-                     (unless (eq key :class)
-                       `((process-standard-output-framework-form
-                          spec ,package ,key (list ,val))))))
-      (finalize-output-framework spec))
-    ,@(block from-forms
-        (loop for form in forms
-              for (collect-call init-forms) = (multiple-value-list (eval form))
-              collect collect-call into append-arg-forms
-              append init-forms into additional-toplevel
-              finally
-           (return-from from-forms
-             `(,@additional-toplevel
-               (defmethod get-specs-for-output-framework
-                   ((spec ,label-name))
-                 ,(cond
-                   ((eql 1 (length append-arg-forms))
-                    (car append-arg-forms))
-                   (t `(append ,@(loop for form in append-arg-forms
-                                     collect (eval form))))))))))))
-
-(defmacro new-def-output-framework ((label-name &rest keyvals
-                                                &key &allow-other-keys)
-                                    &body forms)
-  `(progn ,@(apply #'get-output-framework-forms label-name forms keyvals)))
 
 ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -540,7 +538,7 @@
            (t groups))))
     `(get-specs-for-output-framework
       (make-instance 'grouped-output-framework
-        :group-specs ,groups
+        :group-specs ,adjusted-groups
         :group-specs-supp-p ,groups-supp-p
         :base-label ',label-name
         :generating-thunk #'(lambda ()
@@ -634,3 +632,30 @@
 (defun collect-named-output (name)
   (values `(list (make-instance ',name)) nil))
 
+;;; =================================================================
+
+;;;(defgeneric get-compiled-output-framework (package name forms))
+
+;;;(defmethod get-compiled-output-framework (package name forms)
+;;;  (let* ((use-class (get-output-framework-class package name forms))
+;;;         (result (make-instance use-class :name name)))
+;;;    (loop for form in forms do
+;;;      (process-standard-output-framework-form result package
+;;;                                                     (car form) (cdr form)))
+;;;    result))
+
+;;;(defvar *output-compiler* #'get-compiled-output-framework)
+
+;;;(defmacro old-def-output-framework (name &body body)
+;;;  (let ((p (gensym))
+;;;        (spec (gensym)))
+;;;    ;; (format t "** X ** ~s~%" body)
+;;;    `(let* ((,p (symbol-package ',name))
+;;;            (,spec (funcall *output-compiler* ,p ',name ',body)))
+;;;       (setf (gethash ',name +output-frameworks+) ,spec)
+;;;       (when (and (standard-output-framework-groups-supp-p ,spec)
+;;;                  (not (standard-output-framework-grouping-label-supp-p ,spec)))
+;;;         (warn 'option-without-required-option
+;;;               :given :groups :missing :grouping-label
+;;;               :def-type 'def-output-framework :name ',name))
+;;;       ',name)))

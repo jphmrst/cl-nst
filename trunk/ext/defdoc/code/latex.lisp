@@ -83,33 +83,6 @@
         (when standalone
           (format-latex-standalone-footer style out output-framework index))))))
 
-(defun new-write-latex-output (name &key
-                                    (table-of-contents nil)
-                                    (index nil)
-                                    (echo #'(lambda ()))
-                                    (style 'latex-style)
-                                    (directory #p"./")
-                                    (file nil file-supp-p)
-                                    standalone)
-  (when (symbolp style)
-    (setf style (make-instance style)))
-  (let ((output-framework (make-instance name)))
-    (unless output-framework
-      (error "No such output framework ~s" name))
-    (unless file-supp-p
-      (setf file (format nil "~a_~a.tex" name (type-of style))))
-
-    (funcall echo)
-    (let ((file-spec (merge-pathnames file directory)))
-      (with-open-file (out file-spec :direction :output :if-exists :supersede
-                       :if-does-not-exist :create)
-        (when standalone
-          (format-latex-standalone-header style out output-framework
-                                          table-of-contents index))
-        (format-doc out style output-framework)
-        (when standalone
-          (format-latex-standalone-footer style out output-framework index))))))
-
 (defun write-spec-latex (name target-type &key
                               (style 'latex-style)
                               (directory *defdoc-latex-default-directory*)
@@ -450,3 +423,31 @@
     (run-latex)))
 
 ;;; -----------------------------------------------------------------
+
+;;;(defun old-write-latex-output (name &key
+;;;                                (table-of-contents nil)
+;;;                                (index nil)
+;;;                                (echo #'(lambda ()))
+;;;                                (style 'latex-style)
+;;;                                (directory #p"./")
+;;;                                (file nil file-supp-p)
+;;;                                standalone)
+;;;  (when (symbolp style)
+;;;    (setf style (make-instance style)))
+;;;  (let ((output-framework (get-output-framework name)))
+;;;    (unless output-framework
+;;;      (error "No such output framework ~s" name))
+;;;    (unless file-supp-p
+;;;      (setf file (format nil "~a_~a.tex" name (type-of style))))
+;;;
+;;;    (funcall echo)
+;;;    (let ((file-spec (merge-pathnames file directory)))
+;;;      (with-open-file (out file-spec :direction :output :if-exists :supersede
+;;;                       :if-does-not-exist :create)
+;;;        (when standalone
+;;;          (format-latex-standalone-header style out output-framework
+;;;                                          table-of-contents index))
+;;;        (format-doc out style output-framework)
+;;;        (when standalone
+;;;          (format-latex-standalone-footer style out output-framework index))))))
+

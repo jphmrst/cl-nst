@@ -110,7 +110,7 @@
        #:get-output-framework-class
        #:output-framework
        #:output-framework-name
-       #:get-compiled-output-framework
+       ;; #:get-compiled-output-framework
        #:process-standard-output-framework-form
 
        ;; tag.lisp

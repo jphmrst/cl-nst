@@ -43,7 +43,7 @@
     :in-order-to ((test-op (test-op :defdoc-test)))
     :depends-on ( :closer-mop )
     :components
-    ((:module "code" :pathname "ext/defdoc/code/" :components
+    ((:module "code" :components
               (;; The DEFDOC package, plus internal packages and
                ;; documentation generation.
                (:file "package")
@@ -118,7 +118,7 @@
                                             "elements" "callspec" "tag"
                                             "output"))
 
-               ;; Documentation in def-doc of def-doc.
+               ;; Documentation of def-doc in def-doc.
                (:file "coredoc"  :depends-on ("globals"
                                               "macro" "storage" "targetdef"
                                               "spec" "elementdef" "elements"
