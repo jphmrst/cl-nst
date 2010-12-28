@@ -23,7 +23,7 @@
 (defdoc:def-output-framework (defdoc-manual :title "DefDoc user manual"
                                             :author "John Maraist")
 
-  (defdoc::collect-groups-by-label
+  (defdoc:collect-groups-by-label
       (defdoc::manual-section :package :defdoc
                               :groups '(defdoc::docspecs
                                         defdoc::outspec defdoc::doc-gen
@@ -32,8 +32,8 @@
                                         defdoc::elements defdoc::standard-model
                                         defdoc::output-model defdoc::plaintext
                                         defdoc::latex defdoc::deprecated))
-    (defdoc::collect-exported-symbols :defdoc)
-    (defdoc::collect-exported-symbols :defdoc-control-api)))
+    (defdoc:collect-exported-symbols :defdoc)
+    (defdoc:collect-exported-symbols :defdoc-control-api)))
 
 (defclass manual-style (defdoc-control-api:latex-style) ())
 
@@ -68,38 +68,3 @@
         :style 'manual-style)
     (defdoc:process-latex-document gen-dir "defdoc-manual_manual-style"
                                    :index t)))
-
-;;;(defdoc::old-def-output-framework old-defdoc-manual
-;;;    ;; Set the style to be associated with this output set.
-;;;    ;;
-;;;    ;; (:style style-class)
-;;;
-;;;  (:exported-symbols :defdoc)
-;;;  (:exported-symbols :defdoc-control-api)
-;;;
-;;;  (:grouping-label defdoc::manual-section)
-;;;  (:groups defdoc::docspecs
-;;;           defdoc::outspec defdoc::doc-gen defdoc::control
-;;;           defdoc::targets defdoc::model defdoc::label-model defdoc::elements
-;;;           defdoc::standard-model defdoc::output-model defdoc::plaintext
-;;;           defdoc::latex defdoc::deprecated)
-;;;
-;;;  (:title "DefDoc user manual")
-;;;  (:author "John Maraist"))
-;;;
-;;;(defun old-output-build ()
-;;;  "Write documentation for this package, using system package-doc."
-;;;  (let* ((doc-root-dir (asdf:system-relative-pathname (asdf:find-system :defdoc)
-;;;                                                      "doc/"))
-;;;         (gen-dir (merge-pathnames #p"gen/" doc-root-dir)))
-;;;    (format t "Creating documentation in ~a~%" doc-root-dir)
-;;;    (defdoc::old-write-latex-output 'old-defdoc-manual
-;;;        :echo #'(lambda (&key &allow-other-keys)
-;;;                  (format t "Writing manual~%"))
-;;;        :directory gen-dir
-;;;        :standalone t
-;;;        :index t :table-of-contents t
-;;;        :style 'manual-style)
-;;;    (defdoc:process-latex-document gen-dir "old-defdoc-manual_manual-style"
-;;;                                   :index t)))
-

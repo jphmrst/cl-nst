@@ -245,6 +245,33 @@
   (:intro "The \\texttt{def-label-config} macro specifies information associated with particular uses, especially particular outputs, of a property label.")
   (:properties (manual-section outspec)))
 
+(def-documentation (compiler-macro collect-groups-by-label)
+  (:intro "Macro \\texttt{collect-groups-by-label} --- \\fbox{FILL IN}")
+  (:properties (manual-section outspec)))
+
+(def-documentation (function collect-target-type)
+  (:intro "Function \\texttt{collect-target-type} --- \\fbox{FILL IN}")
+  (:properties (manual-section outspec)))
+
+(def-documentation (function collect-exported-symbols)
+  (:intro "Function \\texttt{collect-exported-symbols} --- \\fbox{FILL IN}")
+  (:properties (manual-section outspec)))
+
+(def-documentation (function collect-documented-symbols)
+  (:intro "Function \\texttt{collect-documented-symbols} --- \\fbox{FILL IN}")
+  (:properties (manual-section outspec)))
+
+(def-documentation (function collect-all-symbols)
+  (:intro "Function \\texttt{collect-all-symbols} --- \\fbox{FILL IN}")
+  (:properties (manual-section outspec)))
+
+(def-documentation (function collect-output)
+  (:intro "Function \\texttt{collect-output} --- \\fbox{FILL IN}")
+  (:properties (manual-section outspec)))
+
+(def-documentation (function collect-named-output)
+  (:intro "Function \\texttt{collect-named-output} --- \\fbox{FILL IN}")
+  (:properties (manual-section outspec)))
 
 ;;; -----------------------------------------------------------------
 ;;; control
