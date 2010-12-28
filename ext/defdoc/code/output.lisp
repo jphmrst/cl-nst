@@ -631,31 +631,3 @@
 
 (defun collect-named-output (name)
   (values `(list (make-instance ',name)) nil))
-
-;;; =================================================================
-
-;;;(defgeneric get-compiled-output-framework (package name forms))
-
-;;;(defmethod get-compiled-output-framework (package name forms)
-;;;  (let* ((use-class (get-output-framework-class package name forms))
-;;;         (result (make-instance use-class :name name)))
-;;;    (loop for form in forms do
-;;;      (process-standard-output-framework-form result package
-;;;                                                     (car form) (cdr form)))
-;;;    result))
-
-;;;(defvar *output-compiler* #'get-compiled-output-framework)
-
-;;;(defmacro old-def-output-framework (name &body body)
-;;;  (let ((p (gensym))
-;;;        (spec (gensym)))
-;;;    ;; (format t "** X ** ~s~%" body)
-;;;    `(let* ((,p (symbol-package ',name))
-;;;            (,spec (funcall *output-compiler* ,p ',name ',body)))
-;;;       (setf (gethash ',name +output-frameworks+) ,spec)
-;;;       (when (and (standard-output-framework-groups-supp-p ,spec)
-;;;                  (not (standard-output-framework-grouping-label-supp-p ,spec)))
-;;;         (warn 'option-without-required-option
-;;;               :given :groups :missing :grouping-label
-;;;               :def-type 'def-output-framework :name ',name))
-;;;       ',name)))

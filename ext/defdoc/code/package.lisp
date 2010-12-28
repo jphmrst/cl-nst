@@ -46,6 +46,13 @@
 
              ;; output.lisp
              #:def-output-framework
+             #:collect-groups-by-label
+             #:collect-target-type
+             #:collect-exported-symbols
+             #:collect-documented-symbols
+             #:collect-all-symbols
+             #:collect-output
+             #:collect-named-output
 
              ;; latex.lisp
              #:*defdoc-latex-default-directory*
