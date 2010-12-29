@@ -1,11 +1,15 @@
 
-3.0.1 - 
+3.0.1 - public release, December 29, 2010
  Execution of one group can now be triggered by another group, as a 
    (directed) hierarchy of groups.
  Ticket 220: The new setup etc. hooks on fixtures were working only for
    attachment to groups, not to tests.
  Ticket 223: Spurious warnings from :sample criterion, and a facility for
    adding declaration for a :sample's :where form.
+ The def-criterion values lambda list argument can now be the simple symbol
+   :ignore, which indicates that 
+ Several SBCL style warnings cleared, a number of which arose from malformed
+   format strings.
  Documentation and defdoc improvements.
 
 3.0.0 - public release, October 11, 2010
