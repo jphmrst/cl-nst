@@ -27,8 +27,7 @@
 
 ;;; Built-in basic testing criteria.
 
-(def-criterion (:pass (:forms) (:form chk))
-  (declare (ignore chk))
+(def-criterion (:pass (:forms) :ignore)
   (make-success-report))
 (defdoc:def-documentation (criterion :pass)
   (:intro (:latex "A trivial test, which always passes."))
@@ -36,8 +35,7 @@
           (:plain "Example:")
           (:code "(def-test passing-test :pass 3 4 \"sd\")"))))
 
-(def-criterion (:fail (:forms &rest args) (:form chk))
-  (declare (ignore chk))
+(def-criterion (:fail (:forms &rest args) :ignore)
   (make-failure-report :format (car args) :args (cdr args)))
 (defdoc:def-documentation (criterion :fail)
   (:callspec (format-string (:seq form)))
@@ -47,8 +45,7 @@
           (:code
            "(def-test fails (:fail \"Expected a \~{}a\" \"string\") 312)"))))
 
-(def-criterion (:warn (:forms &rest args) (:form chk))
-  (declare (ignore chk))
+(def-criterion (:warn (:forms &rest args) :ignore)
   (make-warning-report :format (car args) :args (cdr args)))
 (defdoc:def-documentation (criterion :warn)
   (:callspec (format-string (:seq form)))
@@ -57,8 +54,7 @@
           (:plain "Example:")
           (:code "(:warn \"\~{}d is not a perfect square\" 5)"))))
 
-(def-criterion (:true-form (:forms bool) (:form forms))
-  (declare (ignore forms))
+(def-criterion (:true-form (:forms bool) :ignore)
   (if (eval bool)
       (make-success-report)
       (make-failure-report :format "Expected non-null, got: ~s"

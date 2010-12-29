@@ -439,7 +439,7 @@ structure, permitting the use of apply."))
     ((null formatter) nil)
     ((functionp formatter) (apply formatter stream args) t)
     ((stringp formatter)   (apply #'format stream formatter args) t)
-    (t (error "Cannot handle formatter %s" formatter))))
+    (t (error "Cannot handle formatter ~s" formatter))))
 
 (set-pprint-dispatch 'check-note
   #'(lambda (s cn)

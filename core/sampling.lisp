@@ -430,8 +430,8 @@
                                 (qualifying-sample
                                  nil qualifying-sample-supp-p)
                                 (max-tries nil max-tries-supp-p))
-                        (:form expr-list-form))
-  (declare (ignore values expr-list-form))
+                        :ignore)
+  (declare (ignore values))
   (when values-supp-p
     (warn 'nst-soft-keyarg-deprecation :old-name :values :replacement nil))
 

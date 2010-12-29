@@ -197,16 +197,18 @@
            (:code "(nst:def-test-method-criterion for-clses top-cls
       (:predicate (lambda (tc) (< (tc1 tc) (tc2 tc)))))")))
 
+(defun collect-test-generics (obj)
+  (loop for method-name being the hash-keys of *test-methods*
+        for method-fn = (symbol-function method-name)
+        for actual-method
+             = (when method-fn
+                 (closer-mop:compute-applicable-methods-using-classes
+                    method-fn (list (find-class (type-of obj)))))
+        if actual-method collect method-fn))
 (defun invoke-test-methods (obj)
   (apply #'check-result-union
-         (loop for method-name being the hash-keys of *test-methods*
-               for method-fn = (symbol-function method-name)
-               for actual-method
-                 = (when method-fn
-                     (closer-mop:compute-applicable-methods-using-classes
-                      method-fn (list (find-class (type-of obj)))))
-               if actual-method
-                 collect (funcall method-fn obj))))
+         (loop for method-fn in (collect-test-generics obj)
+               collect (funcall method-fn obj))))
 
 (def-criterion (:methods () (object))
   (invoke-test-methods object))

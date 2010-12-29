@@ -100,21 +100,21 @@ of names of fixtures that are used by TEST-GROUP."))
 (defgeneric test-forms (test-record)
   (:method (o)
      (declare (ignore o))
-     (error "Called %s on an object which is not a subclass of ~s"
+     (error "Called ~s on an object which is not a subclass of ~s"
             'test-forms 'nst-test-record))
   (:documentation "The unevaluated forms to be used as input to a test."))
 
 (defgeneric special-fixture-names (test-record)
   (:method (o)
      (declare (ignore o))
-     (error "Called %s on an object which is not a subclass of ~s"
+     (error "Called ~s on an object which is not a subclass of ~s"
             'special-fixture-names 'nst-test-record))
   (:documentation "The unevaluated forms to be used as input to a test."))
 
 (defgeneric test-criterion (test-record)
   (:method (o)
      (declare (ignore o))
-     (error "Called %s on an object which is not a subclass of ~s"
+     (error "Called ~s on an object which is not a subclass of ~s"
             'test-criterion 'nst-test-record))
   (:documentation "The unevaluated forms to be used as input to a test."))
 

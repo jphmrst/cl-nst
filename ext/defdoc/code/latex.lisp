@@ -374,7 +374,7 @@
   (flet ((set-dir ()
            #+allegro (excl:chdir directory-path)
            #+sbcl (sb-posix:chdir directory-path)
-           #+clozure (setf (current-directory) directory-path)
+           #+clozure (setf (ccl:current-directory) directory-path)
            #+clisp (ext:cd directory-path)
            #+lispworks (hcl:change-directory directory-path)
            #-(or allegro sbcl clozure
