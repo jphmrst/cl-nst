@@ -43,13 +43,10 @@
 
        (with-accessors ((mandatory mandatory)
                         (optional optional)
-                        (optional-supp optional-supp)
                         (keyword key)
                         (keyword-supp key-supp)
-                        (body body)
-                        (body-supp body-supp))
+                        (body body))
            spec
-         (declare (ignorable body-supp optional-supp))
          (setf mandatory
                (nconc mandatory
                       (loop for opt in optional collect `(:opt ,opt))))
