@@ -115,7 +115,7 @@
                                                    target-type spec
                                                    (element (eql :intro))
                                                    datum)
-  (declare (ignore datum target-type))
+  (declare (ignore datum))
   (with-accessors ((self defdoc-control-api:docspec-self)) spec
     (cond
       ((eq target-type 'nst::criterion)
@@ -173,7 +173,7 @@
       (self intro intro-supp-p params params-supp-p
             short short-supp-p full full-supp-p
             callspec) spec
-    ;;(declare (ignore full full-supp-p))
+    ;; (declare (ignore full full-supp-p))
     (cond
      (short-supp-p
       (format-docspec stream style
@@ -210,51 +210,24 @@
 ;;; -----------------------------------------------------------------
 ;;; Starting to debug/use output document specs.
 
-(defdoc:def-output-framework package-api
+(defdoc:def-output-framework (package-api)
     ;; Set the style to be associated with this output set.
     ;;
     ;; (:style style-class)
 
-    (:target-type (function :package :nst)
-                  (function :package :nst-control-api))
-  ;; (:exported-symbols :nst :nst-control-api)
-  (:grouping-label nst::api-summary)
+  (defdoc:collect-groups-by-label
+      (nst::api-summary)
+    (defdoc:collect-target-type 'function :package :nst)
+    (defdoc:collect-target-type 'function :package :nst-control-api)))
 
-  ;; Where the contents come from.  These are disjunctive; could
-  ;; specify conjunctions one level.
-  ;;
-
-;;;  ;; Labels and values of this set.
-;;;  (:property-values (nst-volume 1))
-;;;  (:with-sets nst::criterion)
-;;;  (:target-type (function (:package :nst)))
-;;;  (:documented-symbols package)
-;;;  (:all-symbols package)
-;;;  (:target-type criterion)
-
-  )
-
-(defdoc:def-output-framework the-manual
+(defdoc:def-output-framework (the-manual)
     ;; Set the style to be associated with this output set.
     ;;
     ;; (:style style-class)
 
-  (:exported-symbols :nst)
-  (:target-type nst::criterion nst::command nst::switch)
-
-  (:grouping-label nst-manual)
-  (:groups fixtures groups tests criteria)
-
-  ;; Where the contents come from.  These are disjunctive; could
-  ;; specify conjunctions one level.
-  ;;
-
-;;;  ;; Labels and values of this set.
-;;;  (:property-values (nst-volume 1))
-;;;  (:with-sets nst::criterion)
-;;;  (:target-type (function (:package :nst)))
-;;;  (:documented-symbols package)
-;;;  (:all-symbols package)
-;;;  (:target-type criterion)
-
-  )
+  (defdoc:collect-groups-by-label
+      (nst-manual :groups '(fixtures groups tests criteria))
+    (defdoc:collect-exported-symbols :nst)
+    (defdoc:collect-target-type 'nst::criterion)
+    (defdoc:collect-target-type 'nst::command)
+    (defdoc:collect-target-type 'nst::switch)))
