@@ -296,7 +296,7 @@
 
   (:method (form-head output-framework package form-args)
      (declare (ignore package))
-     (error "Unrecognized form (~a~{ ~s~}) in def-output-framework %s"
+     (error "Unrecognized form (~a~{ ~s~}) in def-output-framework ~s"
             form-head form-args (doc-label-name output-framework)))
 
   (:method ((form-head (eql :style))

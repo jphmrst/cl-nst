@@ -104,17 +104,17 @@
        ((:default-subsort)
         (destructuring-bind (subsort) form-args
           (setf (slot-value labeldef 'default-subsort) subsort)))
-       (otherwise (error "Unrecognized form (~a~{ ~s~}) in def-label of %s"
-                         form-head form-args (doc-label-name labeldef))))))
+       (otherwise (error 'unrecognized-deflabel-form
+                         :head form-head :args form-args
+                         :label-name (doc-label-name labeldef))))))
 
 ;;; -----------------------------------------------------------------
 
-(defmacro def-label-config ((&rest options &key
-                                   (label nil label-supp-p)
-                                   (style t)
-                                   (output-framework t)
-                                   (package nil package-supp-p)
-                                   &allow-other-keys)
+(defmacro def-label-config ((&key (label nil label-supp-p)
+                                  (style t)
+                                  (output-framework t)
+                                  (package nil package-supp-p)
+                                  &allow-other-keys)
                             &body forms)
   (let ((label-def t)
         (values-package
@@ -138,7 +138,7 @@
 (defgeneric get-compiled-label-config (label-def value style output
                                                  &key &allow-other-keys)
   (:method-combination append)
-  (:method append (label-def value style output &rest keyargs &key
+  (:method append (label-def value style output &key
                              (title nil title-supp-p)
                              (order nil order-supp-p)
                              &allow-other-keys)

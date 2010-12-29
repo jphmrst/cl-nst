@@ -153,31 +153,34 @@ as errors arising from within the ."
                     (values form-deconstructor values-binder)))))))
 
 (defmacro def-criterion ((name args-formals values-formals) &body forms)
-  (let ((fp)
-        (ap (gensym "args"))
-        (docstring nil)
-        (form-decls nil)
-        (args-list-type (cond
-                         ((and (consp args-formals)
-                               (symbolp (car args-formals))
-                               (eq (symbol-package (car args-formals))
-                                   (find-package :keyword)))
-                          (pop args-formals)
-                          ;; (error "This feature is not yet implemented")
-                          )
-                         (t :forms)))
-        (values-list-type (cond
-                           ((and (consp values-formals)
-                                 (symbolp (car values-formals))
-                                 (eq (symbol-package (car values-formals))
-                                     (find-package :keyword)))
-                            (pop values-formals)
-                            ;; (error "This feature is not yet implemented")
-                            )
-                           (t :values)))
-        (args-formals-orig args-formals)
-        (values-formals-orig values-formals)
-        (defer-form-decls nil))
+  (let* ((fp)
+         (ap (gensym "args"))
+         (method-declares nil)
+         (docstring nil)
+         (form-decls nil)
+         (args-list-type (cond
+                          ((and (consp args-formals)
+                                (symbolp (car args-formals))
+                                (eq (symbol-package (car args-formals))
+                                    (find-package :keyword)))
+                           (pop args-formals))
+                          (t :forms)))
+         (values-list-type (cond
+                            ((eq values-formals :ignore)
+                             (let ((genform (gensym)))
+                               (setf values-formals (list genform))
+                               (push `(ignore ,genform) method-declares))
+                             :form)
+                            ((and (consp values-formals)
+                                  (symbolp (car values-formals))
+                                  (eq (symbol-package (car values-formals))
+                                      (find-package :keyword)))
+                             (pop values-formals))
+                            (t
+                             :values)))
+         (args-formals-orig args-formals)
+         (values-formals-orig values-formals)
+         (defer-form-decls nil))
     (when (stringp (car forms))       (setf docstring (pop forms)))
     (when (eq (caar forms) 'declare)  (setf form-decls (cdr (pop forms))))
     (let ((core-form
@@ -234,7 +237,7 @@ as errors arising from within the ."
       `(progn
          #+allegro (excl:record-source-file ',name :type :nst-criterion)
          (defmethod apply-criterion ((top (eql ',name)) ,ap ,fp)
-           (declare (optimize (debug 3)))
+           (declare (optimize (debug 3)) ,@method-declares)
            ,@(when docstring (list docstring))
            ,core-form)
          ,@(when docstring
@@ -242,14 +245,17 @@ as errors arising from within the ."
 (def-documentation (compiler-macro def-criterion)
   (:tags primary)
   (:properties (api-summary primary))
-    (:intro (:latex "The \\texttt{def-criterion} macro defines a new criterion for use in NST tests.  These criteria definitions are like generic function method definitions with two sets of formal parameters: the forms provided as the actual parameters of the criterion  itself, and the values arising from the evaluation of the forms under test.\\index{def-criterion@\texttt{def-criterion}}"))
+  (:intro (:latex "The \\texttt{def-criterion} macro defines a new criterion for use in NST tests.  These criteria definitions are like generic function method definitions with two sets of formal parameters: the forms provided as the actual parameters of the criterion  itself, and the values arising from the evaluation of the forms under test.\\index{def-criterion@\texttt{def-criterion}}"))
   (:callspec ((name criterion-lambda-list values-lambda-list)
                    &body
                    (:opt documentation)
               (:seq form)))
   (:params (name "Name of the criterion.")
            (criterion-lambda-list (:latex "Lambda list for the arguments to the criterion.  Optionally, the first element of the list is a symbol specifying the parameter-passing semantics for the criterion arguments: \\texttt{:values} for call-by-value, or \\texttt{:forms} for call-by-name (the default).  The list may include the keywords \\texttt{\\&key}, \\texttt{\\&optional}, \\texttt{\\&body} and \\texttt{\\&rest} but may not use \\texttt{\\&whole} or \\texttt{\\&environment}.  Apart from this restriction, in the former case the list may be any ordinary lambda list as for \\texttt{defun}, and in the latter case the list may be any macro lambda list as for \\texttt{defmacro}."))
-           (values-lambda-list "Lambda list for the forms under test.  Optionally, the first element of the list is a symbol specifying the parameter-passing semantics for the criterion arguments: \\texttt{:values} for call-by-value (the default), or \\texttt{:form} for call-by-name.  In the former case, the list may include the keywords \\texttt{\\&key}, \\texttt{\\&optional}, \\texttt{\\&body} and \\texttt{\\&rest}, but not \\texttt{\\&whole} or \\texttt{\\&environment}; apart from that restriction, list may be any ordinary lambda list as for \\texttt{defun}.  In the latter case, the remainder of the list must contain exactly one symbol, to which a form which would evaluate to the values under test will be bound.")
+           (values-lambda-list
+            (:paragraphs
+             "Lambda list for the forms under test.  Optionally, the first element of the list is a symbol specifying the parameter-passing semantics for the criterion arguments: \\texttt{:values} for call-by-value (the default), or \\texttt{:form} for call-by-name.  In the former case, the list may include the keywords \\texttt{\\&key}, \\texttt{\\&optional}, \\texttt{\\&body} and \\texttt{\\&rest}, but not \\texttt{\\&whole} or \\texttt{\\&environment}; apart from that restriction, list may be any ordinary lambda list as for \\texttt{defun}.  In the latter case, the remainder of the list must contain exactly one symbol, to which a form which would evaluate to the values under test will be bound."
+             "If the criterion ignores the values, then instead of a lambda list, this argument may be the symbol \\texttt{:ignore}.  On many platforms, listing a dummy parameter which is then \\texttt{declare}d \\texttt{ignore} or \\texttt{ignorable} will produce a style warning: the body of a \\texttt{def-criterion} should not be assumed to correspond directly to the body of a \\texttt{defmethod}; in general there will be surrounding \\texttt{destructuring-bind}s."))
            (documentation "An optional documentation string for the criterion.")
            (form "The body of the criterion definition should return a test result report contructed with the \\texttt{make-success-report}, etc.\\ functions."))
   (:details (:seq

@@ -62,4 +62,15 @@
 (defmacro defdoc-debug (format &rest args)
   (when *defdoc-debuggable*
     `(when *defdoc-debug*
-       (format t ,format ,@args))))
+           (format t ,format ,@args))))
+
+(define-condition unrecognized-deflabel-form (error)
+    ((head :initarg :head :reader head)
+     (args :initarg :args :reader args)
+     (label-name :initarg :label-name :reader label-name))
+  (:report (lambda (warning stream)
+             (with-accessors ((head head) (args args)
+                              (label-name label-name)) warning
+               (format stream "Unrecognized form (~a ~{ ~s~}) in def-label of ~s"
+                       head args label-name)))))
+
