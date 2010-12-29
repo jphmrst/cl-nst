@@ -1,1 +1,0 @@
-ext/defdoc/defdoc.asd
