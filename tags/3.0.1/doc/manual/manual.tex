@@ -1,0 +1,145 @@
+%% File manual.tex
+%%
+%% NST by John Maraist, based on RRT by Robert Goldman.
+%%
+%% NST is Copyright (c) 2006-2010 Smart Information Flow Technologies.
+%% RRT is Copyright (c) 2005 Robert Goldman, released under the LGPL,
+%% and the Lisp-specific preamble to that license.
+
+\documentclass{article}
+\usepackage{array}
+\usepackage{makeidx}
+\usepackage{tightlist}
+\usepackage[pdftex]{hyperref}
+\title{NST 3.0 User Manual}
+\setcounter{tocdepth}{2}
+\makeindex
+\parskip 0.6em
+\parindent 0pt
+\def\indexLisp#1{\index{#1@\texttt{#1}}}
+\def\indexLispGlobal#1{\index{#1@\texttt{*#1*}}}
+\def\indexLispConst#1{\index{#1@\texttt{+#1+}}}
+\def\indexKeyword#1{\index{#1@\texttt{:#1}}}
+
+\def\manualOrRef#1#2{#1}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+\parskip -0.5em
+
+\noindent This document is the manual and users' guide to the 3.0.$x$
+series of the NST test framework.  NST is a unit test system for
+Common Lisp which provides support for test fixture data, stateful
+setup and cleanup of tests, grouping of tests, and (we think!) a
+useful runtime interface.  Suggestions and comments are welcome.  The
+files in the NST distribution's \texttt{self-test} directory,
+especially \texttt{self-test/core/builtin-checks.lisp}, holds the NST
+tests for NST and contain many examples (some of which we have adapted
+for this manual).  Known bugs and infelicities, platform-specific
+release notes, and other technical materials are available via the
+link on NST's CLiki page, \textsl{cliki.net/NST}\enspace.
+
+\tableofcontents
+\parskip 0.6em
+\parindent 0pt
+
+\paragraph{Contributors.}
+The primarily author of both NST and this manual is John
+Maraist\footnote{Smart Information Flow Technologies, 211 North First
+  Street, Suite 300, Minneapolis, MN 55401; \textsl{jmaraist} at
+  \textsl{sift.info}.}.  Robert P.\ Goldman provided guidance,
+comments and suggestions through the development.  Other contributors
+include Michael J.\,S.\ Pelican, Steven A.\ Harp, Michael
+Atighetchi and Patrick Stein.  \cleardoublepage
+\addtocontents{toc}{\setcounter{tocdepth}{1}}
+
+\section{Fixtures}
+\label{fixtures}
+\input{../gen/def-fixtures_compiler-macro_nst-item-style}
+\input{../gen/with-fixtures_compiler-macro_nst-item-style}
+
+\section{Test groups}
+\label{sec:groups}
+\input{../gen/def-test-group_compiler-macro_nst-item-style}
+
+\section{Tests and test criteria}
+\label{sec:deftest}
+\input{../gen/def-test_compiler-macro_nst-item-style}
+
+\subsection{Basic criteria}
+\input{../gen/true_criterion_nst-item-style}
+\input{../gen/eq_criterion_nst-item-style}
+\input{../gen/symbol_criterion_nst-item-style}
+\input{../gen/eql_criterion_nst-item-style}
+\input{../gen/equal_criterion_nst-item-style}
+\input{../gen/equalp_criterion_nst-item-style}
+\input{../gen/forms-eq_criterion_nst-item-style}
+\input{../gen/forms-eql_criterion_nst-item-style}
+\input{../gen/forms-equal_criterion_nst-item-style}
+\input{../gen/predicate_criterion_nst-item-style}
+\input{../gen/err_criterion_nst-item-style}
+\input{../gen/perf_criterion_nst-item-style}
+\subsection{Compound criteria}
+\input{../gen/not_criterion_nst-item-style}
+\input{../gen/all_criterion_nst-item-style}
+\input{../gen/any_criterion_nst-item-style}
+\input{../gen/apply_criterion_nst-item-style}
+\input{../gen/check-err_criterion_nst-item-style}
+\input{../gen/progn_criterion_nst-item-style}
+\input{../gen/proj_criterion_nst-item-style}
+\subsection{Criteria for multiple values}
+\input{../gen/value-list_criterion_nst-item-style}
+\input{../gen/values_criterion_nst-item-style}
+\input{../gen/drop-values_criterion_nst-item-style}
+\subsection{Criteria for lists}
+\input{../gen/each_criterion_nst-item-style}
+\input{../gen/seq_criterion_nst-item-style}
+\input{../gen/permute_criterion_nst-item-style}
+\subsection{Criteria for vectors}
+\input{../gen/across_criterion_nst-item-style}
+\subsection{Criteria for classes}
+\input{../gen/slots_criterion_nst-item-style}
+\subsection{Programmatic and debugging criteria}
+\input{../gen/info_criterion_nst-item-style}
+\input{../gen/pass_criterion_nst-item-style}
+\input{../gen/fail_criterion_nst-item-style}
+\input{../gen/warn_criterion_nst-item-style}
+\input{../gen/dump-forms_criterion_nst-item-style}
+
+% \def\criteriaGroup#1#2{\subsection{#1} #2}
+% \def\secText#1{#1}
+% \def\endcriteriaGroup{}
+% \def\criteriaDoc#1#2#3#4#5#6#7#8{%
+% \subsubsection{The \texttt{#2} criterion} 
+% #4\index{#1@\texttt{#2}}
+% \\ Syntax: \texttt{#3}
+% #7{#8}#6}
+% \def\noEx#1{}
+% \def\singleEx#1{\\Example: \texttt{#1}}
+% \def\multiEx#1{#1}
+% \def\passExample#1{\\Passing example: \texttt{#1}}
+% \def\failExample#1{\\Failing example: \texttt{#1}}
+% \def\tabbingEx#1{\\Example: \begin{tabbing}#1\end{tabbing}}
+% \def\noExpl{}
+% \def\hasExpl#1{\par#1}
+% \input{../common/criteria}
+
+\input{criteria}
+\input{quickcheck}
+\input{runtime}
+\input{asdf}
+\appendix
+\addtocontents{toc}{\setcounter{tocdepth}{1}}
+\input{../gen/sift.nst_package_nst-package-list-latex-style}
+\input{junit}
+\input{methods}
+\input{deprecated}
+\printindex
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% TeX-PDF-mode: t
+%%% End: 
