@@ -470,7 +470,6 @@ structure, permitting the use of apply."))
                        (format check-note-format)
                        (args check-note-args)
                        (error error-check-note-error)) cn
-        (declare (ignorable context stack))
         (let (#+allegro (show-zoom (or (eq *nst-report-driver* :test)
                                        (eq *nst-report-driver* :details)
                                        (> *nst-verbosity* 2))))
