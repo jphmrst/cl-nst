@@ -447,7 +447,6 @@ structure, permitting the use of apply."))
                        (stack check-note-stack)
                        (format check-note-format)
                        (args check-note-args)) cn
-        (declare (ignorable context stack))
         (pprint-logical-block (s '(dummy list))
           (apply-formatter s format args)
           (when (or (> *nst-verbosity* 2)
