@@ -22,17 +22,16 @@
 
 (defmacro def-bundle-package (name repackaging &body forms)
   `(defpackage ,name ,@forms
-               ,@(loop for (source . names) in repackaging
-                       collect `(:import-from ,source ,@names))
-               (:export ,@(loop for source-and-names in repackaging
-                                append (cdr source-and-names)))))
+     ,@(loop for (source . names) in repackaging
+         collect `(:import-from ,source ,@names))
+     (:export ,@(loop for source-and-names in repackaging
+                  append (cdr source-and-names)))))
 
 (def-bundle-package :defdoc-control-api
     ((:defdoc
        ;; globals.lisp
        #:format-docspec
        #:format-docspec-element
-
 
        ;; storage.lisp
        #:get-doc-spec
