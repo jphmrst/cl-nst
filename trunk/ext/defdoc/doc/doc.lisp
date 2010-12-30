@@ -43,6 +43,7 @@
               :order (def-documentation))
   (outspec :title "Output documents"
            :order (def-output-framework def-label-config))
+  (asdf-defdoc :title "Document generation via ASDF")
   (control :title "Control model")
   (target :title "Documentation targets")
   (model :title "Documentation models")
@@ -53,18 +54,3 @@
   (plaintext :title "Generating plain text")
   (latex :title "Generating \\LaTeX")
   (deprecated :title "Deprecated forms"))
-
-(defun build-defdoc-docs ()
-  (let* ((doc-root-dir (asdf:system-relative-pathname (asdf:find-system :defdoc)
-                                                      "doc/"))
-         (gen-dir (merge-pathnames #p"gen/" doc-root-dir)))
-
-    (defdoc:write-latex-output 'defdoc-manual
-        :echo #'(lambda (&key &allow-other-keys)
-                  (format t "Writing manual~%"))
-        :directory gen-dir
-        :standalone t
-        :index t :table-of-contents t
-        :style 'manual-style)
-    (defdoc:process-latex-document gen-dir "defdoc-manual_manual-style"
-                                   :index t)))

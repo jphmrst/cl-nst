@@ -22,22 +22,20 @@
 (defpackage :defdoc-doc-asd (:use :common-lisp :asdf))
 (in-package :defdoc-doc-asd)
 
+(asdf:oos 'asdf:load-op :asdf-defdoc)
+
 (defsystem :defdoc-doc
-    :description "Documentation builder for defdoc"
-    :depends-on ( :defdoc )
-    :components ((:module "doc" :components
-                          (;; The NST package, plus internal packages
-                           ;; and documentation generation.
-                           (:file "package")
+  :description "Documentation builder for defdoc"
+  :class defdoc-asdf
+  :documents-system :defdoc
+  :components ((:module "doc" :components
+                        (;; The NST package, plus internal packages
+                         ;; and documentation generation.
+                         (:file "package")
 
-                           ;; Helper functions.
-                           (:file "doc"  :depends-on ("package"))))))
-
-(defmethod asdf:perform ((op load-op)
-                         (system (eql (asdf:find-system :defdoc-doc))))
-  (funcall (symbol-function (intern (symbol-name '#:build-defdoc-docs)
-                                    :defdoc-doc))))
-
-(defmethod asdf:operation-done-p ((op load-op)
-                                  (sys (eql (asdf:find-system :defdoc-doc))))
-  nil)
+                         ;; Helper functions.
+                         (:file "doc"  :depends-on ("package")))))
+  :documentation-package :defdoc-doc
+  :build-output ((#:defdoc-manual :rel-directory "doc/"
+                                  :style #:manual-style
+                                  :index t :table-of-contents t)))
