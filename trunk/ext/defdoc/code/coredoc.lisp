@@ -45,8 +45,8 @@
                 (:intro "The list items after an \\texttt{:enumerate} element (and its second argument, which specifies optional keyword arguments about the list itself) are taken as the contents of a numbered list.")
                 (:callspec (() (:seq string-or-docspec))))
 
-;;;(def-output-framework doc-elements
-;;;  (:target-type doc-element))
+(def-output-framework doc-elements
+    (collect-target-type 'doc-element))
 
 ;;; -----------------------------------------------------------------
 ;;; Special callspec list headers
@@ -98,8 +98,8 @@
             "would render as:"
             (:code "  (:seq item)")))
 
-;;;(def-output-framework callspec-specials
-;;;  (:target-type callspec-special))
+(def-output-framework callspec-specials
+    (collect-target-type 'callspec-special))
 
 ;;; -----------------------------------------------------------------
 ;;; Main macros
