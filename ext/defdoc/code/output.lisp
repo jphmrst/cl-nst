@@ -71,8 +71,9 @@
 ;;;  (unless package-supp-p
 ;;;    (setf package (symbol-package label-name)))
   `((defclass ,label-name (,class) ())
-    (defmethod is-output-framework-class ((cls (eql (find-class ',class)))) t)
-    (defmethod is-output-framework ((o ,class)) t)
+    (defmethod is-output-framework-class ((cls (eql (find-class ',label-name))))
+      t)
+    (defmethod is-output-framework ((o ,label-name)) t)
     (defmethod initialize-instance :after ((spec ,label-name)
                                            &key &allow-other-keys)
       (setf (slot-value spec 'name) ',label-name)
@@ -99,10 +100,16 @@
                    (t `(append ,@(loop for form in append-arg-forms
                                      collect (eval form))))))))))))
 
-(defmacro def-output-framework ((label-name &rest keyvals
-                                                &key &allow-other-keys)
-                                    &body forms)
-  `(progn ,@(apply #'get-output-framework-forms label-name forms keyvals)))
+(defmacro def-output-framework (label-name-or-spec &body forms)
+  (let (label-name keyvals)
+    (cond
+     ((symbolp label-name-or-spec)
+      (setf label-name label-name-or-spec))
+     (t (destructuring-bind (the-label-name &rest the-keyvals
+                                            &key &allow-other-keys)
+            label-name-or-spec
+          (setf label-name the-label-name keyvals the-keyvals))))
+    `(progn ,@(apply #'get-output-framework-forms label-name forms keyvals))))
 
 (defun get-output-framework (name)
   (when (find-class name nil) (make-instance name)))
