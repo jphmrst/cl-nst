@@ -32,7 +32,7 @@
 
 (defgeneric tag-sort (style package tag)
   (:method (style package tag)
-     (warn "~@<Using default tag-sort 0 for:~:@_ style ~a~:@_ package ~a~:@_ tag ~:@_Consider using def-doc-tag~:>" style package tag)
+     (warn "~@<Using default tag-sort 0 for:~:@_ style ~a~:@_ package ~a~:@_ tag ~a~:@_Consider using def-doc-tag~:>" style package tag)
      0))
 
 (defmacro def-doc-tag (tag (&key (package nil package-supp-p) (style t))
