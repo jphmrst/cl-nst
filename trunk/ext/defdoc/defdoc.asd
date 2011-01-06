@@ -22,6 +22,10 @@
 (defpackage :defdoc-asd (:use :common-lisp :asdf))
 (in-package :defdoc-asd)
 
+#+clozure (unless *print-pprint-dispatch*
+            (setf *print-pprint-dispatch*
+                  ((ccl::make-pprint-dispatch-table))))
+
 (defsystem :defdoc
     :description "Structured document specifiers"
                                         ; In the svn repository, the
