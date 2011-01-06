@@ -22,10 +22,13 @@
 (defpackage :defdoc-asd (:use :common-lisp :asdf))
 (in-package :defdoc-asd)
 
-;; CCL 1.6 does not seem to set this variable.
-#+clozure (unless *print-pprint-dispatch*
-            (setf *print-pprint-dispatch*
-                  ((ccl::make-pprint-dispatch-table))))
+;; Since defdoc makes multiple calls to set-pprint-dispatch, we check
+;; here to make sure there's a valid, mutable dispatch map in place.
+;; This caused a problem in CCL 1.6, in which *print-pprint-dispatch*
+;; was initialized to nil, but this patch should work for any
+;; ANSI-compliant implementation.
+(unless *print-pprint-dispatch*
+  (setf *print-pprint-dispatch* (copy-pprint-dispatch nil)))
 
 (defsystem :defdoc
     :description "Structured document specifiers"
