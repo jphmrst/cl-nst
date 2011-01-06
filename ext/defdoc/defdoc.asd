@@ -22,6 +22,7 @@
 (defpackage :defdoc-asd (:use :common-lisp :asdf))
 (in-package :defdoc-asd)
 
+;; CCL 1.6 does not seem to set this variable.
 #+clozure (unless *print-pprint-dispatch*
             (setf *print-pprint-dispatch*
                   ((ccl::make-pprint-dispatch-table))))
