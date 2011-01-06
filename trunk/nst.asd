@@ -2,7 +2,7 @@
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
-;;; Copyright (c) 2006-2010 Smart Information Flow Technologies.
+;;; Copyright (c) 2006-2011 Smart Information Flow Technologies.
 ;;; Written by John Maraist.
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
@@ -40,7 +40,7 @@
                                         ; number) should be
                                         ; incremented immediately
                                         ; after a version is shipped.
-    :version "3.0.1"
+    :version "3.0.2"
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :nst-test))

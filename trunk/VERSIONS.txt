@@ -1,4 +1,11 @@
 
+3.0.2 - 
+ Defdoc now provides a system asdf-defdoc, which defines a base ASDF system for
+   more conveniently associating a system with the documents to be generated
+   when loading it.  This system should be considered an alpha release and
+   subject to significant change; see the trac tickets under the "Documentation"
+   component for an indication of how we see this feature evolving.
+
 3.0.1 - public release, December 29, 2010
  Execution of one group can now be triggered by another group, as a 
    (directed) hierarchy of groups.

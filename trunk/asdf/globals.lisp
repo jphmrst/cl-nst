@@ -1,4 +1,4 @@
-;;; File runnable.lisp
+;;; File globals.lisp
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;

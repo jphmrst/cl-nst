@@ -2,7 +2,7 @@
 ;;;
 ;;; This file is part of the Defdoc unit/regression testing system.
 ;;;
-;;; Copyright (c) 2010 Smart Information Flow Technologies.
+;;; Copyright (c) 2010, 2011 Smart Information Flow Technologies.
 ;;;
 ;;; Defdoc is free software: you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as
@@ -17,6 +17,7 @@
 ;;; You should have received a copy of the GNU Lesser General Public
 ;;; License along with Defdoc.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
+
 (in-package :common-lisp-user)
 
 (defpackage :sift.asdf-defdoc
