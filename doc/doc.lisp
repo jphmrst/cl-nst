@@ -189,22 +189,22 @@
     (when callspec
       (princ " \\begin{verbatim}" stream)
       (loop for (cs . others) on callspec do
-            (loop for line
-                in (defdoc-control-api:callspec-to-lines style target-type cs
-                                                         defdoc:*latex-verbatim-width* self)
-                do
-                  (format stream "  ~a~%" line))
-            (when others (format stream "~%")))
+        (loop for line
+          in (defdoc-control-api:callspec-to-lines style target-type cs
+               defdoc:*latex-verbatim-width* self)
+          do
+          (format stream "  ~a~%" line))
+        (when others (format stream "~%")))
       (princ "\\end{verbatim}" stream))
 
     (when params-supp-p
       (princ "\\begin{description}" stream)
       (loop for (name subspec) in params do
-            (format stream "\\item[~a] " name)
-            (format-docspec stream style
-                            (latex-style-adjust-spec-element style target-type spec
-                                                             :subspec subspec)
-                            target-type))
+        (format stream "\\item[~a] " name)
+        (format-docspec stream style
+                        (latex-style-adjust-spec-element style target-type spec
+                                                         :subspec subspec)
+                        target-type))
       (princ "\\end{description}" stream))))
 
 ;;; -----------------------------------------------------------------
@@ -225,9 +225,9 @@
     ;;
     ;; (:style style-class)
 
-  (defdoc:collect-groups-by-label
-      (nst-manual :groups '(fixtures groups tests criteria))
-    (defdoc:collect-exported-symbols :nst)
-    (defdoc:collect-target-type 'nst::criterion)
-    (defdoc:collect-target-type 'nst::command)
-    (defdoc:collect-target-type 'nst::switch)))
+    (defdoc:collect-groups-by-label
+        (nst-manual :groups '(fixtures groups tests criteria))
+        (defdoc:collect-exported-symbols :nst)
+      (defdoc:collect-target-type 'nst::criterion)
+      (defdoc:collect-target-type 'nst::command)
+      (defdoc:collect-target-type 'nst::switch)))

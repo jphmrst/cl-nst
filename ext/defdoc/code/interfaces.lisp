@@ -2,7 +2,7 @@
 ;;;
 ;;; This file is part of the DefDoc documentation support package.
 ;;;
-;;; Copyright (c) 2010 Smart Information Flow Technologies.
+;;; Copyright (c) 2010, 2011 Smart Information Flow Technologies.
 ;;; Written by John Maraist.
 ;;;
 ;;; DefDoc is free software: you can redistribute it and/or modify it

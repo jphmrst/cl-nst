@@ -2,7 +2,7 @@
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
-;;; Copyright (c) 2010 Smart Information Flow Technologies.
+;;; Copyright (c) 2010, 2011 Smart Information Flow Technologies.
 ;;;
 ;;; NST is free software: you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as

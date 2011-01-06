@@ -2,7 +2,7 @@
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
-;;; Copyright (c) 2006-2010 Smart Information Flow Technologies.
+;;; Copyright (c) 2006-2011 Smart Information Flow Technologies.
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
 ;;; NST is free software: you can redistribute it and/or modify it
@@ -32,23 +32,22 @@
                                           :moderate t :specials nil
                                           :length 5 :level nil)))))
 
-       (handler-bind ((error #'(lambda (cnd)
-                                 (declare (ignorable cnd))
-                                 (format-at-verbosity 3
-                                     "Caught error formatting backtrace~%")
-                                 (return-from backtrace-maker
-                                   (list "Caught error while formatting backtrace, returning raw lines"
-                                         raw)))))
+       (handler-bind
+           ((error
+             #'(lambda (cnd)
+                 (declare (ignore cnd))
+                 (format-at-verbosity 3 "Caught error formatting backtrace~%")
+                 (return-from backtrace-maker
+                   (list "Caught error while formatting backtrace, returning raw lines"
+                         raw)))))
          (let ((lines (loop for spot = (position #\Newline raw)
                           while spot
                           collect (string-left-trim " ->" (subseq raw 0 spot))
                           do (setf raw (subseq raw (+ 1 spot))))))
-           (unless (search ,(if (string= "zz"
-                                         (symbol-name 'zz))
+           (unless (search ,(if (string= "zz" (symbol-name 'zz))
                               "make-error-report "
                               "MAKE-ERROR-REPORT ") (car lines))  (pop lines))
-           (unless (search ,(if (string= "zz"
-                                         (symbol-name 'zz))
+           (unless (search ,(if (string= "zz" (symbol-name 'zz))
                               "make-error-report "
                               "MAKE-ERROR-REPORT ") (car lines))  (pop lines))
 
@@ -56,7 +55,7 @@
 
              (handler-bind
                  ((error #'(lambda (cnd)
-                             (declare (ignorable cnd))
+                             (declare (ignore cnd))
                              (format-at-verbosity 3
                                  "Caught error ~s identifying backtrace core~%"
                                cnd)
@@ -69,7 +68,7 @@
                                                 "make-error-report "
                                                 "MAKE-ERROR-REPORT ")
                                              (car lines))))
-                   do (pop lines))
+                 do (pop lines))
                (cond
                 ;; We found the "make-error-report" line, and it's not at the
                 ;; top of the list of lines.
@@ -160,30 +159,30 @@
             (slot-value system 'asdf::name)))
         (let ((reports
                (nconc (loop for report in packages
-                            collect (let ((*nst-report-driver* (case *nst-report-driver*
-                                                                 (:details :details)
-                                                                 (t :package))))
-                                      (declare (special *nst-report-driver*))
-                                      (format s "~w~%" report)
-                                      report))
+                        collect (let ((*nst-report-driver* (case *nst-report-driver*
+                                                             (:details :details)
+                                                             (t :package))))
+                                  (declare (special *nst-report-driver*))
+                                  (format s "~w~%" report)
+                                  report))
                       (loop for report in groups
-                            collect (let ((*nst-report-driver* (case *nst-report-driver*
-                                                                 (:details :details)
-                                                                 (t :group))))
-                                      (declare (special *nst-report-driver*))
-                                      (format s "~w~%" report)
-                                      report))
+                        collect (let ((*nst-report-driver* (case *nst-report-driver*
+                                                             (:details :details)
+                                                             (t :group))))
+                                  (declare (special *nst-report-driver*))
+                                  (format s "~w~%" report)
+                                  report))
                       (loop for report in tests
-                            collect (let ((*nst-report-driver* (case *nst-report-driver*
-                                                                 (:details :details)
-                                                                 (t :test))))
-                                      (declare (special *nst-report-driver*))
-                                      (format s "~w~%" report)
-                                      report)))))
+                        collect (let ((*nst-report-driver* (case *nst-report-driver*
+                                                             (:details :details)
+                                                             (t :test))))
+                                  (declare (special *nst-report-driver*))
+                                  (format s "~w~%" report)
+                                  report)))))
           (multiple-value-bind (code total passed erred failed warned)
               (result-summary (cond
-                                (stats-source stats-source)
-                                (t reports)))
+                               (stats-source stats-source)
+                               (t reports)))
             (declare (ignorable code))
             (format s
                 "TOTAL: ~d of ~d passed (~d failed, ~d error~p, ~d warning~p)~%"
