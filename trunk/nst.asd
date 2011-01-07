@@ -121,7 +121,7 @@
                            (:file "sampling" :depends-on ("check"))
 
                            ;; Object-oriented test methods.
-                           #-(or clisp lispworks)
+                           #-lispworks
                            (:file "method" :depends-on ("status" "check"))
 
                            ;; Other packaged APIs.

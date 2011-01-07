@@ -106,12 +106,14 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+#-clisp
 (defclass method-context-layer (context-layer)
      ((method-name :initarg :method-name :accessor method-name)
       (class-name :initarg :class-name :accessor class-name)
       (object :initarg :object :accessor object))
   (:documentation "A record of method-based test invocation."))
 
+#-clisp
 (set-pprint-dispatch 'method-context-layer
   #'(lambda (s cl)
       (with-accessors ((method-name method-name)
@@ -125,6 +127,7 @@
           (format s "calling test method ~a on class ~a"
             method-name class-name))))))
 
+#-clisp
 (defmacro with-method-context-layer ((method-name class-name object) &body body)
   `(with-context-layer (make-instance 'method-context-layer
                          :method-name ',method-name
@@ -132,6 +135,7 @@
                          :object ,object)
      ,@body))
 
+#-clisp
 (defmethod show-context-layer ((layer method-context-layer))
   (declare (special -context-display-state-))
   (setf (gethash 'criterion -context-display-state-) t)
@@ -147,7 +151,13 @@
        (defmethod ,function-name ,@(unless (eq combination t)
                                      `(,combination)) ((,arg ,class))
          ,@(when documentation `(,documentation))
-         (let ((result (with-method-context-layer (,function-name ,class ,arg)
+         (let ((result (#-clisp with-method-context-layer
+                                #-clisp (,function-name ,class ,arg)
+                        #+clisp with-context-layer
+                                #+clisp
+                                (format nil
+                                        "calling test method ~a on class ~a on ~s"
+                                        ',function-name ',class ',arg)
                          ,@body)))
            (push ,(format nil "Checked test method ~s for ~s"
                     function-name class)
