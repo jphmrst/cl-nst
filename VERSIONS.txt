@@ -5,6 +5,9 @@
    when loading it.  This system should be considered an alpha release and
    subject to significant change; see the trac tickets under the "Documentation"
    component for an indication of how we see this feature evolving.
+ Ticket 226: Added a crude workaround to CLisp's stack overflow issue --- but
+   not sure how this hack will react in all cases where a dispatched test
+   fails. 
 
 3.0.1 - public release, December 29, 2010
  Execution of one group can now be triggered by another group, as a 

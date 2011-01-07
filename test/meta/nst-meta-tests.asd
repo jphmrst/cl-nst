@@ -45,7 +45,7 @@
 
                  ;; Classes and test methods for meta-tests of the
                  ;; :methods criterion.
-                 #-(or clisp lispworks)
+                 #-lispworks
                  (:file "methods")
 
                  ;; NST tests on NST runs.
