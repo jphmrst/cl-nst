@@ -1,0 +1,171 @@
+
+3.0.2 - 
+ Defdoc now provides a system asdf-defdoc, which defines a base ASDF system for
+   more conveniently associating a system with the documents to be generated
+   when loading it.  This system should be considered an alpha release and
+   subject to significant change; see the trac tickets under the "Documentation"
+   component for an indication of how we see this feature evolving.
+ Ticket 226: Added a crude workaround to CLisp's stack overflow issue --- but
+   not sure how this hack will react in all cases where a dispatched test
+   fails. 
+
+3.0.1 - public release, December 29, 2010
+ Execution of one group can now be triggered by another group, as a 
+   (directed) hierarchy of groups.
+ Ticket 220: The new setup etc. hooks on fixtures were working only for
+   attachment to groups, not to tests.
+ Ticket 223: Spurious warnings from :sample criterion, and a facility for
+   adding declaration for a :sample's :where form.
+ The def-criterion values lambda list argument can now be the simple symbol
+   :ignore, which indicates that 
+ Several SBCL style warnings cleared, a number of which arose from malformed
+   format strings.
+ Documentation and defdoc improvements.
+
+3.0.0 - public release, October 11, 2010
+ This release was planned as 2.1.2, but contains enough extensions to
+   the API macros to justify bumping the major release, to allow the
+   new API to be required e.g. by ASDF.
+ Improved some of the test output.
+ Fixed a bug in some of the self-test criteria (which had obviously
+   never yet come into use).
+ Removed some of the verbosity on recursively-called self-tests.
+ Ticket 212: Correct some duplicate execution of tests.
+ Ticket 189: Allow packages to be omitted from :report and :detail.
+ Documentation tickets: #192, #193, #210.
+ Consolidate the :uses and :assumes options to def-fixtures into the single,
+   clearer option :special.  Old options still allowed for now but deprecated.
+ Ticket 187: Removed some deprecated internal names.
+ Added a new documentation system for generating common text of the docstrings,
+   manual and reference card: #161, #194, #195.
+
+2.1.1 - public release, August 31, 2010
+ Fixed a bug in the implementation of fixture sets exporting names into their
+   packages, and added tests to verify exporting (ticket:163).
+ Added startup/finish hooks for tests, all hooks for fixtures.
+ Verified fix for ticket:129.
+ Many small code-cleaning patches, and some additional unit tests.
+ Updates to the manual and quick-reference sheet.
+
+2.1.0 - public release, July 1, 2010
+ A fairly significant change to the translation of groups and tests.
+  - Will require re-compiling code built against macros from earlier
+    NST versions.
+  - Should expand to considerably fewer method definitions.
+  - Should also clear most of the warnings previously generated under SBCL.
+ Added an interactive method to remove groups and tests.
+ Fixed a bug in the parsing when the :export-names and related options in
+   fixtures are used.
+ Now explicitly depends on sb-aclrepl in SBCL; thanks to Stelian Ionescu for
+   pointing out the implicit dependency in earlier version.
+ Correct the format string used for printing Lisp warnings in NST
+   results output; thanks to Steve Harp for pointing out the problem.
+ Added make-success-report, make-failure-report and make-warning-report as
+   eventual replacements for emit-success et al., per a suggestion of Robert
+   Goldman --- these functions do not have any side-effect, so the make-*
+   names more accurately evoke their functionality.  We'll eventually
+   deprecate, and then remove, the emit-* definitions.
+
+2.0.3 - public release, April 6, 2010
+ Renamed the version numbering from 1.3.* to 2.0.*, to allow
+   projects to require a version from before the rewrite of 
+   criteria handling.
+ LispWorks compatibility.
+ Ticket 28 - nil can now be used as a fixture name, to provide
+             side-effects in sequence with fixture bindings.         
+ Various documentation strings.
+
+1.3.2 (2.0.2) - public release, March 16, 2010
+ Improvements/debugging to error reporting.
+ def-test and def-test-group now accept docstrings.
+ Ticket 159 - Quote attribute value string contents in JUnit XML output.
+ Ticket 113 - The last task for :whatis --- this command now reports on
+              NST-relevant name in all packages, not just *package*.
+ Ticket 41 - Restored the :debug-on-fail mode.
+
+1.3.1 (2.0.1) - public release, February 22, 2010
+ Ticket 158 - The underlying problem was that the internal function for
+              constructing a report on all results by package was faulty.
+              The function was referencing a deprecated defvar which was
+              no longer being written.
+ Added checking of JUnit XML generation to the multiplatform testing suite.
+ Changed the packaging of tests' internal class names for Allegro 8.2.
+
+1.3.0 (2.0.0) - public release
+ Ticket 110 - The major fix in this release.  The implementation of
+              criteria has been completely rewritten to use method
+              dispatch rather than macro expansion.  The
+              def-form-criterion macro is invalidated; the
+              def-values-criterion is deprecated.
+ Added optional caching of fixtures.
+ Added the `:nst apply` command to the runtime system.
+ Correct handling of negative numbers in sampling of real numbers.
+ Ticket 151 - The criteria definers now all allow docstrings.
+ Ticket 149 - Lisp warnings are now caught, and translated into
+              NST warnings.
+ Ticket 60 - Added a with-fixtures macro.
+ Ticket 12 - Ctrl-C under SBCL interrupts tests, no longer swallowed.
+ Ticket 101 - Separate group setup/cleanup routines within and without
+              group fixture bindings
+
+1.2.8 - public release
+ The package argument to :nst :run-package is now optional, with
+      *package* as default.
+ Bug fix for Mac OSX: suppress backtrace collection.
+
+1.2.7 - public release, November 15, 2009
+ Ticket 4 - Handling of cleanup group forms, and both setup- and
+            cleanup forms attached to individual tests.
+ Ticket 140 - NST was not resetting the list of a fixture set's bound
+              names on a redefinition of the fixture set.
+ Adjusting some type usage in the sample generator for portability.
+
+1.2.6 - public release, November 11, 2009
+ Minor bug fixes and improvements.
+
+1.2.5 - internal release, October 28, 2009
+ Ticket 134 - Fixed a bug in the :permute criteria.
+ Ticket 123 - Bug in output.
+ Reorganized "meta" tests to better examine and regression-test NST's
+   performance in detail.
+ Allow tests to be defined separately from their group.
+ Replaced check-result with emit-success.
+ Improved deprecation warnings.
+ Several minor tweaks.
+
+1.2.4 - internal release, October 9, 2009
+ Add restarts for use in interactive operation.
+ (Start to) capture fixture names when errors arise in fixture application.
+ Better failure checking of cleanup operations.
+ Added :export-* options to fixtures.
+
+1.2.3 - internal release, October 2, 2009
+ Added :export-names, :export-fixture-name and :export-bound-names to
+   the def-fixtures macro.
+
+1.2.2 - internal release, September 9, 2009
+ Ticket 104 - recompilation of a test now removes the record of its
+              pass/failure.
+ Ticket 113 - about halfway implemented.
+ Ticket 119 - partial fix: affected tests do now show up as erring,
+              although the message is cryptic.
+ Start of NST API documentation in manual.
+
+1.2.1 - internal release, September 2, 2009
+ Ticket 104 - fixed issues with modern/classic capitalization, occasional
+              hanging in backtrace collector
+
+1.2.0 - public release, July 22, 2009
+ Deprecation warnings on several disused macros.
+ Clarified error output message for :eq/:eql/:equal/:equalp.
+ Ticket 98 - customizable meaning for ":nst :debug" via ASDF.
+ Ticket 99 - fixed Makefile for documentation.
+ Ticket 100 - re-activated links in generated PDF.
+ Ticket 102 - deactivated Allegro backtrace harvesting on Mac OS X.
+ Ticket 103 discussion - now using "import" for ":nst :open".
+ New criterion for quickcheck-style sampling of generated data.
+ New do-what-I-mean interactive command :nst :run.
+ Code improvements for compile/load-time improvements.
+
+1.1.1 - First public release, June 2009.
+
