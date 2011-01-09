@@ -212,7 +212,8 @@
         for method-fn = (symbol-function method-name)
         for actual-method
              = (when method-fn
-                 (closer-mop:compute-applicable-methods-using-classes
+                 (#-clozure-common-lisp closer-mop:compute-applicable-methods-using-classes
+                  #+clozure-common-lisp compute-applicable-methods-using-classes
                     method-fn (list (find-class (type-of obj)))))
         if actual-method collect method-fn))
 (defun invoke-test-methods (obj)
