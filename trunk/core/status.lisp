@@ -55,7 +55,6 @@
 
              (handler-bind
                  ((error #'(lambda (cnd)
-                             (declare (ignore cnd))
                              (format-at-verbosity 3
                                  "Caught error ~s identifying backtrace core~%"
                                cnd)
@@ -430,7 +429,13 @@ structure, permitting the use of apply."))
  context - the surrounding criteria structure, a list of context-layer structs
  stack - the stack of values at the note point
  format, args - further details; this string and list may e.g. be provided to
-                cl:format"
+                cl:format
+
+                ** IMPORTANT ** Do not use check-note-format or check-note-args!
+                Do not assume that the format slot is a string!  The API for
+                these slots is apply-check-note-formatter, which checks for
+                function values (or other types allowed as a formatter since
+                the time when this docstring was written)."
   context stack format args)
 
 (defun apply-formatter (stream formatter args)
@@ -440,14 +445,16 @@ structure, permitting the use of apply."))
     ((stringp formatter)   (apply #'format stream formatter args) t)
     (t (error "Cannot handle formatter ~s" formatter))))
 
+(defun apply-check-note-formatter (stream check-note)
+  (apply-formatter stream
+                   (check-note-format check-note) (check-note-args check-note)))
+
 (set-pprint-dispatch 'check-note
   #'(lambda (s cn)
       (with-accessors ((context check-note-context)
-                       (stack check-note-stack)
-                       (format check-note-format)
-                       (args check-note-args)) cn
+                       (stack check-note-stack)) cn
         (pprint-logical-block (s '(dummy list))
-          (apply-formatter s format args)
+          (apply-check-note-formatter s cn)
           (when (or (> *nst-verbosity* 2)
                     (and (> *nst-verbosity* 1)
                          (eq *nst-report-driver* :details)))
@@ -465,15 +472,13 @@ structure, permitting the use of apply."))
   #'(lambda (s cn)
       (with-accessors ((context check-note-context)
                        (stack check-note-stack)
-                       (format check-note-format)
-                       (args check-note-args)
                        (error error-check-note-error)) cn
         (let (#+allegro (show-zoom (or (eq *nst-report-driver* :test)
                                        (eq *nst-report-driver* :details)
                                        (> *nst-verbosity* 2))))
           (pprint-logical-block (s '(dummy list))
             (format s "~a" error)
-            (when (apply-formatter s format args)
+            (when (apply-check-note-formatter s cn)
               (pprint-newline :mandatory s))
             (cond
               (context (format s "~:@_in context: ~@<~{~a~^~:@_~}~:>" context))

@@ -132,19 +132,16 @@ argument should be a string of just spaces."))
         (format s "~%~a" padding))
 
        (failures
-        (with-accessors ((context check-note-context)
-                         (stack check-note-stack)
-                         (format check-note-format)
-                         (args check-note-args))
-            (car failures)
-          (let ((msg (format nil "~?" format args)))
-            (format s "~%~a  " padding)
-            (format s "<failure message=\"~a\" type=\"lisp.nst.criterion.~a\">"
-                    (string-escaped msg) (get-local-criterion-context context))
-            (format s "<![CDATA[~%~a    " padding)
-            (format s "~@<~{~a~^~:@_~}~:>~%" context)
-            (format s "~a  ]]></failure>~%" padding)
-            (format s "~a" padding)))))
+        (let ((failure (car failures)))
+        (with-accessors ((context check-note-context)) failure
+          (format s "~%~a  " padding)
+          (format s "<failure message=\"~a\" type=\"lisp.nst.criterion.~a\">"
+                  (string-escaped (apply-check-note-formatter nil failure))
+                  (get-local-criterion-context context))
+          (format s "<![CDATA[~%~a    " padding)
+          (format s "~@<~{~a~^~:@_~}~:>~%" context)
+          (format s "~a  ]]></failure>~%" padding)
+          (format s "~a" padding)))))
 
       ;; Close the testcase block.
       (format s "</testcase>~%"))))
