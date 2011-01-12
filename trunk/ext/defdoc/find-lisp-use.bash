@@ -1,3 +1,3 @@
 #!/bin/bash
 
-fgrep "$1" */*.lisp *.lisp *.asd
+fgrep -e "$1" */*.lisp *.lisp *.asd
