@@ -215,7 +215,12 @@
                             (return-from err-criterion
                               (make-error-report e))))))))
       (eval expr-form))
-    (make-failure-report :format "~@<No expected error:~{~_ ~s~}~:>"
+    (make-failure-report :format #'(lambda (stream forms)
+                                     (pprint-logical-block (stream forms)
+                                       (write "No expected error:" stream)
+                                       (loop for form in forms do
+                                         (pprint-newline :linear stream)
+                                         (format stream " ~s" form))))
                          :args `(,(cond
                                     ((and (listp expr-form)
                                           (eq 'list (car expr-form)))
@@ -318,8 +323,15 @@
             (return-from any-criterion
               (make-success-report :info (nconc info
                                              (check-result-info result)))))))
-      (make-failure-report :format "No disjuncts succeeded:~{~_ ~s~}"
-                           :args (list criteria) :info info))))
+      (make-failure-report
+        :format #'(lambda (stream disjuncts)
+                    (pprint-logical-block (stream disjuncts)
+                      (write "No disjuncts succeeded:" stream)
+                      (loop for disjunct in disjuncts do
+                        (pprint-newline :linear stream)
+                        (format stream " ~s" disjunct))))
+        :args (list criteria)
+        :info info))))
 (defdoc:def-documentation (criterion :any)
   (:callspec ((:seq subcriterion)))
   (:intro (:latex "Passes when any of the subordinate criteria pass."))

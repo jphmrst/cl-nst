@@ -126,8 +126,13 @@ argument should be a string of just spaces."))
               (let ((backtrace #+allegro (error-check-note-zoom error-note)
                                #-allegro nil))
                 (cond
-                 (backtrace (format s "      ~@<~:*~{~a~%~}~:>  " backtrace))
-                 (t         (write "      expression top-level  " s))))
+                 (backtrace
+                  (write "      " s)
+                  (pprint-logical-block (s backtrace)
+                    (loop for bt = (pprint-pop) while bt do
+                      (format s "~a~%" bt)))
+                  (write "  " s))
+                 (t (write "      expression top-level  " s))))
               (write "  ]]></error>" s))))
         (format s "~%~a" padding))
 
