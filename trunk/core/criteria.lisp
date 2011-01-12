@@ -180,7 +180,8 @@
   (:intro (:latex "Checks the primary value according to the subordinate criterion, ignoring any additional returned values from the evaluation of the form under test.")))
 
 (def-criterion (:dump-forms (:forms blurb) (:values &rest forms))
-  (format t "~%~a~%~{~s~%~}" blurb forms)
+  (format t "~%~a~%" blurb)
+  (loop for form in forms do (format t "~s~%" form))
   (make-failure-report :format "Arguments dumped" :args nil))
 (defdoc:def-documentation (criterion :dump-forms)
   (:callspec (blurb))

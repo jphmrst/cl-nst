@@ -53,24 +53,29 @@ argument should be a string of just spaces."))
     (destructuring-bind (second minute hour date month year day daylight-p zone)
         timestamp
       (declare (ignorable day daylight-p zone))
-      (format s
-          "~a<testsuite~@< errors=\"~d\"~
-                     ~:_ failures=\"~d\"~
-                     ~:_ name=~s~
-                     ~:_ tests=\"~d\"~
-                     ~:_ time=\"~f\"~
-                     ~:_ timestamp=\"~d-~2,'0d-~2,'0dT~2,'0d:~2,'0d:~2,'0d\"~
-                  ~@[~:_ hostname=~s~]~:>>~%"
-        padding errors failures (symbol-to-junit-name group-name) tests
-        (/ elapsed-time internal-time-units-per-second)
-        year month date hour minute second
+      (format s "~a<testsuite" padding)
+      (pprint-logical-block (s '(1 2 3))
+        (format s " errors=\"~d\"" errors)
+        (pprint-newline :fill s)
+        (format s " failures=\"~d\"" failures)
+        (pprint-newline :fill s)
+        (format s " name=~s" (symbol-to-junit-name group-name))
+        (pprint-newline :fill s)
+        (format s " tests=\"~d\"" tests)
+        (pprint-newline :fill s)
+        (format s " time=\"~f\""
+          (/ elapsed-time internal-time-units-per-second))
+        (pprint-newline :fill s)
+        (format s " timestamp=\"~d-~2,'0d-~2,'0dT~2,'0d:~2,'0d:~2,'0d\""
+                year month date hour minute second)
+        #+allegro (progn
+                    (pprint-newline :fill s)
+                    (format s " hostname=~s"
+                      (let ((outputs (excl.osi:command-output "hostname")))
+                        (if (and outputs (stringp (car outputs)))
+                            (car outputs))))))
+      (format s ">~%")
 
-        ;; The hostname.  This isn't Lisp-standard, so maybe we can't
-        ;; have it.
-        #+allegro (let ((outputs (excl.osi:command-output "hostname")))
-                    (if (and outputs (stringp (car outputs)))
-                      (car outputs)))
-        #-allegro nil)
       (let ((new-padding (concatenate 'string "  " padding)))
         (loop for report being the hash-values of test-reports do
               (cond (report (junit-xml-snippet report s new-padding)))))
@@ -93,56 +98,56 @@ argument should be a string of just spaces."))
     (destructuring-bind (second minute hour date month year day daylight-p zone)
         timestamp
       (declare (ignorable day daylight-p zone))
+
+      ;; Open the testcase block.
       (format s "~a<testcase classname=~s name=\"~a\" time=\"~f\" ~
-                      timestamp=\"~4,'0d-~2,'0d-~2,'0dT~2,'0d:~2,'0d:~2,'0d\""
+                      timestamp=\"~4,'0d-~2,'0d-~2,'0dT~2,'0d:~2,'0d:~2,'0d\">"
         padding
         (symbol-to-junit-name group-name) ; use the group for the classname
         check-name (/ elapsed-time internal-time-units-per-second)
         year month date hour minute second)
+
+      ;; Contents of the testcase block.
       (cond
-        (errors
-         (format s
-;;;             ">~:{~%~a  ~@<<error message=\"~a raised an error: ~a\" type=~s><![CDATA[~
-;;;                         ~:@_  Lisp backtrace (within NST context):~
-;;;                         ~:@_<br>~:[expression top-level~
-;;;                                  ~;<table border=\"1\">~@<~:*~{<tr><td nowrap=\"nowrap\">~a</td></tr>~^~:@_~}~:></table>~]~
-;;;                         ~:@_]]></error>~:>~}~%"
-           ">~:{~%~a  ~@<<error message=\"~a raised an error: ~a\" type=~s><![CDATA[~
- Lisp backtrace (within NST context): ~
- ~:[~
-      expression top-level~
-  ~;~
-      ~@<~:*~{~a~%~}~:>~
-  ~]~
-  ]]></error>~:>~}~%"
-           (loop for error-note in errors
-                 collect (with-accessors ((error error-check-note-error))
-                             error-note
-                           (list padding
-                                 (symbol-to-junit-name check-name)
-                                 (symbol-to-junit-name (type-of error))
-                                 (symbol-to-junit-name (type-of error))
-                                 #+allegro (error-check-note-zoom error-note)
-                                 #-allegro nil))))
-         (format s "~a</testcase>~%" padding))
-        (failures
-         (with-accessors ((context check-note-context)
-                          (stack check-note-stack)
-                          (format check-note-format)
-                          (args check-note-args))
-                         (car failures)
-           (let ((msg (format nil "~?" format args)))
-             (format s
-                 ">~%~a  <failure message=\"~a\" type=\"lisp.nst.criterion.~a\"><![CDATA[~%"
-               padding (string-escaped msg)
-               (get-local-criterion-context context)
-               ;; (criterion (car context))
-               )
-             (format s "~a    ~@<~{~a~^~:@_~}~:>~%"
-               padding context)))
-                  (format s "~a  ]]></failure>~%" padding)
-                  (format s "~a</testcase>~%" padding))
-       (t (format s " />~%"))))))
+
+       (errors
+        ;; Print the errors in a vertical list.
+        (loop for error-note in errors do
+          (format s "~%~a  " padding)
+          (with-accessors ((error error-check-note-error)) error-note
+
+            ;; Details of a single error go into a logical block.
+            (pprint-logical-block (s '(1 2))
+              (format s "<error message=\"~a raised an error: ~a\" type=~s>"
+                      (symbol-to-junit-name check-name)
+                      (symbol-to-junit-name (type-of error))
+                      (symbol-to-junit-name (type-of error)))
+              (write "<![CDATA[ Lisp backtrace (within NST context):  " s)
+              (let ((backtrace #+allegro (error-check-note-zoom error-note)
+                               #-allegro nil))
+                (cond
+                 (backtrace (format s "      ~@<~:*~{~a~%~}~:>  " backtrace))
+                 (t         (write "      expression top-level  " s))))
+              (write "  ]]></error>" s))))
+        (format s "~%~a" padding))
+
+       (failures
+        (with-accessors ((context check-note-context)
+                         (stack check-note-stack)
+                         (format check-note-format)
+                         (args check-note-args))
+            (car failures)
+          (let ((msg (format nil "~?" format args)))
+            (format s "~%~a  " padding)
+            (format s "<failure message=\"~a\" type=\"lisp.nst.criterion.~a\">"
+                    (string-escaped msg) (get-local-criterion-context context))
+            (format s "<![CDATA[~%~a    " padding)
+            (format s "~@<~{~a~^~:@_~}~:>~%" context)
+            (format s "~a  ]]></failure>~%" padding)
+            (format s "~a" padding)))))
+
+      ;; Close the testcase block.
+      (format s "</testcase>~%"))))
 
 (defun nst-xml-dump (stream)
   (nst-junit-dump stream))

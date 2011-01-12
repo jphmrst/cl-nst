@@ -249,10 +249,18 @@
                                `(format t "   (~s ~s ~s)~%"
                                   ',options ',var ',form))
                               (t `(format t "   (~s ~s)~%" ',var ',form))))
-                     (format t " - Other fixtures: ~@<~{~s~^ ~_~}~:>~%" ',uses)
-                     (format t " - Names expected: ~@<~{~s~^ ~_~}~:>~%" ',assumes)
-                     (format t " - Outer bindings: ~@<~{~s~^ ~_~}~:>~%" ',outer)
-                     (format t " - Inner bindings: ~@<~{~s~^ ~_~}~:>~%" ',inner)
+                     (flet ((format-list (title list)
+                              (format t " - ~a: " title)
+                              (pprint-logical-block (t list)
+                                (loop for item = (pprint-pop) while item do
+                                  (format t "~s " item)
+                                  (pprint-exit-if-list-exhausted)
+                                  (format t " ")
+                                  (pprint-newline :linear t)))))
+                       (format-list "Other fixtures" ',uses)
+                       (format-list "Names expected" ',assumes)
+                       (format-list "Outer bindings" ',outer)
+                       (format-list "Inner bindings" ',inner))
                      (format t " - Documentation string: ~s~%" ,documentation)
 
                      ',name)
