@@ -84,7 +84,12 @@
        ((null repl) ", ignored, and will be removed in a future release")
        ((not (listp repl)) (format nil "; use ~a instead" repl))
        ((eql (length repl) 1) (format nil "; use ~a instead" (car repl)))
-       (t (format nil "; use one of ~{~a~^, ~} instead" repl))))))
+       (t (with-output-to-string (buf)
+            (format buf "; use one of ")
+            (loop for (first . others) on repl do
+              (format buf "~a" first)
+              (when others (format buf " " repl)))
+            (format buf " instead")))))))
 
 (define-condition nst-soft-deprecation
     (style-warning nst-deprecation-warning-mixin) ()

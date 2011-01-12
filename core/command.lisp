@@ -131,9 +131,9 @@ available from compile-time forward.")
                        (t (format nil "~a" arg))))
                      (t (format nil "~a" arg)))))
            (with-output-to-string (out)
-             (format out "~{~a~^ ~}"
-               (loop for arg in arg-list
-                   collect (prep-arg-name arg)))))))))
+             (loop for (arg . other-args) on arg-list do
+               (princ (prep-arg-name arg) out)
+               (when other-args (princ " " out)))))))))
 
 (defvar +nst-repl-commands+ nil)
 (defvar +nst-repl-properties+ nil)
@@ -486,8 +486,8 @@ The last form shows all interesting results."
       (cond
         ((null usage) (format t "The symbol ~s is not known to NST" name))
         ((null (cdr usage)) (format t "~a~%" (car usage)))
-        (t (format t "There are ~d uses of ~s:~%~{ - ~a~%~}"
-             (length usage) name usage)))
+        (t (format t "There are ~d uses of ~s:~%" (length usage) name)
+           (loop for u in usage do (format t " - ~a~%" u))))
       nil))
 (def-documentation (command :whatis)
   (:callspec (name))

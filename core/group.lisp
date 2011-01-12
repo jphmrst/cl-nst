@@ -95,8 +95,17 @@
 
 (defmethod trace-group ((g nst-group-record))
   (format t "Group ~s:~%" (group-name g))
-  (format t " - Fixtures: ~@<~{~s~^ ~:_~}~:>~%" (group-given-fixtures g))
-  (format t " - Defines tests: ~@<~{~s~^ ~:_~}~:>~%" (test-names g)))
+  (flet ((format-list (title list)
+           (format t " - ~a: " title)
+           (pprint-logical-block (t list)
+             (loop for item = (pprint-pop) while item do
+               (format t "~s " item)
+               (pprint-exit-if-list-exhausted)
+               (format t " ")
+               (pprint-newline :fill t)))
+           (format t "~%")))
+    (format-list "Fixtures" (group-given-fixtures g))
+    (format-list "Defines tests" (test-names g))))
 
 (defun no-effect () nil)
 
