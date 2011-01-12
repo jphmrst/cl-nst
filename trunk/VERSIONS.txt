@@ -8,8 +8,15 @@
  Ticket 226: Added a crude workaround to CLisp's stack overflow issue --- but
    not sure how this hack will react in all cases where a dispatched test
    fails. 
+ Ticket 185: A longstanding code quality issue --- I'd like to get rid of all
+   uses of ~{ , ~[ , ~< and ~* (with or without uses of prefix arguments) in
+   calls to format.  They're convenient, but just too hard to read in long-term
+   code.  This ticket is part of that effort; an internal structure which
+   previously stored a format string can now also accept a function on the
+   arguments to be formatted.
 
 3.0.1 - public release, December 29, 2010
+ This release may have broken SBCL; see Ticket 185.
  Execution of one group can now be triggered by another group, as a 
    (directed) hierarchy of groups.
  Ticket 220: The new setup etc. hooks on fixtures were working only for
