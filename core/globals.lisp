@@ -85,16 +85,31 @@
   "User variable: if non-null, will attempt to capture the Lisp backtrace of errors in tests.")
 
 (defmacro format-at-verbosity (lv format &rest args)
+  `(at-verbosity ,lv
+     (format t ,format ,@args)))
+
+(defmacro with-output-for-verbosity ((lv stream-name) &body forms)
   (let ((lv-val (gensym)))
     `(let ((,lv-val ,lv))
        (when (>= *nst-verbosity* ,lv-val)
-         (format t ,format ,@args)))))
+         (let ((,stream-name t))
+           ,@forms)))))
 
-(defmacro at-verbosity (lv &rest forms)
+(defmacro at-verbosity (lv &body forms)
   (let ((lv-val (gensym)))
     `(let ((,lv-val ,lv))
        (when (>= *nst-verbosity* ,lv-val)
          ,@forms))))
+
+(defun princ-filled-text (string &optional (stream *standard-output*))
+  (let ((spaces nil))
+    (loop for char across string do
+      (cond
+       ((eq char #\Space) (setf spaces t))
+       (t (when spaces
+            (pprint-newline :fill stream))
+          (setf spaces nil)))
+      (princ char stream))))
 
 ;;;
 ;;;  Flags and dynamic variable declarations.

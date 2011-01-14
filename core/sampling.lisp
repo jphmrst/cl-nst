@@ -497,25 +497,44 @@
                 #'(lambda (e)
                     (format-at-verbosity 4 "Caught ~s in :sample criterion~%" e)
                     (add-error result
-                      :format (format nil
-                                  "~~@<Error ~~s~~:@_for case:~{~~:@_~s ~~s~}~~:>"
-                                names-only)
-                      ;; ******************************
-                      ;; "names-only" below is wrong
-                      ;; ******************************
-                      :args (list e names-only))
+;;;                   ;; This was the original code.
+;;;                   :format (format nil
+;;;                               "~~@<Error ~~s~~:@_for case:~{~~:@_~s ~~s~}~~:>"
+;;;                             names-only)
+;;;                   ;; ******************************
+;;;                   ;; "names-only" below is wrong
+;;;                   ;; ******************************
+;;;                   :args (list e names-only)
+                      :format #'(lambda (stream err)
+                                  (pprint-logical-block (stream names-only)
+                                    (format stream "Error ~s" err)
+;;;                                 (format stream " for case:")
+;;;                                 (loop for name = (pprint-pop) while name do
+;;;                                   (pprint-newline :mandatory stream)
+;;;                                   (format stream "~s " name)
+;;;                                   ;; Whatever this is supposed to
+;;;                                   ;; be goes here.
+;;;                                   )
+                                    ))
+                      :args (list e)
+                      )
                     (return-from verify-once))))
 
                (let ((this-result (eval verify-expr)))
                 (unless this-result
                   (add-failure result
-                    :format (format nil
-                                "~~@<Failed for case:~{~~:@_~s ~~s~}~~:>"
-                              ;; ******************************
-                              ;; "names-only" below is wrong
-                              ;; ******************************
-                              names-only)
-                    :args (list names-only))))))))
+                      :format #'(lambda (stream)
+                                  (pprint-logical-block (stream names-only)
+                                    (format stream "Failed")
+;;;                                 (format stream " for case:")
+;;;                                 (loop for name = (pprint-pop) while name do
+;;;                                   (pprint-newline :mandatory stream)
+;;;                                   (format stream "~s " name)
+;;;                                   ;; Whatever this is supposed to
+;;;                                   ;; be goes here.
+;;;                                   )
+                                    ))
+                    :args nil)))))))
        finally (setf total-samples-run sample-num))
 
     (add-info result

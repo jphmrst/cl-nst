@@ -227,25 +227,44 @@ you want to use to read +name-use+."
             ((and fixture (not group) (not tests-p))
              (let ((the-names (loop for name in (bound-names fixture)
                                     if (symbol-package name)
-                                      collect name)))
-               (format stream
-                   "~@<~a (package ~a) is a fixture~
-                 ~:@_ - ~@<binds ~:[~2*no accessible names~
-                                  ~;name~p~{ ~a~^,~:_~}~]~:>~
-                 ~:>"
-                 (type-of fixture)
-                 (package-name (symbol-package (type-of fixture)))
-                 the-names
-                 (length the-names)
-                 the-names)))
+                                    collect name)))
+               (pprint-logical-block (stream '(1 2))
+                 (format stream "~a (package ~a) is a fixture"
+                         (type-of fixture)
+                         (package-name (symbol-package (type-of fixture))))
+                 (pprint-newline :mandatory stream)
+                 (princ " - " stream)
+                 (pprint-logical-block (stream '(1 2))
+                   (princ "binds " stream)
+                   (cond
+                    (the-names (princ "name" stream)
+                               (unless (eql 1 the-names)
+                                 (princ "s" stream))
+                               (loop for (name . others) on the-names do
+                                 (princ " " stream)
+                                 (format stream "~a" name)
+                                 (when others
+                                   (princ "," stream)
+                                   (pprint-newline :fill stream))))
+                    (t (princ-filled-text "no accessible names" stream)))))))
 
             ((and group (not fixture) (not tests-p))
-             (format stream
-                 "~@<~a (package ~a) is a test group~
-                  ~:@_ - ~@<Contains test~p~{ ~a~^,~:_~}~:>~:>"
-               (type-of group)
-               (package-name (symbol-package (type-of group)))
-               (length (test-names group)) (test-names group)))
+             (pprint-logical-block (stream '(1 2))
+               (format stream "~a (package ~a) is a test group"
+                       (type-of group)
+                       (package-name (symbol-package (type-of group))))
+               (pprint-newline :mandatory stream)
+               (princ " - " stream)
+               (let ((test-names (test-names group)))
+                 (pprint-logical-block (stream test-names)
+                   (princ "Contains test" stream)
+                   (unless (eql 1 (length (test-names group)))
+                     (princ "s" stream))
+                   (loop for name = (pprint-pop) while name do
+                     (format stream " ~a" name)
+                     (pprint-exit-if-list-exhausted)
+                     (princ "," stream)
+                     (pprint-newline :fill stream))))))
 
             ((and tests-p (not fixture) (not group))
              (case (hash-table-count tests)

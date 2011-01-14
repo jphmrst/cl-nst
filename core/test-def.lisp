@@ -70,7 +70,13 @@ first element is that symbol and whose remaining elements are options."
   (format t "Test ~s (group ~s)~%" gr ts)
   ;; (format t " - Given name and args: ~s~%" (test-forms ts))
   (format t " - Given criterion: ~s~%" (test-criterion ts))
-  (format t " - Given forms: ~@<~{~s~^ ~:_~}~:>~%" (test-forms ts)))
+  (format t " - Given forms: ")
+  (pprint-logical-block (*standard-output* (test-forms ts))
+    (loop for form = (pprint-pop) while form do
+      (format t "~s" (test-forms ts))
+      (pprint-exit-if-list-exhausted)
+      (pprint-newline :fill)))
+  (format t "~%"))
 
 (defmethod test-record-p ((r nst-test-record))
   t)
