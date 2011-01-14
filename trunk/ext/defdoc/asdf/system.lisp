@@ -74,7 +74,8 @@
                 file-name (symbol-name output)
                 idx nil
                 toc nil
-                doc-style (intern :#latex-style (find-package :defdoc))))
+                doc-style (intern (symbol-name :#latex-style)
+                                  (find-package :defdoc))))
 
          ((listp output)
           (destructuring-bind (name &key
@@ -110,7 +111,7 @@
                   doc-style (cond
                              (style-supp-p (intern (symbol-name style)
                                                    (find-package package)))
-                             (t (intern :#latex-style
+                             (t (intern (symbol-name :#latex-style)
                                         (find-package :defdoc)))))))
 
          (t (error "Expected symbol or list, got ~s" output)))

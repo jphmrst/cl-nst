@@ -128,12 +128,15 @@
     (declare (special *nst-group-name* *nst-check-user-name*))
     (make-error-report error :format (format nil msg))))
 
-
 (defun fixture-binding-error-note (fixture-name variable-name error)
   (make-error-report
    error
-   (format nil "~~@<Error binding ~a for fixture ~s:~~_ ~~w~~:>"
-     variable-name fixture-name)
+   #'(lambda (stream e)
+       (pprint-logical-block (stream '(1 2))
+         (format stream "Error binding ~a for fixture ~s"
+                 variable-name fixture-name)
+         (pprint-newline :fill stream)
+         (format stream " ~w" e)))
    error))
 
 ;;;
@@ -458,7 +461,9 @@ structure, permitting the use of apply."))
           (when (or (> *nst-verbosity* 2)
                     (and (> *nst-verbosity* 1)
                          (eq *nst-report-driver* :details)))
-            (format s "~{~:@_~w~}" (get-display-context-layers context))
+            (loop for layer in (get-display-context-layers context) do
+              (pprint-newline :mandatory s)
+              (write layer :stream s))
             (when stack
               (pprint-newline :mandatory s)
               (princ "stack: " s)
@@ -481,8 +486,15 @@ structure, permitting the use of apply."))
             (when (apply-check-note-formatter s cn)
               (pprint-newline :mandatory s))
             (cond
-              (context (format s "~:@_in context: ~@<~{~a~^~:@_~}~:>" context))
-              (t (princ "at top level" s)))
+             (context
+              (pprint-newline :mandatory s)
+              (format s "in context: ")
+              (pprint-logical-block (s context)
+                (loop for ct = (pprint-pop) while ct do
+                  (format s "~a" context)
+                  (pprint-exit-if-list-exhausted)
+                  (pprint-newline :mandatory s))))
+             (t (princ "at top level" s)))
             (pprint-newline :mandatory s)
             (format s "~:[nil values~;~:*values: ~w~]" stack)
             #+allegro (when show-zoom

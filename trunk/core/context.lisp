@@ -58,17 +58,33 @@
                        (given-stack given-stack)) cl
         (cond
          ((eq (car given-stack) 'list)
-          (format s
-              #-(or sbcl scl) "checki~@<ng (~s~@<~{~:_ ~s~}~:>) ~_on~{ ~a~}~:>"
-              #+(or sbcl scl) "checking (~s~{~:_ ~s~}) on~{ ~a~}"
-              criterion criterion-args (cdr given-stack)))
+          (princ "checki" s)
+          (pprint-logical-block (s '(1 2))
+            (format s "ng (~s" criterion)
+            (pprint-logical-block (s criterion-args)
+              (loop for arg = (pprint-pop) while arg do
+                (pprint-newline :fill s)
+                (princ " " s)
+                (format s "~s" arg)))
+            (princ ") " s)
+            (pprint-newline :linear s)
+            (princ "on" s)
+            (loop for layer in (cdr given-stack) do
+              (format s " ~a" layer))))
 
-         (t
-          (format s
-              #-(or sbcl scl) "ch~@<ecking (~s~@<~{~:_ ~s~}~:>) ~
-                        ~:_on ~:_the ~:_result ~:_of ~:_evaluating ~:_~a~:>"
-              #+(or sbcl scl) "checking (~s~{~:_ ~s~}) on the result of evaluating ~a"
-              criterion criterion-args given-stack))))))
+         (t (princ "ch" s)
+            (pprint-logical-block (s '(1 2))
+              (format s "ecking (~s" criterion)
+              (pprint-logical-block (s criterion-args)
+                (loop for arg = (pprint-pop) while arg do
+                  (pprint-newline :fill s)
+                  (princ " " s)
+                  (format s "~{~:_ ~s~}" arg)))
+              (princ ") " s)
+              (pprint-newline :fill s)
+              (princ-filled-text "on the result of evaluating " s)
+              (pprint-newline :fill s)
+              (format s "~a" given-stack)))))))
 
 (defmethod show-context-layer ((layer criterion-context-layer))
   (declare (special -context-display-state-))

@@ -71,13 +71,13 @@
 
 (defun get-filter-predicate (filter-keyargs)
   (destructuring-bind (&key (package nil package-supp-p)) filter-keyargs
-    #'(lambda (spec)
-        (block filter-block
-          (when package-supp-p
-            (unless (eq (find-package package)
-                        (symbol-package (docspec-self spec)))
-              (return-from filter-block nil)))
-          t))))
+    `#'(lambda (spec)
+         (block filter-block
+           (when ,package-supp-p
+             (unless (eq (find-package ,package)
+                         (symbol-package (docspec-self spec)))
+               (return-from filter-block nil)))
+           t))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

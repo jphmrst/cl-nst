@@ -217,7 +217,7 @@
       (eval expr-form))
     (make-failure-report :format #'(lambda (stream forms)
                                      (pprint-logical-block (stream forms)
-                                       (write "No expected error:" stream)
+                                       (write "No expected error:" :stream stream)
                                        (loop for form in forms do
                                          (pprint-newline :linear stream)
                                          (format stream " ~s" form))))
@@ -326,7 +326,7 @@
       (make-failure-report
         :format #'(lambda (stream disjuncts)
                     (pprint-logical-block (stream disjuncts)
-                      (write "No disjuncts succeeded:" stream)
+                      (write "No disjuncts succeeded:" :stream stream)
                       (loop for disjunct in disjuncts do
                         (pprint-newline :linear stream)
                         (format stream " ~s" disjunct))))
@@ -357,13 +357,18 @@
     (cond
      ((check-result-errors result)
       (make-success-report))
-     (t (make-failure-report :format "~@<No expected error for check ~s on:~
-                                 ~{~_ ~s~}~:>"
-                             :args (list criterion
-                                         (cond ((and (listp forms)
-                                                     (eq 'list (car forms)))
-                                                (cdr forms))
-                                               (t (list forms)))))))))
+     (t (make-failure-report
+         :format #'(lambda (s criterion forms)
+                     (pprint-logical-block (s forms)
+                       (format s "No expected error for check ~s on:" criterion)
+                       (loop for form in forms do
+                         (pprint-newline :linear s)
+                         (format s " ~s" form))))
+         :args (list criterion
+                     (cond ((and (listp forms)
+                                 (eq 'list (car forms)))
+                            (cdr forms))
+                           (t (list forms)))))))))
 (defdoc:def-documentation (criterion :check-err)
   (:callspec (criterion))
   (:intro (:latex "Like \\texttt{:err}, but proceeds according to the subordinate criterion rather than simply evaluating the input forms."))

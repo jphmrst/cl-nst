@@ -122,18 +122,18 @@ argument should be a string of just spaces."))
                       (symbol-to-junit-name check-name)
                       (symbol-to-junit-name (type-of error))
                       (symbol-to-junit-name (type-of error)))
-              (write "<![CDATA[ Lisp backtrace (within NST context):  " s)
+              (write "<![CDATA[ Lisp backtrace (within NST context):  " :stream s)
               (let ((backtrace #+allegro (error-check-note-zoom error-note)
                                #-allegro nil))
                 (cond
                  (backtrace
-                  (write "      " s)
+                  (write "      " :stream s)
                   (pprint-logical-block (s backtrace)
                     (loop for bt = (pprint-pop) while bt do
                       (format s "~a~%" bt)))
-                  (write "  " s))
-                 (t (write "      expression top-level  " s))))
-              (write "  ]]></error>" s))))
+                  (write "  " :stream s))
+                 (t (write "      expression top-level  " :stream s))))
+              (write "  ]]></error>" :stream s))))
         (format s "~%~a" padding))
 
        (failures
@@ -144,8 +144,12 @@ argument should be a string of just spaces."))
                   (string-escaped (apply-check-note-formatter nil failure))
                   (get-local-criterion-context context))
           (format s "<![CDATA[~%~a    " padding)
-          (format s "~@<~{~a~^~:@_~}~:>~%" context)
-          (format s "~a  ]]></failure>~%" padding)
+          (pprint-logical-block (s context)
+            (loop for ct = (pprint-pop) while ct do
+              (format s "~a" context)
+              (pprint-exit-if-list-exhausted)
+              (pprint-newline :mandatory s)))
+          (format s "~%~a  ]]></failure>~%" padding)
           (format s "~a" padding)))))
 
       ;; Close the testcase block.

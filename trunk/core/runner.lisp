@@ -41,8 +41,16 @@ REPL macros require the dynamic configuration provided by those wrappers."
     (note-artifact-choice (package-name user-package) user-package)
 
     ;; Print a message at the appropriate level of verbosity.
-    (format-at-verbosity 0 "~@<Running package ~s (groups ~{~s~^ ~:_~})~:>~%"
-        (package-name user-package) group-names)
+    (with-output-for-verbosity (0 verb)
+      (pprint-logical-block (verb '(1 2))
+        (format verb "Running package ~s (groups " (package-name user-package))
+        (loop for (group-name . others) on group-names do
+          (format verb "~s" group-name)
+          (when others
+            (princ " " verb)
+            (pprint-newline :mandatory verb)))
+        (format verb ")"))
+      (format verb "~%"))
 
     (cond
       (group-names

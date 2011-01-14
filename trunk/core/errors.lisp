@@ -88,7 +88,7 @@
             (format buf "; use one of ")
             (loop for (first . others) on repl do
               (format buf "~a" first)
-              (when others (format buf " " repl)))
+              (when others (princ " " buf)))
             (format buf " instead")))))))
 
 (define-condition nst-soft-deprecation
