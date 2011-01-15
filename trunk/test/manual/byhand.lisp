@@ -123,8 +123,10 @@
 ;;;(def-test-group err (mnst::f1 mnst::f1a)
 ;;;  (def-test error1 (:eql 3) (error "blah")))
 
+(defun div5by (x) (/ 5 x))
 (def-test-group core-checks-sub ()
-  (def-test err-3 (:err :type division-by-zero) (error "Miss this")))
+  (def-test err-3 (:err :type division-by-zero) (error "Miss this"))
+  (def-test err-3a (:err :type division-by-zero) (div5by 0)))
 
 (def-fixtures erring-fixture ()
   (pf-a 120)
