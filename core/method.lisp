@@ -115,17 +115,18 @@
 
 #-clisp
 (set-pprint-dispatch 'method-context-layer
-  #'(lambda (s cl)
+  (named-function pprint-method-context-layer
+    (lambda (s cl)
       (with-accessors ((method-name method-name)
                        (class-name class-name)
                        (object object)) cl
         (cond
-         ((> *nst-verbosity* 2)
-          (format s "calling test method ~a on class ~a on ~s"
-            method-name class-name object))
-         (t
-          (format s "calling test method ~a on class ~a"
-            method-name class-name))))))
+          ((> *nst-verbosity* 2)
+           (format s "calling test method ~a on class ~a on ~s"
+             method-name class-name object))
+          (t
+           (format s "calling test method ~a on class ~a"
+             method-name class-name)))))))
 
 #-clisp
 (defmacro with-method-context-layer ((method-name class-name object) &body body)

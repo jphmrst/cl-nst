@@ -202,25 +202,27 @@
   (block err-criterion
     (format-at-verbosity 4 "    Setting up ~s handler for :err~%" type)
     (handler-bind-interruptable
-        ((condition #'(lambda (e)
+        ((condition (named-function err-criterion-condition-handler
+                      (lambda (e)
                         (cond
-                         ((typep e type)
-                          (format-at-verbosity 4
-                              "Caught ~s as expected by :err criterion~%" e)
-                          (return-from err-criterion (make-success-report)))
-                         ((typep e 'error)
-                          (format-at-verbosity 4
-                              "Caught ~s but :err expected ~s~%" e type)
-                          (unless *debug-on-error*
-                            (return-from err-criterion
-                              (make-error-report e))))))))
+                          ((typep e type)
+                           (format-at-verbosity 4
+                               "Caught ~s as expected by :err criterion~%" e)
+                           (return-from err-criterion (make-success-report)))
+                          ((typep e 'error)
+                           (format-at-verbosity 4
+                               "Caught ~s but :err expected ~s~%" e type)
+                           (unless *debug-on-error*
+                             (return-from err-criterion
+                               (make-error-report e)))))))))
       (eval expr-form))
-    (make-failure-report :format #'(lambda (stream forms)
+    (make-failure-report :format (named-function errcriterion-failure-formatter
+                                   (lambda (stream forms)
                                      (pprint-logical-block (stream forms)
                                        (write "No expected error:" :stream stream)
                                        (loop for form in forms do
-                                         (pprint-newline :linear stream)
-                                         (format stream " ~s" form))))
+                                             (pprint-newline :linear stream)
+                                             (format stream " ~s" form)))))
                          :args `(,(cond
                                     ((and (listp expr-form)
                                           (eq 'list (car expr-form)))
@@ -324,12 +326,13 @@
               (make-success-report :info (nconc info
                                              (check-result-info result)))))))
       (make-failure-report
-        :format #'(lambda (stream disjuncts)
-                    (pprint-logical-block (stream disjuncts)
-                      (write "No disjuncts succeeded:" :stream stream)
-                      (loop for disjunct in disjuncts do
-                        (pprint-newline :linear stream)
-                        (format stream " ~s" disjunct))))
+       :format (named-function any-criterion-failure-handler
+                 (lambda (stream disjuncts)
+                   (pprint-logical-block (stream disjuncts)
+                     (write "No disjuncts succeeded:" :stream stream)
+                     (loop for disjunct in disjuncts do
+                           (pprint-newline :linear stream)
+                           (format stream " ~s" disjunct)))))
         :args (list criteria)
         :info info))))
 (defdoc:def-documentation (criterion :any)
@@ -358,12 +361,13 @@
      ((check-result-errors result)
       (make-success-report))
      (t (make-failure-report
-         :format #'(lambda (s criterion forms)
+         :format (named-function check-err-failure-handler
+                   (lambda (s criterion forms)
                      (pprint-logical-block (s forms)
                        (format s "No expected error for check ~s on:" criterion)
                        (loop for form in forms do
-                         (pprint-newline :linear s)
-                         (format s " ~s" form))))
+                             (pprint-newline :linear s)
+                             (format s " ~s" form)))))
          :args (list criterion
                      (cond ((and (listp forms)
                                  (eq 'list (car forms)))

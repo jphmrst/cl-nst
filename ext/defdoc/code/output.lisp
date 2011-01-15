@@ -115,13 +115,14 @@
   (when (find-class name nil) (make-instance name)))
 
 (defun get-output-frameworks-collector (names)
-  #'(lambda (&optional (result (make-hash-table :test 'eq)))
+  (named-function get-output-frameworks-collector-thunk
+    (lambda (&optional (result (make-hash-table :test 'eq)))
       (loop for name-or-spec in names do
-        (with-name-and-filters (name filters name-or-spec)
-          (let ((spec (get-output-framework name)))
-            (when (funcall (get-filter-predicate filters) spec)
-              (setf (gethash spec result) t)))))
-      result))
+            (with-name-and-filters (name filters name-or-spec)
+              (let ((spec (get-output-framework name)))
+                (when (funcall (get-filter-predicate filters) spec)
+                  (setf (gethash spec result) t)))))
+      result)))
 
 ;;; -----------------------------------------------------------------
 
@@ -136,9 +137,11 @@
       (default-style :initarg :default-style :reader output-framework-style)))
 
 (defclass standard-output-framework (output-framework)
-     ((collector :initform #'(lambda (&optional (result
+     ((collector :initform (named-function
+                               standard-output-framework-collector-default
+                             (lambda (&optional (result
                                                  (make-hash-table :test 'eq)))
-                               result)
+                               result))
                  :accessor standard-output-framework-collector)
       (grouping-label :reader standard-output-framework-grouping-label)
       (groups :reader standard-output-framework-groups)
@@ -235,16 +238,18 @@
                                                            style group oname)))
                   (setf (gethash group group-hash)
                         (sort elements
-                              #'(lambda (x y)
+                              (named-function
+                                  format-standard-output-framework-sorter
+                                (lambda (x y)
                                   (let ((xp (position (docspec-self x)
                                                       item-order :test 'eq))
                                         (yp (position (docspec-self y)
                                                       item-order :test 'eq)))
                                     (cond
-                                     ((and (numberp xp) (numberp yp))
-                                      (< xp yp))
-                                     ((and (numberp xp) (null yp)) t)
-                                     (t nil))))))))
+                                      ((and (numberp xp) (numberp yp))
+                                       (< xp yp))
+                                      ((and (numberp xp) (null yp)) t)
+                                      (t nil)))))))))
 
               (loop for (spec . other-specs) on (gethash group group-hash) do
                 (format-output-prespec style stream output-framework spec)
@@ -264,7 +269,8 @@
       (loop for item in contents do (format-doc stream style item))))))
 
 (set-pprint-dispatch 'standard-output-framework
-  #'(lambda (stream output)
+  (named-function pprint-standard-output-framework
+    (lambda (stream output)
       (pprint-logical-block (stream '(1))
         (format stream "[ ~s ~s"
           (type-of output)
@@ -274,20 +280,20 @@
             (format stream "~:@_  - properties:~:@_    ")
             (pprint-logical-block (stream
                                    (loop for label being the hash-keys of props
-                                         collect label))
+                                       collect label))
               (loop for label = (pprint-pop)
-                    for value = (gethash label props)
-                    do
-                 (format stream "~s ~s" label value)
-                 (pprint-exit-if-list-exhausted)
-                 (pprint-newline :mandatory)))))
+                  for value = (gethash label props)
+                  do
+                    (format stream "~s ~s" label value)
+                    (pprint-exit-if-list-exhausted)
+                    (pprint-newline :mandatory)))))
         (loop for slot in '(default-style grouping-label groups)
-              do
-           (cond
-             ((slot-boundp output slot)
-              (format stream "~:@_  - ~a ~w" slot (slot-value output slot)))
-             (t (format stream "~:@_  - no ~a" slot))))
-        (format stream " ]"))))
+            do
+              (cond
+                ((slot-boundp output slot)
+                 (format stream "~:@_  - ~a ~w" slot (slot-value output slot)))
+                (t (format stream "~:@_  - no ~a" slot))))
+        (format stream " ]")))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -322,9 +328,11 @@
       (standard-output-framework-collector output-framework)
       (loop for (label value) in form-args
             collect (filter-collector #'all-specs-collector
-                                      #'(lambda (spec)
-                                          (eql (label-value spec label)
-                                               value))))))
+                                        (named-function
+                                              property-values-collector
+                                          (lambda (spec)
+                                            (eql (label-value spec label)
+                                                 value)))))))
 
   (:method ((form-head (eql :grouping-label))
             (output-framework standard-output-framework) package form-args)
@@ -508,16 +516,17 @@
                 (when item-order
                   (setf spec-list
                     (sort spec-list
-                          #'(lambda (x y)
+                          (named-function output-framework-specs-sorter
+                            (lambda (x y)
                               (let ((xp (position (docspec-self x)
                                                   item-order :test 'eq))
                                     (yp (position (docspec-self y)
                                                   item-order :test 'eq)))
                                 (cond
-                                 ((and (numberp xp) (numberp yp))
-                                  (< xp yp))
-                                 ((and (numberp xp) (null yp)) t)
-                                 (t nil)))))))
+                                  ((and (numberp xp) (numberp yp))
+                                   (< xp yp))
+                                  ((and (numberp xp) (null yp)) t)
+                                  (t nil))))))))
                 (defdoc-debug " --> group ~s ~s~%" group spec-list)
 
                 (make-instance 'grouped-subframework
@@ -548,12 +557,13 @@
         :group-specs ,adjusted-groups
         :group-specs-supp-p ,groups-supp-p
         :base-label ',label-name
-        :generating-thunk #'(lambda ()
+        :generating-thunk (named-function default-generating-thunk
+                            (lambda ()
                               ,(case (length forms)
                                  ((1) (car forms))
                                  (otherwise
                                   `(append ,@(loop for form in forms
-                                                 collect (eval form))))))))))
+                                                 collect (eval form)))))))))))
 
 (defvar *grouping-compiler* #'default-compile-grouper)
 

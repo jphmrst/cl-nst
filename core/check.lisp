@@ -30,21 +30,24 @@
 as errors in the \"glue\" among criteria and forms."
   `(handler-bind-interruptable
        ((error
-         #'(lambda (error)
+         (named-function returning-criterion-config-error-handler
+           (lambda (error)
              (unless *debug-on-error*
                (return-from apply-criterion
                  (make-error-report error
                                     :format (format nil "Criterion error: ~a"
-                                              ,msg)))))))
+                                              ,msg))))))))
      ,@forms))
 
 (defmacro returning-test-error (&body forms)
   "For use within criteria definitions only --- catch errors and process them
 as errors arising from within the ."
-  `(handler-bind-interruptable ((error #'(lambda (e)
-                                           (unless *debug-on-error*
-                                             (return-from apply-criterion
-                                               (make-error-report e))))))
+  `(handler-bind-interruptable
+       ((error (named-function returning-test-error-handler
+                 (lambda (e)
+                   (unless *debug-on-error*
+                     (return-from apply-criterion
+                       (make-error-report e)))))))
      ,@forms))
 
 (defmethod apply-criterion :around (top args form)

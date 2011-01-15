@@ -87,9 +87,10 @@ first element is that symbol and whose remaining elements are options."
   (declare (special *group-object-variable*))
 
   (handler-bind (#+sbcl (style-warning
-                         #'(lambda (c)
-                             (format t ">>>>>>>>>>>>>>>>>>>>>>>>>~%")
-                             (muffle-warning c))))
+                         (named-function def-test-style-warning-handler
+                           (lambda (c)
+                             ;; (format t ">>>>>>>>>>>>>>>>>>>>>>>>>~%")
+                             (muffle-warning c)))))
 
     ;; Decode the name-or-name-and-args, pulling out the individual
     ;; components, and indicating which are given in this test.
@@ -204,12 +205,13 @@ first element is that symbol and whose remaining elements are options."
 
                ;; Pretty printer.
                (set-pprint-dispatch ',name
-                 #'(lambda (stream object)
+                 (named-function ,(format nil "pprint-test--~a" name)
+                   (lambda (stream object)
                      (declare (ignorable object))
                      (format stream
                          ,(format nil "Test ~s of group ~s"
                             test-name
-                            *group-class-name*))))
+                            *group-class-name*)))))
 
                ;; (defmethod test-name-lookup ((ts ,name)) ',test-name)
 
@@ -226,19 +228,35 @@ first element is that symbol and whose remaining elements are options."
                    (set-slot '%criterion ',criterion)
                    (set-slot '%setup-form
                              ,(cond
-                                (setup-supp-p `#'(lambda () ,setup))
+                                (setup-supp-p
+                                 `(named-function ,(format nil
+                                                       "test-~a-setup-thunk"
+                                                     name)
+                                   (lambda () ,setup)))
                                 (t '#'no-effect)))
                    (set-slot '%cleanup-form
                              ,(cond
-                                (cleanup-supp-p `#'(lambda () ,cleanup))
+                               (cleanup-supp-p
+                                `(named-function
+                                     ,(format nil "test-~a-cleanup-thunk"
+                                        name)
+                                   (lambda () ,cleanup)))
                                 (t '#'no-effect)))
                    (set-slot '%startup-form
                              ,(cond
-                                (startup-supp-p `#'(lambda () ,startup))
+                               (startup-supp-p
+                                `(named-function
+                                     ,(format nil "test-~a-startup-thunk"
+                                        name)
+                                                  (lambda () ,startup)))
                                 (t '#'no-effect)))
                    (set-slot '%finish-form
                              ,(cond
-                                (finish-supp-p `#'(lambda () ,finish))
+                               (finish-supp-p
+                                `(named-function
+                                     ,(format nil "test-~a-finish-thunk"
+                                        name)
+                                   (lambda () ,finish)))
                                 (t '#'no-effect))))
 
                  ;; Store information about this test in its group.

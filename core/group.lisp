@@ -112,8 +112,9 @@
 (defmacro def-test-group (group-name given-fixtures &body forms)
 
   (handler-bind (#+sbcl (style-warning
-                         #'(lambda (c)
-                             (muffle-warning c))))
+                         (named-function def-test-group-style-warning-muffler
+                           (lambda (c)
+                             (muffle-warning c)))))
 
   ;; Establish a binding of the group name to a special variable for
   ;; use in the expansion of the test-defining forms.
@@ -190,9 +191,11 @@
                  ;; Complete the group class setup
                  (finalize-inheritance (find-class ',group-name))
                  (set-pprint-dispatch ',group-name
-                   #'(lambda (stream object)
+                   (named-function ,(intern (format nil "pprint-test-group-~a"
+                                              group-name))
+                     (lambda (stream object)
                        (declare (ignorable object))
-                       (format stream ,(format nil "Group ~s" group-name))))
+                       (format stream ,(format nil "Group ~s" group-name)))))
 
                  ;; Copnfiguration of the actual group object
                  ;; instance.
@@ -212,40 +215,64 @@
                      (set-slot '%fixtures-setup-thunk
                                ,(cond
                                   (fixtures-setup-supp-p
-                                   `#'(lambda () ,@fixtures-setup))
+                                   `(named-function
+                                        ,(format nil
+                                             "~a-fixtures-setup-thunk"
+                                           group-name)
+                                      (lambda () ,@fixtures-setup)))
                                   (t `#'no-effect)))
                      (set-slot '%fixtures-cleanup-thunk
                                ,(cond
                                   (fixtures-cleanup-supp-p
-                                   `#'(lambda () ,@fixtures-cleanup))
+                                   `(named-function
+                                        ,(format nil
+                                             "~a-fixtures-cleanup-thunk"
+                                           group-name)
+                                      (lambda () ,@fixtures-cleanup)))
                                   (t `#'no-effect)))
                      (set-slot '%withfixtures-setup-thunk
                                ,(cond
                                   (setup-supp-p
-                                   `#'(lambda ()
+                                   `(named-function
+                                        ,(format nil
+                                             "~a-withfixtures-setup-thunk"
+                                           group-name)
+                                      (lambda ()
                                         (declare (special ,@fixture-names))
-                                        ,@setup))
+                                        ,@setup)))
                                   (t `#'no-effect)))
                      (set-slot '%withfixtures-cleanup-thunk
                                ,(cond
                                   (cleanup-supp-p
-                                   `#'(lambda ()
+                                   `(named-function
+                                        ,(format nil
+                                             "~a-withfixtures-cleanup-thunk"
+                                           group-name)
+                                      (lambda ()
                                         (declare (special ,@fixture-names))
-                                        ,@cleanup))
+                                        ,@cleanup)))
                                   (t `#'no-effect)))
                      (set-slot '%eachtest-setup-thunk
                                ,(cond
                                   (each-setup-supp-p
-                                   `#'(lambda ()
+                                   `(named-function
+                                        ,(format nil
+                                             "~a-eachtest-setup-thunk"
+                                           group-name)
+                                      (lambda ()
                                         (declare (special ,@fixture-names))
-                                        ,@each-setup))
+                                        ,@each-setup)))
                                   (t `#'no-effect)))
                      (set-slot '%eachtest-cleanup-thunk
                                ,(cond
                                   (each-cleanup-supp-p
-                                   `#'(lambda ()
+                                   `(named-function
+                                        ,(format nil
+                                             "~a-eachtest-cleanup-thunk"
+                                           group-name)
+                                      (lambda ()
                                         (declare (special ,@fixture-names))
-                                        ,@each-cleanup))
+                                        ,@each-cleanup)))
                                   (t `#'no-effect)))
                      (set-slot '%include-groups ',include-groups))
 

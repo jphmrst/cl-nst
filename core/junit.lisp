@@ -2,6 +2,7 @@
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
+;;; Except as noted below, all contents are:
 ;;; Copyright (c) 2009-2011 Smart Information Flow Technologies.
 ;;; Written by John Maraist.
 ;;;
@@ -20,150 +21,8 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
-;;;
-;;; Generating status data within checks.
-;;;
-
-(defgeneric junit-xml-snippet (item &optional stream padding)
-  (:documentation "Print XML items corresponding to a test result.  The padding
-argument should be a string of just spaces."))
-
-(defmethod junit-xml-snippet ((item multi-results)
-                              &optional (s *standard-output*) (padding ""))
-  (with-accessors ((elapsed-time result-stats-elapsed-time)
-                   (tests result-stats-tests)
-                   (errors result-stats-erring)
-                   (failures result-stats-failing)
-                   (system multi-results-system)
-                   (group-reports multi-results-group-reports)) item
-    (let ((new-padding (concatenate 'string "  " padding)))
-      (loop for report in group-reports do
-        (cond (report (junit-xml-snippet report s new-padding)))))))
-
-(defmethod junit-xml-snippet ((item group-result)
-                              &optional (s *standard-output*) (padding ""))
-  (with-accessors ((elapsed-time result-stats-elapsed-time)
-                   (tests result-stats-tests)
-                   (errors result-stats-erring)
-                   (failures result-stats-failing)
-                   (system multi-results-system)
-                   (group-name group-result-group-name)
-                   (test-reports group-result-check-results)
-                   (timestamp result-stats-timestamp)) item
-    (destructuring-bind (second minute hour date month year day daylight-p zone)
-        timestamp
-      (declare (ignorable day daylight-p zone))
-      (format s "~a<testsuite" padding)
-      (pprint-logical-block (s '(1 2 3))
-        (format s " errors=\"~d\"" errors)
-        (pprint-newline :fill s)
-        (format s " failures=\"~d\"" failures)
-        (pprint-newline :fill s)
-        (format s " name=~s" (symbol-to-junit-name group-name))
-        (pprint-newline :fill s)
-        (format s " tests=\"~d\"" tests)
-        (pprint-newline :fill s)
-        (format s " time=\"~f\""
-          (/ elapsed-time internal-time-units-per-second))
-        (pprint-newline :fill s)
-        (format s " timestamp=\"~d-~2,'0d-~2,'0dT~2,'0d:~2,'0d:~2,'0d\""
-                year month date hour minute second)
-        #+allegro (progn
-                    (pprint-newline :fill s)
-                    (format s " hostname=~s"
-                      (let ((outputs (excl.osi:command-output "hostname")))
-                        (if (and outputs (stringp (car outputs)))
-                            (car outputs))))))
-      (format s ">~%")
-
-      (let ((new-padding (concatenate 'string "  " padding)))
-        (loop for report being the hash-values of test-reports do
-              (cond (report (junit-xml-snippet report s new-padding)))))
-      (format s "~a  <system-out><![CDATA[" padding)
-      (nst-dump :stream s)
-      (format s "]]></system-out>~%")
-      (format s "~a  <system-err><![CDATA[]]></system-err>~%" padding)
-      (format s "~a</testsuite>~%" padding))))
-
-(defmethod junit-xml-snippet ((item check-result)
-                              &optional (s *standard-output*) (padding ""))
-  (with-accessors ((group-name check-result-group-name)
-                   (check-name check-result-check-name)
-                   (warnings check-result-warnings)
-                   (failures check-result-failures)
-                   (errors check-result-errors)
-                   (info check-result-info)
-                   (elapsed-time check-result-elapsed-time)
-                   (timestamp result-stats-timestamp)) item
-    (destructuring-bind (second minute hour date month year day daylight-p zone)
-        timestamp
-      (declare (ignorable day daylight-p zone))
-
-      ;; Open the testcase block.
-      (format s "~a<testcase classname=~s name=\"~a\" time=\"~f\" ~
-                      timestamp=\"~4,'0d-~2,'0d-~2,'0dT~2,'0d:~2,'0d:~2,'0d\">"
-        padding
-        (symbol-to-junit-name group-name) ; use the group for the classname
-        check-name (/ elapsed-time internal-time-units-per-second)
-        year month date hour minute second)
-
-      ;; Contents of the testcase block.
-      (cond
-
-       (errors
-        ;; Print the errors in a vertical list.
-        (loop for error-note in errors do
-          (format s "~%~a  " padding)
-          (with-accessors ((error error-check-note-error)) error-note
-
-            ;; Details of a single error go into a logical block.
-            (pprint-logical-block (s '(1 2))
-              (format s "<error message=\"~a raised an error: ~a\" type=~s>"
-                      (symbol-to-junit-name check-name)
-                      (symbol-to-junit-name (type-of error))
-                      (symbol-to-junit-name (type-of error)))
-              (write "<![CDATA[ Lisp backtrace (within NST context):  " :stream s)
-              (let ((backtrace #+allegro (error-check-note-zoom error-note)
-                               #-allegro nil))
-                (cond
-                 (backtrace
-                  (write "      " :stream s)
-                  (pprint-logical-block (s backtrace)
-                    (loop for bt = (pprint-pop) while bt do
-                      (format s "~a~%" bt)))
-                  (write "  " :stream s))
-                 (t (write "      expression top-level  " :stream s))))
-              (write "  ]]></error>" :stream s))))
-        (format s "~%~a" padding))
-
-       (failures
-        (let ((failure (car failures)))
-        (with-accessors ((context check-note-context)) failure
-          (format s "~%~a  " padding)
-          (format s "<failure message=\"~a\" type=\"lisp.nst.criterion.~a\">"
-                  (string-escaped (apply-check-note-formatter nil failure))
-                  (get-local-criterion-context context))
-          (format s "<![CDATA[~%~a    " padding)
-          (pprint-logical-block (s context)
-            (loop for ct = (pprint-pop) while ct do
-              (format s "~a" context)
-              (pprint-exit-if-list-exhausted)
-              (pprint-newline :mandatory s)))
-          (format s "~%~a  ]]></failure>~%" padding)
-          (format s "~a" padding)))))
-
-      ;; Close the testcase block.
-      (format s "</testcase>~%"))))
-
 (defun nst-xml-dump (stream)
   (nst-junit-dump stream))
-
-(defun symbol-to-junit-name (symbol)
-  (format nil "lisp.~a.~a"
-    (package-name (symbol-package symbol)) (symbol-name symbol)))
-
-(defun junit-header (stream)
-  (format stream "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>~%"))
 
 (defgeneric nst-junit-dump (stream))
 (def-documentation (function nst-junit-dump)
@@ -173,7 +32,8 @@ argument should be a string of just spaces."))
 
 (defmethod nst-junit-dump ((stream stream))
   (junit-header stream)
-  (junit-xml-snippet (all-groups-report) stream))
+  ;; (junit-xml-snippet (all-groups-report) stream)
+  (pprint-xml (all-groups-report) stream))
 
 (defmethod nst-junit-dump ((filename string))
   "Write the results of this session's NST testing in JUnit XML format."
@@ -250,7 +110,7 @@ argument should be a string of just spaces."))
              *standard-output*))))
 
     (junit-header the-stream)
-    (junit-xml-snippet group the-stream)
+    (pprint-xml group the-stream)
     (unless stream-supp-p (close the-stream))))
 
 (defun junit-results-by-group (&rest args &key verbose &allow-other-keys)
@@ -268,8 +128,9 @@ argument should be a string of just spaces."))
                      (if-file-exists bool)))
     (:details (:latex "Either \\texttt{:dir} and \\texttt{:file} options, or the \\texttt{:stream} option, but not both, should be used to specify the target for XML output; if none of the three options are given, the function will write to \\texttt{*standard-output*}.")))
 
-;;; The following three definitions are Copyright (c) 2003, Miles Egan
-;;; All rights reserved.
+;;; The following three definitions are
+;;; Copyright (c) 2003, Miles Egan. All rights reserved.
+;;; Modifications Copyright (c) 2011, John Maraist. All rights reserved.
 
 ;;; Redistribution and use [of these three definitions] in source and
 ;;; binary forms, with or without modification, are permitted provided
@@ -330,6 +191,8 @@ argument should be a string of just spaces."))
     table))
 
 (defun string-escaped (string)
+  (when (symbolp string)
+    (return-from string-escaped (string-escaped (symbol-name string))))
   (with-output-to-string (stream)
     "Writes string to stream with all character entities escaped."
     #-allegro (coerce string 'simple-base-string)
@@ -339,4 +202,5 @@ argument should be a string of just spaces."))
 
 ;;; The above three definitions are Copyright (c) 2003, Miles Egan
 ;;; All rights reserved.
+;;; Modifications Copyright (c) 2011, John Maraist. All rights reserved.
 ;;; See conditions and disclaimer above.

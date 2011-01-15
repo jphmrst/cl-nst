@@ -30,9 +30,20 @@
      ;; (format t "DFT for: ~a~%" tag)
      (format stream "~a" tag)))
 
+(define-condition tag-sort-warning (warning)
+  ((tag-sort-warning-style   :initarg :style   :reader tag-sort-warning-style)
+   (tag-sort-warning-package :initarg :package :reader tag-sort-warning-package)
+   (tag-sort-warning-tag     :initarg :tag     :reader tag-sort-warning-tag))
+  (:report (lambda (w stream)
+             (with-accessors ((style tag-sort-warning-style)
+                              (package tag-sort-warning-package)
+                              (tag tag-sort-warning-tag))
+                 w
+               (format stream "~@<Using default tag-sort 0 for:~:@_ style ~a~:@_ package ~a~:@_ tag ~a~:@_Consider using def-doc-tag~:>" style package tag)))))
+
 (defgeneric tag-sort (style package tag)
   (:method (style package tag)
-     (warn "~@<Using default tag-sort 0 for:~:@_ style ~a~:@_ package ~a~:@_ tag ~a~:@_Consider using def-doc-tag~:>" style package tag)
+     (warn 'tag-sort-warning :style style :package package :tag tag)
      0))
 
 (defmacro def-doc-tag (tag (&key (package nil package-supp-p) (style t))

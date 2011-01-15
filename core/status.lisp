@@ -34,12 +34,13 @@
 
        (handler-bind
            ((error
-             #'(lambda (cnd)
+             (named-function backtrace-lines-error-handler-1
+               (lambda (cnd)
                  (declare (ignore cnd))
                  (format-at-verbosity 3 "Caught error formatting backtrace~%")
                  (return-from backtrace-maker
                    (list "Caught error while formatting backtrace, returning raw lines"
-                         raw)))))
+                         raw))))))
          (let ((lines (loop for spot = (position #\Newline raw)
                           while spot
                           collect (string-left-trim " ->" (subseq raw 0 spot))
@@ -54,13 +55,14 @@
            (let ((orig-lines (loop for line in lines collect line)))
 
              (handler-bind
-                 ((error #'(lambda (cnd)
+                 ((error (named-function backtrace-lines-error-handler-2
+                           (lambda (cnd)
                              (format-at-verbosity 3
                                  "Caught error ~s identifying backtrace core~%"
                                cnd)
                              (return-from backtrace-maker
                                (list* "Caught error while identifying backtrace core, returning raw lines"
-                                      lines)))))
+                                      lines))))))
                (loop while (and lines
                                 (not (search ,(if (string= "zz"
                                                            (symbol-name 'zz))
@@ -85,11 +87,12 @@
                                    (car lines))
                    do (pop lines))
                (let ((first
-                      (position-if #'(lambda (x)
+                      (position-if (named-function backtrace-lines-position-if
+                                     (lambda (x)
                                        (search ,(if (string= "zz"
                                                              (symbol-name 'zz))
-                                                    "core-run-test"
-                                                    "CORE-RUN-TEST") x))
+                                                  "core-run-test"
+                                                  "CORE-RUN-TEST") x)))
                                          lines)))
                  (setf lines (subseq lines 0 first)))
                lines)))))))
@@ -131,12 +134,13 @@
 (defun fixture-binding-error-note (fixture-name variable-name error)
   (make-error-report
    error
-   #'(lambda (stream e)
+   (named-function fixture-binding-error-note-format
+     (lambda (stream e)
        (pprint-logical-block (stream '(1 2))
          (format stream "Error binding ~a for fixture ~s"
-                 variable-name fixture-name)
+           variable-name fixture-name)
          (pprint-newline :fill stream)
-         (format stream " ~w" e)))
+         (format stream " ~w" e))))
    error))
 
 ;;;
@@ -149,7 +153,8 @@
   (stats-source nil))
 
 (set-pprint-dispatch 'multi-results
-  #'(lambda (s res)
+  (named-function pprint-multi-results
+    (lambda (s res)
       (with-accessors ((packages multi-results-package-reports)
                        (groups multi-results-group-reports)
                        (tests multi-results-test-reports)
@@ -161,34 +166,34 @@
             (slot-value system 'asdf::name)))
         (let ((reports
                (nconc (loop for report in packages
-                        collect (let ((*nst-report-driver* (case *nst-report-driver*
-                                                             (:details :details)
-                                                             (t :package))))
-                                  (declare (special *nst-report-driver*))
-                                  (format s "~w~%" report)
-                                  report))
+                          collect (let ((*nst-report-driver* (case *nst-report-driver*
+                                                               (:details :details)
+                                                               (t :package))))
+                                    (declare (special *nst-report-driver*))
+                                    (format s "~w~%" report)
+                                    report))
                       (loop for report in groups
-                        collect (let ((*nst-report-driver* (case *nst-report-driver*
-                                                             (:details :details)
-                                                             (t :group))))
-                                  (declare (special *nst-report-driver*))
-                                  (format s "~w~%" report)
-                                  report))
+                          collect (let ((*nst-report-driver* (case *nst-report-driver*
+                                                               (:details :details)
+                                                               (t :group))))
+                                    (declare (special *nst-report-driver*))
+                                    (format s "~w~%" report)
+                                    report))
                       (loop for report in tests
-                        collect (let ((*nst-report-driver* (case *nst-report-driver*
-                                                             (:details :details)
-                                                             (t :test))))
-                                  (declare (special *nst-report-driver*))
-                                  (format s "~w~%" report)
-                                  report)))))
+                          collect (let ((*nst-report-driver* (case *nst-report-driver*
+                                                               (:details :details)
+                                                               (t :test))))
+                                    (declare (special *nst-report-driver*))
+                                    (format s "~w~%" report)
+                                    report)))))
           (multiple-value-bind (code total passed erred failed warned)
               (result-summary (cond
-                               (stats-source stats-source)
-                               (t reports)))
+                                (stats-source stats-source)
+                                (t reports)))
             (declare (ignorable code))
             (format s
                 "TOTAL: ~d of ~d passed (~d failed, ~d error~p, ~d warning~p)~%"
-              passed total failed erred erred warned warned))))))
+              passed total failed erred erred warned warned)))))))
 
 (defstruct (package-result (:include result-stats))
   "Overall package result structure, mapping groups to results by name."
@@ -196,7 +201,8 @@
   (group-results (make-hash-table :test 'eq)))
 
 (set-pprint-dispatch 'package-result
-  #'(lambda (s pr)
+  (named-function pprint-package-result
+    (lambda (s pr)
       (with-accessors ((name package-result-package-name)
                        (checks package-result-group-results)) pr
         (multiple-value-bind (code total passed erred failed warned)
@@ -209,7 +215,7 @@
               (loop while (not (pprint-exit-if-list-exhausted)) do
                     (pprint-newline :mandatory s)
                     (let ((name (pprint-pop)))
-                      (format s " - ~@<~w~:>" (gethash name checks))))))))))
+                      (format s " - ~@<~w~:>" (gethash name checks)))))))))))
 
 
 (defstruct (group-result (:include result-stats))
@@ -218,7 +224,8 @@
   (check-results (make-hash-table :test 'eq)))
 
 (set-pprint-dispatch 'group-result
-  #'(lambda (s gr)
+  (named-function pprint-group-result
+    (lambda (s gr)
       (with-accessors ((name group-result-group-name)
                        (checks group-result-check-results)) gr
         (multiple-value-bind (code total passed erred failed warned)
@@ -240,7 +247,7 @@
                          (unless (or (eq :clear (result-summary cr))
                                      (eq :info (result-summary cr)))
                            (pprint-newline :mandatory s)
-                           (format s " - ~w" cr))))))))))))
+                           (format s " - ~w" cr)))))))))))))
 
 
 (defstruct (check-result (:include result-stats (tests 1))
@@ -315,7 +322,8 @@ structure, permitting the use of apply."))
   `(make-and-calibrate-check-result ,@args))
 
 (set-pprint-dispatch 'check-result
-  #'(lambda (s cr)
+  (named-function pprint-check-result
+    (lambda (s cr)
       (declare (special *nst-verbosity* *nst-report-driver*))
       (with-accessors ((check-name check-result-check-name)
                        (group-name check-result-group-name)
@@ -335,21 +343,21 @@ structure, permitting the use of apply."))
                    (when items
                      (format stream "~:@_  ~a" header)
                      (loop for item in items for num from 1 do
-                       (pprint-newline :mandatory stream)
-                       (cond
-                         ((and numbered (> (length items) 1))
-                          (format stream "   ~d. " num))
-                         (t (princ "   - " stream)))
-                       (princ item stream))))
+                           (pprint-newline :mandatory stream)
+                           (cond
+                             ((and numbered (> (length items) 1))
+                              (format stream "   ~d. " num))
+                             (t (princ "   - " stream)))
+                           (princ item stream))))
 
                  (unheadered-items-printer (stream items &key numbered)
                    (loop for item in items for num from 1 do
-                     (pprint-newline :mandatory stream)
-                       (cond
-                         ((and numbered (> (length items) 1))
-                          (format stream " ~d. " num))
-                         (t (princ " - " stream)))
-                     (princ item stream))))
+                         (pprint-newline :mandatory stream)
+                         (cond
+                           ((and numbered (> (length items) 1))
+                            (format stream " ~d. " num))
+                           (t (princ " - " stream)))
+                         (princ item stream))))
 
 ;;;            (format t
 ;;;                "drill-down ~s~%*nst-verbosity* ~s~%*nst-report-driver* ~s~%~
@@ -362,69 +370,69 @@ structure, permitting the use of apply."))
                 (format s "(group ~a) " group-name))
 
               (cond
-               ;; The first three cases are for when we have only one
-               ;; item to report.  We do this on one line if it fits, and
-               ;; don't bother with bullet points.
-               ;;
-               ((and (eql 1 total-items) errors)
-                (princ "raised an error" s)
-                (when drill-down
-                  (princ ":" s)
-                  (unheadered-items-printer s errors :numbered t)
-                  (headered-items-printer s "Additional information:" info)))
+                ;; The first three cases are for when we have only one
+                ;; item to report.  We do this on one line if it fits, and
+                ;; don't bother with bullet points.
+                ;;
+                ((and (eql 1 total-items) errors)
+                 (princ "raised an error" s)
+                 (when drill-down
+                   (princ ":" s)
+                   (unheadered-items-printer s errors :numbered t)
+                   (headered-items-printer s "Additional information:" info)))
 
-               ((and (eql 1 total-items) warnings)
-                (cond
-                  ((eql 1 (length warnings))
-                   (format s "passed with a warning"))
-                  (t (format s "passed with warnings")))
-                (unheadered-items-printer s warnings :numbered t)
-                (headered-items-printer s "Additional information:" info))
+                ((and (eql 1 total-items) warnings)
+                 (cond
+                   ((eql 1 (length warnings))
+                    (format s "passed with a warning"))
+                   (t (format s "passed with warnings")))
+                 (unheadered-items-printer s warnings :numbered t)
+                 (headered-items-printer s "Additional information:" info))
 
-               ((and (eql 1 total-items) failures)
-                (princ "failed" s)
-                (unheadered-items-printer s failures :numbered t)
-                (headered-items-printer s "Additional information:" info))
+                ((and (eql 1 total-items) failures)
+                 (princ "failed" s)
+                 (unheadered-items-printer s failures :numbered t)
+                 (headered-items-printer s "Additional information:" info))
 
-               ;; When a query asks about a specific test.
-               ;;
-               ((eq *nst-report-driver* :test)
-                (cond
-                 (succeeded (princ "passed" s))
-                 (t (princ "failed" s)))
-                (when (or errors failures warnings info)
-                  (princ ": " s)
-                  (headered-items-printer s "Errors:" errors :numbered t)
-                  (headered-items-printer s "Failures:" failures :numbered t)
-                  (headered-items-printer s "Warnings:" warnings :numbered t)
-                  (headered-items-printer s "Additional information:" info)))
+                ;; When a query asks about a specific test.
+                ;;
+                ((eq *nst-report-driver* :test)
+                 (cond
+                   (succeeded (princ "passed" s))
+                   (t (princ "failed" s)))
+                 (when (or errors failures warnings info)
+                   (princ ": " s)
+                   (headered-items-printer s "Errors:" errors :numbered t)
+                   (headered-items-printer s "Failures:" failures :numbered t)
+                   (headered-items-printer s "Warnings:" warnings :numbered t)
+                   (headered-items-printer s "Additional information:" info)))
 
-               ;; If we're reporting results for a package or group,
-               ;; suppress the info fields of the report.
-               ;;
-               (t
-                (cond (succeeded
-                       (princ "passed" s)
-                       (when warnings
-                         (princ " with warning" s)
-                         (when (> (length warnings) 1)
-                           (princ "s" s))))
-                      (errors (princ "raised an error" s))
-                      (t (princ "failed" s)))
-                (cond
-                  ((and (not errors) (not failures) warnings)
-                   (unheadered-items-printer s warnings :numbered t)
-                   (headered-items-printer s "Additional information:"
-                                           info))
-                 ((or errors failures)
-                  (princ ": " s)
-                  (headered-items-printer s "Errors:" errors :numbered t)
-                  (headered-items-printer s "Failures:" failures :numbered t)
-                  (headered-items-printer s "Further warnings:" warnings
-                                          :numbered t)
-                  (headered-items-printer s "Additional information:"
-                                          info))
-                 (t (princ "." s)))))))))))
+                ;; If we're reporting results for a package or group,
+                ;; suppress the info fields of the report.
+                ;;
+                (t
+                 (cond (succeeded
+                        (princ "passed" s)
+                        (when warnings
+                          (princ " with warning" s)
+                          (when (> (length warnings) 1)
+                            (princ "s" s))))
+                       (errors (princ "raised an error" s))
+                       (t (princ "failed" s)))
+                 (cond
+                   ((and (not errors) (not failures) warnings)
+                    (unheadered-items-printer s warnings :numbered t)
+                    (headered-items-printer s "Additional information:"
+                                            info))
+                   ((or errors failures)
+                    (princ ": " s)
+                    (headered-items-printer s "Errors:" errors :numbered t)
+                    (headered-items-printer s "Failures:" failures :numbered t)
+                    (headered-items-printer s "Further warnings:" warnings
+                                            :numbered t)
+                    (headered-items-printer s "Additional information:"
+                                            info))
+                   (t (princ "." s))))))))))))
 
 
 (defstruct check-note
@@ -441,6 +449,15 @@ structure, permitting the use of apply."))
                 the time when this docstring was written)."
   context stack format args)
 
+(defgeneric check-note-type-string (type context)
+  (:method (type context)
+     (declare (ignore context))
+     (case type
+       ((:failure) "failure")
+       ((:error) "error")
+       ((:warning) "warning")
+       ((:info) "info"))))
+
 (defun apply-formatter (stream formatter args)
   (cond
     ((null formatter) nil)
@@ -453,7 +470,8 @@ structure, permitting the use of apply."))
                    (check-note-format check-note) (check-note-args check-note)))
 
 (set-pprint-dispatch 'check-note
-  #'(lambda (s cn)
+  (named-function pprint-check-note
+    (lambda (s cn)
       (with-accessors ((context check-note-context)
                        (stack check-note-stack)) cn
         (pprint-logical-block (s '(dummy list))
@@ -462,19 +480,20 @@ structure, permitting the use of apply."))
                     (and (> *nst-verbosity* 1)
                          (eq *nst-report-driver* :details)))
             (loop for layer in (get-display-context-layers context) do
-              (pprint-newline :mandatory s)
-              (write layer :stream s))
+                  (pprint-newline :mandatory s)
+                  (write layer :stream s))
             (when stack
               (pprint-newline :mandatory s)
               (princ "stack: " s)
-              (princ stack s)))))))
+              (princ stack s))))))))
 
 (defstruct (error-check-note (:include check-note))
   "A note issued in regards to a thrown error."
   error #+allegro zoom)
 
 (set-pprint-dispatch 'error-check-note
-  #'(lambda (s cn)
+  (named-function pprint-error-check-note
+    (lambda (s cn)
       (with-accessors ((context check-note-context)
                        (stack check-note-stack)
                        (error error-check-note-error)) cn
@@ -486,15 +505,15 @@ structure, permitting the use of apply."))
             (when (apply-check-note-formatter s cn)
               (pprint-newline :mandatory s))
             (cond
-             (context
-              (pprint-newline :mandatory s)
-              (format s "in context: ")
-              (pprint-logical-block (s context)
-                (loop for ct = (pprint-pop) while ct do
-                  (format s "~a" context)
-                  (pprint-exit-if-list-exhausted)
-                  (pprint-newline :mandatory s))))
-             (t (princ "at top level" s)))
+              (context
+               (pprint-newline :mandatory s)
+               (format s "in context: ")
+               (pprint-logical-block (s context)
+                 (loop for ct = (pprint-pop) while ct do
+                       (format s "~a" context)
+                       (pprint-exit-if-list-exhausted)
+                       (pprint-newline :mandatory s))))
+              (t (princ "at top level" s)))
             (pprint-newline :mandatory s)
             (format s "~:[nil values~;~:*values: ~w~]" stack)
             #+allegro (when show-zoom
@@ -502,12 +521,12 @@ structure, permitting the use of apply."))
                         (princ "at " s)
                         (pprint-logical-block (s (error-check-note-zoom cn))
                           (loop do
-                            (write (pprint-pop) :stream s
-                                   :escape nil :readably nil :pretty t
-                                   :circle nil)
-                            (pprint-exit-if-list-exhausted)
-                            (pprint-newline :mandatory s)
-                            (princ "while " s)))))))))
+                                (write (pprint-pop) :stream s
+                                       :escape nil :readably nil :pretty t
+                                       :circle nil)
+                                (pprint-exit-if-list-exhausted)
+                                (pprint-newline :mandatory s)
+                                (princ "while " s))))))))))
 
 ;;; Functions on result and status reports.
 ;;;
@@ -855,7 +874,7 @@ six-value summary of the results:
         (*print-readably* nil)
         (*nst-verbosity* 1)
         (*nst-report-driver* :multiple))
-    (pprint report *nst-output-stream*))
+    (write report :stream *nst-output-stream* :pretty t))
   nil)
 
 (defun report-details (group-or-package gp-supp-p test test-supp-p)
@@ -865,7 +884,7 @@ six-value summary of the results:
         (*print-readably* nil)
         (*nst-verbosity* 2)
         (*nst-report-driver* :details))
-    (pprint report *nst-output-stream*)
+    (write report :stream *nst-output-stream* :pretty t)
     nil))
 
 

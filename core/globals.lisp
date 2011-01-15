@@ -92,7 +92,10 @@
   (let ((lv-val (gensym)))
     `(let ((,lv-val ,lv))
        (when (>= *nst-verbosity* ,lv-val)
-         (let ((,stream-name t))
+         (let ((,stream-name (cond
+                               ((boundp ',stream-name)
+                                (symbol-value ',stream-name))
+                               (t *standard-output*))))
            ,@forms)))))
 
 (defmacro at-verbosity (lv &body forms)

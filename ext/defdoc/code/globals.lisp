@@ -74,3 +74,7 @@
                (format stream "Unrecognized form (~a ~{ ~s~}) in def-label of ~s"
                        head args label-name)))))
 
+#-allegro
+(defmacro named-function (name lambda-expression)
+  (declare (ignore name))
+  `(function ,lambda-expression))

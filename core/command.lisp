@@ -153,9 +153,13 @@ available from compile-time forward.")
        (defmethod run-command-actual ((cmd (eql ',canonical)) &rest ,args-var)
          ,@(unless args-supp-p `((declare (ignorable ,args-var))))
          (block nst-command
-           (handler-bind ((nst-error #'(lambda (e)
-                                         (format t "~w~%" e)
-                                         (return-from nst-command))))
+           (handler-bind
+               ((nst-error
+                 (named-function
+                     ,(intern (format nil "run-command-actual--~a" name))
+                   (lambda (e)
+                     (format t "~w~%" e)
+                     (return-from nst-command)))))
              ,@command-run-forms)))
        ,(when repeatable
           `(defmethod consider-repl-call-save ((cmd (eql ,name)) args)

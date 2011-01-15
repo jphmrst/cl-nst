@@ -74,7 +74,8 @@
        ,@forms)))
 
 (set-pprint-dispatch 'standard-doc-spec
-  #'(lambda (stream spec)
+  (named-function pprint-standard-doc-spec
+    (lambda (stream spec)
       (pprint-logical-block (stream '(1))
         (format stream "[ standard-doc-spec")
         (let ((props (label-values spec)))
@@ -82,22 +83,22 @@
             (format stream "~:@_  - properties:~:@_    ")
             (pprint-logical-block (stream
                                    (loop for label being the hash-keys of props
-                                         collect label))
+                                       collect label))
               (loop for label = (pprint-pop)
-                    for value = (gethash label props)
-                    do
-                 (format stream "~s ~s" label value)
-                 (pprint-exit-if-list-exhausted)
-                 (pprint-newline :mandatory)))))
+                  for value = (gethash label props)
+                  do
+                    (format stream "~s ~s" label value)
+                    (pprint-exit-if-list-exhausted)
+                    (pprint-newline :mandatory)))))
         (loop for slot in '(tags
                             target-type self descriptive intro blurb details
                             params callspecs deprecated)
-              do
-           (cond
-             ((slot-boundp spec slot)
-              (format stream "~:@_  - ~a ~w" slot (slot-value spec slot)))
-             (t (format stream "~:@_  - no ~a" slot))))
-        (format stream " ]"))))
+            do
+              (cond
+                ((slot-boundp spec slot)
+                 (format stream "~:@_  - ~a ~w" slot (slot-value spec slot)))
+                (t (format stream "~:@_  - no ~a" slot))))
+        (format stream " ]")))))
 
 (defun compile-spec (name target-type spec-args forms)
   (declare (ignore spec-args))
@@ -134,8 +135,9 @@
          ((:blurb)       (setting-accessor docspec-blurb))
          ((:details)        (setting-accessor docspec-details))
          ((:callspec) (setf (docspec-callspecs spec)
-                            (mapcar #'(lambda (x)
-                                        (get-compiled-callspec package spec x))
+                            (mapcar (named-function standard-specdef-mapper
+                                      (lambda (x)
+                                        (get-compiled-callspec package spec x)))
                                     form-args)))
          ((:properties) (loop for (name value) in form-args do
                           (setf (label-value spec name) value)))

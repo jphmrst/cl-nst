@@ -218,7 +218,8 @@ you want to use to read +name-use+."
          (setf (gethash (group-name item) tests-by-group) item)))))
 
 (set-pprint-dispatch 'name-use
-  #'(lambda (stream usage)
+  (named-function name-use-pprint-dispatch
+    (lambda (stream usage)
       (with-accessors ((fixture name-use-fixture)
                        (group name-use-group)
                        (tests name-use-tests)) usage
@@ -226,33 +227,33 @@ you want to use to read +name-use+."
           (cond
             ((and fixture (not group) (not tests-p))
              (let ((the-names (loop for name in (bound-names fixture)
-                                    if (symbol-package name)
-                                    collect name)))
+                                  if (symbol-package name)
+                                  collect name)))
                (pprint-logical-block (stream '(1 2))
                  (format stream "~a (package ~a) is a fixture"
-                         (type-of fixture)
-                         (package-name (symbol-package (type-of fixture))))
+                   (type-of fixture)
+                   (package-name (symbol-package (type-of fixture))))
                  (pprint-newline :mandatory stream)
                  (princ " - " stream)
                  (pprint-logical-block (stream '(1 2))
                    (princ "binds " stream)
                    (cond
-                    (the-names (princ "name" stream)
-                               (unless (eql 1 the-names)
-                                 (princ "s" stream))
-                               (loop for (name . others) on the-names do
-                                 (princ " " stream)
-                                 (format stream "~a" name)
-                                 (when others
-                                   (princ "," stream)
-                                   (pprint-newline :fill stream))))
-                    (t (princ-filled-text "no accessible names" stream)))))))
+                     (the-names (princ "name" stream)
+                                (unless (eql 1 the-names)
+                                  (princ "s" stream))
+                                (loop for (name . others) on the-names do
+                                      (princ " " stream)
+                                      (format stream "~a" name)
+                                      (when others
+                                        (princ "," stream)
+                                        (pprint-newline :fill stream))))
+                     (t (princ-filled-text "no accessible names" stream)))))))
 
             ((and group (not fixture) (not tests-p))
              (pprint-logical-block (stream '(1 2))
                (format stream "~a (package ~a) is a test group"
-                       (type-of group)
-                       (package-name (symbol-package (type-of group))))
+                 (type-of group)
+                 (package-name (symbol-package (type-of group))))
                (pprint-newline :mandatory stream)
                (princ " - " stream)
                (let ((test-names (test-names group)))
@@ -261,28 +262,28 @@ you want to use to read +name-use+."
                    (unless (eql 1 (length (test-names group)))
                      (princ "s" stream))
                    (loop for name = (pprint-pop) while name do
-                     (format stream " ~a" name)
-                     (pprint-exit-if-list-exhausted)
-                     (princ "," stream)
-                     (pprint-newline :fill stream))))))
+                         (format stream " ~a" name)
+                         (pprint-exit-if-list-exhausted)
+                         (princ "," stream)
+                         (pprint-newline :fill stream))))))
 
             ((and tests-p (not fixture) (not group))
              (case (hash-table-count tests)
                (1
                 (loop for tst being the hash-values of tests do
-                  (format stream "~a (package ~a) is a test in group ~a"
-                    (test-name-lookup tst)
-                    (package-name (symbol-package (test-name-lookup tst)))
-                    (group-name tst))))
+                      (format stream "~a (package ~a) is a test in group ~a"
+                        (test-name-lookup tst)
+                        (package-name (symbol-package (test-name-lookup tst)))
+                        (group-name tst))))
                (otherwise
                 (loop for tst being the hash-values of tests do
-                  (format stream "~a (package ~a) is a test in group ~a~%"
-                    (test-name-lookup tst)
-                    (package-name (symbol-package (test-name-lookup tst)))
-                    (group-name tst))))))
+                      (format stream "~a (package ~a) is a test in group ~a~%"
+                        (test-name-lookup tst)
+                        (package-name (symbol-package (test-name-lookup tst)))
+                        (group-name tst))))))
 
             (t
-             (format stream "MULTI")))))))
+             (format stream "MULTI"))))))))
 
 ;;;
 ;;; Recording of results.  We use a hash table here --- unlike the

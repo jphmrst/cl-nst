@@ -80,7 +80,8 @@
 (defun write-latex-output (name &key
                                 (table-of-contents nil)
                                 (index nil)
-                                (echo #'(lambda ()))
+                                (echo (named-function write-latex-output-nop
+                                        (lambda ())))
                                 (style 'latex-style)
                                 (directory #p"./")
                                 (file nil file-supp-p)
@@ -372,11 +373,13 @@
       (let ((tag-list
              (loop for tag being the hash-keys of tag-sort collect tag)))
         (loop for tag
-              in (sort tag-list #'(lambda (x y)
-                                    (let ((sx (tag-sort style actual-package x))
-                                          (sy (tag-sort style
-                                                        actual-package y)))
-                                      (< sx sy))))
+              in (sort tag-list
+                       (named-function format-docspec-element-tag-sorter
+                         (lambda (x y)
+                           (let ((sx (tag-sort style actual-package x))
+                                 (sy (tag-sort style
+                                               actual-package y)))
+                             (< sx sy)))))
               for tag-hash = (gethash tag tag-sort)
               do
            (package-list-group-header style pspec tag stream)
@@ -448,7 +451,9 @@
 ;;;(defun old-write-latex-output (name &key
 ;;;                                (table-of-contents nil)
 ;;;                                (index nil)
-;;;                                (echo #'(lambda ()))
+;;;                                (echo
+;;;                                 (named-function old-write-latex-output-nop
+;;;                                   (lambda ())))
 ;;;                                (style 'latex-style)
 ;;;                                (directory #p"./")
 ;;;                                (file nil file-supp-p)

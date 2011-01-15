@@ -99,3 +99,8 @@ delimiters."
                     (descend (cdr list))))))
       (descend generic-list)
       (nreverse result))))
+
+#-allegro
+(defmacro named-function (name lambda-expression)
+  (declare (ignore name))
+  `(function ,lambda-expression))
