@@ -39,16 +39,21 @@ handling if the error is related to a keyboard interrupt."
        (handler-bind
            ;; First catch the class of keyboard interrupts, in which
            ;; case we disable further error handling.
-           ((,+keyboard-interrupt-class+ #'(lambda (,e)
+           ((,+keyboard-interrupt-class+ (named-function handler-bind-intrp
+                                           (lambda (,e)
                                              (declare (ignore ,e))
-                                             (setf ,keyboard-error t)))
+                                             (setf ,keyboard-error t))))
 
             ;; Now insert all the rest of the handlers, checking
             ;; first that it's not an interrupt.
             ,@(loop for (typ handler) in handlers
-                  collect `(,typ #'(lambda (,e)
-                                     (unless ,keyboard-error
-                                       (funcall ,handler ,e))))))
+                    collect
+                    `(,typ (named-function ,(intern (format nil
+                                                        "handler-bind-intrp-~a"
+                                                      typ))
+                             (lambda (,e)
+                               (unless ,keyboard-error
+                                 (funcall ,handler ,e)))))))
          ,@forms)))
 
   ;; Otherwise, if we're not on a system that deals with keyboard

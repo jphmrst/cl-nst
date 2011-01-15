@@ -24,6 +24,7 @@
     (:documentation "Structured documentation definition")
     (:nicknames :ddoc)
     (:use :common-lisp)
+    #+allegro (:import-from excl #:named-function)
     (:export #:*docstring-style*
              #:*latex-verbatim-width*
              ;; globals.lisp

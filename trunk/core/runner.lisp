@@ -143,14 +143,16 @@ configuration provided by those wrappers."
             (handler-bind-interruptable
                 (,@(when for-fail
                      `((debug-for-fail
-                        #'(lambda (,formal)
+                        (named-function nst-control-for-fail
+                          (lambda (,formal)
                             (funcall #',handler-body-fn
-                                     ,formal *debug-on-fail*)))))
+                                     ,formal *debug-on-fail*))))))
                  ,@(when for-error
                      `((error
-                        #'(lambda (,formal)
+                        (named-function nst-control-for-error
+                          (lambda (,formal)
                             (funcall #',handler-body-fn
-                                     ,formal *debug-on-error*))))))
+                                     ,formal *debug-on-error*)))))))
               ,@body))))
 
     (cond
@@ -469,9 +471,10 @@ for the test application class.")
     (format-at-verbosity 1 " - Executing test ~s~%" *nst-check-user-name*)
     (setf start-time (get-internal-real-time))
     (let ((result (handler-bind ((warning
-                                  #'(lambda (w)
+                                  (named-function core-run-test-warning-handler
+                                    (lambda (w)
                                       (push w caught-warnings)
-                                      (muffle-warning w))))
+                                      (muffle-warning w)))))
 
                     (let ((*current-group* (group-name test))
                           (*current-test*  (test-name-lookup test))

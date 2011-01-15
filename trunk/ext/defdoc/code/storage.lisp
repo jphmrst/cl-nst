@@ -71,13 +71,15 @@
 
 (defun get-filter-predicate (filter-keyargs)
   (destructuring-bind (&key (package nil package-supp-p)) filter-keyargs
-    `#'(lambda (spec)
-         (block filter-block
-           (when ,package-supp-p
-             (unless (eq (find-package ,package)
-                         (symbol-package (docspec-self spec)))
-               (return-from filter-block nil)))
-           t))))
+    (let ((spec (gensym)))
+      `(named-function get-filter-predicate-result
+         (lambda (,spec)
+           ,@(cond
+               (package-supp-p
+                `((eq (find-package ,package)
+                      (symbol-package (docspec-self ,spec)))))
+               (t `((declare (ignore ,spec))
+                    t))))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -89,14 +91,15 @@
 ;;;  Hope to get rid of this after new output-framework spec.
 ;;;
 (defun get-target-types-collector (target-type-specs)
-  #'(lambda (&optional (result (make-hash-table :test 'eq)))
+  (named-function get-target-types-collector-result
+    (lambda (&optional (result (make-hash-table :test 'eq)))
       (loop for target-type-spec in target-type-specs do
-        (with-name-and-filters (type filters target-type-spec)
-          (let* ((specs (get-specs-by-target-type
-                                          type (get-filter-predicate filters))))
-            (loop for spec in specs do
-              (setf (gethash spec result) t)))))
-      result))
+            (with-name-and-filters (type filters target-type-spec)
+              (let* ((specs (get-specs-by-target-type
+                             type (get-filter-predicate filters))))
+                (loop for spec in specs do
+                      (setf (gethash spec result) t)))))
+      result)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -117,14 +120,15 @@
 ;;;
 (defun get-packages-exported-collector (package-names
                                         &optional (warn-if-undoc t))
-  #'(lambda (&optional (result (make-hash-table :test 'eq)))
+  (named-function get-packages-exported-collector-result
+    (lambda (&optional (result (make-hash-table :test 'eq)))
       (loop for package-name-spec in package-names do
-        (with-name-and-filters (package-name raw-filters package-name-spec)
-          (loop for spec in (get-specs-by-package-export
-                             package-name (get-filter-predicate raw-filters)
-                                warn-if-undoc)
-              do (setf (gethash spec result) t))))
-      result))
+            (with-name-and-filters (package-name raw-filters package-name-spec)
+              (loop for spec in (get-specs-by-package-export
+                                 package-name (get-filter-predicate raw-filters)
+                                 warn-if-undoc)
+                  do (setf (gethash spec result) t))))
+      result)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -144,13 +148,14 @@
 ;;;  Hope to get rid of this after new output-framework spec.
 ;;;
 (defun get-packages-symbols-collector (package-names &optional warn-if-undoc)
-  #'(lambda (&optional (result (make-hash-table :test 'eq)))
+  (named-function get-packages-symbols-collector-result
+    (lambda (&optional (result (make-hash-table :test 'eq)))
       (loop for package-name-spec in package-names do
-        (with-name-and-filters (package-name raw-filters package-name-spec)
-          (loop for spec
-                in (get-specs-by-package-allsymbols package-name
-                                                    (get-filter-predicate
-                                                        raw-filters)
-                       warn-if-undoc)
-                do (setf (gethash spec result) t))))
-      result))
+            (with-name-and-filters (package-name raw-filters package-name-spec)
+              (loop for spec
+                  in (get-specs-by-package-allsymbols package-name
+                                                      (get-filter-predicate
+                                                       raw-filters)
+                                                      warn-if-undoc)
+                  do (setf (gethash spec result) t))))
+      result)))

@@ -25,6 +25,7 @@
     (:documentation "Unit and regression testing for Common Lisp")
     (:nicknames :nst)
     (:use :closer-common-lisp :defdoc)
+    #+allegro (:import-from excl #:named-function)
     #+(or sbcl allegro)
     (:import-from #+sbcl sb-mop #-sbcl mop
                   #:generic-function-methods #:method-specializers

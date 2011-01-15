@@ -29,11 +29,12 @@
   result)
 
 (defun filter-collector (collector filter)
-  #'(lambda (&optional (result (make-hash-table :test 'eq)))
+  (named-function filter-collector-thunk
+    (lambda (&optional (result (make-hash-table :test 'eq)))
       (loop for spec being the hash-keys of (funcall collector)
-            if (funcall filter spec)
-              do (setf (gethash spec result) t))
-      result))
+          if (funcall filter spec)
+          do (setf (gethash spec result) t))
+      result)))
 
 (defmacro collector-unitef (base-collection new-collection-form)
   (let ((prev (gensym))
@@ -42,17 +43,19 @@
     `(let ((,prev ,base-collection)
            (,addl ,new-collection-form))
        (setf ,base-collection
-         #'(lambda (&optional (,result (make-hash-table :test 'eq)))
-             (funcall ,prev ,result)
-             (funcall ,addl ,result)
-             ,result)))))
+        (named-function collector-unitef-thunk
+          (lambda (&optional (,result (make-hash-table :test 'eq)))
+            (funcall ,prev ,result)
+            (funcall ,addl ,result)
+            ,result))))))
 
 (defmacro collectors-unitef (base-collection new-collections)
   (let ((prev (gensym))
         (result (gensym)))
     `(let ((,prev ,base-collection))
        (setf ,base-collection
-             #'(lambda (&optional (,result (make-hash-table :test 'eq)))
-                 (funcall ,prev ,result)
-                 (loop for c in ,new-collections do (funcall c ,result))
-                 ,result)))))
+        (named-function collectors-unitef-thunk
+          (lambda (&optional (,result (make-hash-table :test 'eq)))
+            (funcall ,prev ,result)
+            (loop for c in ,new-collections do (funcall c ,result))
+            ,result))))))

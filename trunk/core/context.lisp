@@ -52,39 +52,40 @@
  given-stack - the stack of values assessed by the criterion"))
 
 (set-pprint-dispatch 'criterion-context-layer
-  #'(lambda (s cl)
+  (named-function pprint-criterion-context-layer
+    (lambda (s cl)
       (with-accessors ((criterion criterion)
                        (criterion-args criterion-args)
                        (given-stack given-stack)) cl
         (cond
-         ((eq (car given-stack) 'list)
-          (princ "checki" s)
-          (pprint-logical-block (s '(1 2))
-            (format s "ng (~s" criterion)
-            (pprint-logical-block (s criterion-args)
-              (loop for arg = (pprint-pop) while arg do
-                (pprint-newline :fill s)
-                (princ " " s)
-                (format s "~s" arg)))
-            (princ ") " s)
-            (pprint-newline :linear s)
-            (princ "on" s)
-            (loop for layer in (cdr given-stack) do
-              (format s " ~a" layer))))
+          ((eq (car given-stack) 'list)
+           (princ "checki" s)
+           (pprint-logical-block (s '(1 2))
+             (format s "ng (~s" criterion)
+             (pprint-logical-block (s criterion-args)
+               (loop for arg = (pprint-pop) while arg do
+                     (pprint-newline :fill s)
+                     (princ " " s)
+                     (format s "~s" arg)))
+             (princ ") " s)
+             (pprint-newline :linear s)
+             (princ "on" s)
+             (loop for layer in (cdr given-stack) do
+                   (format s " ~a" layer))))
 
-         (t (princ "ch" s)
-            (pprint-logical-block (s '(1 2))
-              (format s "ecking (~s" criterion)
-              (pprint-logical-block (s criterion-args)
-                (loop for arg = (pprint-pop) while arg do
-                  (pprint-newline :fill s)
-                  (princ " " s)
-                  (format s "~{~:_ ~s~}" arg)))
-              (princ ") " s)
-              (pprint-newline :fill s)
-              (princ-filled-text "on the result of evaluating " s)
-              (pprint-newline :fill s)
-              (format s "~a" given-stack)))))))
+          (t (princ "ch" s)
+             (pprint-logical-block (s '(1 2))
+               (format s "ecking (~s" criterion)
+               (pprint-logical-block (s criterion-args)
+                 (loop for arg = (pprint-pop) while arg do
+                       (pprint-newline :fill s)
+                       (princ " " s)
+                       (format s " ~s" arg)))
+               (princ ") " s)
+               (pprint-newline :fill s)
+               (princ-filled-text "on the result of evaluating " s)
+               (pprint-newline :fill s)
+               (format s "~a" given-stack))))))))
 
 (defmethod show-context-layer ((layer criterion-context-layer))
   (declare (special -context-display-state-))

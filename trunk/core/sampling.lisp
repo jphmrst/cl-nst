@@ -494,7 +494,8 @@
            (block verify-once
              (handler-bind-interruptable
               ((error
-                #'(lambda (e)
+                (named-function sample-criterion-error-handler
+                  (lambda (e)
                     (format-at-verbosity 4 "Caught ~s in :sample criterion~%" e)
                     (add-error result
 ;;;                   ;; This was the original code.
@@ -505,7 +506,9 @@
 ;;;                   ;; "names-only" below is wrong
 ;;;                   ;; ******************************
 ;;;                   :args (list e names-only)
-                      :format #'(lambda (stream err)
+                      :format (named-function
+                                  sample-criterion-error-handler-format
+                                (lambda (stream err)
                                   (pprint-logical-block (stream names-only)
                                     (format stream "Error ~s" err)
 ;;;                                 (format stream " for case:")
@@ -515,17 +518,19 @@
 ;;;                                   ;; Whatever this is supposed to
 ;;;                                   ;; be goes here.
 ;;;                                   )
-                                    ))
+                                    )))
                       :args (list e)
                       )
-                    (return-from verify-once))))
+                    (return-from verify-once)))))
 
                (let ((this-result (eval verify-expr)))
                 (unless this-result
                   (add-failure result
-                      :format #'(lambda (stream)
-                                  (pprint-logical-block (stream names-only)
-                                    (format stream "Failed")
+                    :format (named-function
+                                sample-criterion-verify-fail-format
+                              (lambda (stream)
+                                (pprint-logical-block (stream names-only)
+                                  (format stream "Failed")
 ;;;                                 (format stream " for case:")
 ;;;                                 (loop for name = (pprint-pop) while name do
 ;;;                                   (pprint-newline :mandatory stream)
@@ -533,7 +538,7 @@
 ;;;                                   ;; Whatever this is supposed to
 ;;;                                   ;; be goes here.
 ;;;                                   )
-                                    ))
+                                  )))
                     :args nil)))))))
        finally (setf total-samples-run sample-num))
 

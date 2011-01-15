@@ -39,7 +39,8 @@
                       ((0) nil)
                       ((1) (car core))
                       (otherwise `(progn ,@core))))
-   (t `#'(lambda (,variable) ,@core))))
+   (t `(named-function wrapped-core-fn
+         (lambda (,variable) ,@core)))))
 
 (defun compile-filter-spec (spec spec-var)
   (declare (ignore spec-var))

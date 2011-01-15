@@ -115,7 +115,10 @@
                            (:file "command" :depends-on ("globals" "status"))
 
                            ;; Generating JUnit-friendly XML.
-                           (:file "junit" :depends-on ("status"))
+                           (:file "xml" :depends-on ("status"))
+
+                           ;; Interfacing with JUnit
+                           (:file "junit" :depends-on ("xml"))
 
                            ;; Sample-testing predicates.
                            (:file "sampling" :depends-on ("check"))

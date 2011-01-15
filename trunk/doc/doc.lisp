@@ -29,22 +29,25 @@
          (quickref-dir (merge-pathnames #p"quickref/" doc-root-dir)))
     (format t "Creating documentation in ~a~%" doc-root-dir)
     (defdoc:write-package-specs-latex :nst
-        :echo #'(lambda (&key name type)
-                  (format t "Writing ~a ~a for manual...~%" type name))
+        :echo (nst::named-function nst-docs-write-package-specs-latex
+                (lambda (&key name type)
+                  (format t "Writing ~a ~a for manual...~%" type name)))
         :directory gen-dir
         :style 'nst-item-style
         :include-doctypes '(nst::criterion nst::command nst::switch)
         :package-style 'nst-package-list-latex-style)
     (defdoc:write-package-specs-latex :nst
-        :echo #'(lambda (&key name type)
-                  (format t "Writing ~a ~a for quickref...~%" type name))
+        :echo (nst::named-function nst-docs-write-package-specs-latex
+                (lambda (&key name type)
+                  (format t "Writing ~a ~a for quickref...~%" type name)))
         :directory gen-dir
         :style 'nst-quickref
         :include-doctypes '(nst::criterion)
         :package-style nil)
     (defdoc:write-latex-output 'package-api
-        :echo #'(lambda (&key &allow-other-keys)
-                  (format t "Writing package-api document spec~%"))
+        :echo (nst::named-function nst-docs-write-latex-output
+                (lambda (&key &allow-other-keys)
+                  (format t "Writing package-api document spec~%")))
         :directory gen-dir
         :standalone t
         :style 'nst-item-style)

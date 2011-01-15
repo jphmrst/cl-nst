@@ -38,8 +38,9 @@
        (compile-symbol-headed-element (car args) package spec (cdr args)))
       ((listp args)
        (get-element-aggregation
-        package spec (mapcar #'(lambda (x)
-                                 (compile-element package spec x))
+        package spec (mapcar (named-function compile-element-mapper
+                               (lambda (x)
+                                 (compile-element package spec x)))
                              args)))
       (t
        (error "Odd spec element ~s" args)))))
