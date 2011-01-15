@@ -71,9 +71,17 @@
 (define-condition nst-hard-deprecation (warning
                                         nst-deprecation-warning-mixin) ()
   (:report (lambda (cnd stream)
-             (format stream "~@<~a is deprecated and MAY NOT OPERATE CORRECTLY~
-                             ; use ~:[~a~;one of ~{~a~^, ~:_~}~] instead.~:>"
-               (old-name cnd) (listp (replacement cnd)) (replacement cnd)))))
+             (pprint-logical-block (stream '(1 2))
+               (princ (old-name cnd) stream)
+               (princ " is deprecated and MAY NOT OPERATE CORRECTLY; use "
+                      stream)
+               (let ((replacement (replacement cnd)))
+                 (cond
+                   ((listp replacement)
+                    (format stream "one of ~{~a~^, ~:_~}" replacement))
+                   (t
+                    (format stream "~a" replacement))))
+               (princ " instead." stream)))))
 
 (defun soft-dep-warning (prefix cnd stream)
   (format stream

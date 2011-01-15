@@ -8,15 +8,17 @@
  Ticket 226: Added a crude workaround to CLisp's stack overflow issue --- but
    not sure how this hack will react in all cases where a dispatched test
    fails. 
- Ticket 185: A longstanding code quality issue --- I'd like to get rid of all
-   uses of ~{ , ~[ , ~< and ~* (with or without uses of prefix arguments) in
+ Tickets 185 and 186: A longstanding code quality issue --- I'd like to get rid
+   of uses of ~{ , ~[ , ~< and ~* (with or without uses of prefix arguments) in
    calls to format.  They're convenient, but just too hard to read in long-term
-   code.  This ticket is part of that effort; an internal structure which
-   previously stored a format string can now also accept a function on the
-   arguments to be formatted.
+   code.  Ticket 185 removes all but the simplest uses of the formatters, or
+   their uses in simple-errors.  Ticket 186 allows a particular internal
+   structure which previously stored a format string can now also accept a
+   function on the  arguments to be formatted.
  Ticket 215: Small change to this test.
  Moved from using #' to named-function, which is usefle for debugging on some
    platforms, and which nst macro-alises to (function ...) on others.
+ Reworked the internal organization of the XUnit output generator.
 
 3.0.1 - public release, December 29, 2010
  Execution of one group can now be triggered by another group, as a 
@@ -25,6 +27,7 @@
    attachment to groups, not to tests.
  Ticket 223: Spurious warnings from :sample criterion, and a facility for
    adding declaration for a :sample's :where form.
+ Ticket 217: Change included in this release.
  The def-criterion values lambda list argument can now be the simple symbol
    :ignore, which indicates that 
  Several SBCL style warnings cleared, a number of which arose from malformed
