@@ -31,15 +31,24 @@
      (format stream "~a" tag)))
 
 (define-condition tag-sort-warning (warning)
-  ((tag-sort-warning-style   :initarg :style   :reader tag-sort-warning-style)
-   (tag-sort-warning-package :initarg :package :reader tag-sort-warning-package)
-   (tag-sort-warning-tag     :initarg :tag     :reader tag-sort-warning-tag))
+    ((tag-sort-warning-style   :initarg :style :reader tag-sort-warning-style)
+     (tag-sort-warning-package :initarg :package
+                               :reader tag-sort-warning-package)
+     (tag-sort-warning-tag     :initarg :tag   :reader tag-sort-warning-tag))
   (:report (lambda (w stream)
              (with-accessors ((style tag-sort-warning-style)
                               (package tag-sort-warning-package)
-                              (tag tag-sort-warning-tag))
-                 w
-               (format stream "~@<Using default tag-sort 0 for:~:@_ style ~a~:@_ package ~a~:@_ tag ~a~:@_Consider using def-doc-tag~:>" style package tag)))))
+                              (tag tag-sort-warning-tag)) w
+               (pprint-logical-block (stream '(2 3))
+                 (format stream "Using default tag-sort 0 for:")
+                 (pprint-newline :mandatory stream)
+                 (format stream "Using  style ~a" style)
+                 (pprint-newline :mandatory stream)
+                 (format stream " package ~a" package)
+                 (pprint-newline :mandatory stream)
+                 (format stream " tag ~a" tag)
+                 (pprint-newline :mandatory stream)
+                 (princ "Consider using def-doc-tag" stream))))))
 
 (defgeneric tag-sort (style package tag)
   (:method (style package tag)

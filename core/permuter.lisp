@@ -49,24 +49,29 @@
 
 (defmethod print-object ((p permuter) stream)
   (print-unreadable-object (p stream :type t :identity nil)
-    (format stream "~/nst::fmt-permuter/" p)))
+    (fmt-permuter stream p)))
 
-(defgeneric fmt-permuter (stream p c s))
-
-(defmethod fmt-permuter (stream (p permuter) c s)
-  (declare (ignorable c) (ignorable s))
-  (with-slots (next-permutation perm-stack has-next) p
-    (format stream "~:[No more permutations~2*~
-                       ~;~@<Next permutation ~s;~_ ~
-                            stack ~@<~{~/nst::fmt-permuter/~^, ~_~}~
-                                  ~:>~
-                         ~:>~
-                     ~]"
-            has-next next-permutation perm-stack)))
-(defmethod fmt-permuter (stream (pf permuter-frame) c s)
-  (declare (ignorable c) (ignorable s))
-  (with-slots (next-firsts prev-firsts) pf
-    (format stream "~@<~s~_--~s~:>" next-firsts prev-firsts)))
+(defgeneric fmt-permuter (stream p)
+  (:method (stream (p permuter))
+     (with-slots (next-permutation perm-stack has-next) p
+       (cond
+         (has-next
+          (pprint-logical-block (stream '(1 2))
+            (format stream "Next permutation ~s;~_ stack " next-permutation)
+            (pprint-logical-block (stream perm-stack)
+              (loop for perm = (pprint-pop) while perm do
+                    (fmt-permuter stream perm)
+                    (pprint-exit-if-list-exhausted)
+                    (princ ", " stream)
+                    (pprint-newline :linear stream)))))
+         (t
+          (format stream "No more permutations")))))
+  (:method (stream (pf permuter-frame))
+     (with-slots (next-firsts prev-firsts) pf
+       (pprint-logical-block (stream '(1 2))
+         (format stream "~s" next-firsts)
+         (pprint-newline :linear stream)
+         (format stream "~s" prev-firsts)))))
 
 (defun next-permutation (p)
   (with-slots (next-permutation perm-stack has-next degenerate) p

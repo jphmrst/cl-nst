@@ -213,8 +213,7 @@ configuration provided by those wrappers."
         ((e flag
             :for-fail t
             :cerror-label-var exit-tests-label
-            :cerror-label (format nil
-                              "~@<Skip group ~s (cleaning up first)~:>"
+            :cerror-label (format nil "Skip group ~s (cleaning up first)"
                             (group-name group-obj))
             :with-retry
             (format nil "Restart testing group ~s (reapplying group fixtures)"
