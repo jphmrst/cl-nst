@@ -251,7 +251,13 @@
   (:documentation "These tests validate the :process criterion"))
 (def-test (process-failure-test-1 :group process-failure-tests)
     (--nst-group mnst-src::process-failures
-      (---test-fails mnst-src::process-failures mnst-src::process-fail-1)))
-(def-test (process-failure-test-2 :group process-failure-tests)
-    (--nst-group mnst-src::process-failures
-      (---test-fails mnst-src::process-failures mnst-src::process-fail-2)))
+      (---on-test mnst-src::process-failures mnst-src::process-fail-1
+        (---fail-records (:apply length (:eql 4)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))
+      (---on-test mnst-src::process-failures mnst-src::process-fail-2
+        (---fail-records (:apply length (:eql 4)))
+        (---error-records (:apply length (:eql 1)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))))

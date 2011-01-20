@@ -8,7 +8,9 @@
    indication of how we see this feature evolving.
  Added a :process criterion for simple interleaving of Lisp function
    calls and NST checks, to allow checking of intermediate states of
-   an arbitrarily-long process.
+   an arbitrarily-long process.  Not yet fully debugged; certain
+   errors will about the criterion check, but should be caught and
+   counted.
  Ticket 226: Added a crude workaround to CLisp's stack overflow issue
    --- but not sure how this hack will react in all cases where a
    dispatched test fails.
