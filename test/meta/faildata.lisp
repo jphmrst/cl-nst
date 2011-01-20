@@ -124,7 +124,7 @@
 
 (defvar *test-exec-counter* 0)
 (def-test-group counter-tests ()
-   (nst:def-test counter-test :true
+   (def-test counter-test :true
      (incf *test-exec-counter*)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
