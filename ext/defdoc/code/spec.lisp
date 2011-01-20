@@ -76,29 +76,34 @@
 (set-pprint-dispatch 'standard-doc-spec
   (named-function pprint-standard-doc-spec
     (lambda (stream spec)
-      (pprint-logical-block (stream '(1))
-        (format stream "[ standard-doc-spec")
-        (let ((props (label-values spec)))
-          (when (< 0 (hash-table-count props))
-            (format stream "~:@_  - properties:~:@_    ")
-            (pprint-logical-block (stream
-                                   (loop for label being the hash-keys of props
-                                       collect label))
-              (loop for label = (pprint-pop)
-                  for value = (gethash label props)
-                  do
-                    (format stream "~s ~s" label value)
-                    (pprint-exit-if-list-exhausted)
-                    (pprint-newline :mandatory)))))
-        (loop for slot in '(tags
-                            target-type self descriptive intro blurb details
-                            params callspecs deprecated)
-            do
-              (cond
-                ((slot-boundp spec slot)
-                 (format stream "~:@_  - ~a ~w" slot (slot-value spec slot)))
-                (t (format stream "~:@_  - no ~a" slot))))
-        (format stream " ]")))))
+      (cond
+       ((and (boundp '*pprint-short-spec*) (symbol-value '*pprint-short-spec*))
+        (format stream "[[ ~a ~a ]]"
+                (docspec-target-type spec) (docspec-self spec)))
+       (t
+        (pprint-logical-block (stream '(1))
+          (format stream "[ standard-doc-spec")
+          (let ((props (label-values spec)))
+            (when (< 0 (hash-table-count props))
+              (format stream "~:@_  - properties:~:@_    ")
+              (pprint-logical-block
+                  (stream (loop for label being the hash-keys of props
+                            collect label))
+                (loop for label = (pprint-pop)
+                    for value = (gethash label props)
+                    do
+                      (format stream "~s ~s" label value)
+                      (pprint-exit-if-list-exhausted)
+                      (pprint-newline :mandatory)))))
+          (loop for slot in '(tags
+                              target-type self descriptive intro blurb details
+                              params callspecs deprecated)
+              do
+                (cond
+                 ((slot-boundp spec slot)
+                  (format stream "~:@_  - ~a ~w" slot (slot-value spec slot)))
+                 (t (format stream "~:@_  - no ~a" slot))))
+          (format stream " ]")))))))
 
 (defun compile-spec (name target-type spec-args forms)
   (declare (ignore spec-args))

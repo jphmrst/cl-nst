@@ -66,7 +66,7 @@
                 (:intro "The list items after an \\texttt{:enumerate} element (and its second argument, which specifies optional keyword arguments about the list itself) are taken as the contents of a numbered list.")
                 (:callspec (() (:seq string-or-docspec))))
 
-(def-output-framework doc-elements
+(def-output-class doc-elements
     (collect-target-type 'doc-element))
 
 ;;; -----------------------------------------------------------------
@@ -119,7 +119,7 @@
             "would render as:"
             (:code "  (:seq item)")))
 
-(def-output-framework callspec-specials
+(def-output-class callspec-specials
     (collect-target-type 'callspec-special))
 
 ;;; -----------------------------------------------------------------
@@ -229,61 +229,73 @@
 ;;; -----------------------------------------------------------------
 ;;; outspec
 
-(def-documentation (compiler-macro def-output-framework)
-  (:intro "The \\texttt{def-output-framework} macro defines the contents of an output document.")
-  (:callspec (output-framework-name
-              &rest
-              (:opt (:key-head :style style-name))
-              (:opt (:key-head :title string))
-              (:opt (:key-head :author string))
-              (:opt (:key-head :property-values (:seq (name value))))
-              (:opt (:key-head :grouping-label label-name))
-              (:opt (:key-head :groups (:seq group-name)))
-              (:opt (:key-head :default-group group-name))
-              (:bag (:key-head :target-type name)
-                    (:key-head :all-symbols package-name)
-                    (:key-head :documented-symbols package-name)
-                    (:key-head :exported-symbols package-name)
-                    (:key-head :with-output (:seq name)))))
+(def-documentation (compiler-macro def-output-class)
+  (:intro "The \\texttt{def-output-class} macro defines the contents of an output document.")
+  (:callspec ((output-class-name &key (class base-class)
+                                 (title title-spec)
+                                 (author author-spec))
+              &body
+              (:seq collection-form)))
   ;; (:details )
-  (:params (output-framework-name
-            "The symbolic name of the output specification")
-           (style "Name of the style to be associated by default with this output document.")
-           (title "The title of the document.")
-           (author "The author of the document.")
-           (property-values "A list of label-value pairs.  The labels should have been defined via \\texttt{def-property-label}.")
-           (grouping-label "Names a declared label.  The output will be divided into groups corresponding to the value stored against this label in the output set's contents.")
-           (groups "Names and orders the values corresponding to the groups induced by the \\texttt{grouping-label} form.  When this form is provided, any values not in the list are ignored in the output.")
-           (default-group "The default group to which specs which have no value stored for the \\texttt{grouping-label} property will be grouped.")
-           (target-type "Includes all documentation specs for the given target type in the output set.  This form may appear multiple times in the macro body.")
-           (all-symbols "Includes all symbols of the given package in the output set.  This form may appear multiple times in the macro body.")
-           (documented-symbols "Includes all documented symbols of the given package in the output set.  This form may appear multiple times in the macro body.")
-           (exported-symbols "Includes all exported symbols of the given package in the output set.  This form may appear multiple times in the macro body.")
-           (with-output "Names output sets which should be taken as subcomponents of this output."))
+  (:params (output-class-name
+            "The name of the class being created for this output specification")
+           (base-class "Base class for the definition, by default \\texttt{output-contents}.")
+           (title-spec "The title of the document component.")
+           (author-spec "The author of the document component.")
+           (collection-form "One or more calls to the \\texttt{collect-} functions below.")
+;;;           (property-values "A list of label-value pairs.  The labels should have been defined via \\texttt{def-property-label}.")
+;;;           (grouping-label "Names a declared label.  The output will be divided into groups corresponding to the value stored against this label in the output set's contents.")
+;;;           (groups "Names and orders the values corresponding to the groups induced by the \\texttt{grouping-label} form.  When this form is provided, any values not in the list are ignored in the output.")
+;;;           (default-group "The default group to which specs which have no value stored for the \\texttt{grouping-label} property will be grouped.")
+;;;           (target-type "Includes all documentation specs for the given target type in the output set.  This form may appear multiple times in the macro body.")
+;;;           (all-symbols "Includes all symbols of the given package in the output set.  This form may appear multiple times in the macro body.")
+;;;           (documented-symbols "Includes all documented symbols of the given package in the output set.  This form may appear multiple times in the macro body.")
+;;;           (exported-symbols "Includes all exported symbols of the given package in the output set.  This form may appear multiple times in the macro body.")
+;;;           (with-output "Names output sets which should be taken as subcomponents of this output.")
+           )
   (:properties (manual-section outspec)))
 
 (def-documentation (compiler-macro def-label-config)
   (:intro "The \\texttt{def-label-config} macro specifies information associated with particular uses, especially particular outputs, of a property label.")
+  (:callspec ((&key (label label-name)
+                    (style style)
+                    (output-framework output-name)
+                    (package package))
+              &body (:seq (value &key (title group-title)
+                                 (order symbol-list)))))
+  (:params (label-name "\\fbox{FILL IN}")
+           (style "\\fbox{FILL IN}")
+           (output-name "\\fbox{FILL IN}")
+           (package "\\fbox{FILL IN}")
+           (value "\\fbox{FILL IN}")
+           (group-title "\\fbox{FILL IN}")
+           (symbol-list "\\fbox{FILL IN}"))
   (:properties (manual-section outspec)))
 
 (def-documentation (compiler-macro collect-groups-by-label)
   (:intro "Macro \\texttt{collect-groups-by-label} --- \\fbox{FILL IN}")
+  (:callspec ((label-nam &key (package package) (groups groups))
+              &body (:seq collection-form)))
   (:properties (manual-section outspec)))
 
 (def-documentation (function collect-target-type)
   (:intro "Function \\texttt{collect-target-type} --- \\fbox{FILL IN}")
+  (:callspec (target-name (:seq filter)))
   (:properties (manual-section outspec)))
 
 (def-documentation (function collect-exported-symbols)
   (:intro "Function \\texttt{collect-exported-symbols} --- \\fbox{FILL IN}")
+  (:callspec (package-name (:seq filter)))
   (:properties (manual-section outspec)))
 
 (def-documentation (function collect-documented-symbols)
   (:intro "Function \\texttt{collect-documented-symbols} --- \\fbox{FILL IN}")
+  (:callspec (package-name (:seq filter)))
   (:properties (manual-section outspec)))
 
 (def-documentation (function collect-all-symbols)
   (:intro "Function \\texttt{collect-all-symbols} --- \\fbox{FILL IN}")
+  (:callspec (package-name (:seq filter)))
   (:properties (manual-section outspec)))
 
 (def-documentation (function collect-output)
@@ -338,7 +350,7 @@
   (:params (name "Symbolic name of the new target type.")
            (class-name "Class to be used as a record for the stored target type's information.  The default is \\texttt{standard-doc-target}; if another class is used it must support the \\texttt{:name} initarg and \\texttt{docstring-installer} accessor.")
            (docstring-installer "Function which installs a standard Lisp document string for targets of this type."))
-  (:properties (manual-section targets)))
+  (:properties (manual-section docspecs)))
 
 
 ;;; -----------------------------------------------------------------
@@ -408,9 +420,9 @@
 ;;;  (:intro "Function \\texttt{get-compiled-output-framework} --- \\fbox{FILL IN}")
 ;;;  (:properties (manual-section model)))
 
-(def-documentation (function get-output-framework-class)
-  (:intro "Function \\texttt{get-output-framework-class} --- \\fbox{FILL IN}")
-  (:properties (manual-section model)))
+;;;(def-documentation (function get-output-framework-class)
+;;;  (:intro "Function \\texttt{get-output-framework-class} --- \\fbox{FILL IN}")
+;;;  (:properties (manual-section model)))
 
 
 ;;; -----------------------------------------------------------------
@@ -502,28 +514,12 @@
            (stream "Output stream for the result."))
   (:properties (manual-section output-model)))
 
-(def-documentation (function format-output-postgroup)
-  (:intro "Function \\texttt{format-output-postgroup} --- \\fbox{FILL IN}")
+(def-documentation (function format-output-preitem)
+  (:intro "Function \\texttt{format-output-preitem} --- \\fbox{FILL IN}")
   (:properties (manual-section output-model)))
 
-(def-documentation (function format-output-group-sep)
-  (:intro "Function \\texttt{format-output-group-sep} --- \\fbox{FILL IN}")
-  (:properties (manual-section output-model)))
-
-(def-documentation (function format-output-spec-sep)
-  (:intro "Function \\texttt{format-output-spec-sep} --- \\fbox{FILL IN}")
-  (:properties (manual-section output-model)))
-
-(def-documentation (function format-output-pregroup)
-  (:intro "Function \\texttt{format-output-pregroup} --- \\fbox{FILL IN}")
-  (:properties (manual-section output-model)))
-
-(def-documentation (function format-output-prespec)
-  (:intro "Function \\texttt{format-output-prespec} --- \\fbox{FILL IN}")
-  (:properties (manual-section output-model)))
-
-(def-documentation (function format-output-postspec)
-  (:intro "Function \\texttt{format-output-postspec} --- \\fbox{FILL IN}")
+(def-documentation (function format-output-postitem)
+  (:intro "Function \\texttt{format-output-postitem} --- \\fbox{FILL IN}")
   (:properties (manual-section output-model)))
 
 (def-documentation (function process-standard-output-framework-form)

@@ -120,6 +120,35 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Testing the number of times a test is executed
+
+(defvar *test-exec-counter* 0)
+(def-test-group counter-tests ()
+   (nst:def-test counter-test :true
+     (incf *test-exec-counter*)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Failure cases for the :process criterion
+
+(def-test-group process-failures ()
+  (def-test process-fail-1
+      (:process (:eval (setf zzz 0))
+                (:check (:true-form (eql zzz 1))
+                        (:true-form (eql zzz 10)))
+                (:eval (incf zzz))
+                (:check (:true-form (eql zzz 2)))
+                (:eval (incf zzz))
+                (:check (:true-form (eql zzz 3)))))
+  (def-test process-fail-2
+      (:process (:eval (setf zzz 0))
+                (:check (:true-form (eql zzz 1))
+                        (:true-form (eql zzz 10)))
+                (:eval (error "Blah"))
+                (:check (:true-form (eql zzz 2)))
+                (:eval (incf zzz))
+                (:check (:true-form (eql zzz 3))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Testing export of names.
 
 (in-package :mnst-src-1)
@@ -140,10 +169,5 @@
   (fix3a :true)
   (fix3b :false))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Testing the number of times a test is executed
-
-(defvar *test-exec-counter* 0)
-(def-test-group counter-tests ()
-   (nst:def-test counter-test :true
-     (incf *test-exec-counter*)))
+;; NB --- search for in-package --- the end of this file is NOT in
+;; :mnst-src.

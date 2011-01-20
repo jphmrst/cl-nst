@@ -1,37 +1,43 @@
 
 3.0.2 - 
- Defdoc now provides a system asdf-defdoc, which defines a base ASDF system for
-   more conveniently associating a system with the documents to be generated
-   when loading it.  This system should be considered an alpha release and
-   subject to significant change; see the trac tickets under the "Documentation"
-   component for an indication of how we see this feature evolving.
- Ticket 226: Added a crude workaround to CLisp's stack overflow issue --- but
-   not sure how this hack will react in all cases where a dispatched test
-   fails. 
- Tickets 185 and 186: A longstanding code quality issue --- I'd like to get rid
-   of uses of ~{ , ~[ , ~< and ~* (with or without uses of prefix arguments) in
-   calls to format.  They're convenient, but just too hard to read in long-term
-   code.  Ticket 185 removes all but the simplest uses of the formatters, or
-   their uses in simple-errors.  Ticket 186 allows a particular internal
-   structure which previously stored a format string can now also accept a
-   function on the  arguments to be formatted.
+ Defdoc now provides a system asdf-defdoc, which defines a base ASDF
+   system for more conveniently associating a system with the
+   documents to be generated when loading it.  This system should be
+   considered an alpha release and subject to significant change; see
+   the trac tickets under the "Documentation" component for an
+   indication of how we see this feature evolving.
+ Added a :process criterion for simple interleaving of Lisp function
+   calls and NST checks, to allow checking of intermediate states of
+   an arbitrarily-long process.
+ Ticket 226: Added a crude workaround to CLisp's stack overflow issue
+   --- but not sure how this hack will react in all cases where a
+   dispatched test fails.
+ Tickets 185 and 186: A longstanding code quality issue --- I'd like
+   to get rid of uses of ~{ , ~[ , ~< and ~* (with or without uses of
+   prefix arguments) in calls to format.  They're convenient, but just
+   too hard to read in long-term code.  Ticket 185 removes all but the
+   simplest uses of the formatters, or their uses in simple-errors.
+   Ticket 186 allows a particular internal structure which previously
+   stored a format string can now also accept a function on the
+   arguments to be formatted.
  Ticket 215: Small change to this test.
- Moved from using #' to named-function, which is usefle for debugging on some
-   platforms, and which nst macro-alises to (function ...) on others.
+ Moved from using #' to named-function, which is usefle for debugging
+   on some platforms, and which NST macro-alises to (function ...) on
+   others.
  Reworked the internal organization of the XUnit output generator.
 
 3.0.1 - public release, December 29, 2010
- Execution of one group can now be triggered by another group, as a 
+ Execution of one group can now be triggered by another group, as a
    (directed) hierarchy of groups.
- Ticket 220: The new setup etc. hooks on fixtures were working only for
-   attachment to groups, not to tests.
- Ticket 223: Spurious warnings from :sample criterion, and a facility for
-   adding declaration for a :sample's :where form.
+ Ticket 220: The new setup etc. hooks on fixtures were working only
+   for attachment to groups, not to tests.
+ Ticket 223: Spurious warnings from :sample criterion, and a facility
+   for adding declaration for a :sample's :where form.
  Ticket 217: Change included in this release.
- The def-criterion values lambda list argument can now be the simple symbol
-   :ignore, which indicates that 
- Several SBCL style warnings cleared, a number of which arose from malformed
-   format strings.
+ The def-criterion values lambda list argument can now be the simple
+   symbol :ignore, which indicates that
+ Several SBCL style warnings cleared, a number of which arose from
+   malformed format strings.
  Documentation and defdoc improvements.
 
 3.0.0 - public release, October 11, 2010
@@ -45,15 +51,17 @@
  Ticket 212: Correct some duplicate execution of tests.
  Ticket 189: Allow packages to be omitted from :report and :detail.
  Documentation tickets: #192, #193, #210.
- Consolidate the :uses and :assumes options to def-fixtures into the single,
-   clearer option :special.  Old options still allowed for now but deprecated.
+ Consolidate the :uses and :assumes options to def-fixtures into the
+   single, clearer option :special.  Old options still allowed for now
+   but deprecated.
  Ticket 187: Removed some deprecated internal names.
- Added a new documentation system for generating common text of the docstrings,
-   manual and reference card: #161, #194, #195.
+ Added a new documentation system for generating common text of the
+   docstrings, manual and reference card: #161, #194, #195.
 
 2.1.1 - public release, August 31, 2010
- Fixed a bug in the implementation of fixture sets exporting names into their
-   packages, and added tests to verify exporting (ticket:163).
+ Fixed a bug in the implementation of fixture sets exporting names
+   into their packages, and added tests to verify exporting
+   (ticket:163).
  Added startup/finish hooks for tests, all hooks for fixtures.
  Verified fix for ticket:129.
  Many small code-cleaning patches, and some additional unit tests.
@@ -64,19 +72,22 @@
   - Will require re-compiling code built against macros from earlier
     NST versions.
   - Should expand to considerably fewer method definitions.
-  - Should also clear most of the warnings previously generated under SBCL.
+  - Should also clear most of the warnings previously generated under
+    SBCL.
  Added an interactive method to remove groups and tests.
- Fixed a bug in the parsing when the :export-names and related options in
-   fixtures are used.
- Now explicitly depends on sb-aclrepl in SBCL; thanks to Stelian Ionescu for
-   pointing out the implicit dependency in earlier version.
+ Fixed a bug in the parsing when the :export-names and related options
+   in fixtures are used.
+ Now explicitly depends on sb-aclrepl in SBCL; thanks to Stelian
+   Ionescu for pointing out the implicit dependency in earlier
+   version.
  Correct the format string used for printing Lisp warnings in NST
    results output; thanks to Steve Harp for pointing out the problem.
- Added make-success-report, make-failure-report and make-warning-report as
-   eventual replacements for emit-success et al., per a suggestion of Robert
-   Goldman --- these functions do not have any side-effect, so the make-*
-   names more accurately evoke their functionality.  We'll eventually
-   deprecate, and then remove, the emit-* definitions.
+ Added make-success-report, make-failure-report and
+   make-warning-report as eventual replacements for emit-success et
+   al., per a suggestion of Robert Goldman --- these functions do not
+   have any side-effect, so the make-* names more accurately evoke
+   their functionality.  We'll eventually deprecate, and then remove,
+   the emit-* definitions.
 
 2.0.3 - public release, April 6, 2010
  Renamed the version numbering from 1.3.* to 2.0.*, to allow

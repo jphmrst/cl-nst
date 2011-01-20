@@ -25,6 +25,7 @@
 ;;; -----------------------------------------------------------------
 ;;; Top-level LaTeX generation APIs.
 
+(defvar *latex-sectioning-level* 0)
 (defvar *defdoc-latex-default-directory* "./")
 (defvar *latex-full-package-item-header-macro* "\\paragraph")
 (defvar *latex-verbatim-width* 65)
@@ -43,36 +44,33 @@
      (get-latex-output-file-name (type-of style) usage name)))
 
 (defgeneric format-latex-standalone-header (style stream out &optional
-                                                  contents index)
-  (:method (style stream (out standard-output-framework)
-                  &optional contents index)
-     (declare (ignore style))
+                                                             contents index)
+  (:method (style stream (out output-contents) &optional contents index)
      (format stream "~a" *latex-default-header-matter*)
      (when index
        (format stream "\\usepackage{makeidx}~%\\makeindex~%"))
-     (let ((title-supp (standard-output-framework-title-supp-p out))
-           (author-supp (standard-output-framework-author-supp-p out)))
-       (when (or title-supp author-supp)
+     (let ((title (get-output-unit-title out))
+           (author (get-output-unit-author out)))
+       (when (or title author)
          (cond
-          (title-supp
-           (format stream "\\title{~a}~%"
-             (standard-output-framework-title out)))
-          (t
-           (format stream "\\title{}~%")))
+          (title (princ "\\title{" stream)
+                 (format-docspec-element style nil title stream)
+                 (format stream "}~%"))
+          (t (format stream "\\title{}~%")))
          (cond
-          (author-supp
-           (format stream "\\author{~a}~%"
-             (standard-output-framework-author out)))
+          (author (format stream "\\author{")
+                  (format-docspec-element style nil author stream)
+                  (format stream "}~%"))
           (t
            (format stream "\\author{}~%"))))
        (format stream "\\begin{document}~%")
-       (when (or title-supp author-supp)
+       (when (or title author)
          (format stream "\\maketitle~%"))
        (when contents
          (format stream "\\tableofcontents~%")))))
 
 (defgeneric format-latex-standalone-footer (style stream out &optional index)
-  (:method (style stream (out standard-output-framework) &optional index)
+  (:method (style stream (out output-contents) &optional index)
      (declare (ignore style))
      (when index (format stream "\\printindex~%"))
      (format stream "\\end{document}~%")))
@@ -88,7 +86,7 @@
                                 standalone)
   (when (symbolp style)
     (setf style (make-instance style)))
-  (let ((output-framework (get-output-framework name)))
+  (let ((output-framework (make-instance name)))
     (unless output-framework
       (error "No such output framework ~s" name))
     (unless file-supp-p
@@ -188,6 +186,34 @@
 ;;; The default LaTeX style.
 
 (defclass latex-style () ())
+
+(defgeneric display-latex-section (output)
+  (:method (o)
+     (declare (ignore o))
+     nil)
+  (:method ((o output-contents))
+     (> *latex-sectioning-level* 0))
+  (:method ((o grouped-output-contents))
+     (with-accessors ((label labeldef) (group group)) o
+       (or (get-label-section-title-supp-p label group o)
+           (call-next-method))))
+  (:method :around (o)
+     (when (get-output-unit-title o)
+       (call-next-method))))
+
+(defmethod format-doc :around (stream (style latex-style) output)
+  (declare (ignore stream))
+  (let ((*latex-sectioning-level* (cond
+                                    ((display-latex-section output)
+                                     (+ 1 *latex-sectioning-level*))
+                                    (t *latex-sectioning-level*))))
+    (declare (special *latex-sectioning-level*))
+    (call-next-method)))
+
+(defmethod format-output-contents-sep ((style latex-style)
+                                       stream output spec1 spec2)
+  (declare (ignore output spec1 spec2))
+  (format stream "\\par "))
 
 (defmethod format-docspec-element ((style latex-style) target-type
                                    (spec standard-doc-spec) stream)
@@ -293,28 +319,29 @@
     (format-docspec stream style spec target-type))
   (format stream "\\end{~a}" (list-element-env-tag spec)))
 
-(defgeneric format-latex-sectioning-level (style stream sectioning-level body)
-  (:method (style stream level body)
+(defgeneric latex-section-formatter (style sectioning-level)
+  (:method (style level)
      (declare (ignore style))
-     (format stream
-         (case level
-           ((1) "\\section{~a}")
-           ((2) "\\subsection{~a}")
-           ((3) "\\subsubsection{~a}")
-           ((4) "\\paragraph{~a}")
-           ((5) "\\subparagraph{~a}")
-           (otherwise (error "Too deeply grouped.")))
-       body)))
+     (case level
+       ((1) "\\section{~a}")
+       ((2) "\\subsection{~a}")
+       ((3) "\\subsubsection{~a}")
+       ((4) "\\paragraph{~a}")
+       ((5) "\\subparagraph{~a}")
+       (otherwise (error "Too deeply grouped.")))))
 
-(defmethod format-output-pregroup ((style latex-style)
-                                   stream output label group)
-  (let (;; (oname (output-framework-name output))
-        )
-    (when (get-label-section-title-supp-p label style group output)
-      (format-latex-sectioning-level style stream *sectioning-level*
-                                     (get-label-section-title label style
-                                                              group output))))
-  (call-next-method))
+(defmethod format-output-leader-title :around ((style latex-style) stream
+                                               (output output-contents))
+  (declare (ignore stream))
+  (when (> *latex-sectioning-level* 0)
+    (let ((*output-leader-title-format-string*
+           (latex-section-formatter style *latex-sectioning-level*)))
+      (declare (special *output-leader-title-format-string*))
+      (call-next-method))))
+
+(defmethod format-output-leader-sep ((style latex-style) stream output)
+  (declare (ignore output))
+  (princ "\\par " stream))
 
 ;;; -----------------------------------------------------------------
 ;;; Mixin for a full description of packages.
@@ -445,35 +472,3 @@
     (when index (run-makeindex))
     (when (or bibtex index) (run-latex))
     (run-latex)))
-
-;;; -----------------------------------------------------------------
-
-;;;(defun old-write-latex-output (name &key
-;;;                                (table-of-contents nil)
-;;;                                (index nil)
-;;;                                (echo
-;;;                                 (named-function old-write-latex-output-nop
-;;;                                   (lambda ())))
-;;;                                (style 'latex-style)
-;;;                                (directory #p"./")
-;;;                                (file nil file-supp-p)
-;;;                                standalone)
-;;;  (when (symbolp style)
-;;;    (setf style (make-instance style)))
-;;;  (let ((output-framework (get-output-framework name)))
-;;;    (unless output-framework
-;;;      (error "No such output framework ~s" name))
-;;;    (unless file-supp-p
-;;;      (setf file (format nil "~a_~a.tex" name (type-of style))))
-;;;
-;;;    (funcall echo)
-;;;    (let ((file-spec (merge-pathnames file directory)))
-;;;      (with-open-file (out file-spec :direction :output :if-exists :supersede
-;;;                       :if-does-not-exist :create)
-;;;        (when standalone
-;;;          (format-latex-standalone-header style out output-framework
-;;;                                          table-of-contents index))
-;;;        (format-doc out style output-framework)
-;;;        (when standalone
-;;;          (format-latex-standalone-footer style out output-framework index))))))
-

@@ -99,14 +99,8 @@
 
        ;; output.lisp
        #:standard-output-framework
-       #:format-output-pregroup
-       #:format-output-prespec
-       #:format-output-postspec
-       #:format-output-spec-sep
-       #:format-output-postgroup
-       #:format-output-group-sep
-       #:get-output-framework
-       #:get-output-framework-class
+       #:format-output-preitem
+       #:format-output-postitem
        #:output-framework
        #:output-framework-name
        ;; #:get-compiled-output-framework

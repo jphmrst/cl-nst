@@ -21,7 +21,6 @@
 (in-package :defdoc)
 
 (defvar *docstring-style* 'standard-docstring-style)
-(defvar *sectioning-level* 1)
 
 (defgeneric format-doc (stream style spec))
 

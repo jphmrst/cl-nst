@@ -229,11 +229,11 @@
 (def-test-group counter-metatest ()
   (:documentation "There was a bug in which (some) tests were run twice.")
   (def-test (ct1 :setup (setf nst-meta-sources-1::*test-exec-counter* 0))
-      (--nst-group nst-meta-sources-1::counter-tests
+      (--nst-group nst-meta-sources::counter-tests
         (:true-form (eql nst-meta-sources-1::*test-exec-counter* 1))))
   (def-test (ct2 :setup (setf nst-meta-sources-1::*test-exec-counter* 0))
-      (--nst-test nst-meta-sources-1::counter-tests
-          nst-meta-sources-1::counter-test
+      (--nst-test nst-meta-sources::counter-tests
+          nst-meta-sources::counter-test
         (:true-form (eql nst-meta-sources-1::*test-exec-counter* 1)))))
 
 (def-test-group group-includes-tests ()
@@ -246,3 +246,12 @@
       (---test-passes mnst-src::included-1 mnst-src::inc1-2)
       (---test-passes mnst-src::included-2 mnst-src::inc2-1)
       (---test-passes mnst-src::included-2 mnst-src::inc2-2)))
+
+(def-test-group process-failure-tests ()
+  (:documentation "These tests validate the :process criterion"))
+(def-test (process-failure-test-1 :group process-failure-tests)
+    (--nst-group mnst-src::process-failures
+      (---test-fails mnst-src::process-failures mnst-src::process-fail-1)))
+(def-test (process-failure-test-2 :group process-failure-tests)
+    (--nst-group mnst-src::process-failures
+      (---test-fails mnst-src::process-failures mnst-src::process-fail-2)))

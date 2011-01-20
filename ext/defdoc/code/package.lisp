@@ -46,7 +46,8 @@
              #:def-documentation
 
              ;; output.lisp
-             #:def-output-framework
+             #:def-output-class
+             #:collect-doc
              #:collect-groups-by-label
              #:collect-target-type
              #:collect-exported-symbols
