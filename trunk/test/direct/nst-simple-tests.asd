@@ -23,17 +23,26 @@
 (defpackage :nst-simple-asd (:use :common-lisp :asdf))
 (in-package :nst-simple-asd)
 
+(defclass interpreted-file (cl-source-file) ())
+(defmethod asdf:operation-done-p ((op compile-op) (fl interpreted-file)) t)
+(defmethod asdf:input-files ((op load-op) (file interpreted-file))
+  (list (component-pathname file)))
+(defmethod perform ((o compile-op) (f interpreted-file)) (values))
+
 (defsystem :nst-simple-tests
     :class nst-test-holder
     :description "M as in meta: NST- (or otherwise) testing NST."
     :serial t
     ;; :nst-systems (:masdfnst)
-    :nst-packages (:nst-simple-tests)
+    :nst-packages (:nst-simple-tests :nst-simple-tests-interpreted)
     :depends-on (:nst :nst-selftest-utils)
     :components ((:file "package")
 
                  ;; A simple test suite
                  (:file "builtins")
+
+                 ;; Same tests, but interpreted and not compiled
+                 (:interpreted-file "interpreted")
 
 ;;;              ;; Checks with anonymous fixtures
 ;;;              (:file "anon-fixtures-mnst")
