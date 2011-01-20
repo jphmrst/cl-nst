@@ -22,7 +22,7 @@
 
 (defclass labeled ()
      ((label-values :initform (make-hash-table :test 'eq)
-                  :reader label-values)))
+                    :reader label-values)))
 
 (defgeneric label-value (labeled name)
   (:method ((labeled labeled) name)
@@ -156,23 +156,23 @@
                                           id))
                          (t `(,(gensym) ,output))))
            (v-spec `(,(gensym) (eql ',value))))
+      (declare (ignore s-spec))
       `(,@(when title-supp-p
             (addressed-labelconfig-keyarg :title)
-            `((defmethod get-label-section-title (,l-spec
-                                                  ,s-spec ,v-spec ,o-spec)
+            `((defmethod get-label-section-title (,l-spec ,v-spec ,o-spec)
                 ,@(when ignores `((declare (ignore ,@ignores))))
-                ,title)
-              (defmethod get-label-section-title-supp-p (,l-spec
-                                                         ,s-spec ,v-spec ,o-spec)
+                (compile-element *package* nil ',title))
+              (defmethod get-label-section-title-supp-p
+                  (,l-spec ,v-spec ,o-spec)
                 ,@(when ignores `((declare (ignore ,@ignores))))
                 t)))
         ,@(when order-supp-p
             (addressed-labelconfig-keyarg :order)
-            `((defmethod get-label-section-order (,l-spec ,s-spec ,v-spec ,o-spec)
+            `((defmethod get-label-section-order (,l-spec ,v-spec ,o-spec)
                 ,@(when ignores `((declare (ignore ,@ignores))))
                 ',order)
-              (defmethod get-label-section-order-supp-p (,l-spec
-                                                         ,s-spec ,v-spec ,o-spec)
+              (defmethod get-label-section-order-supp-p
+                  (,l-spec ,v-spec ,o-spec)
                 ,@(when ignores `((declare (ignore ,@ignores))))
                 t))))))
   (:method :around (label-def value style output
@@ -202,12 +202,12 @@
   (declare (special label-config-keys-to-address))
   (remhash key label-config-keys-to-address))
 
-(defgeneric get-label-section-title (label style value output))
-(defgeneric get-label-section-order (label style value output))
+(defgeneric get-label-section-title (label value output))
+(defgeneric get-label-section-order (label value output))
 
 (defmacro def-generic-fn-default-nil (name params)
   `(defgeneric ,name ,params
      (:method ,params (declare (ignore ,@params)) nil)))
 
-(def-generic-fn-default-nil get-label-section-title-supp-p (label style value output))
-(def-generic-fn-default-nil get-label-section-order-supp-p (label style value output))
+(def-generic-fn-default-nil get-label-section-title-supp-p (label value output))
+(def-generic-fn-default-nil get-label-section-order-supp-p (label value output))

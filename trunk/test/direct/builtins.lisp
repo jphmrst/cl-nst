@@ -184,7 +184,13 @@
                :verify (< y (+ y x))
                :sample-size 10
                :max-tries 12))
-  )
+  (def-test process-1
+      (:process (:eval (setf zzz 0))
+                (:check (:true-form (eql zzz 0)))
+                (:eval (incf zzz))
+                (:check (:true-form (eql zzz 1)))
+                (:eval (incf zzz))
+                (:check (:true-form (eql zzz 2))))))
 
 (defparameter for-setup 0
   "This variable will be set by the setup-cleanup tests")

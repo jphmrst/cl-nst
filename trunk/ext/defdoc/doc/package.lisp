@@ -20,18 +20,32 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :common-lisp-user)
 
-(defpackage :sift.defdoc-doc
-    (:documentation "Unit and regression testing for Common Lisp")
-    (:nicknames :defdoc-doc)
-    (:use :closer-common-lisp :defdoc)
-    #+(or sbcl allegro)
-    (:import-from #+sbcl sb-mop #-sbcl mop
-                  #:generic-function-methods #:method-specializers
-                  #:eql-specializer-object)
-    #+(or openmcl clozure)
-    (:import-from ccl
-                  #:extract-lambda-list
-                  #:generic-function-methods #:method-specializers
-                  #:eql-specializer-object)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (intern (symbol-name '#:asdf-defdoc) (find-package :defdoc)))
 
-    (:export #:build-defdoc-docs))
+(defpackage :sift.defdoc-doc
+  (:documentation "Unit and regression testing for Common Lisp")
+  (:nicknames :defdoc-doc)
+  (:use :common-lisp :defdoc)
+  #+(or sbcl allegro)
+  (:import-from #+sbcl sb-mop #-sbcl mop
+                #:generic-function-methods #:method-specializers
+                #:eql-specializer-object)
+  #+(or openmcl clozure)
+  (:import-from ccl
+    #:extract-lambda-list
+    #:generic-function-methods #:method-specializers
+    #:eql-specializer-object)
+
+  (:import-from defdoc
+    #:manual-section #:docspecs #:outspec #:asdf-defdoc ; #:doc-gen
+    #:control #:targets #:model
+    #:label-model #:elements #:standard-model #:output-model #:plaintext
+    #:latex #:deprecated)
+
+  (:export #:build-defdoc-docs))
+
+(defmethod defdoc-control-api:string-implicit-symbol-head
+    ((p (eql (find-package :defdoc-doc))) spec string)
+  (declare (ignore spec string))
+  :latex)

@@ -20,32 +20,38 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :defdoc-doc)
 
-(defdoc:def-output-framework (defdoc-manual :title "DefDoc user manual"
-                                            :author "John Maraist")
+(def-documentation (type asdf-defdoc::defdoc-asdf)
+  (:intro (:latex "Class \\texttt{defdoc-asdf} --- \\fbox{FILL IN}"))
+  (:properties (manual-section defdoc::asdf-defdoc)))
 
-  (defdoc:collect-groups-by-label
-      (defdoc::manual-section :package :defdoc
-                              :groups '(defdoc::docspecs
-                                        defdoc::outspec defdoc::doc-gen
-                                        defdoc::control defdoc::targets
-                                        defdoc::model defdoc::label-model
-                                        defdoc::elements defdoc::standard-model
-                                        defdoc::output-model defdoc::plaintext
-                                        defdoc::latex defdoc::deprecated))
-    (defdoc:collect-exported-symbols :defdoc)
-    (defdoc:collect-exported-symbols :defdoc-control-api)))
+(def-output-class (defdoc-manual
+                      :title "DefDoc user manual" :author "John Maraist")
+
+  (collect-doc () "this is a test")
+  (collect-groups-by-label
+      (manual-section :package :defdoc
+                      :groups '((docspecs :order (def-documentation
+                                                     def-target-type)
+                                          :title "Documentation in code"
+                                          :leader "Test 2.")
+                                (outspec
+                                 :order (def-output-class def-label-config))
+                                asdf-defdoc
+                                doc-gen control targets model
+                                label-model elements standard-model output-model
+                                plaintext latex deprecated))
+    (collect-exported-symbols :defdoc)
+    (collect-documented-symbols :asdf-defdoc)
+    (collect-exported-symbols :defdoc-control-api)))
 
 (defclass manual-style (defdoc-control-api:latex-style) ())
 
-(def-label-config (:style manual-style :label defdoc::manual-section
-                          :package :defdoc)
-    (docspecs :title "Providing documentation"
-              :order (def-documentation))
-  (outspec :title "Output documents"
-           :order (def-output-framework def-label-config))
+(def-label-config (:style manual-style :label manual-section :package :defdoc)
+  (docspecs :title "Providing documentation")
+  (outspec :title "Content collection")
   (asdf-defdoc :title "Document generation via ASDF")
   (control :title "Control model")
-  (target :title "Documentation targets")
+  (targets :title "Documentation targets")
   (model :title "Documentation models")
   (elements :title "Documentation model elements")
   (label-model :title "Accessing labels and values")

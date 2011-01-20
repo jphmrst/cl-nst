@@ -213,7 +213,7 @@
 ;;; -----------------------------------------------------------------
 ;;; Starting to debug/use output document specs.
 
-(defdoc:def-output-framework (package-api)
+(defdoc:def-output-class (package-api)
     ;; Set the style to be associated with this output set.
     ;;
     ;; (:style style-class)
@@ -223,7 +223,7 @@
     (defdoc:collect-target-type 'function :package :nst)
     (defdoc:collect-target-type 'function :package :nst-control-api)))
 
-(defdoc:def-output-framework (the-manual)
+(defdoc:def-output-class (the-manual)
     ;; Set the style to be associated with this output set.
     ;;
     ;; (:style style-class)

@@ -103,9 +103,8 @@
                                             ))
 
                ;; Generic output framework specifications.
-               (:file "output"  :depends-on ("package"
-                                             "labels" "targets" "elements"
-                                             "collect"))
+               (:file "output" :depends-on
+                      ("package" "labels" "targets" "elements" "collect"))
 
                ;; Decoding the callspec forms.
                (:file "callspec"  :depends-on ("package"

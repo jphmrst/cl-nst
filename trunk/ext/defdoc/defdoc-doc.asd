@@ -27,6 +27,7 @@
 (defsystem :defdoc-doc
   :description "Documentation builder for defdoc"
   :class defdoc-asdf
+  :depends-on ( :defdoc :asdf-defdoc )
   :documents-system :defdoc
   :components ((:module "doc" :components
                         (;; The NST package, plus internal packages
