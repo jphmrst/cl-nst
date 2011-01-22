@@ -29,16 +29,20 @@
 
 (def-bundle-package :defdoc-control-api
     ((:defdoc
+
        ;; globals.lisp
+       #:*docstring-style*
+       #:*latex-verbatim-width*
        #:format-docspec
        #:format-docspec-element
+       #:package-exports-p
 
        ;; storage.lisp
        #:get-doc-spec
        #:get-doc-specs
 
        ;; targetdef.lisp
-       #:standard-doc-target
+       #:standard-doc-target ;; not now in coredoc
        #:get-target-type-docspecs
        #:get-doc-target-types
        #:get-target-type
@@ -103,7 +107,6 @@
        #:format-output-postitem
        #:output-framework
        #:output-framework-name
-       ;; #:get-compiled-output-framework
        #:process-standard-output-framework-form
 
        ;; tag.lisp
@@ -144,9 +147,10 @@
        #:callspec-suffix
 
        ;; latex.lisp
+       #:*defdoc-latex-default-directory*
+       #:*latex-full-package-item-header-macro*
        #:package-list-latex-mixin
        #:get-latex-output-file-name
-       #:latex-style
        #:latex-style-adjust-spec-element
        #:full-package-latex-style-mixin
        #:package-list-overall-header

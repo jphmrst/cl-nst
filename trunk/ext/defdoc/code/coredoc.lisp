@@ -25,11 +25,7 @@
 ;; "normal" applications use DefDoc, they can place this defmethod in
 ;; e.g. the package.lisp or some other source file which will be
 ;; loaded before other files are compiled.
-(eval-when (:compile-toplevel :load-toplevel)
-  (defmethod string-implicit-symbol-head ((p (eql (find-package :defdoc)))
-                                          spec string)
-    (declare (ignore spec string))
-    :latex))
+(defdoc:def-bare-string-element-tag :latex :package :defdoc)
 
 (def-property-label manual-section ())
 
@@ -225,6 +221,23 @@
   (:properties (manual-section docspecs))
   (:callspec (label-name () &body (:opt (:key-head :default-subsort name)))))
 
+(def-documentation (compiler-macro def-label-config)
+  (:intro "The \\texttt{def-label-config} macro specifies information associated with particular uses, especially particular outputs, of a property label.")
+  (:callspec ((&key (label label-name)
+                    (style style)
+                    (output-framework output-name)
+                    (package package))
+              &body (:seq (value &key (title title-spec-element)
+                                 (order symbol-list)))))
+  (:params (label-name "The name of a label to be configured.  Note that you do \\emph{not} need to specify label: this macro translates to internal method declarations; omitting a label could be used, for example, to give names to certain values of all label in the context of a particular style.")
+           (style "If provided, names the style class to which this configuration should apply.")
+           (output-name "If provided, the output unit name to which this configuration should apply.")
+           (package "The package in which the value and label names given in this form should be interned.  By default, they are left in the current package.  Forward declarations cannot be used here; the package will be referenced when the \\texttt{def-label-config} macro is expanded.")
+           (value "Designates the property value with which certain values should be associated.")
+           (title-spec-element "Spec element corresponding to the section title associated with a particular label value.")
+           (symbol-list "Order of display associated with a particular label value."))
+  (:properties (manual-section docspecs)))
+
 
 ;;; -----------------------------------------------------------------
 ;;; outspec
@@ -255,47 +268,41 @@
            )
   (:properties (manual-section outspec)))
 
-(def-documentation (compiler-macro def-label-config)
-  (:intro "The \\texttt{def-label-config} macro specifies information associated with particular uses, especially particular outputs, of a property label.")
-  (:callspec ((&key (label label-name)
-                    (style style)
-                    (output-framework output-name)
-                    (package package))
-              &body (:seq (value &key (title group-title)
-                                 (order symbol-list)))))
-  (:params (label-name "\\fbox{FILL IN}")
-           (style "\\fbox{FILL IN}")
-           (output-name "\\fbox{FILL IN}")
-           (package "\\fbox{FILL IN}")
-           (value "\\fbox{FILL IN}")
-           (group-title "\\fbox{FILL IN}")
-           (symbol-list "\\fbox{FILL IN}"))
-  (:properties (manual-section outspec)))
-
 (def-documentation (compiler-macro collect-groups-by-label)
   (:intro "Macro \\texttt{collect-groups-by-label} --- \\fbox{FILL IN}")
-  (:callspec ((label-nam &key (package package) (groups groups))
+  (:callspec ((label-nam &key (package package) (groups groups) (exhaustive boolean))
               &body (:seq collection-form)))
   (:properties (manual-section outspec)))
 
 (def-documentation (function collect-target-type)
-  (:intro "Function \\texttt{collect-target-type} --- \\fbox{FILL IN}")
+  (:intro "Function \\texttt{collect-target-type} aggregates documentation specifications for the \\texttt{def-output-class} macro according to the target type to which the specifications is attached --- all functions, all compiler macros, or more typically, all of a particular user-defined target type.")
+  (:params (target-name "The target type of interest.")
+           (filter (:paragraphs
+                    "The filters in \\texttt{collect} functions specify further conditions for inclusion in the \\texttt{collect}ed result.  The filter itself is a list of keyword parameters.  Currently the \\texttt{collect} functions support one filter:"
+                    (:itemize ()
+                      (:latex "The \\texttt{:package} filter collects only specifications documenting symbols in the given package.")))))
   (:callspec (target-name (:seq filter)))
   (:properties (manual-section outspec)))
 
 (def-documentation (function collect-exported-symbols)
-  (:intro "Function \\texttt{collect-exported-symbols} --- \\fbox{FILL IN}")
+  (:intro "Function \\texttt{collect-exported-symbols} collects documentation from the symbols exported from a particular package.")
   (:callspec (package-name (:seq filter)))
+  (:params (package-name "The package whose symbols' documentation specs are collected.")
+           (filter "As for \\texttt{collect-target-type}."))
   (:properties (manual-section outspec)))
 
 (def-documentation (function collect-documented-symbols)
-  (:intro "Function \\texttt{collect-documented-symbols} --- \\fbox{FILL IN}")
+  (:intro "Function \\texttt{collect-documented-symbols} collects documentation from all symbols in the package, exported or not, which have documentation explicitly declared for them.")
   (:callspec (package-name (:seq filter)))
+  (:params (package-name "The package whose symbols' documentation specs are collected.")
+           (filter "As for \\texttt{collect-target-type}."))
   (:properties (manual-section outspec)))
 
 (def-documentation (function collect-all-symbols)
-  (:intro "Function \\texttt{collect-all-symbols} --- \\fbox{FILL IN}")
+  (:intro "Function \\texttt{collect-all-symbols} collects documentation for all symbols in a package.")
   (:callspec (package-name (:seq filter)))
+  (:params (package-name "The package whose symbols' documentation specs are collected.")
+           (filter "As for \\texttt{collect-target-type}."))
   (:properties (manual-section outspec)))
 
 (def-documentation (function collect-output)
@@ -528,6 +535,27 @@
 
 
 ;;; -----------------------------------------------------------------
+;;; styles
+
+(def-documentation (type symbol-homing-style)
+  (:intro "Class \\texttt{symbol-homing-style} --- \\fbox{FILL IN}")
+  (:properties (manual-section styles)))
+
+(def-documentation (function candidate-home-packages)
+  (:intro "Function \\texttt{candidate-home-packages} --- \\fbox{FILL IN}")
+  (:properties (manual-section styles)))
+
+(def-documentation (type docspec-par-latex-style)
+  (:intro "Class \\texttt{docspec-par-latex-style} --- \\fbox{FILL IN}, list in superclass lists \\emph{before} \\texttt{latex-style}.")
+  (:properties (manual-section styles)))
+
+(def-documentation (type docspec-fancy-header-latex-style)
+  (:intro
+   "Class \\texttt{docspec-fancy-header-latex-style} --- \\fbox{FILL IN}")
+  (:properties (manual-section styles)))
+
+
+;;; -----------------------------------------------------------------
 ;;; standard-model
 
 (def-documentation (type standard-doc-target)
@@ -650,43 +678,43 @@
 
 (def-documentation (type standard-docstring-style)
     (:intro "The \\texttt{standard-docstring-style} class is a standard implementation of the default style for docstring generation.")
-  (:properties (manual-section plaintext)))
+  (:properties (manual-section plaintext-model)))
 
 (def-documentation (type standard-plain-text)
   (:intro "Type \\texttt{standard-plain-text} --- \\fbox{FILL IN}")
-  (:properties (manual-section plaintext)))
+  (:properties (manual-section plaintext-model)))
 
 (def-documentation (function indent-with)
     (:callspec (lines length))
-  (:properties (manual-section plaintext)))
+  (:properties (manual-section plaintext-model)))
 
 (def-documentation (function adjoin-blocks)
     (:callspec (lines length))
-  (:properties (manual-section plaintext)))
+  (:properties (manual-section plaintext-model)))
 
 (def-documentation (function indent-by)
     (:callspec (lines length))
-  (:properties (manual-section plaintext)))
+  (:properties (manual-section plaintext-model)))
 
 (def-documentation (function bracket-with)
     (:callspec (lines prefix suffix))
-  (:properties (manual-section plaintext)))
+  (:properties (manual-section plaintext-model)))
 
 (def-documentation (function width)
     (:callspec (lines))
-  (:properties (manual-section plaintext)))
+  (:properties (manual-section plaintext-model)))
 
 (def-documentation (function flow)
     (:callspec (formatter artifacts max))
-  (:properties (manual-section plaintext)))
+  (:properties (manual-section plaintext-model)))
 
 (def-documentation (function output-lines)
   (:intro "Function \\texttt{output-lines} --- \\fbox{FILL IN}")
-  (:properties (manual-section plaintext)))
+  (:properties (manual-section plaintext-model)))
 
 (def-documentation (variable *docstring-style*)
   (:intro "The \\texttt{*docstring-style*} variable specifies the style used when generating docstrings.")
-  (:properties (manual-section plaintext)))
+  (:properties (manual-section plaintext-model)))
 
 
 ;;; -----------------------------------------------------------------
@@ -694,7 +722,7 @@
 
 (def-documentation (variable *latex-verbatim-width*)
     (:intro "The \\texttt{*latex-verbatim-width*} variable specifies the maximum line length in verbatim mode")
-  (:properties (manual-section latex)))
+  (:properties (manual-section latex-style-model)))
 
 (def-documentation (function write-spec-latex)
   (:intro "Function \\texttt{write-spec-latex} --- \\fbox{FILL IN}")
@@ -706,11 +734,11 @@
 
 (def-documentation (variable *latex-full-package-item-header-macro*)
     (:intro "The \\texttt{*latex-full-package-item-header-macro*} variable is a string with the \\LaTeX\\ macro used as a section header in the \\texttt{full-package} style.")
-  (:properties (manual-section latex)))
+  (:properties (manual-section latex-style-model)))
 
 (def-documentation (variable *defdoc-latex-default-directory*)
   (:intro "The \\texttt{*defdoc-latex-default-directory*} variable is a string naming the directry into which generated \\LaTeX\\ output should be written.")
-  (:properties (manual-section latex)))
+  (:properties (manual-section latex-style-model)))
 
 (def-documentation (function write-package-specs-latex)
   (:intro "Function \\texttt{write-package-specs-latex} --- \\fbox{FILL IN}")
@@ -722,7 +750,7 @@
 
 (def-documentation (function write-latex-output)
   (:intro "Function \\texttt{write-latex-output} --- \\fbox{FILL IN}")
-  (:properties (manual-section latex)))
+  (:properties (manual-section latex-style-model)))
 
 (def-documentation (function write-doctype-latex)
   (:intro "Function \\texttt{write-doctype-latex} --- \\fbox{FILL IN}")
@@ -730,7 +758,7 @@
 
 (def-documentation (function latex-style-adjust-spec-element)
   (:intro "Function \\texttt{latex-style-adjust-spec-element} --- \\fbox{FILL IN}")
-  (:properties (manual-section latex)))
+  (:properties (manual-section latex-style-model)))
 
 (def-documentation (type latex-style)
   (:intro "Type \\texttt{latex-style} --- \\fbox{FILL IN}")
@@ -738,27 +766,27 @@
 
 (def-documentation (type full-package-latex-style-mixin)
   (:intro "Type \\texttt{full-package-latex-style-mixin} --- \\fbox{FILL IN}")
-  (:properties (manual-section latex)))
+  (:properties (manual-section latex-style-model)))
 
 (def-documentation (type standard-latex)
   (:intro "Type \\texttt{standard-latex} --- \\fbox{FILL IN}")
-  (:properties (manual-section latex)))
+  (:properties (manual-section latex-style-model)))
 
 (def-documentation (function latex-element-latex)
   (:intro "Function \\texttt{latex-element-latex} --- \\fbox{FILL IN}")
-  (:properties (manual-section latex)))
+  (:properties (manual-section latex-style-model)))
 
 (def-documentation (function package-list-overall-header)
   (:intro "Function \\texttt{package-list-overall-header} --- \\fbox{FILL IN}")
-  (:properties (manual-section latex)))
+  (:properties (manual-section latex-style-model)))
 
 (def-documentation (function get-latex-output-file-name)
   (:intro "Function \\texttt{get-latex-output-file-name} --- \\fbox{FILL IN}")
-  (:properties (manual-section latex)))
+  (:properties (manual-section latex-style-model)))
 
 (def-documentation (type package-list-latex-mixin)
   (:intro "Type \\texttt{package-list-latex-mixin} --- \\fbox{FILL IN}")
-  (:properties (manual-section latex)))
+  (:properties (manual-section latex-style-model)))
 
 
 ;;; -----------------------------------------------------------------

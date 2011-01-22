@@ -26,9 +26,21 @@
 ;;; can declare documentation about.
 
 (defclass standard-doc-target ()
-     ((name :initarg :name :accessor name)
-      (docstring-installer :initarg :docstring-installer
-                           :accessor docstring-installer)))
+  ((name :initarg :name :accessor name)
+   (capitalized :initform nil :initarg :capitalized :accessor capitalized)
+   (lower-case  :initform nil :initarg :lower-case  :accessor lower-case)
+   (docstring-installer :initarg :docstring-installer
+                        :accessor docstring-installer)))
+(defmethod initialize-instance :after ((target standard-doc-target)
+                                       &key &allow-other-keys)
+  (with-accessors ((name name) (capitalized capitalized)
+                   (lower-case lower-case)) target
+                   (unless lower-case
+                     (setf lower-case (string-downcase (symbol-name name))))
+                   (unless capitalized
+                     (setf capitalized (copy-seq lower-case))
+                     (setf (elt capitalized 0)
+                           (char-upcase (elt capitalized 0))))))
 
 (defvar +doc-target-types+ (make-hash-table :test 'eq)
   "Master global hashtable of all documentation target specifiers.")
@@ -54,10 +66,17 @@
 
 ;;; -----------------------------------------------------------------
 
-(defmacro def-target-type (name (&key (class 'standard-doc-target)) &body forms)
+(defmacro def-target-type (name (&key (class 'standard-doc-target)
+                                      (capitalized nil capitalized-supp-p)
+                                      (lower-case nil lower-case-supp-p))
+                                &body forms)
   (multiple-value-bind (lisp-installer lisp-installer-supp-p)
       (decode-doctype-forms forms)
-    `(let ((target-spec (make-instance ',class :name ',name)))
+    `(let ((target-spec (make-instance ',class :name ',name
+                                       ,@(when capitalized-supp-p
+                                           `(:capitalized ,capitalized))
+                                       ,@(when lower-case-supp-p
+                                           `(:lower-case ,lower-case)))))
        (setf (docstring-installer target-spec)
              #',(cond
                   (lisp-installer-supp-p lisp-installer)

@@ -119,6 +119,9 @@
                                                        "callspec" "block"
                                                        "macro"))
 
+               ;; Style mixins
+               (:file "style"  :depends-on ())
+
                ;; Converting specs to LaTeX.
                (:file "latex"  :depends-on ("globals"
                                             "macro" "plaintext" "spec"

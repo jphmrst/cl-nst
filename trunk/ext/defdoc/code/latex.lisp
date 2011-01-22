@@ -25,10 +25,12 @@
 ;;; -----------------------------------------------------------------
 ;;; Top-level LaTeX generation APIs.
 
-(defvar *latex-sectioning-level* 0)
+(defvar *latex-sectioning-level* -1)
 (defvar *defdoc-latex-default-directory* "./")
 (defvar *latex-full-package-item-header-macro* "\\paragraph")
-(defvar *latex-verbatim-width* 65)
+(defvar *latex-verbatim-width* 57)
+(defvar *latex-generate-index* nil)
+(defvar *latex-generate-toc* nil)
 (defvar *latex-default-header-matter*
     "\\documentclass{article}
 \\usepackage{times}
@@ -86,7 +88,9 @@
                                 standalone)
   (when (symbolp style)
     (setf style (make-instance style)))
-  (let ((output-framework (make-instance name)))
+  (let ((output-framework (make-instance name))
+        (*latex-generate-index* index)
+        (*latex-generate-toc* table-of-contents))
     (unless output-framework
       (error "No such output framework ~s" name))
     (unless file-supp-p
@@ -201,19 +205,36 @@
      (when (get-output-unit-title o)
        (call-next-method))))
 
+(defgeneric has-latex-section-title (output)
+  (:method (o)
+     (declare (ignore o))
+     nil)
+  (:method ((o output-contents))
+     (get-output-unit-title o))
+  (:method ((o grouped-output-contents))
+     (with-accessors ((label labeldef) (group group)) o
+       (or (get-label-section-title-supp-p label group o)
+           (call-next-method)))))
+
 (defmethod format-doc :around (stream (style latex-style) output)
   (declare (ignore stream))
   (let ((*latex-sectioning-level* (cond
-                                    ((display-latex-section output)
+                                    ((has-latex-section-title output)
                                      (+ 1 *latex-sectioning-level*))
                                     (t *latex-sectioning-level*))))
     (declare (special *latex-sectioning-level*))
     (call-next-method)))
 
+(defmethod format-output-leader-material :before ((style latex-style)
+                                                  stream output)
+  (when (and *latex-generate-toc* (eql *latex-sectioning-level* 0)
+             (get-output-unit-title output))
+    (format stream "\\vspace*{1em}")))
+
 (defmethod format-output-contents-sep ((style latex-style)
                                        stream output spec1 spec2)
   (declare (ignore output spec1 spec2))
-  (format stream "\\par "))
+  (format stream " "))
 
 (defmethod format-docspec-element ((style latex-style) target-type
                                    (spec standard-doc-spec) stream)

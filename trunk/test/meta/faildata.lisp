@@ -146,6 +146,15 @@
                 (:eval (error "Blah"))
                 (:check (:true-form (eql zzz 2)))
                 (:eval (incf zzz))
+                (:check (:true-form (eql zzz 3)))))
+  (def-test process-fail-3
+      (:process (:eval (setf zzz 0))
+                (:check (:true-form (eql zzz 1))
+                        (:true-form (eql zzz 10)))
+                (:eval (error "Blah"))
+                (:errcheck)
+                (:check (:true-form (eql zzz 2)))
+                (:eval (incf zzz))
                 (:check (:true-form (eql zzz 3))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
