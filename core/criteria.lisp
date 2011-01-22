@@ -634,7 +634,12 @@
                 (add-error result
                   :format "Expected (STEP ...), got ~s" :args (list form)))
               (case (car form)
-                ((:eval)      (eval `(progn ,@(cdr form))))
+                ((:eval) (block eval-forms
+                           (handler-bind ((error
+                                           #'(lambda (e)
+                                               (add-thrown-error result e)
+                                               (return-from eval-forms))))
+                             (eval `(progn ,@(cdr form))))))
                 ((:check)
                  (setf result
                    (check-result-union result
@@ -643,13 +648,13 @@
                 ((:failcheck) (when (or (check-result-failures result)
                                         (check-result-errors result))
                                 (return-from process)))
-                ((:errcheck)  (when (check-result-failures result)
+                ((:errcheck)  (when (check-result-errors result)
                                 (return-from process)))
                 (otherwise
                  (setf result
                    (check-result-union result
-                                       (check-criterion-on-form form nil))))))
-        (calibrate-check-result result))))
+                                       (check-criterion-on-form form nil)))))))
+      (calibrate-check-result result)))
 (defdoc:def-documentation (criterion :process)
   (:callspec ((:seq form)))
   (:intro (:latex "The \\texttt{:process} criterion allows simple interleaving of Lisp function calls and NST checks, to allow checking of intermediate states of an arbitrarily-long process."))

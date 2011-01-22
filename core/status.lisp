@@ -103,7 +103,7 @@
         :replacement '(make-error-report))
   `(make-error-report ,@args))
 
-(defun make-error-report (e &rest format-args &aux format args)
+(defun make-error-note (e &rest format-args &aux format args)
   (declare (special *nst-context* *nst-stack*))
   (cond
    (format-args (setf format (car format) args (cdr args)))
@@ -111,14 +111,16 @@
   (let ((other-args nil))
     #+(and allegro (not macosx))
     (setf other-args (list* :zoom (make-backtrace-lines) other-args))
-    (let ((error-note (apply #'make-error-check-note
-                             :context *nst-context*
-                             :stack *nst-stack*
-                             :format format
-                             :args args
-                             :error e
-                             other-args)))
-      (make-and-calibrate-check-result :errors (list error-note)))))
+    (apply #'make-error-check-note
+           :context *nst-context*
+           :stack *nst-stack*
+           :format format
+           :args args
+           :error e
+           other-args)))
+(defun make-error-report (e &rest format-args)
+  (let ((error-note (apply #'make-error-note e format-args)))
+    (make-and-calibrate-check-result :errors (list error-note))))
 (def-documentation (function make-error-report)
   (:tags criteria)
   (:properties (api-summary criteria))
@@ -996,6 +998,9 @@ six-value summary of the results:
     (:callspec (result-report &key
                               (format format-string) (args argument-list))))
 
+(defun add-thrown-error (result e &rest format-args)
+  (push (apply #'make-error-note e format-args)
+        (check-result-errors result)))
 (defun add-error (result &key format args)
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
 

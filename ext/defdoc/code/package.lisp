@@ -25,15 +25,13 @@
     (:nicknames :ddoc)
     (:use :common-lisp)
     #+allegro (:import-from excl #:named-function)
-    (:export #:*docstring-style*
-             #:*latex-verbatim-width*
-             ;; globals.lisp
-
-             ;; targetdef.lisp
+    (:export
              #:def-target-type
+             ;; targetdef.lisp
 
              ;; elementdef.lisp
              #:def-element
+             #:def-bare-string-element-tag
 
              ;; labels.lisp
              #:def-property-label
@@ -56,10 +54,14 @@
              #:collect-output
              #:collect-named-output
 
+             ;; style.lisp
+             #:candidate-home-packages
+             #:symbol-homing-style
+             #:docspec-par-latex-style
+             #:docspec-fancy-header-latex-style
+
              ;; latex.lisp
-             #:*defdoc-latex-default-directory*
-             #:*latex-full-package-item-header-macro*
-                                        ; Top-level LaTeX invocation.
+             #:latex-style
              #:write-spec-latex
              #:write-doctype-latex
              #:write-package-specs-latex

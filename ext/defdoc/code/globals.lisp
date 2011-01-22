@@ -77,3 +77,16 @@
 (defmacro named-function (name lambda-expression)
   (declare (ignore name))
   `(function ,lambda-expression))
+
+(defmethod package-exports-p (package symbol)
+  (multiple-value-bind (sym status)
+      (find-symbol (symbol-name symbol) package)
+    (declare (ignore sym))
+    (case status
+      ((:external) t)
+      (otherwise nil))))
+(defgeneric locate-package-home (style target-type spec symbol)
+  (:method (style target-type spec symbol)
+           (declare (ignore style target-type spec))
+           (let ((package (symbol-package symbol)))
+             (values package (package-exports-p package symbol)))))

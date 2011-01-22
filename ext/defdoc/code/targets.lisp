@@ -27,7 +27,7 @@
           (with-output-to-string (stream)
             (format-docspec stream *docstring-style* spec 'function)))))
 
-(def-target-type compiler-macro ()
+(def-target-type compiler-macro (:lower-case "macro")
   (:docstring-installer (name spec)
     (setf (documentation name 'compiler-macro)
           (with-output-to-string (stream)
@@ -57,7 +57,7 @@
           (with-output-to-string (stream)
             (format-docspec stream *docstring-style* spec 'package)))))
 
-(def-target-type method-combination ()
+(def-target-type method-combination (:lower-case "method combination")
   (:docstring-installer (name spec)
     (setf (documentation name 'method-combination)
           (with-output-to-string (stream)

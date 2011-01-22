@@ -51,10 +51,26 @@
                                                                  spec string)
                                     package spec (list string))))
 
-(defgeneric string-implicit-symbol-head (package spec string)
-  (:method (package spec string)
-     (declare (ignore package spec string))
-     :plain))
+(defmacro def-bare-string-element-tag (tag &key (package nil package-supp-p)
+                                                (spec-type nil spec-supp-p))
+  (let ((p (gensym)) (spec (gensym)) (string (gensym)))
+    `(eval-when (:compile-toplevel :load-toplevel :execute)
+       (defmethod string-implicit-symbol-head
+           (,(cond
+              (package-supp-p
+               `(,p (eql (find-package ,package))))
+              (t p))
+            ,(cond
+              (spec-supp-p `(,spec ,spec-type))
+              (t spec))
+            ,string)
+         (declare (ignore ,@(unless spec-supp-p `(,spec))
+                          ,@(unless package-supp-p `(,p))
+                          ,string))
+         ,tag))))
+
+(defgeneric string-implicit-symbol-head (package spec string))
+(def-bare-string-element-tag :plain)
 
 (defgeneric get-element-aggregation (package spec elements)
   (:method (package spec elements)

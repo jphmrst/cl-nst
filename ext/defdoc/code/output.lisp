@@ -37,7 +37,7 @@
     (loop for form in forms
         for (collector preparation) = (multiple-value-list (eval form))
         collect collector into collectors
-        collect preparation into preparations
+        append preparation into preparations
         finally
           (let ((initial (gensym)))
             (return-from def-output-class
@@ -150,6 +150,8 @@
 (defgeneric format-output-leader-material (style stream output)
   (:method (style stream output) (declare (ignore style stream output)))
   (:method (style stream (output output-contents))
+     (defdoc-debug "format-output-leader-material on output-framework ~s~%"
+       output)
      (format-output-leader-title style stream output)
      (let ((leader (output-contents-leader output)))
        (when leader
@@ -200,24 +202,26 @@
                                      ,(get-filter-predicate filters) t)
    nil))
 
-(defun collect-output (name-or-spec &rest forms)
+(defmacro collect-output (name-or-spec &rest forms)
   (let ((name) (options))
-    (cond (;; There's just a bare symbol.
+    (cond (;; There's a list of some sort
+           (listp name-or-spec)
+
+           (cond
+            ((and (car name-or-spec) (symbolp (car name-or-spec))
+                  (not (keywordp (car name-or-spec))))
+             (setf name (car name-or-spec) options (cdr name-or-spec)))
+
+            (t (setf name (gensym) options name-or-spec))))
+
+          (;; There's just a bare symbol.
            (symbolp name-or-spec)
            (setf name name-or-spec options nil))
 
-          ;; There's an output set name with options.
-          ((and name-or-spec (listp name-or-spec) (car name-or-spec)
-                (symbolp (car name-or-spec))
-                (not (keywordp (car name-or-spec))))
-           (setf name (car name-or-spec) options (cdr name-or-spec)))
+          (t (error "Expected symbol or list, got ~s" name-or-spec)))
 
-          ;; There's output set options, but no name.
-          ((and name-or-spec (listp name-or-spec) (car name-or-spec)
-                (keywordp (car name-or-spec)))
-           (setf name (gensym) options name-or-spec)))
-    (values `(list (make-instance ',name))
-            `(def-output-class (,name ,@options) ,@forms))))
+    `(values `(list (make-instance ',',name))
+             `((def-output-class (,',name ,@',options) ,@',forms)))))
 
 (defun collect-named-output (name)
   (values `(list (make-instance ',name)) nil))
@@ -246,12 +250,14 @@
 (defmacro collect-groups-by-label ((label-name &key
                                                (package nil package-supp-p)
                                                groups
+                                               exhaustive
                                                &allow-other-keys) &body forms)
   `(values ',(get-label-grouper-call label-name groups package package-supp-p
-                                     forms)
+                                     exhaustive forms)
            nil))
 
-(defun get-label-grouper-call (label-name groups package package-supp-p forms)
+(defun get-label-grouper-call (label-name groups package package-supp-p
+                                          exhaustive forms)
   (let ((adjusted-groups
          (cond
            (package-supp-p
@@ -267,18 +273,19 @@
                             (t g))))
            (t groups))))
     `(group-list-by-label
-      :group-specs ,adjusted-groups
-      :grouping-label ',label-name
+      :exhaustive ,exhaustive
+      :group-specs ,adjusted-groups :grouping-label ',label-name
       :generating-thunk (named-function default-generating-thunk
                           (lambda ()
                             ,(case (length forms)
-                               ((1) (car forms))
+                               ((1) (eval (car forms)))
                                (otherwise
                                 `(append ,@(loop for form in forms
                                                collect (eval form))))))))))
 
 (defun group-list-by-label (&key (group-specs nil groups-supp-p)
                                  grouping-label
+                                 exhaustive
                                  (generating-thunk #'(lambda () nil)))
   (let ((contents (funcall generating-thunk)))
     (let* ((allowed nil)
@@ -332,7 +339,7 @@
         (loop for group-name being the hash-keys of group-hash do
           (unless (member group-name allowed :test 'eq)
             (defdoc-debug "Dropping unused group ~s~%" group-name)
-            (when (gethash group-name group-hash)
+            (when (and (gethash group-name group-hash) exhaustive)
               (warn "Group ~s nonempty, but excluded from output" group-name))
             (remhash group-name group-hash))))
 

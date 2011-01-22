@@ -260,4 +260,9 @@
         (---fail-records (:apply length (:eql 4)))
         (---error-records (:apply length (:eql 1)))
         (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))
+      (---on-test mnst-src::process-failures mnst-src::process-fail-3
+        (---fail-records (:apply length (:eql 2)))
+        (---error-records (:apply length (:eql 1)))
+        (---warning-records (:apply length (:eql 0)))
         (---info-records (:apply length (:eql 0))))))

@@ -27,30 +27,54 @@
 (def-output-class (defdoc-manual
                       :title "DefDoc user manual" :author "John Maraist")
 
-  (collect-doc () "this is a test")
+  (collect-doc ()
+               "DefDoc allows programmers and authors to base all program documentation and manuals on declarations within the program source.  By generating the manual, reference card, and docstrings from a common set of declarations, DefDoc helps eliminate the possibility of documents containing inconsistent, outdated material.")
+  (collect-output (:title "Basic operations")
+    (collect-groups-by-label
+        (manual-section :package :defdoc
+                        :groups '((docspecs :order (def-documentation
+                                                       def-target-type)
+                                            :title "Writing documentation"
+                                            :leader (:latex "DefDoc uses a small set of macros for adding documentation to source code.  Its primary macro is \\texttt{def-documentation}, which attaches documentation to a target.  Targets include, by default, anything to which the Lisp \\texttt{documentation} model applies --- \\texttt{function}s, \\texttt{type}s, \\texttt{compiler-macro}s and so forth, as well as individual generic function methods; authors can also create additional target types."))
+                                  (outspec
+                                   :order (def-output-class def-label-config
+                                            collect-target-type)
+                                   :leader (:latex "DefDoc separates the description of the \\emph{contents} of an output document from the mechanics of generating the document.  The description of a document's contents is though \\emph{output units}.  DefDoc provides macros and functions to quickly specify output units.  The top-level macro for these definitions is \\emph{def-output-class}, which creates a class corresponding to an output unit, and an initialiation method for gathering its contents.  The initialiation methods are based on calls to various \\texttt{collect} functions and macros within the body of a \\emph{def-output-class} call."))
+                                  asdf-defdoc
+                                  latex
+                                  styles))
+      (collect-exported-symbols :defdoc)
+      (collect-documented-symbols :asdf-defdoc)))
+  (collect-output (:title "Internals")
+    (collect-groups-by-label
+        (manual-section :package :defdoc
+                        :groups '(doc-gen control targets model label-model
+                                  elements output-model))
+      (collect-exported-symbols :defdoc)
+      (collect-exported-symbols :defdoc-control-api)))
+  (collect-output (:title "Standard models")
+    (collect-groups-by-label
+        (manual-section :package :defdoc
+                        :groups '(standard-model plaintext latex-style-model))
+      (collect-exported-symbols :defdoc-control-api)))
   (collect-groups-by-label
-      (manual-section :package :defdoc
-                      :groups '((docspecs :order (def-documentation
-                                                     def-target-type)
-                                          :title "Documentation in code"
-                                          :leader "Test 2.")
-                                (outspec
-                                 :order (def-output-class def-label-config))
-                                asdf-defdoc
-                                doc-gen control targets model
-                                label-model elements standard-model output-model
-                                plaintext latex deprecated))
+      (manual-section :package :defdoc :groups '(deprecated))
     (collect-exported-symbols :defdoc)
-    (collect-documented-symbols :asdf-defdoc)
     (collect-exported-symbols :defdoc-control-api)))
 
-(defclass manual-style (defdoc-control-api:latex-style) ())
+(defclass manual-style (symbol-homing-style
+                        docspec-fancy-header-latex-style
+                        latex-style) ())
+(defmethod candidate-home-packages ((style manual-style) target-type spec)
+  (declare (ignore target-type spec))
+  '(:defdoc-control-api :asdf-defdoc :defdoc))
 
 (def-label-config (:style manual-style :label manual-section :package :defdoc)
   (docspecs :title "Providing documentation")
-  (outspec :title "Content collection")
+  (outspec :title "Packaging units of output")
   (asdf-defdoc :title "Document generation via ASDF")
   (control :title "Control model")
+  (styles :title "Mixins for styles")
   (targets :title "Documentation targets")
   (model :title "Documentation models")
   (elements :title "Documentation model elements")
@@ -58,5 +82,6 @@
   (output-model :title "Output models")
   (standard-model :title "The standard documentation model")
   (plaintext :title "Generating plain text")
-  (latex :title "Generating \\LaTeX")
+  (latex :title (:latex "Generating \\LaTeX"))
+  (latex-style-model :title (:latex "The \\LaTeX\ model"))
   (deprecated :title "Deprecated forms"))

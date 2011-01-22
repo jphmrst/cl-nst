@@ -40,12 +40,11 @@
   (:import-from defdoc
     #:manual-section #:docspecs #:outspec #:asdf-defdoc ; #:doc-gen
     #:control #:targets #:model
-    #:label-model #:elements #:standard-model #:output-model #:plaintext
-    #:latex #:deprecated)
+    #:label-model #:elements #:standard-model #:output-model
+    #| #:plaintext |# #:plaintext-model
+    #:styles #:latex #:latex-style-model
+    #:deprecated)
 
   (:export #:build-defdoc-docs))
 
-(defmethod defdoc-control-api:string-implicit-symbol-head
-    ((p (eql (find-package :defdoc-doc))) spec string)
-  (declare (ignore spec string))
-  :latex)
+(defdoc:def-bare-string-element-tag :latex :package :defdoc-doc)
