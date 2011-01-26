@@ -88,6 +88,11 @@
         for filter in filters
         if (funcall filter spec) collect spec))
 
+(defun get-symbol-list-specs (symbols filter)
+  (loop for s in symbols
+    append (loop for spec in (get-doc-specs s)
+             if (funcall filter spec) collect spec)))
+
 ;;;  Hope to get rid of this after new output-framework spec.
 ;;;
 (defun get-target-types-collector (target-type-specs)
@@ -137,10 +142,12 @@
     (do-symbols (s (find-package package-name))
       (let ((symbol-used nil))
         (loop for target-type-hash being the hash-values of +defdocs+
-              for spec = (gethash s target-type-hash)
-              if (and spec (funcall filter spec))
-                do (push spec result)
-                   (setf symbol-used t))
+            using (hash-key typ)
+            for spec = (gethash s target-type-hash)
+            if (and spec (funcall filter spec))
+            do (format t "~s ~s~%" s typ)
+               (push spec result)
+               (setf symbol-used t))
         (when (and warn-if-undoc (not symbol-used))
           (warn "No specification for ~s" s))))
     (nreverse result)))

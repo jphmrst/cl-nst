@@ -231,16 +231,18 @@
              (get-output-unit-title output))
     (format stream "\\vspace*{1em}")))
 
-(defmethod format-output-contents-sep ((style latex-style)
-                                       stream output spec1 spec2)
+(defmethod format-default-output-contents-sep ((style latex-style)
+                                               stream output spec1 spec2)
   (declare (ignore output spec1 spec2))
-  (format stream " "))
+  (princ " " stream))
 
 (defmethod format-docspec-element ((style latex-style) target-type
                                    (spec standard-doc-spec) stream)
   (with-unpacked-standard-spec (self intro intro-supp-p params params-supp-p
                                      blurb blurb-supp-p details details-supp-p
                                      callspec) spec
+    (when *latex-generate-index*
+      (format stream "\\index{~a@\\texttt{~:*~a}|(}" self))
     (cond
      (intro-supp-p
       (format-docspec stream style
@@ -278,7 +280,9 @@
       (format-docspec stream style
                       (latex-style-adjust-spec-element style target-type spec
                                                        :details details)
-                      target-type))))
+                      target-type))
+    (when *latex-generate-index*
+      (format stream "\\index{~a@\\texttt{~:*~a}|)}" self))))
 
 (defgeneric latex-style-adjust-spec-element (style target-type spec
                                                    element datum)

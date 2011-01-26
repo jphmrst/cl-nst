@@ -60,15 +60,37 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(defclass docspec-fancy-header-latex-style (docspec-par-latex-style) ())
+(defclass docspec-fancy-header-latex-style (docspec-par-latex-style)
+  ())
+
+(defgeneric default-format-fancy-header-target-type (style target-type
+                                                           spec name stream)
+  (:method (style target-type spec name stream)
+    (declare (ignore spec name style))
+    (princ (capitalized (get-target-type target-type)) stream)))
+
+(defgeneric format-fancy-header-target-type (style target-type spec name stream)
+  (:method ((style docspec-fancy-header-latex-style)
+            target-type spec name stream)
+    (default-format-fancy-header-target-type style target-type
+      spec name stream))
+  (:method ((style docspec-fancy-header-latex-style)
+            (target-type (eql 'function)) spec name stream)
+    (declare (ignore spec))
+    (cond
+     ((and (fboundp name) (typep (symbol-function name) 'generic-function))
+      (princ "Generic function" stream))
+     (t (call-next-method)))))
 
 (defmethod format-docspec-element
     :before ((style docspec-fancy-header-latex-style)
              target-type (spec standard-doc-spec) stream)
-   (let ((self (docspec-self spec)))
-     (multiple-value-bind (home-package exported-p)
-         (locate-package-home style target-type spec self)
-       (format stream "\\vspace{1ex}\\noindent\\begin{tabular}{@{}p{\\textwidth}@{}}\\bfseries\\itshape ~a ~a\\hspace*{\\fill}~a :~a\\\\\\hline\\end{tabular}\\\\"
-               (capitalized (get-target-type target-type)) (symbol-name self)
-               (if exported-p "Package" "Internal to")
-               (package-name home-package)))))
+  (let ((self (docspec-self spec)))
+    (multiple-value-bind (home-package exported-p)
+        (locate-package-home style target-type spec self)
+      (princ "\\vspace{1ex}\\noindent\\begin{tabular}{@{}p{\\textwidth}@{}}\\bfseries\\itshape " stream)
+      (format-fancy-header-target-type style target-type spec self stream)
+      (format stream " ~a\\hspace*{\\fill}~a :~a\\\\\\hline\\end{tabular}\\\\"
+              (symbol-name self)
+              (if exported-p "Package" "Internal to")
+              (package-name home-package)))))

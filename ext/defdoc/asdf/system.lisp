@@ -21,19 +21,19 @@
 
 
 (defclass defdoc-asdf (system)
-    ((documents-system :initarg :documents-system
-                       :reader documents-system
-                       :initform nil
-                       :documentation "Output documents to be generated.")
-     (documentation-package :initarg :documentation-package
-                            :reader documentation-package
-                            :initform *package*
-                            :documentation
-                            "Default package for symbol references.")
-     (build-output :initarg :build-output
-                   :reader build-output
-                   :initform nil
-                   :documentation "Output documents to be generated."))
+  ((documents-system :initarg :documents-system
+                     :reader documents-system
+                     :initform nil
+                     :documentation "Output documents to be generated.")
+   (documentation-package :initarg :documentation-package
+                          :reader documentation-package
+                          :initform *package*
+                          :documentation
+                          "Default package for symbol references.")
+   (build-output :initarg :build-output
+                 :reader build-output
+                 :initform nil
+                 :documentation "Output documents to be generated."))
 
   (:documentation
    "Class of ASDF systems that generate documentation when loaded."))

@@ -26,7 +26,7 @@
 (defpackage :sift.defdoc-doc
   (:documentation "Unit and regression testing for Common Lisp")
   (:nicknames :defdoc-doc)
-  (:use :common-lisp :defdoc)
+  (:use :common-lisp :defdoc :defdoc-control-api)
   #+(or sbcl allegro)
   (:import-from #+sbcl sb-mop #-sbcl mop
                 #:generic-function-methods #:method-specializers
@@ -46,5 +46,3 @@
     #:deprecated)
 
   (:export #:build-defdoc-docs))
-
-(defdoc:def-bare-string-element-tag :latex :package :defdoc-doc)

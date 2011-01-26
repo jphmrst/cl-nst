@@ -53,6 +53,7 @@
              #:collect-all-symbols
              #:collect-output
              #:collect-named-output
+             #:collect-symbols
 
              ;; style.lisp
              #:candidate-home-packages
