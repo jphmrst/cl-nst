@@ -64,9 +64,13 @@
 
 ;;; -----------------------------------------------------------------
 
-(defgeneric format-output-contents-sep (style stream spec obj1 obj2)
+(defgeneric format-default-output-contents-sep (style stream spec obj1 obj2)
   (:method (style stream spec obj1 obj2)
      (declare (ignore style stream spec obj1 obj2))))
+
+(defgeneric format-output-contents-sep (style stream spec obj1 obj2)
+  (:method (style stream spec obj1 obj2)
+     (format-default-output-contents-sep style stream spec obj1 obj2)))
 
 ;;; -----------------------------------------------------------------
 
@@ -184,6 +188,16 @@
   (values `(get-specs-by-target-type ',target-name
                                      ,(get-filter-predicate filters))
           nil))
+
+(defmacro collect-symbols (package symbols &rest filters)
+  (unless (listp symbols)
+    (setf symbols (list symbols)))
+  `(values
+    `(let ((p (find-package ',',package)))
+       (get-symbol-list-specs (loop for s in ',',symbols
+                                  collect (intern (symbol-name s) p))
+                              ,',(get-filter-predicate filters)))
+    nil))
 
 (defun collect-exported-symbols (package &rest filters)
   (values
@@ -353,19 +367,32 @@
                     (item-order (gethash group group-order-spec)))
                 (cond
                  (item-order
-                  (setf spec-list
-                    (sort spec-list
-                          (named-function output-framework-specs-sorter
-                            (lambda (x y)
-                              (let ((xp (position (docspec-self x)
-                                                  item-order :test 'eq))
-                                    (yp (position (docspec-self y)
-                                                  item-order :test 'eq)))
-                                (cond
-                                 ((and (numberp xp) (numberp yp))
-                                  (< xp yp))
-                                 ((and (numberp xp) (null yp)) t)
-                                 (t nil)))))))))
+                  (labels ((position-of (z)
+                             (position z item-order :test 'eq))
+
+                           (output-framework-specs-sorter (x y)
+                             (let* ((xp (position-of (docspec-self x)))
+                                    (yp (position-of (docspec-self y)))
+                                    (xap (let ((xa (label-value x 'anchor)))
+                                           (when xa (position-of xa))))
+                                    (yap (let ((ya (label-value y 'anchor)))
+                                           (when ya (position-of ya))))
+                                    (num-xp (numberp xp))
+                                    (num-yp (numberp yp))
+                                    (num-xap (numberp xap))
+                                    (num-yap (numberp yap)))
+                               (cond
+                                ((and num-xp num-yp)   (< xp yp))
+                                ((and num-xp num-yap)  (<= xp yap))
+                                ((and num-xap num-yp)  (< xap yp))
+                                (num-xp                t)
+                                (num-yp                nil)
+                                ((and num-xap num-yap) (< xap yap))
+                                (num-xap               t)
+                                (num-yap               nil)
+                                (t                     nil)))))
+                    (setf spec-list
+                          (sort spec-list #'output-framework-specs-sorter)))))
                 (defdoc-debug " --> group ~s ~s~%" group spec-list)
 
                 (let ((optionals nil))

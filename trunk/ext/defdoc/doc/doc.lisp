@@ -20,8 +20,36 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :defdoc-doc)
 
+(def-bare-string-element-tag :latex :package :defdoc-doc)
+
 (def-documentation (type asdf-defdoc::defdoc-asdf)
-  (:intro (:latex "Class \\texttt{defdoc-asdf} --- \\fbox{FILL IN}"))
+  (:intro (:latex "The \\texttt{defdoc-asdf} class gives an ASDF system the effect that, when loaded, it should generate system documentation."))
+  (:details (:seq
+             "For example"
+             (:code "(defsystem :defdoc-doc
+  :description \"Documentation builder for defdoc\"
+  :class defdoc-asdf
+  :depends-on ( :defdoc :asdf-defdoc )
+  :documents-system :defdoc
+  :components ( ... )
+  :documentation-package :defdoc-doc
+  :build-output ((#:defdoc-manual
+                     :rel-directory \"doc/\"
+                     :style #:manual-style
+                     :index t :table-of-contents t)))")
+             (:latex "The \\texttt{defdoc-asdf} class allows three new forms in the body of a system:")
+             (:itemize ()
+               (:seq (:latex "The \\texttt{:documents-system} forms names the ASDF system which this system documents."))
+               (:seq (:latex "The \\texttt{:documentation-package} names the package in which the symbols used in the \\texttt{:build-output} forms actually live.  Since this is an ASDF system definition, we cannot assume that this package will be loaded before the system definition."))
+               (:seq (:latex "The \\texttt{:build-output} form specifies the output units to be generated for this system.  Each element of this list is either a symbol naming an output unit, or is a list headed by such a symbol with the remaining elements taken as keyword arguments:")
+                     (:itemize ()
+                        (:latex "The \\texttt{:package} argument overrides the \\texttt{documentation-package} form for this output unit.")
+                        (:latex "The \\texttt{:style} argument names the style class which should be instantiated for this output unit.")
+                        (:latex "The \\texttt{:rel-directory} argument specifies the directory relative to the ASDF system definition into which the documentation should be written.")
+                        (:latex "The \\texttt{:abs-directory} specifies the absolute directory into which the documentation should be written.  It is erroneous to give both an \\texttt{:rel-directory} and an \\texttt{:abs-directory} argument.")
+                        (:latex "The \\texttt{:filename} argument should be astring naming the root of the file to be written.  If omitted, the name of the symbol ")
+                        (:latex "\\texttt{:index} --- \\fbox{FILL IN}")
+                        (:latex "\\texttt{:table-of-contents} --- \\fbox{FILL IN}"))))))
   (:properties (manual-section defdoc::asdf-defdoc)))
 
 (def-output-class (defdoc-manual
@@ -44,18 +72,39 @@
                                   latex
                                   styles))
       (collect-exported-symbols :defdoc)
-      (collect-documented-symbols :asdf-defdoc)))
-  (collect-output (:title "Internals")
+      (collect-symbols #:asdf #:defdoc-asdf)))
+  (collect-output (:title "Output styles")
+    (collect-output (:title "Documentation model")
+      (collect-groups-by-label
+          (manual-section :package :defdoc
+                          :groups '((model :title "The core document model"
+                                           :order (doc-spec))
+                                    (standard-model
+                                     :title "The standard document model"
+                                     :order (standard-doc-spec
+                                             standard-callspec
+                                             standard-simple-list-environment
+                                             standard-enumerate
+                                             standard-itemize
+                                             standard-code
+                                             standard-output-framework
+                                             standard-sequence))))
+        (collect-exported-symbols :defdoc-control-api)))
     (collect-groups-by-label
         (manual-section :package :defdoc
-                        :groups '(doc-gen control targets model label-model
-                                  elements output-model))
-      (collect-exported-symbols :defdoc)
+                        :groups '((output-model :order (output-framework))
+                                  plaintext
+                                  (latex-style-model
+                                   :order (standard-latex
+                                           full-package-latex-style-mixin
+                                           package-list-latex-mixin))))
       (collect-exported-symbols :defdoc-control-api)))
-  (collect-output (:title "Standard models")
+  (collect-output (:title "Customizing documentation models")
     (collect-groups-by-label
         (manual-section :package :defdoc
-                        :groups '(standard-model plaintext latex-style-model))
+                        :groups '(doc-gen control targets label-model
+                                  elements))
+      (collect-exported-symbols :defdoc)
       (collect-exported-symbols :defdoc-control-api)))
   (collect-groups-by-label
       (manual-section :package :defdoc :groups '(deprecated))
@@ -63,8 +112,8 @@
     (collect-exported-symbols :defdoc-control-api)))
 
 (defclass manual-style (symbol-homing-style
-                        docspec-fancy-header-latex-style
-                        latex-style) ())
+                        latex-style
+                        docspec-fancy-header-latex-style) ())
 (defmethod candidate-home-packages ((style manual-style) target-type spec)
   (declare (ignore target-type spec))
   '(:defdoc-control-api :asdf-defdoc :defdoc))

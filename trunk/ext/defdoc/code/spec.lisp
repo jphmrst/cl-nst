@@ -85,7 +85,7 @@
           (format stream "[ standard-doc-spec")
           (let ((props (label-values spec)))
             (when (< 0 (hash-table-count props))
-              (format stream "~:@_  - properties:~:@_    ")
+              (format stream "~:@_  - properties: ")
               (pprint-logical-block
                   (stream (loop for label being the hash-keys of props
                             collect label))
@@ -94,7 +94,7 @@
                     do
                       (format stream "~s ~s" label value)
                       (pprint-exit-if-list-exhausted)
-                      (pprint-newline :mandatory)))))
+                      (pprint-newline :mandatory stream)))))
           (loop for slot in '(tags
                               target-type self descriptive intro blurb details
                               params callspecs deprecated)
@@ -129,7 +129,7 @@
                   `(setf (,acc spec)
                          (compile-element package spec form-args))))
        (case form-head
-         ((:deprecated)  (setf (docspec-deprecated spec) (car form-args)))
+         ((:deprecated)  (setf (docspec-deprecated spec)  (car form-args)))
          ((:descriptive) (setf (docspec-descriptive spec) (car form-args)))
          ((:tags) (setf (docspec-tags spec) form-args))
          ((:params)

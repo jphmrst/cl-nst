@@ -102,12 +102,15 @@
        #:process-standard-labeldef-form
 
        ;; output.lisp
+       #:anchor
        #:standard-output-framework
        #:format-output-preitem
        #:format-output-postitem
        #:output-framework
        #:output-framework-name
        #:process-standard-output-framework-form
+       #:format-output-contents-sep
+       #:format-default-output-contents-sep
 
        ;; tag.lisp
        #:get-doc-tags
