@@ -28,8 +28,8 @@
 
   ;; Decode the name-or-spec
   (destructuring-bind (name &key (class 'output-contents)
-                            title author leader trailer
-                            &allow-other-keys)
+                                 title author leader trailer
+                       &allow-other-keys)
       name-or-spec
 
     ;; Define a class, and an intialize-instance method with the
@@ -59,8 +59,11 @@
                        `((setf (output-contents-title ,initial)
                                (compile-element *package* nil ',title))))
                    (setf (output-contents-contents ,initial)
-                     (append ,@collectors)))
+                         (append ,@collectors)))
                  ',name))))))
+
+(defgeneric write-output (style output-name directory file-name
+                                &key &allow-other-keys))
 
 ;;; -----------------------------------------------------------------
 
@@ -70,21 +73,21 @@
 
 (defgeneric format-output-contents-sep (style stream spec obj1 obj2)
   (:method (style stream spec obj1 obj2)
-     (format-default-output-contents-sep style stream spec obj1 obj2)))
+    (format-default-output-contents-sep style stream spec obj1 obj2)))
 
 ;;; -----------------------------------------------------------------
 
 (defclass output-contents ()
-     ((contents :initform nil :initarg :contents :reader contents
-                :accessor output-contents-contents)
-      (title    :initform nil :initarg :title    :reader unit-title
-                :accessor output-contents-title)
-      (author   :initform nil :initarg :author   :reader author
-                :accessor output-contents-author)
-      (leader   :initform nil :initarg :leader   :reader leader
-                :accessor output-contents-leader)
-      (trailer  :initform nil :initarg :trailer  :reader trailer
-                :accessor output-contents-trailer)))
+  ((contents :initform nil :initarg :contents :reader contents
+             :accessor output-contents-contents)
+   (title    :initform nil :initarg :title    :reader unit-title
+             :accessor output-contents-title)
+   (author   :initform nil :initarg :author   :reader author
+             :accessor output-contents-author)
+   (leader   :initform nil :initarg :leader   :reader leader
+             :accessor output-contents-leader)
+   (trailer  :initform nil :initarg :trailer  :reader trailer
+             :accessor output-contents-trailer)))
 
 (defgeneric get-output-unit-title (o)
   (:method (o) (declare (ignore o)))
@@ -104,8 +107,8 @@
   (:method append (o) (declare (ignore o)))
   (:method append ((o output-contents))
     (loop for fn-name in '(title author leader trailer)
-      if (and (slot-boundp o fn-name) (slot-value o fn-name))
-      collect fn-name)))
+          if (and (slot-boundp o fn-name) (slot-value o fn-name))
+            collect fn-name)))
 (set-pprint-dispatch 'output-contents
   (named-function pprint-output-contents
     (lambda (stream spec)
@@ -115,8 +118,8 @@
           (format stream "{ OUTPUT")
           (pprint-logical-block
               (stream (loop for fn-name in (pprint-output-contents-fields spec)
-                        if (slot-boundp spec fn-name)
-                        collect fn-name))
+                            if (slot-boundp spec fn-name)
+                              collect fn-name))
             (loop for fn-name = (pprint-pop) while fn-name do
               (format stream " ~a=~s" fn-name (slot-value spec fn-name))
               (pprint-exit-if-list-exhausted)
@@ -318,18 +321,19 @@
                                            (title nil title-supp-p)
                                            (leader nil leader-supp-p)
                                            (trailer nil trailer-supp-p)
-                                           &allow-other-keys) group-spec
+                                           &allow-other-keys)
+                     group-spec
                    (when order-supp-p
                      (setf (gethash name group-order-spec) order))
                    (when title-supp-p
                      (setf (gethash name group-title-spec)
-                           (compile-element *package* nil title)))
+                       (compile-element *package* nil title)))
                    (when leader-supp-p
                      (setf (gethash name group-leader-spec)
-                           (compile-element *package* nil leader)))
+                       (compile-element *package* nil leader)))
                    (when trailer-supp-p
                      (setf (gethash name group-trailer-spec)
-                           (compile-element *package* nil trailer))))))
+                       (compile-element *package* nil trailer))))))
               (t (error "Expected symbol or list: ~s" group-spec))))
       (setf allowed (reverse allowed))
 
@@ -438,8 +442,8 @@
     result))
 
 (defclass grouped-output-contents (output-contents)
-     ((labeldef :initform nil :initarg :labeldef :reader labeldef)
-      (group    :initform nil :initarg :group    :reader group)))
+  ((labeldef :initform nil :initarg :labeldef :reader labeldef)
+   (group    :initform nil :initarg :group    :reader group)))
 (defmethod get-output-unit-title ((o grouped-output-contents))
   (let ((result (call-next-method)))
     (cond
@@ -456,6 +460,6 @@
 (defmethod title ((o grouped-output-contents))
   (with-accessors ((label labeldef) (group group)) o
     (cond
-      ((get-label-section-title-supp-p label group o)
+     ((get-label-section-title-supp-p label group o)
        (get-label-section-title label group o))
       (t (call-next-method)))))

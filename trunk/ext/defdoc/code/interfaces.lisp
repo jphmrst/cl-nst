@@ -111,6 +111,14 @@
        #:process-standard-output-framework-form
        #:format-output-contents-sep
        #:format-default-output-contents-sep
+       #:get-output-unit-title
+       #:get-output-unit-author
+       #:get-output-unit-leader
+       #:get-output-unit-trailer
+       #:format-output-leader-material
+       #:format-output-leader-sep
+       #:format-output-leader-title
+       #:format-output-trailer-material
 
        ;; tag.lisp
        #:get-doc-tags

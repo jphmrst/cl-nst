@@ -21,53 +21,53 @@
 (in-package :common-lisp-user)
 
 (defpackage :defdoc
-    (:documentation "Structured documentation definition")
-    (:nicknames :ddoc)
-    (:use :common-lisp)
-    #+allegro (:import-from excl #:named-function)
-    (:export
-             #:def-target-type
-             ;; targetdef.lisp
+  (:documentation "Structured documentation definition")
+  (:nicknames :ddoc)
+  (:use :common-lisp)
+  #+allegro (:import-from excl #:named-function)
+  (:export #:def-target-type
+           ;; targetdef.lisp
 
-             ;; elementdef.lisp
-             #:def-element
-             #:def-bare-string-element-tag
+           ;; elementdef.lisp
+           #:def-element
+           #:def-bare-string-element-tag
 
-             ;; labels.lisp
-             #:def-property-label
-             #:def-label-config
+           ;; labels.lisp
+           #:def-property-label
+           #:def-label-config
 
-             ;; tag.lisp
-             #:def-doc-tag
+           ;; tag.lisp
+           #:def-doc-tag
 
-             ;; macro.lisp
-             #:def-documentation
+           ;; macro.lisp
+           #:def-documentation
 
-             ;; output.lisp
-             #:def-output-class
-             #:collect-doc
-             #:collect-groups-by-label
-             #:collect-target-type
-             #:collect-exported-symbols
-             #:collect-documented-symbols
-             #:collect-all-symbols
-             #:collect-output
-             #:collect-named-output
-             #:collect-symbols
+           ;; output.lisp
+           #:write-output
+           #:def-output-class
+           #:collect-doc
+           #:collect-groups-by-label
+           #:collect-target-type
+           #:collect-exported-symbols
+           #:collect-documented-symbols
+           #:collect-all-symbols
+           #:collect-output
+           #:collect-named-output
+           #:collect-symbols
 
-             ;; style.lisp
-             #:candidate-home-packages
-             #:symbol-homing-style
-             #:docspec-par-latex-style
-             #:docspec-fancy-header-latex-style
+           ;; style.lisp
+           #:candidate-home-packages
+           #:symbol-homing-style
+           #:docspec-par-latex-style
+           #:docspec-fancy-header-latex-style
 
-             ;; latex.lisp
-             #:latex-style
-             #:write-spec-latex
-             #:write-doctype-latex
-             #:write-package-specs-latex
-             #:write-latex-output
-             #:process-latex-document))
+           ;; latex.lisp
+           #:latex-style
+           #:write-spec-latex
+           #:write-doctype-latex
+           #:write-package-specs-latex
+           #:write-latex-output
+           #:process-latex-document))
 
 (defun defdoc::make-package-documentation ()
   "Write documentation for this package, using system package-doc."
@@ -79,6 +79,6 @@
 (defmacro defdoc::let-echo* (bindings &body body)
   (let ((x (gensym)))
     `(let* ,(loop for (name form) in bindings
-                  collect `(,name (let ((,x ,form))
-                                    (format t "~a = ~s~%" ',name ,x))))
+                collect `(,name (let ((,x ,form))
+                                  (format t "~a = ~s~%" ',name ,x))))
        ,@body)))

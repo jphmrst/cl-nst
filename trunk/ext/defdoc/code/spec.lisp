@@ -23,13 +23,13 @@
 (defvar *spec-class* 'standard-doc-spec)
 (defgeneric get-spec-class (package name forms)
   (:method (package name forms)
-     (declare (ignore package name forms))
-     *spec-class*))
+    (declare (ignore package name forms))
+    *spec-class*))
 
 (defclass doc-spec (labeled)
-     ((self :initarg :self :reader docspec-self)
-      (target-type :initarg :target-type :reader docspec-target-type)
-      (tags :initarg :tags :accessor docspec-tags)))
+  ((self :initarg :self :reader docspec-self)
+   (target-type :initarg :target-type :reader docspec-target-type)
+   (tags :initarg :tags :accessor docspec-tags)))
 
 (defmethod format-doc (stream style (spec doc-spec))
   (format-docspec stream style spec (docspec-target-type spec)))

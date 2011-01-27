@@ -116,20 +116,11 @@
 
          (t (error "Expected symbol or list, got ~s" output)))
 
-        (funcall (symbol-function (intern (symbol-name '#:write-latex-output)
+        (funcall (symbol-function (intern (symbol-name '#:write-output)
                                           (find-package :defdoc)))
-                 output-name
-                 :echo #'(lambda (&key &allow-other-keys)
-                           (format t "Writing ~a~%" output-name))
-                 :directory dir-pathname
-                 :file (format nil "~a.tex" file-name)
-                 :standalone t
-                 :index idx :table-of-contents toc
-                 :style doc-style)
-        (funcall (symbol-function (intern (symbol-name
-                                           '#:process-latex-document)
-                                          (find-package :defdoc)))
-                 dir-pathname file-name :index idx)))))
+                 (make-instance doc-style) output-name
+                 dir-pathname file-name
+                 :index idx :table-of-contents toc)))))
 
 (defmethod operation-done-p ((op load-op) (c defdoc-asdf))
   nil)

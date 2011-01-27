@@ -405,7 +405,7 @@
 (def-documentation (function docspec-target-type)
     (:intro "The \\texttt{docspec-target-type} accessor on documentation objects retrieves the symbolic name of the target type of the documentation.")
   (:properties (manual-section model)
-                 (anchor doc-spec)))
+               (anchor doc-spec)))
 
 (def-documentation (function docspec-tags)
     (:intro "The \\texttt{docspec-tags} accessor on documentation objects retrieves the tags associated with a particular piece of documentation.")
@@ -415,37 +415,37 @@
 (def-documentation (function docspec-descriptive)
     (:intro "The \\texttt{docspec-descriptive} accessor on standard documentation objects retrieves a one-word descriptive string for the target.  Used in FILL IN")
   (:properties (manual-section model)
-                 (anchor doc-spec)))
+               (anchor doc-spec)))
 
 (def-documentation (function docspec-intro)
     (:intro "The \\texttt{docspec-intro} accessor on standard documentation objects retrieves the introduction element.")
   (:properties (manual-section model)
-                 (anchor doc-spec)))
+               (anchor doc-spec)))
 
 (def-documentation (function docspec-blurb)
     (:intro "The \\texttt{docspec-blurb} accessor on standard documentation objects retrieves the short description element.")
   (:properties (manual-section model)
-                 (anchor doc-spec)))
+               (anchor doc-spec)))
 
 (def-documentation (function docspec-details)
     (:intro "The \\texttt{docspec-details} accessor on standard documentation objects retrieves the documentation's main body.")
   (:properties (manual-section model)
-                 (anchor doc-spec)))
+               (anchor doc-spec)))
 
 (def-documentation (function docspec-params)
     (:intro "The \\texttt{docspec-params} accessor on standard documentation objects retrieves documentation of the object's parameters.")
   (:properties (manual-section model)
-                 (anchor doc-spec)))
+               (anchor doc-spec)))
 
 (def-documentation (function docspec-callspecs)
     (:intro "The \\texttt{docspec-callspecs} accessor on standard documentation objects retrieves the callspec element.")
   (:properties (manual-section model)
-                 (anchor doc-spec)))
+               (anchor doc-spec)))
 
 (def-documentation (function docspec-deprecated)
     (:intro "The \\texttt{docspec-deprecated} accessor on standard documentation objects retrieves a deprecation flag.")
   (:properties (manual-section model)
-                 (anchor doc-spec)))
+               (anchor doc-spec)))
 
 (def-documentation (function get-label-symbol-value-translation)
   (:intro "Function \\texttt{get-label-symbol-value-translation} --- \\fbox{FILL IN}")
@@ -539,6 +539,19 @@
 ;;; -----------------------------------------------------------------
 ;;; output-model
 
+(def-documentation (function write-output)
+  (:intro "The \\texttt{write-output} function is the main call for producing formatting output documentation.")
+  (:callspec ((style latex-style) output-name directory file-name
+              &key (index flag) (table-of-contents flag)))
+  (:params (style "Object specifying the style for the output.")
+           (output-name "Name of the output unit to be formatted.")
+           (directory "The directory where the document should be written.")
+           (file-name "Root file name for the output.")
+           (index "If non-nil and the style supports it, an index will be generated.")
+           (table-of-contents "If non-nil and the style supports it, a table of contents will be generated."))
+  (:details "Other keyword arguments may be supported by other styles.")
+  (:properties (manual-section styles)))
+
 (def-documentation (function format-docspec)
   (:intro "The \\texttt{format-docspec} function produces output from a documentation specification.")
   (:callspec (stream style spec target-type))
@@ -577,25 +590,58 @@
   (:intro "Function \\texttt{process-standard-output-framework-form} --- \\fbox{FILL IN}")
   (:properties (manual-section output-model)))
 
+(def-documentation (function get-output-unit-title)
+  (:intro "Function \\texttt{get-output-unit-title} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (function get-output-unit-author)
+  (:intro "Function \\texttt{get-output-unit-author} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (function get-output-unit-leader)
+  (:intro "Function \\texttt{get-output-unit-leader} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (function get-output-unit-trailer)
+  (:intro "Function \\texttt{get-output-unit-trailer} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (function format-output-leader-material)
+  (:intro "Function \\texttt{format-output-leader-material} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (function format-output-leader-sep)
+  (:intro "Function \\texttt{format-output-leader-sep} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (function format-output-leader-title)
+  (:intro "Function \\texttt{format-output-leader-title} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (function format-output-trailer-material)
+  (:intro "Function \\texttt{format-output-trailer-material} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
 
 ;;; -----------------------------------------------------------------
 ;;; styles
 
 (def-documentation (type symbol-homing-style)
-  (:intro "Class \\texttt{symbol-homing-style} --- \\fbox{FILL IN}")
+  (:intro "The \\texttt{symbol-homing-style} style allows documentation to find alternative home packages for symbols.  This mixin allows symbols which are developed as internal symbols in one package, but exported from another interface package.  Style classes inheriting from this mixin should define a method on \\texttt{candidate-home-packages}: if the given symbol is exported from any of the packages returned by this function, it will be documented as being in that package, disregarding any differing result of \\texttt{symbol-package}.")
   (:properties (manual-section styles)))
 
 (def-documentation (function candidate-home-packages)
-  (:intro "Function \\texttt{candidate-home-packages} --- \\fbox{FILL IN}")
-  (:properties (manual-section styles)))
+  (:intro "The \\texttt{candidate-home-packages} function returns a list of packages in which the given specification should first be checked as the exporter of its symbolic name.  Generally, methods of this function are specialized on the style, and ignore the other parameters.")
+  (:callspec (style target-type spec))
+  (:properties (manual-section styles)
+               (anchor symbol-homing-style)))
 
 (def-documentation (type docspec-par-latex-style)
-  (:intro "Class \\texttt{docspec-par-latex-style} --- \\fbox{FILL IN}, list in superclass lists \\emph{before} \\texttt{latex-style}.")
+  (:intro "The \\texttt{docspec-par-latex-style} style mixin inserts a paragraph break between consecutive documentation units.")
   (:properties (manual-section styles)))
 
 (def-documentation (type docspec-fancy-header-latex-style)
-  (:intro
-   "Class \\texttt{docspec-fancy-header-latex-style} --- \\fbox{FILL IN}")
+  (:intro "The \\texttt{docspec-fancy-header-latex-style} style mixin adds fancy headers to the beginning of each docspec.  This class is a subclass of \\texttt{docspec-par-latex-style}.")
   (:properties (manual-section styles)))
 
 
@@ -806,8 +852,8 @@
   (:properties (manual-section latex-style-model)))
 
 (def-documentation (type latex-style)
-  (:intro "Type \\texttt{latex-style} --- \\fbox{FILL IN}")
-  (:properties (manual-section latex)))
+  (:intro (:latex "The \\texttt{latex-style} class is a base class for \\LaTeX\\ document generation."))
+  (:properties (manual-section styles)))
 
 (def-documentation (type full-package-latex-style-mixin)
   (:intro "Type \\texttt{full-package-latex-style-mixin} --- \\fbox{FILL IN}")

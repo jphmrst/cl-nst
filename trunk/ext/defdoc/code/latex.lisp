@@ -34,7 +34,8 @@
 (defvar *latex-default-header-matter*
     "\\documentclass{article}
 \\usepackage{times}
-\\usepackage{helvet}")
+\\usepackage{helvet}
+\\usepackage[pdftex]{hyperref}")
 
 (defgeneric get-latex-output-file-name (style usage name)
   (:method ((style symbol) usage name)
@@ -443,6 +444,20 @@
                 (loop for type in type-list do
                   (package-list-entry style
                           pspec tag (get-doc-spec name type) stream)))))))))
+
+;;; -----------------------------------------------------------------
+
+(defmethod write-output ((style latex-style) output-name directory file-name
+                         &key index table-of-contents &allow-other-keys)
+  (write-latex-output output-name
+                      :echo #'(lambda (&key &allow-other-keys)
+                                (format t "Writing ~a~%" output-name))
+                      :directory directory
+                      :file (format nil "~a.tex" file-name)
+                      :standalone t
+                      :index index :table-of-contents table-of-contents
+                      :style style)
+  (process-latex-document directory file-name :index index))
 
 ;;; -----------------------------------------------------------------
 
