@@ -22,50 +22,50 @@
 (in-package :common-lisp-user)
 
 (defpackage :sift.nst
-    (:documentation "Unit and regression testing for Common Lisp")
-    (:nicknames :nst)
-    (:use :closer-common-lisp :defdoc)
-    #+allegro (:import-from excl #:named-function)
-    #+(or sbcl allegro)
-    (:import-from #+sbcl sb-mop #-sbcl mop
-                  #:generic-function-methods #:method-specializers
-                  #:eql-specializer-object)
-    #+(or openmcl clozure)
-    (:import-from ccl
-                  #:extract-lambda-list
-                  #:generic-function-methods #:method-specializers
-                  #:eql-specializer-object)
+  (:documentation "Unit and regression testing for Common Lisp")
+  (:nicknames :nst)
+  (:use :closer-common-lisp :defdoc)
+  #+allegro (:import-from excl #:named-function)
+  #+(or sbcl allegro)
+  (:import-from #+sbcl sb-mop #-sbcl mop
+                #:generic-function-methods #:method-specializers
+                #:eql-specializer-object)
+  #+(or openmcl clozure)
+  (:import-from ccl
+                #:extract-lambda-list
+                #:generic-function-methods #:method-specializers
+                #:eql-specializer-object)
 
-    (:export #:def-fixtures #:def-test-group #:def-test
-             #:nst-cmd
+  (:export #:def-fixtures #:def-test-group #:def-test
+           #:nst-cmd
 
-             #:nst-junit-dump #:junit-results-by-group
+           #:nst-junit-dump #:junit-results-by-group
 
-             #:*nst-output-stream*
-             #:*default-report-verbosity*
-             #:*debug-on-error*
-             #:*debug-on-fail*
+           #:*nst-output-stream*
+           #:*default-report-verbosity*
+           #:*debug-on-error*
+           #:*debug-on-fail*
 
-             #:arbitrary
-             #:compound-structure
-             #:*max-compound-structure-depth*
-             #:def-arbitrary-instance-type
+           #:arbitrary
+           #:compound-structure
+           #:*max-compound-structure-depth*
+           #:def-arbitrary-instance-type
 
-             #:def-criterion #:def-criterion-unevaluated #:def-criterion-alias
-             #:check-criterion-on-value #:check-criterion-on-form
-             #:make-failure-report #:make-error-report
-             #:make-warning-report #:make-success-report
-             #:add-failure #:add-error #:add-info
-             ;; Deprecated:
-             #:emit-failure #:emit-warning #:emit-success
-             #:def-form-criterion #:def-values-criterion
+           #:def-criterion #:def-criterion-unevaluated #:def-criterion-alias
+           #:check-criterion-on-value #:check-criterion-on-form
+           #:make-failure-report #:make-error-report
+           #:make-warning-report #:make-success-report
+           #:add-failure #:add-error #:add-info
+           ;; Deprecated:
+           #:emit-failure #:emit-warning #:emit-success
+           #:def-form-criterion #:def-values-criterion
 
-             #:with-fixtures
+           #:with-fixtures
 
-             #:nst-results
-             #:def-test-generic
-             #:def-test-method
-             #:def-test-method-criterion))
+           #:nst-results
+           #:def-test-generic
+           #:def-test-method
+           #:def-test-method-criterion))
 
 (defdoc:def-documentation (package :sift.nst)
     (:blurb "NST unit testing package")

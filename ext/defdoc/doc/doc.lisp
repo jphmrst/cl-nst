@@ -45,11 +45,10 @@
                      (:itemize ()
                         (:latex "The \\texttt{:package} argument overrides the \\texttt{documentation-package} form for this output unit.")
                         (:latex "The \\texttt{:style} argument names the style class which should be instantiated for this output unit.")
-                        (:latex "The \\texttt{:rel-directory} argument specifies the directory relative to the ASDF system definition into which the documentation should be written.")
-                        (:latex "The \\texttt{:abs-directory} specifies the absolute directory into which the documentation should be written.  It is erroneous to give both an \\texttt{:rel-directory} and an \\texttt{:abs-directory} argument.")
+                        (:latex "The \\texttt{:rel-directory} and \\texttt{:abs-directory} arguments specify the directory into which the documentation should be written.  DefDoc takes the \\texttt{:rel-directory} argument to be relative to the directory holding the ASDF system definition, and the \\texttt{:abs-directory} argument to be an absolute directory reference.  At most one of these keyword arguments should be given.")
                         (:latex "The \\texttt{:filename} argument should be astring naming the root of the file to be written.  If omitted, the name of the symbol ")
-                        (:latex "\\texttt{:index} --- \\fbox{FILL IN}")
-                        (:latex "\\texttt{:table-of-contents} --- \\fbox{FILL IN}"))))))
+                        (:latex "The \\texttt{:index} argument, if non-nil, indicates that output should include an index if the style supports it.")
+                        (:latex "The \\texttt{:table-of-contents} argument, if non-nil, indicates that output should include a table of contents if the style supports it."))))))
   (:properties (manual-section defdoc::asdf-defdoc)))
 
 (def-output-class (defdoc-manual
@@ -68,12 +67,16 @@
                                    :order (def-output-class def-label-config
                                             collect-target-type)
                                    :leader (:latex "DefDoc separates the description of the \\emph{contents} of an output document from the mechanics of generating the document.  The description of a document's contents is though \\emph{output units}.  DefDoc provides macros and functions to quickly specify output units.  The top-level macro for these definitions is \\emph{def-output-class}, which creates a class corresponding to an output unit, and an initialiation method for gathering its contents.  The initialiation methods are based on calls to various \\texttt{collect} functions and macros within the body of a \\emph{def-output-class} call."))
-                                  asdf-defdoc
-                                  latex
-                                  styles))
+                                  (asdf-defdoc
+                                   :leader (:latex "DefDoc integrates with ASDF to coordinate documentation generation.  Currently, DefDoc provides an interim base ASDF system, under which the ASDF \\texttt{load-op} triggers document generation.  We plan to develop a second base system which supports a new operator \\texttt{doc-op}, with distinguished components loaded only for the documentation, and not the standard component load or test."))
+                                  (styles :title "The output style"
+                                   :order (write-output
+                                           latex-style symbol-homing-style)
+                                   :leader (:latex "This section discusses \\emph{styles}, classes encapsulating various options for documentation generation, which are exported by DefDoc."))
+                                  (latex :title (:latex "Other \\LaTeX\\ generators"))))
       (collect-exported-symbols :defdoc)
       (collect-symbols #:asdf #:defdoc-asdf)))
-  (collect-output (:title "Output styles")
+  (collect-output (:title "Customizing and extending styles")
     (collect-output (:title "Documentation model")
       (collect-groups-by-label
           (manual-section :package :defdoc
@@ -132,5 +135,5 @@
   (standard-model :title "The standard documentation model")
   (plaintext :title "Generating plain text")
   (latex :title (:latex "Generating \\LaTeX"))
-  (latex-style-model :title (:latex "The \\LaTeX\ model"))
+  (latex-style-model :title (:latex "The \\LaTeX\\ model"))
   (deprecated :title "Deprecated forms"))
