@@ -18,7 +18,7 @@
 ;;; You should have received a copy of the GNU Lesser General Public
 ;;; License along with DefDoc.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
-(in-package :defdoc)
+(in-package :defdoc-standard-model)
 
 ;;; -----------------------------------------------------------------
 
@@ -54,7 +54,8 @@
 (defclass docspec-par-latex-style () ())
 
 (defmethod format-output-contents-sep ((style docspec-par-latex-style)
-                                       stream output spec1 spec2)
+                                       stream output spec1 spec2
+                                       &key &allow-other-keys)
   (declare (ignore output spec1 spec2))
   (format stream "\\par "))
 
@@ -67,7 +68,7 @@
                                                            spec name stream)
   (:method (style target-type spec name stream)
     (declare (ignore spec name style))
-    (princ (capitalized (get-target-type target-type)) stream)))
+    (princ (capitalized-target-name (get-target-type target-type)) stream)))
 
 (defgeneric format-fancy-header-target-type (style target-type spec name stream)
   (:method ((style docspec-fancy-header-latex-style)
@@ -82,9 +83,9 @@
       (princ "Generic function" stream))
      (t (call-next-method)))))
 
-(defmethod format-docspec-element
-    :before ((style docspec-fancy-header-latex-style)
-             target-type (spec standard-doc-spec) stream)
+(defmethod format-docspec
+    :before (stream (style docspec-fancy-header-latex-style)
+                    (spec standard-doc-spec) target-type &key &allow-other-keys)
   (let ((self (docspec-self spec)))
     (multiple-value-bind (home-package exported-p)
         (locate-package-home style target-type spec self)

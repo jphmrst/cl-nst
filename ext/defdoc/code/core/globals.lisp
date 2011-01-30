@@ -18,20 +18,15 @@
 ;;; You should have received a copy of the GNU Lesser General Public
 ;;; License along with DefDoc.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
-(in-package :defdoc)
+(in-package :defdoc-core)
 
-(defvar *docstring-style* 'standard-docstring-style)
+(defvar *docstring-style* 'defdoc-plaintext:standard-docstring-style)
 
-(defgeneric format-doc (stream style spec))
-
-(defgeneric format-docspec (stream style spec type)
-  (:method :around (stream style spec type)
-     (cond ((symbolp style)
-            (format-docspec stream (make-instance style)
-                            spec type))
-           (t (call-next-method))))
-  (:method (stream style spec type)
-     (format-docspec-element style type spec stream)))
+(defgeneric string-implicit-symbol-head (package spec string))
+(defgeneric format-doc (stream style spec &key &allow-other-keys))
+(defgeneric format-docspec (stream style spec type &key &allow-other-keys)
+  (:method (stream (style symbol) spec type &rest keyargs)
+     (apply #'format-docspec stream (make-instance style) spec type keyargs)))
 
 (defgeneric format-docspec-element (style target-type element stream))
 
@@ -78,13 +73,14 @@
   (declare (ignore name))
   `(function ,lambda-expression))
 
-(defmethod package-exports-p (package symbol)
-  (multiple-value-bind (sym status)
-      (find-symbol (symbol-name symbol) package)
-    (declare (ignore sym))
-    (case status
-      ((:external) t)
-      (otherwise nil))))
+(defgeneric package-exports-p (package symbol)
+  (:method (package symbol)
+    (multiple-value-bind (sym status)
+        (find-symbol (symbol-name symbol) package)
+      (declare (ignore sym))
+      (case status
+        ((:external) t)
+        (otherwise nil)))))
 (defgeneric locate-package-home (style target-type spec symbol)
   (:method (style target-type spec symbol)
            (declare (ignore style target-type spec))

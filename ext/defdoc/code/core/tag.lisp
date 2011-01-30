@@ -18,7 +18,7 @@
 ;;; You should have received a copy of the GNU Lesser General Public
 ;;; License along with DefDoc.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
-(in-package :defdoc)
+(in-package :defdoc-core)
 
 (defun get-doc-tags (name type)
   (let ((spec (get-doc-spec name type)))

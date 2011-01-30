@@ -19,9 +19,18 @@
 ;;; License along with DefDoc.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
 
-(in-package :defdoc)
+(in-package :defdoc-core)
 
-(defvar *default-element-class* 'standard-doc-element)
+(defclass docspec-element () ())
+(defgeneric canonicalize-element (element))
+
+;;; -----------------------------------------------------------------
+
+(defmethod format-docspec (stream style (element docspec-element) type
+                                  &rest keyargs)
+  (apply #'format-docspec-element style type element stream keyargs))
+
+(defvar *default-element-class* 'defdoc-standard-model:standard-doc-element)
 (defgeneric get-element-class (package name spec forms)
   (:method (package name spec forms)
      (declare (ignore package name spec forms))
@@ -69,28 +78,27 @@
                           ,string))
          ,tag))))
 
-(defgeneric string-implicit-symbol-head (package spec string))
 (def-bare-string-element-tag :plain)
 
 (defgeneric get-element-aggregation (package spec elements)
   (:method (package spec elements)
      (declare (ignore package spec))
-     (make-instance 'standard-paragraph-list :paragraphs elements)))
+     (make-instance 'defdoc-standard-model:standard-paragraph-list
+       :paragraphs elements)))
 
 (defgeneric compile-symbol-headed-element (hd package spec args)
   (:method (hd package spec args)
      (declare (ignore package spec))
      (error "Unrecognized element specifier: (~s~{ ~s~})" hd args)))
 
-(defclass standard-doc-element ()
-     ())
-
-(defmacro def-element (name (new-class &key (class 'standard-doc-element)
-                                       (package (gensym) package-supp-p)
-                                       (spec (gensym) spec-supp-p)
-                                       (arg-list (gensym) arg-list-supp-p)
-                                       (args nil args-supp-p))
-                            slots &body body)
+(defmacro def-element
+    (name (new-class &key
+                     (class 'defdoc-standard-model:standard-doc-element)
+                     (package (gensym) package-supp-p)
+                     (spec (gensym) spec-supp-p)
+                     (arg-list (gensym) arg-list-supp-p)
+                     (args nil args-supp-p))
+     slots &body body)
   (let ((declares (cond
                     ((eq 'declare (caar body))
                      (cdr (pop body)))

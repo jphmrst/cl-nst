@@ -19,7 +19,7 @@
 ;;; License along with DefDoc.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
 
-(in-package :defdoc)
+(in-package :defdoc-core)
 
 (defmacro with-conjunctive-options ((arg options) item &body body)
   (let ((item-var (gensym)))

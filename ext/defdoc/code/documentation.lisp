@@ -19,13 +19,24 @@
 ;;; License along with DefDoc.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
 
-(in-package :defdoc)
+(defpackage :defdoc-coredoc
+  (:documentation "DefDoc internal organizational package - self-documentation")
+  (:use :defdoc-docsyms :common-lisp :defdoc-core :defdoc-collectors
+        :defdoc-standard-model :defdoc-latex :defdoc-html :defdoc-plaintext)
+  #+allegro (:import-from excl #:named-function))
+(in-package :defdoc-coredoc)
 
 ;; This eval-when is necessary on in this use of this method.  When
 ;; "normal" applications use DefDoc, they can place this defmethod in
 ;; e.g. the package.lisp or some other source file which will be
 ;; loaded before other files are compiled.
-(defdoc:def-bare-string-element-tag :latex :package :defdoc)
+(def-bare-string-element-tag :latex :package :defdoc-core)
+(def-bare-string-element-tag :latex :package :defdoc-collectors)
+(def-bare-string-element-tag :latex :package :defdoc-standard-model)
+(def-bare-string-element-tag :latex :package :defdoc-plaintext)
+(def-bare-string-element-tag :latex :package :defdoc-latex)
+(def-bare-string-element-tag :latex :package :defdoc-html)
+(def-bare-string-element-tag :latex :package :defdoc-coredoc)
 
 (def-property-label manual-section ())
 
@@ -678,8 +689,8 @@
   (:intro "Function \\texttt{callspec-item-to-lines} --- \\fbox{FILL IN}")
   (:properties (manual-section standard-model)))
 
-(def-documentation (function standard-paragraph-list)
-  (:intro "Function \\texttt{standard-paragraph-list} --- \\fbox{FILL IN}")
+(def-documentation (type standard-paragraph-list)
+  (:intro "Class \\texttt{standard-paragraph-list} --- \\fbox{FILL IN}")
   (:properties (manual-section standard-model)))
 
 (def-documentation (type output-framework)
@@ -816,11 +827,16 @@
   (:properties (manual-section latex-style-model)))
 
 (def-documentation (function write-spec-latex)
-  (:intro "Function \\texttt{write-spec-latex} --- \\fbox{FILL IN}")
+  (:intro "The \\texttt{write-spec-latex} function writes a single document spec to a \\LaTeX\\ source file.")
   (:callspec (name usage &key
                    (style style)
                    (directory pathname)
                    (file filename-string)))
+  (:params (name (:latex "Symbol naming the entity to be documented."))
+           (usage (:latex "Symbol naming the target type of the entity, e.g.\ \\texttt{function}, \\texttt{type}, etc."))
+           (style (:latex "Style class to be applied for this output; the default is \\texttt{latex-style}."))
+           (directory (:latex "Directory where the output file should be written; the default is the value of \\texttt{*defdoc-latex-default-directory*}."))
+           (file (:latex "File to be created or overwritten with this content; by default the result of a call to \\texttt{get-latex-output-file-name} is used.")))
   (:properties (manual-section latex)))
 
 (def-documentation (variable *latex-full-package-item-header-macro*)
@@ -832,11 +848,27 @@
   (:properties (manual-section latex-style-model)))
 
 (def-documentation (function write-package-specs-latex)
-  (:intro "Function \\texttt{write-package-specs-latex} --- \\fbox{FILL IN}")
+  (:intro "The \\texttt{write-package-specs-latex} function generates \\LaTeX\\ source files for all docspecs for entities named by symbols in a particular package.")
+  (:callspec (package-spec &key (style name) (package-style name)
+                           (include-doctypes ( (:seq doctype) ))
+                           (directory pathname) (echo callback)))
+  (:params (package-spec (:latex "Specifier for the package for which output is to be generated."))
+           (style (:latex "Style class to be applied for this output; the default is \\texttt{latex-style}."))
+           (package-style (:latex "When non-nil, indicated that a \\LaTeX\\ file documenting the package itself should be written, and names the style class to be applied for that output file.  The default is \\texttt{t}, which indicates that the value of the \\texttt{:style} argument should be used here as well."))
+           (doctype (:latex "This list of symbols naming spec type selects additional documentation to be written: when a type is given here, all docspecs are that type will be written \\emph{whether or not the specs are attached to entities named by symbols in the package targeted by this call}."))
+           (directory (:latex "Directory where the output files should be written; the default is the value of \\texttt{*defdoc-latex-default-directory*}."))
+           (callback (:latex "The echo callback is invoked for each item written; the call is passed keyword arguments \\texttt{:name} and \\texttt{:type} for the symbols naming respectively the entity name and doctype.  The callback is useful for providing feedback on long processes to the user.")))
   (:properties (manual-section latex)))
 
 (def-documentation (function process-latex-document)
-  (:intro "Function \\texttt{process-latex-document} --- \\fbox{FILL IN}")
+  (:intro "Function \\texttt{process-latex-document} is a utility function which runs \\LaTeX\\ and associated tools on a particular file.")
+  (:callspec (directory file-name-root &key (bibtex flag) (index flag)))
+  (:params (directory (:latex "Directory holding the \\LaTeX\\ source file."))
+           (file-name-root (:latex "Root file name (i.e.\\ dropping the ``\\texttt{.tex}'' suffix) of the \\LaTeX\\ source file."))
+           (bibtex (:latex "If non-nil, indicates that Bib\\TeX\\ should be used to generate a bibliography."))
+           (index (:latex "If non-nil, indicates that \\texttt{makeindex} should be used to generate an index.")))
+  (:details "Although \\texttt{process-latex-document} does not attempt to parse the output of the various tools, it will re-run \\LaTeX\\ as it anticipates to be necessary to resolve cross-references, which may result in running the tool more times than is strictly necessary."
+            "Invocation of external programs is not included in the Common Lisp specification, and varies by platform.  Thus, this function is implementated on a platform-by-platform basis.  At this writing, it is known to work on Allegro and Steel Bank Common Lisps only.")
   (:properties (manual-section latex)))
 
 (def-documentation (function write-latex-output)
@@ -844,11 +876,16 @@
   (:properties (manual-section latex-style-model)))
 
 (def-documentation (function write-doctype-latex)
-  (:intro "Function \\texttt{write-doctype-latex} --- \\fbox{FILL IN}")
+  (:intro "The \\texttt{write-doctype-latex} function generates \\LaTeX\\ source files for all docspecs of a certain target type.")
+  (:callspec (doctype &key (style style) (directory pathname) (echo callback)))
+  (:params (doctype (:latex "Symbol naming the target type of the entities to be written, e.g.\ \\texttt{function} or \\texttt{type}."))
+           (style (:latex "Style class to be applied for this output; the default is \\texttt{latex-style}."))
+           (directory (:latex "Directory where the output files should be written; the default is the value of \\texttt{*defdoc-latex-default-directory*}."))
+           (callback (:latex "The echo callback is invoked for each item written; the call is passed keyword arguments \\texttt{:name} and \\texttt{:type} for the symbols naming respectively the entity name and doctype.  The callback is useful for providing feedback on long processes to the user.")))
   (:properties (manual-section latex)))
 
-(def-documentation (function latex-style-adjust-spec-element)
-  (:intro "Function \\texttt{latex-style-adjust-spec-element} --- \\fbox{FILL IN}")
+(def-documentation (function get-element-for-docspec-format)
+  (:intro "Function \\texttt{get-element-for-docspec-format} --- \\fbox{FILL IN}")
   (:properties (manual-section latex-style-model)))
 
 (def-documentation (type latex-style)
