@@ -1,4 +1,4 @@
-;;; File output.lisp
+;;; File collectors.lisp
 ;;;
 ;;; This file is part of the DefDoc documentation support package.
 ;;;
@@ -18,171 +18,7 @@
 ;;; You should have received a copy of the GNU Lesser General Public
 ;;; License along with DefDoc.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
-(in-package :defdoc)
-
-;;; -----------------------------------------------------------------
-
-(defmacro def-output-class (name-or-spec &body forms)
-  (unless (listp name-or-spec)
-    (setf name-or-spec (list name-or-spec)))
-
-  ;; Decode the name-or-spec
-  (destructuring-bind (name &key (class 'output-contents)
-                                 title author leader trailer
-                       &allow-other-keys)
-      name-or-spec
-
-    ;; Define a class, and an intialize-instance method with the
-    ;; actual contents of the output unit.
-    (loop for form in forms
-        for (collector preparation) = (multiple-value-list (eval form))
-        collect collector into collectors
-        append preparation into preparations
-        finally
-          (let ((initial (gensym)))
-            (return-from def-output-class
-              `(progn
-                 (defclass ,name (,class) ())
-                 ,@preparations
-                 (defmethod initialize-instance :after ((,initial ,name)
-                                                        &key &allow-other-keys)
-                   ,@(when leader
-                       `((setf (output-contents-leader ,initial)
-                               (compile-element *package* nil ',leader))))
-                   ,@(when trailer
-                       `((setf (output-contents-trailer ,initial)
-                               (compile-element *package* nil ',trailer))))
-                   ,@(when author
-                       `((setf (output-contents-author ,initial)
-                               (compile-element *package* nil ',author))))
-                   ,@(when title
-                       `((setf (output-contents-title ,initial)
-                               (compile-element *package* nil ',title))))
-                   (setf (output-contents-contents ,initial)
-                         (append ,@collectors)))
-                 ',name))))))
-
-(defgeneric write-output (style output-name directory file-name
-                                &key &allow-other-keys))
-
-;;; -----------------------------------------------------------------
-
-(defgeneric format-default-output-contents-sep (style stream spec obj1 obj2)
-  (:method (style stream spec obj1 obj2)
-     (declare (ignore style stream spec obj1 obj2))))
-
-(defgeneric format-output-contents-sep (style stream spec obj1 obj2)
-  (:method (style stream spec obj1 obj2)
-    (format-default-output-contents-sep style stream spec obj1 obj2)))
-
-;;; -----------------------------------------------------------------
-
-(defclass output-contents ()
-  ((contents :initform nil :initarg :contents :reader contents
-             :accessor output-contents-contents)
-   (title    :initform nil :initarg :title    :reader unit-title
-             :accessor output-contents-title)
-   (author   :initform nil :initarg :author   :reader author
-             :accessor output-contents-author)
-   (leader   :initform nil :initarg :leader   :reader leader
-             :accessor output-contents-leader)
-   (trailer  :initform nil :initarg :trailer  :reader trailer
-             :accessor output-contents-trailer)))
-
-(defgeneric get-output-unit-title (o)
-  (:method (o) (declare (ignore o)))
-  (:method ((o output-contents)) (unit-title o)))
-(defgeneric get-output-unit-author (o)
-  (:method (o) (declare (ignore o)))
-  (:method ((o output-contents)) (author o)))
-(defgeneric get-output-unit-leader (o)
-  (:method (o) (declare (ignore o)))
-  (:method ((o output-contents)) (leader o)))
-(defgeneric get-output-unit-trailer (o)
-  (:method (o) (declare (ignore o)))
-  (:method ((o output-contents)) (trailer o)))
-
-(defgeneric pprint-output-contents-fields (o)
-  (:method-combination append :most-specific-last)
-  (:method append (o) (declare (ignore o)))
-  (:method append ((o output-contents))
-    (loop for fn-name in '(title author leader trailer)
-          if (and (slot-boundp o fn-name) (slot-value o fn-name))
-            collect fn-name)))
-(set-pprint-dispatch 'output-contents
-  (named-function pprint-output-contents
-    (lambda (stream spec)
-      (let ((*pprint-short-spec* t))
-        (declare (special *pprint-short-spec*))
-        (pprint-logical-block (stream '(1))
-          (format stream "{ OUTPUT")
-          (pprint-logical-block
-              (stream (loop for fn-name in (pprint-output-contents-fields spec)
-                            if (slot-boundp spec fn-name)
-                              collect fn-name))
-            (loop for fn-name = (pprint-pop) while fn-name do
-              (format stream " ~a=~s" fn-name (slot-value spec fn-name))
-              (pprint-exit-if-list-exhausted)
-              (pprint-newline :fill stream)))
-          (loop for item in (contents spec) do
-            (pprint-newline :mandatory stream)
-            (princ "  - " stream)
-            (write item :stream stream))
-          (pprint-newline :mandatory stream)
-          (princ "}" stream))))))
-
-;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-(defparameter *output-nesting-depth* 0)
-
-(defmethod format-doc (stream style (output output-contents))
-  (defdoc-debug "format-doc on output-framework ~s~%" output)
-  (format-output-leader-material style stream output)
-  (let ((*output-nesting-depth* (+ 1 *output-nesting-depth*)))
-    (declare (special *output-nesting-depth*))
-    (loop for (item . others) on (contents output) do
-      (format-output-preitem style stream output item)
-      (format-doc stream style item)
-      (format-output-postitem style stream output item)
-      (when others
-        (format-output-contents-sep style stream output item (car others)))))
-  (format-output-trailer-material style stream output))
-
-(defgeneric format-output-preitem (style stream output spec)
-  (:method (style stream output spec)
-     (declare (ignore style stream output spec))))
-(defgeneric format-output-postitem (style stream output spec)
-  (:method (style stream output spec)
-     (declare (ignore style stream output spec))))
-(defgeneric format-output-leader-material (style stream output)
-  (:method (style stream output) (declare (ignore style stream output)))
-  (:method (style stream (output output-contents))
-     (defdoc-debug "format-output-leader-material on output-framework ~s~%"
-       output)
-     (format-output-leader-title style stream output)
-     (let ((leader (output-contents-leader output)))
-       (when leader
-         (format-docspec-element style nil leader stream)
-         (format-output-leader-sep style stream output)))))
-(defgeneric format-output-leader-sep (style stream output)
-  (:method (style stream output) (declare (ignore style stream output))))
-(defgeneric format-output-leader-title (style stream output)
-  (:method (style stream output) (declare (ignore style stream output)))
-  (:method (style stream (output output-contents))
-    (let ((title (get-output-unit-title output)))
-      (when title
-        (let ((formatter (cond
-                          ((boundp '*output-leader-title-format-string*)
-                           (symbol-value '*output-leader-title-format-string*))
-                          (t "~a"))))
-          (format stream formatter
-            (with-output-to-string (str)
-              (format-docspec-element style nil title str))))))))
-(defgeneric format-output-trailer-material (style stream output)
-  (:method (style stream output) (declare (ignore style stream output)))
-  (:method (style stream (output output-contents))
-     (let ((trailer (output-contents-trailer output)))
-       (when trailer (format-docspec-element style nil trailer stream)))))
+(in-package :defdoc-core)
 
 ;;; -----------------------------------------------------------------
 ;;; Collectors of specs.
@@ -258,7 +94,8 @@
     (setf (docspec result) (compile-element *package* result spec-forms))
     result))
 
-(defmethod format-doc (stream style (spec explicit-doc-element))
+(defmethod format-doc (stream style (spec explicit-doc-element)
+                              &key &allow-other-keys)
   (format-docspec-element style nil (docspec spec) stream))
 
 ;;; -----------------------------------------------------------------
@@ -442,23 +279,25 @@
     result))
 
 (defclass grouped-output-contents (output-contents)
-  ((labeldef :initform nil :initarg :labeldef :reader labeldef)
-   (group    :initform nil :initarg :group    :reader group)))
+  ((labeldef :initform nil :initarg :labeldef :reader get-grouped-output-labeldef)
+   (group    :initform nil :initarg :group    :reader get-grouped-output-group)))
 (defmethod get-output-unit-title ((o grouped-output-contents))
   (let ((result (call-next-method)))
     (cond
      (result result)
-     (t (with-accessors ((label labeldef) (group group)) o
+     (t (with-accessors ((label get-grouped-output-labeldef)
+                         (group get-grouped-output-group)) o
           (cond
-           ((get-label-section-title-supp-p label group o)
-            (get-label-section-title label group o))
+            ((get-label-section-title-supp-p label group o)
+             (get-label-section-title label group o))
            (t nil)))))))
 (defmethod pprint-output-contents-fields append ((o grouped-output-contents))
   (loop for fn-name in '(group)
     if (and (slot-boundp o fn-name) (slot-value o fn-name)) collect fn-name))
 
 (defmethod title ((o grouped-output-contents))
-  (with-accessors ((label labeldef) (group group)) o
+  (with-accessors ((label get-grouped-output-labeldef)
+                   (group get-grouped-output-group)) o
     (cond
      ((get-label-section-title-supp-p label group o)
        (get-label-section-title label group o))

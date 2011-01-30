@@ -19,18 +19,19 @@
 ;;; License along with DefDoc.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
 
-(in-package :defdoc)
+(in-package :defdoc-standard-model)
 
 ;;; Decoding the :callspec forms.
 
 (defclass standard-callspec ()
-     ((mandatory :initarg :mandatory :accessor mandatory)
-      (optional :initarg :optional :accessor optional)
-      (optional-supp :initarg :optional-supp :accessor optional-supp)
-      (key :initarg :key :accessor key)
-      (key-supp :initarg :key-supp :accessor key-supp)
-      (body :initarg :body :accessor body)
-      (body-supp :initarg :body-supp :accessor body-supp)))
+     ((mandatory :initarg :mandatory :accessor standard-callspec-mandatory)
+      (optional :initarg :optional :accessor standard-callspec-optional)
+      (optional-supp :initarg :optional-supp
+                     :accessor standard-callspec-optional-supp)
+      (key :initarg :key :accessor standard-callspec-key)
+      (key-supp :initarg :key-supp :accessor standard-callspec-key-supp)
+      (body :initarg :body :accessor standard-callspec-body)
+      (body-supp :initarg :body-supp :accessor standard-callspec-body-supp)))
 
 (defclass macrolist-callspec (standard-callspec) ())
 
@@ -87,16 +88,16 @@
          :body (nreverse body)   :body-supp body-supp))))
 
 (defclass callspec-items-holder ()
-     ((items :initarg :items :reader items)))
+     ((items :initarg :items :reader get-callspec-holder-items)))
 (defclass callspec-bag-of (callspec-items-holder) ())
 (defclass callspec-one-of (callspec-items-holder) ())
 (defclass callspec-sequence-of ()
-     ((repeated :initarg :repeated :reader repeated)))
+     ((repeated :initarg :repeated :reader get-callspec-sequence-of-repeated)))
 (defclass callspec-optional ()
-     ((option :initarg :option :reader option)))
+     ((option :initarg :option :reader get-callspec-optional-option)))
 (defclass callspec-keyheaded ()
-     ((key :initarg :key :reader key)
-      (forms :initarg :forms :reader forms)))
+     ((key   :initarg :key   :reader get-callspec-keyheaded-key)
+      (forms :initarg :forms :reader get-callspec-keyheaded-forms)))
 
 (defun get-compiled-callspec-simple-item (package target-type item)
   (cond
@@ -134,8 +135,8 @@
     (t (error "Unrecognized lambda list element ~s" item))))
 
 (defclass callspec-keyarg ()
-     ((key :initarg :key :reader key)
-      (arg :initarg :arg :reader arg)))
+     ((key :initarg :key :reader get-callspec-keyarg-key)
+      (arg :initarg :arg :reader get-callspec-keyarg-arg)))
 
 (defun get-compiled-callspec-keyarg-item (package target-type item)
   (destructuring-bind (keyword param-desig) item
@@ -143,3 +144,4 @@
       :key keyword
       :arg (get-compiled-callspec-simple-item package
                                               target-type param-desig))))
+

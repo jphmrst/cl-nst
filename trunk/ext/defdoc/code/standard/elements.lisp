@@ -19,7 +19,10 @@
 ;;; License along with DefDoc.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
 
-(in-package :defdoc)
+(in-package :defdoc-standard-model)
+
+(defclass standard-doc-element (docspec-element)
+     ())
 
 (def-element :plain (standard-plain-text :class standard-doc-element
                                          :args (text))
@@ -31,22 +34,6 @@
       (pprint-logical-block (stream '(1))
         (format stream "[ ~a" (type-of spec))
         (loop for slot in '(text) do
-              (cond
-                ((slot-boundp spec slot)
-                 (format stream "~:@_  - ~a ~w" slot (slot-value spec slot)))
-                (t (format stream "~:@_  - no ~a" slot))))
-        (format stream " ]")))))
-
-(def-element :latex (standard-latex :class standard-doc-element
-                                    :args (text))
-     ((latex :initarg :latex :reader latex-element-latex))
-  (make-instance 'standard-latex :latex text))
-(set-pprint-dispatch 'standard-latex
-  (named-function pprint-standard-latex
-    (lambda (stream spec)
-      (pprint-logical-block (stream '(1))
-        (format stream "[ ~a" (type-of spec))
-        (loop for slot in '(latex) do
               (cond
                 ((slot-boundp spec slot)
                  (format stream "~:@_  - ~a ~w" slot (slot-value spec slot)))

@@ -19,7 +19,7 @@
 ;;; License along with DefDoc.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
 
-(in-package :defdoc)
+(in-package :defdoc-core)
 
 ;;; -----------------------------------------------------------------
 ;;; Global hashtable storing information about the kinds of things we
@@ -27,14 +27,16 @@
 
 (defclass standard-doc-target ()
   ((name :initarg :name :accessor name)
-   (capitalized :initform nil :initarg :capitalized :accessor capitalized)
-   (lower-case  :initform nil :initarg :lower-case  :accessor lower-case)
+   (capitalized :initform nil :initarg :capitalized
+                :accessor capitalized-target-name)
+   (lower-case  :initform nil :initarg :lower-case
+                :accessor lower-case-target-name)
    (docstring-installer :initarg :docstring-installer
                         :accessor docstring-installer)))
 (defmethod initialize-instance :after ((target standard-doc-target)
                                        &key &allow-other-keys)
-  (with-accessors ((name name) (capitalized capitalized)
-                   (lower-case lower-case)) target
+  (with-accessors ((name name) (capitalized capitalized-target-name)
+                   (lower-case lower-case-target-name)) target
                    (unless lower-case
                      (setf lower-case (string-downcase (symbol-name name))))
                    (unless capitalized

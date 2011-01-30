@@ -19,14 +19,17 @@
 ;;; License along with DefDoc.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
 
-(in-package :defdoc)
+(in-package :defdoc-core)
+
+(defvar *docspec-compiler-name* 'defdoc-standard-model:compile-spec)
 
 (defmacro def-documentation (name-or-spec &body body)
   "Doc doc doc"
   (multiple-value-bind (name target-type spec-args)
       (decode-defdoc-spec name-or-spec)
     (let ((spec (gensym "spec")))
-      `(let ((,spec (compile-spec ',name ',target-type ',spec-args ',body)))
+      `(let ((,spec (funcall (symbol-function *docspec-compiler-name*)
+                             ',name ',target-type ',spec-args ',body)))
          (setf (get-doc-spec ',name ',target-type) ,spec)
          (funcall (docstring-installer (get-target-type ',target-type))
                   ',name ,spec)
