@@ -21,8 +21,9 @@
 
 (defpackage :defdoc-coredoc
   (:documentation "DefDoc internal organizational package - self-documentation")
-  (:use :defdoc-docsyms :common-lisp :defdoc-core :defdoc-collectors
-        :defdoc-standard-model :defdoc-latex :defdoc-html :defdoc-plaintext)
+  (:use :defdoc-docsyms :common-lisp
+        :defdoc-core :defdoc-collectors :defdoc-standard-model
+        :defdoc-latex :defdoc-html :defdoc-plaintext)
   #+allegro (:import-from excl #:named-function))
 (in-package :defdoc-coredoc)
 
@@ -916,6 +917,62 @@
 (def-documentation (type package-list-latex-mixin)
   (:intro "Type \\texttt{package-list-latex-mixin} --- \\fbox{FILL IN}")
   (:properties (manual-section latex-style-model)))
+
+
+;;; -----------------------------------------------------------------
+;;; HTML
+
+(def-documentation (compiler-macro with-div-wrapper)
+  (:intro (:latex "The \\texttt{with-div-wrapper} macro \\fbox{FILL IN}"))
+  (:properties (manual-section html-style-model)))
+
+(def-documentation (compiler-macro with-span-wrapper)
+  (:intro (:latex "The \\texttt{with-span-wrapper} macro \\fbox{FILL IN}"))
+  (:properties (manual-section html-style-model)))
+
+(def-documentation (type html-style)
+  (:intro (:latex "The \\texttt{html-style} class is a base class for HTML document generation.  Note that \\LaTeX's \\texttt{makeindex} program can become confused if a directory has the same name as a \\LaTeX\\ source file: so a file \\texttt{mydoc.tex} and a generated directory of HTML files \\texttt{mydoc} should not actually be given the same name."))
+  (:properties (manual-section styles)))
+
+(def-documentation (function write-html-output-index-page)
+  (:intro "The \\texttt{write-html-output-index-page} function \\fbox{FILL IN}")
+  (:properties (manual-section html-style-model)))
+
+(def-documentation (function format-html-output-index-page-header-block)
+  (:intro "The \\texttt{format-html-output-index-page-header-block} function \\fbox{FILL IN}")
+  (:properties (manual-section html-style-model)))
+
+(def-documentation (function format-html-output-index-page-headers)
+  (:intro "The \\texttt{format-html-output-index-page-headers} function \\fbox{FILL IN}")
+  (:properties (manual-section html-style-model)))
+
+(def-documentation (function format-html-output-index-page-body)
+  (:intro (:latex "The \\texttt{format-html-output-index-page-body} function \\fbox{FILL IN}"))
+  (:properties (manual-section html-style-model)))
+
+(def-documentation (function traverse-and-write-output-pages)
+  (:intro (:latex "The \\texttt{traverse-and-write-output-pages} function \\fbox{FILL IN}"))
+  (:properties (manual-section html-style-model)))
+
+(def-documentation (function get-html-disambiguator)
+  (:intro (:latex "The \\texttt{get-html-disambiguator} function \\fbox{FILL IN}"))
+  (:properties (manual-section html-style-model)))
+
+(def-documentation (function format-content-link)
+  (:intro (:latex "The \\texttt{format-content-link} function \\fbox{FILL IN}"))
+  (:properties (manual-section html-style-model)))
+
+(def-documentation (function get-content-link-filename)
+  (:intro (:latex "The \\texttt{get-content-link-filename} function \\fbox{FILL IN}"))
+  (:properties (manual-section html-style-model)))
+
+(def-documentation (function format-content-anchor)
+  (:intro (:latex "The \\texttt{format-content-anchor} function \\fbox{FILL IN}"))
+  (:properties (manual-section html-style-model)))
+
+(def-documentation (function html-free-paragraph-docspec-element)
+  (:intro (:latex "The \\texttt{html-free-paragraph-docspec-element} function \\fbox{FILL IN}"))
+  (:properties (manual-section html-style-model)))
 
 
 ;;; -----------------------------------------------------------------

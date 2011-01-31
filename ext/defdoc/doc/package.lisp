@@ -26,7 +26,7 @@
 (defpackage :sift.defdoc-doc
   (:documentation "Unit and regression testing for Common Lisp")
   (:nicknames :defdoc-doc)
-  (:use :common-lisp :defdoc :defdoc-control-api)
+  (:use :common-lisp :defdoc :defdoc-control-api :defdoc-docsyms :asdf-defdoc)
   #+(or sbcl allegro)
   (:import-from #+sbcl sb-mop #-sbcl mop
                 #:generic-function-methods #:method-specializers
@@ -36,13 +36,5 @@
     #:extract-lambda-list
     #:generic-function-methods #:method-specializers
     #:eql-specializer-object)
-
-  (:import-from defdoc
-    #:manual-section #:docspecs #:outspec #:asdf-defdoc ; #:doc-gen
-    #:control #:targets #:model
-    #:label-model #:elements #:standard-model #:output-model
-    #| #:plaintext |# #:plaintext-model
-    #:styles #:latex #:latex-style-model
-    #:deprecated)
 
   (:export #:build-defdoc-docs))

@@ -49,13 +49,11 @@
                         (:latex "The \\texttt{:filename} argument should be astring naming the root of the file to be written.  If omitted, the name of the symbol ")
                         (:latex "The \\texttt{:index} argument, if non-nil, indicates that output should include an index if the style supports it.")
                         (:latex "The \\texttt{:table-of-contents} argument, if non-nil, indicates that output should include a table of contents if the style supports it."))))))
-  (:properties (manual-section defdoc::asdf-defdoc)))
+  (:properties (manual-section defdoc-via-asdf)))
 
 (def-output-class (defdoc-manual
-                      :title "DefDoc user manual" :author "John Maraist")
-
-  (collect-doc ()
-               "DefDoc allows programmers and authors to base all program documentation and manuals on declarations within the program source.  By generating the manual, reference card, and docstrings from a common set of declarations, DefDoc helps eliminate the possibility of documents containing inconsistent, outdated material.")
+                      :title "DefDoc user manual" :author "John Maraist"
+                      :leader (:latex "DefDoc allows programmers and authors to base all program documentation and manuals on declarations within the program source.  By generating the manual, reference card, and docstrings from a common set of declarations, DefDoc helps eliminate the possibility of documents containing inconsistent, outdated material."))
   (collect-output (:title "Basic operations")
     (collect-groups-by-label
         (manual-section :package :defdoc
@@ -65,15 +63,20 @@
                                             :leader (:latex "DefDoc uses a small set of macros for adding documentation to source code.  Its primary macro is \\texttt{def-documentation}, which attaches documentation to a target.  Targets include, by default, anything to which the Lisp \\texttt{documentation} model applies --- \\texttt{function}s, \\texttt{type}s, \\texttt{compiler-macro}s and so forth, as well as individual generic function methods; authors can also create additional target types."))
                                   (outspec
                                    :order (def-output-class def-label-config
-                                            collect-target-type)
+                                              collect-target-type)
+                                   ;; :title "Packaging units of output"
                                    :leader (:latex "DefDoc separates the description of the \\emph{contents} of an output document from the mechanics of generating the document.  The description of a document's contents is though \\emph{output units}.  DefDoc provides macros and functions to quickly specify output units.  The top-level macro for these definitions is \\emph{def-output-class}, which creates a class corresponding to an output unit, and an initialiation method for gathering its contents.  The initialiation methods are based on calls to various \\texttt{collect} functions and macros within the body of a \\emph{def-output-class} call."))
-                                  (asdf-defdoc
+                                  (defdoc-via-asdf
                                    :leader (:latex "DefDoc integrates with ASDF to coordinate documentation generation.  Currently, DefDoc provides an interim base ASDF system, under which the ASDF \\texttt{load-op} triggers document generation.  We plan to develop a second base system which supports a new operator \\texttt{doc-op}, with distinguished components loaded only for the documentation, and not the standard component load or test."))
                                   (styles :title "The output style"
                                    :order (write-output
                                            latex-style symbol-homing-style)
-                                   :leader (:latex "This section discusses \\emph{styles}, classes encapsulating various options for documentation generation, which are exported by DefDoc."))
-                                  (latex :title (:latex "Other \\LaTeX\\ generators"))))
+                                   :leader (:latex "This section discusses \\emph{styles}, classes encapsulating various options for documentation generation.  Style classes allow output document generation to be consolidated into a single generic function \\texttt{write-output}.  DefDoc exports a number of pre-defined output styles."))
+                                  (latex :title (:latex "Other \\LaTeX\\ generators")
+                                   :order (write-spec-latex
+                                           write-doctype-latex
+                                           write-package-specs-latex)
+                                   :leader (:latex "DefDoc's facilities for generating documentation fully from output unit definitions is attractive, but is not always feasible, in particular for existing projects to which DefDoc is gradually applied.  This section documents the API for an alternative mode for using DefDoc for \\LaTeX\\ documentation, where snippets of generated \\LaTeX\\ source are included in a manually-constructed top-level \\LaTeX\\ document.  These functions, for the most part, wrap a call to the \\texttt{format-doc} or \\texttt{format-docspec} control API functions with stream-opening and other administrative environment setup."))))
       (collect-exported-symbols :defdoc)
       (collect-symbols #:asdf #:defdoc-asdf)))
   (collect-output (:title "Customizing and extending styles")
@@ -100,7 +103,8 @@
                                   (latex-style-model
                                    :order (standard-latex
                                            full-package-latex-style-mixin
-                                           package-list-latex-mixin))))
+                                           package-list-latex-mixin))
+                                  html-style-model))
       (collect-exported-symbols :defdoc-control-api)))
   (collect-output (:title "Customizing documentation models")
     (collect-groups-by-label
@@ -121,10 +125,10 @@
   (declare (ignore target-type spec))
   '(:defdoc-control-api :asdf-defdoc :defdoc))
 
-(def-label-config (:style manual-style :label manual-section :package :defdoc)
+(def-label-config (:label manual-section :package :defdoc-docsyms)
   (docspecs :title "Providing documentation")
   (outspec :title "Packaging units of output")
-  (asdf-defdoc :title "Document generation via ASDF")
+  (defdoc-via-asdf :title "Document generation via ASDF")
   (control :title "Control model")
   (styles :title "Mixins for styles")
   (targets :title "Documentation targets")
@@ -136,4 +140,5 @@
   (plaintext :title "Generating plain text")
   (latex :title (:latex "Generating \\LaTeX"))
   (latex-style-model :title (:latex "The \\LaTeX\\ model"))
+  (html-style-model :title (:latex "The HTML model"))
   (deprecated :title "Deprecated forms"))

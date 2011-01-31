@@ -21,11 +21,11 @@
 (in-package :common-lisp-user)
 
 (defpackage :defdoc-docsyms
-    (:export #:manual-section #:docspecs #:outspec ; #:doc-gen
-             #:control #:targets #:model
-             #:label-model #:elements #:standard-model #:output-model
-             #| #:plaintext |#
-             #:plaintext-model #:styles #:latex #:latex-style-model
+    (:export #:manual-section
+             #:docspecs #:outspec #:defdoc-via-asdf #:styles #:latex #:html
+             #:model #:standard-model
+             #:output-model #:plaintext #:latex-style-model #:html-style-model
+             #:doc-gen #:control #:targets #:label-model #:elements
              #:deprecated))
 
 (defpackage :defdoc-core
@@ -129,13 +129,6 @@
            #:grouped-output-contents
            #:get-grouped-output-labeldef
            #:get-grouped-output-group))
-
-;;;(defmacro defdoc-core::let-echo* (bindings &body body)
-;;;  (let ((x (gensym)))
-;;;    `(let* ,(loop for (name form) in bindings
-;;;                collect `(,name (let ((,x ,form))
-;;;                                  (format t "~a = ~s~%" ',name ,x))))
-;;;       ,@body)))
 
 (defpackage :defdoc-collectors
   (:documentation
@@ -249,6 +242,7 @@
   (:use :defdoc-docsyms :common-lisp :defdoc-core :defdoc-standard-model :defdoc-plaintext)
   #+allegro (:import-from excl #:named-function)
   (:export ;; latex.lisp
+           #:latex-style
            #:standard-latex
            #:latex-element-latex
            #:*defdoc-latex-default-directory*
@@ -258,7 +252,11 @@
            #:full-package-latex-style-mixin
            #:package-list-overall-header
            #:package-list-group-header
-           #:package-list-entry))
+           #:package-list-entry
+
+           #:write-spec-latex #:write-doctype-latex
+           #:write-package-specs-latex #:write-latex-output
+           #:process-latex-document))
 
 (defpackage :defdoc-html
   (:documentation "DefDoc internal organizational package - HTML backend")
@@ -266,6 +264,16 @@
         :defdoc-plaintext :defdoc-latex)
   #+allegro (:import-from excl #:named-function)
   (:export ;; html.lisp
+           #:with-div-wrapper
+           #:with-span-wrapper
+           #:html-style
            #:write-html-output-index-page
            #:format-html-output-index-page-header-block
-           #:format-html-output-index-page-headers))
+           #:format-html-output-index-page-headers
+           #:format-html-output-index-page-body
+           #:traverse-and-write-output-pages
+           #:get-html-disambiguator
+           #:format-content-link
+           #:get-content-link-filename
+           #:format-content-anchor
+           #:html-free-paragraph-docspec-element))
