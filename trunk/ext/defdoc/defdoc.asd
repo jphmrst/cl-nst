@@ -6,7 +6,7 @@
 ;;; Written by John Maraist.
 ;;;
 ;;; DefDoc is free software: you can redistribute it and/or modify it
-;;; under the terms of the GNU Lesser General Public License as
+;;; under the terms of the GNU Lx2esser General Public License as
 ;;; published by the Free Software Foundation, either version 3 of the
 ;;; License, or (at your option) any later version.
 ;;;
@@ -56,95 +56,92 @@
                ;; documentation generation.
                (:file "package")
 
-               ;; Global settings
-               (:file "globals"  :depends-on ("package"))
+               (:module "core" :depends-on ("package") :components
 
-               ;; Collectable objects with properties.
-               (:file "collect"  :depends-on ("package"))
+                        ;; Global settings
+                        ((:file "globals")
 
-               ;; Storage for the actual documentation objects.
-               (:file "storage"  :depends-on ("globals" "collect"))
+                         ;; Collectable objects with properties.
+                         (:file "collect")
 
-               ;; Properties associated with labels.
-               (:file "labels"  :depends-on ("package"))
+                         ;; Storage for the actual documentation
+                         ;; objects.
+                         (:file "storage" :depends-on ("globals" "collect"))
 
-               ;; Declaring different documentation targets.
-               (:file "targetdef"  :depends-on ("package" "storage"))
+                         ;; Declaring different documentation targets.
+                         (:file "targetdef" :depends-on ("storage"))
 
-               ;; Things we give documentation to.
-               (:file "targets"  :depends-on ("targetdef" "globals"))
+                         ;; Things we give documentation to.
+                         (:file "targets" :depends-on ("targetdef" "globals"))
 
-               ;; Standard representation of a specification
-               (:file "spec"  :depends-on ("package"))
+                         ;; Properties associated with labels.
+                         (:file "labels")
 
-               ;; Scheme for defining document elements.
-               (:file "elementdef" :depends-on ("package"))
+                         ;; General model of a document spec.
+                         (:file "spec")
 
-               ;; Standard document element definition.
-               (:file "elements" :depends-on ("elementdef" "package"))
+                         ;; Scheme for defining document elements.
+                         (:file "elementdef")
 
-               ;; First cut at a tagging scheme.  Will be replaced
-               ;; by the labels/values scheme below.
-               (:file "tag" :depends-on ("package"))
+                         ;; First cut at a tagging scheme.  Will be replaced
+                         ;; by the labels/values scheme below.
+                         (:file "tag")
 
-               ;; Selecting a set of specs.
-               (:file "select" :depends-on ("spec"))
+                         ;; Selecting a set of specs.
+                         (:file "select")
+                                        ;  :depends-on ("standard")
 
-               ;; (:file "values" :depends-on ("package"))
+                         ;; The main defdoc macro.
+                         (:file "macro"  :depends-on
+                                ( ;; "standard"
+                                 ;; the one below are to be able to
+                                 ;; use defdoc in things that depend
+                                 ;; on macro.
+                                 "tag" "elementdef"
+                                 "targets" "targetdef"))
 
-               ;; The main defdoc macro.
-               (:file "macro"  :depends-on ("spec"
-                                            ;; the one below are to be
-                                            ;; able to use defdoc in
-                                            ;; things that depend on
-                                            ;; macro.
-                                            "tag" "elements" "elementdef"
-                                            "targets" "targetdef"
-                                            ))
+                         ;; Generic output framework specifications.
+                         (:file "output" :depends-on
+                                ("labels" "targets" "collect"))
 
-               ;; Generic output framework specifications.
-               (:file "output" :depends-on
-                      ("package" "labels" "targets" "elements" "collect"))
+                         ;; Generic output framework specifications.
+                         (:file "collectors" :depends-on ("output"))))
 
-               ;; Decoding the callspec forms.
-               (:file "callspec"  :depends-on ("package"
-                                               "macro"))
+               (:module "standard" :depends-on ("package") :components
 
-               ;; Operations on blocks of lines.
-               (:file "block"  :depends-on ("package"
-                                            "macro"))
+                        ;; Standard representation of a specification.
+                        ((:file "standard")
 
-               ;; Converting specs to plain text.
-               (:file "plaintext"  :depends-on ("spec" "elements"
-                                                       "callspec" "block"
-                                                       "macro"))
+                         ;; Standard document element definition.
+                         (:file "elements")
 
-               ;; Style mixins
-               (:file "style"  :depends-on ())
+                         ;; Decoding the callspec forms.
+                         (:file "callspec")
+
+                         ;; Style mixins
+                         (:file "style")))
+
+               (:module "plaintext" :depends-on ("standard") :components
+
+                        ;; Operations on blocks of lines.
+                        ((:file "block")
+
+                         ;; Converting specs to plain text.
+                         (:file "plaintext" :depends-on ("block"))))
 
                ;; Converting specs to LaTeX.
-               (:file "latex"  :depends-on ("globals"
-                                            "macro" "plaintext" "spec"
-                                            "elements" "callspec" "tag"
-                                            "output"))
+               (:file "latex"  :depends-on ("standard" "plaintext"))
+
+               ;; Converting specs to HTML
+               (:file "html"  :depends-on ("standard" "plaintext"))
 
                ;; Documentation of def-doc in def-doc.
-               (:file "coredoc"  :depends-on ("globals"
-                                              "macro" "storage" "targetdef"
-                                              "spec" "elementdef" "elements"
-                                              "tag" "macro" "callspec" "block"
-                                              "plaintext" "latex"))
+               (:file "documentation" :depends-on
+                      ("core" "standard" "plaintext" "latex" "html"))
 
                ;; Programmatic API
-               (:file "interfaces"  :depends-on ("storage"
-                                                 "targetdef"
-                                                 "spec"
-                                                 "elementdef"
-                                                 "elements"
-                                                 "labels"
-                                                 "tag"
-                                                 "callspec"
-                                                 "block"
-                                                 "output"
+               (:file "interfaces"  :depends-on ("standard"
+                                                 "core"
                                                  "plaintext"
-                                                 "latex"))))))
+                                                 "latex"
+                                                 "html"))))))

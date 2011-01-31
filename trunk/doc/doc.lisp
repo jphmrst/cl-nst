@@ -61,7 +61,7 @@
 ;;; -----------------------------------------------------------------
 ;;; Style for criteria --- prob. deprecated
 
-(defclass nst-criterion-style (defdoc-control-api:latex-style
+(defclass nst-criterion-style (defdoc:latex-style
                                defdoc-control-api:package-list-latex-mixin) ())
 (defmethod defdoc-control-api:get-latex-output-file-name ((style nst-criterion-style)
                                               usage name)
@@ -107,14 +107,14 @@
 ;;; --------------------------------------------------
 ;;; Style for the manual.
 
-(defclass nst-item-style (defdoc-control-api:latex-style) ())
+(defclass nst-item-style (defdoc:latex-style) ())
 (defmethod defdoc-control-api:get-latex-output-file-name ((style nst-item-style)
                                               usage name)
   (string-downcase (concatenate 'string
                      (symbol-name name) "_"
                      (symbol-name usage) "_"
                      (symbol-name (type-of style)) ".tex")))
-(defmethod defdoc-control-api:latex-style-adjust-spec-element ((style nst-item-style)
+(defmethod defdoc-control-api:get-element-for-docspec-format ((style nst-item-style)
                                                    target-type spec
                                                    (element (eql :intro))
                                                    datum)
@@ -128,7 +128,7 @@
          :elements (list (make-instance 'defdoc-control-api:standard-latex
                            :latex (format nil "\\label{~a:primary}" self))
                          (call-next-method)))))))
-(defmethod defdoc-control-api:latex-style-adjust-spec-element ((style nst-item-style)
+(defmethod defdoc-control-api:get-element-for-docspec-format ((style nst-item-style)
                                                    target-type spec
                                                    (element (eql :blurb))
                                                    datum)
@@ -150,7 +150,7 @@
 ;;; Style for the manual's package list.
 
 (defclass nst-package-list-latex-style (defdoc-control-api:package-list-latex-mixin
-                                        defdoc-control-api:latex-style) ())
+                                        defdoc:latex-style) ())
 (defmethod defdoc-control-api:package-list-entry ((style nst-package-list-latex-style)
                                       spec group entry stream)
      (declare (ignore spec group))
@@ -162,7 +162,7 @@
 ;;; --------------------------------------------------
 ;;; Style for the quickref card.
 
-(defclass nst-quickref (defdoc-control-api:latex-style) ())
+(defclass nst-quickref (defdoc:latex-style) ())
 (defmethod defdoc-control-api:get-latex-output-file-name ((style nst-quickref)
                                               usage name)
   (string-downcase (concatenate 'string
@@ -180,12 +180,12 @@
     (cond
      (short-supp-p
       (format-docspec stream style
-                      (latex-style-adjust-spec-element style target-type spec
+                      (get-element-for-docspec-format style target-type spec
                                                        :intro short)
                       target-type))
      (intro-supp-p
       (format-docspec stream style
-                      (latex-style-adjust-spec-element style target-type spec
+                      (get-element-for-docspec-format style target-type spec
                                                        :intro intro)
                       target-type)))
 
@@ -205,7 +205,7 @@
       (loop for (name subspec) in params do
         (format stream "\\item[~a] " name)
         (format-docspec stream style
-                        (latex-style-adjust-spec-element style target-type spec
+                        (get-element-for-docspec-format style target-type spec
                                                          :subspec subspec)
                         target-type))
       (princ "\\end{description}" stream))))

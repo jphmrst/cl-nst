@@ -38,5 +38,9 @@
                          (:file "doc"  :depends-on ("package")))))
   :documentation-package :defdoc-doc
   :build-output ((#:defdoc-manual :rel-directory "doc/"
+                                  :filename-root "html"
+                                  :style #:html-style
+                                  :index t :table-of-contents t)
+                 (#:defdoc-manual :rel-directory "doc/"
                                   :style #:manual-style
                                   :index t :table-of-contents t)))
