@@ -21,54 +21,66 @@
 
 (in-package :defdoc-core)
 
-(def-target-type function ()
+(def-target-type function (:symbol-definition-checker
+                           (lambda (s) (and (fboundp s)
+                                            (not (macro-function s)))))
   (:docstring-installer (name spec)
     (setf (documentation name 'function)
           (with-output-to-string (stream)
             (format-docspec stream *docstring-style* spec 'function)))))
 
-(def-target-type compiler-macro (:lower-case "macro")
+(def-target-type compiler-macro (:lower-case "macro"
+                                 :symbol-definition-checker macro-function)
   (:docstring-installer (name spec)
     (setf (documentation name 'compiler-macro)
           (with-output-to-string (stream)
             (format-docspec stream *docstring-style* spec 'compiler-macro)))))
 
-(def-target-type setf ()
+(def-target-type setf (:symbol-definition-nocheck t)
   (:docstring-installer (name spec)
     (setf (documentation name 'setf)
           (with-output-to-string (stream)
             (format-docspec stream *docstring-style* spec 'setf)))))
 
-(def-target-type type ()
+(def-target-type type (:symbol-definition-checker
+                       (lambda (e)
+                         (let ((class-def (find-class e nil)))
+                           (and class-def
+                                (not (typep class-def 'structure-class))))))
   (:docstring-installer (name spec)
     (setf (documentation name 'type)
           (with-output-to-string (stream)
             (format-docspec stream *docstring-style* spec 'type)))))
 
-(def-target-type structure ()
+(def-target-type structure (:symbol-definition-checker
+                            (lambda (e)
+                              (let ((class-def (find-class e nil)))
+                                (and class-def
+                                     (typep class-def 'structure-class)))))
   (:docstring-installer (name spec)
     (setf (documentation name 'structure)
           (with-output-to-string (stream)
             (format-docspec stream *docstring-style* spec 'structure)))))
 
-(def-target-type package ()
+(def-target-type package (:symbol-definition-checker find-package)
   (:docstring-installer (name spec)
     (setf (documentation (find-package name) t)
           (with-output-to-string (stream)
             (format-docspec stream *docstring-style* spec 'package)))))
 
-(def-target-type method-combination (:lower-case "method combination")
+(def-target-type method-combination
+    (:lower-case "method combination" :symbol-definition-nocheck t)
   (:docstring-installer (name spec)
     (setf (documentation name 'method-combination)
           (with-output-to-string (stream)
             (format-docspec stream *docstring-style* spec
                             'method-combination)))))
 
-(def-target-type variable ()
+(def-target-type variable (:symbol-definition-checker boundp)
   (:docstring-installer (name spec)
     (setf (documentation name 'variable)
           (with-output-to-string (stream)
             (format-docspec stream *docstring-style* spec 'variable)))))
 
-(def-target-type method ())
+(def-target-type method (:symbol-definition-nocheck t))
 

@@ -47,9 +47,9 @@
                                         ; after a version is shipped.
     :version "0.0.2"
     :author "John Maraist <lisper@maraist.org>"
-    :license "LGPL 2.latest"
+    :license "LGPL 3.latest"
     :in-order-to ((test-op (test-op :defdoc-test)))
-    :depends-on ( :closer-mop )
+    :depends-on ( :closer-mop :defcontract )
     :components
     ((:module "code" :components
               (;; The DEFDOC package, plus internal packages and
@@ -102,12 +102,12 @@
 
                          ;; Generic output framework specifications.
                          (:file "output" :depends-on
-                                ("labels" "targets" "collect"))
+                                ("labels" "targets" "collect" "spec"))
 
                          ;; Generic output framework specifications.
                          (:file "collectors" :depends-on ("output"))))
 
-               (:module "standard" :depends-on ("package") :components
+               (:module "standard" :depends-on ("core") :components
 
                         ;; Standard representation of a specification.
                         ((:file "standard")
@@ -121,13 +121,17 @@
                          ;; Style mixins
                          (:file "style")))
 
-               (:module "plaintext" :depends-on ("standard") :components
+               (:module "plaintext" :depends-on ("standard")
+                        :components
 
-                        ;; Operations on blocks of lines.
-                        ((:file "block")
+                        ;; Utility operations on blocks of lines.
+                        ((:file "utils")
+
+                         ;; Converting specs to blocks of lines.
+                         (:file "lineblocks" :depends-on ("utils"))
 
                          ;; Converting specs to plain text.
-                         (:file "plaintext" :depends-on ("block"))))
+                         (:file "plaintext" :depends-on ("lineblocks"))))
 
                ;; Converting specs to LaTeX.
                (:file "latex"  :depends-on ("standard" "plaintext"))
@@ -135,13 +139,10 @@
                ;; Converting specs to HTML
                (:file "html"  :depends-on ("standard" "plaintext"))
 
-               ;; Documentation of def-doc in def-doc.
-               (:file "documentation" :depends-on
-                      ("core" "standard" "plaintext" "latex" "html"))
-
                ;; Programmatic API
                (:file "interfaces"  :depends-on ("standard"
                                                  "core"
-                                                 "plaintext"
-                                                 "latex"
-                                                 "html"))))))
+                                                 "plaintext" "latex" "html"))
+
+               ;; Documentation of def-doc in def-doc.
+               (:file "documentation" :depends-on ("interfaces"))))))

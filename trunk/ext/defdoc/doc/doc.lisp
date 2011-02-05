@@ -50,6 +50,7 @@
                         (:latex "The \\texttt{:index} argument, if non-nil, indicates that output should include an index if the style supports it.")
                         (:latex "The \\texttt{:table-of-contents} argument, if non-nil, indicates that output should include a table of contents if the style supports it."))))))
   (:properties (manual-section defdoc-via-asdf)))
+(ensure-api-documentation :asdf-defdoc)
 
 (def-output-class (defdoc-manual
                       :title "DefDoc user manual" :author "John Maraist"
@@ -60,7 +61,8 @@
                         :groups '((docspecs :order (def-documentation
                                                        def-target-type)
                                             :title "Writing documentation"
-                                            :leader (:latex "DefDoc uses a small set of macros for adding documentation to source code.  Its primary macro is \\texttt{def-documentation}, which attaches documentation to a target.  Targets include, by default, anything to which the Lisp \\texttt{documentation} model applies --- \\texttt{function}s, \\texttt{type}s, \\texttt{compiler-macro}s and so forth, as well as individual generic function methods; authors can also create additional target types."))
+                                   :leader (:latex "DefDoc uses a small set of macros for adding documentation to source code.  Its primary macro is \\texttt{def-documentation}, which attaches documentation to a target.  Targets include, by default, anything to which the Lisp \\texttt{documentation} model applies --- \\texttt{function}s, \\texttt{type}s, \\texttt{compiler-macro}s and so forth, as well as individual generic function methods; authors can also create additional target types."))
+                                  label-use
                                   (outspec
                                    :order (def-output-class def-label-config
                                               collect-target-type)
@@ -76,7 +78,10 @@
                                    :order (write-spec-latex
                                            write-doctype-latex
                                            write-package-specs-latex)
-                                   :leader (:latex "DefDoc's facilities for generating documentation fully from output unit definitions is attractive, but is not always feasible, in particular for existing projects to which DefDoc is gradually applied.  This section documents the API for an alternative mode for using DefDoc for \\LaTeX\\ documentation, where snippets of generated \\LaTeX\\ source are included in a manually-constructed top-level \\LaTeX\\ document.  These functions, for the most part, wrap a call to the \\texttt{format-doc} or \\texttt{format-docspec} control API functions with stream-opening and other administrative environment setup."))))
+                                   :leader (:latex "DefDoc's facilities for generating documentation fully from output unit definitions is attractive, but is not always feasible, in particular for existing projects to which DefDoc is gradually applied.  This section documents the API for an alternative mode for using DefDoc for \\LaTeX\\ documentation, where snippets of generated \\LaTeX\\ source are included in a manually-constructed top-level \\LaTeX\\ document.  These functions, for the most part, wrap a call to the \\texttt{format-doc} or \\texttt{format-docspec} control API functions with stream-opening and other administrative environment setup."))
+                                  (html :title (:latex "Other HTML generators"))
+                                  (newtargetdef
+                                   :title (:latex "Defining target types"))))
       (collect-exported-symbols :defdoc)
       (collect-symbols #:asdf #:defdoc-asdf)))
   (collect-output (:title "Customizing and extending styles")
@@ -127,6 +132,7 @@
 
 (def-label-config (:label manual-section :package :defdoc-docsyms)
   (docspecs :title "Providing documentation")
+  (label-use :title "Annotating documentation with labels")
   (outspec :title "Packaging units of output")
   (defdoc-via-asdf :title "Document generation via ASDF")
   (control :title "Control model")

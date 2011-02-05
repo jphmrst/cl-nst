@@ -125,14 +125,23 @@
 (defvar *output-unit-name-hash* nil)
 (defvar *processed-output-units* nil)
 
-(defmethod write-output ((style html-style) output-name directory file-name
-                         &rest keyargs &key &allow-other-keys)
-  (let ((pathname (prepare-html-output-directory directory file-name))
-        (*output-unit-name-hash* (make-hash-table :test 'eq))
-        (*processed-output-units* (make-hash-table :test 'eq)))
-    (setf (gethash output-name *output-unit-name-hash*) "index.html")
+(defmethod write-output ((style html-style) output-name directory file-root
+                         &rest keyargs)
+  (let* ((pathname (prepare-html-output-directory directory file-root))
+         (*output-unit-name-hash* (make-hash-table :test 'eq))
+         (*processed-output-units* (make-hash-table :test 'eq)))
+    (setf (gethash output-name *output-unit-name-hash*)
+          (format nil "index~a"
+            (apply #'get-filename-extension
+                   style output-name directory "index" keyargs)))
     (apply #'traverse-and-write-output-pages
            style output-name pathname keyargs)))
+
+(defmethod get-filename-extension ((style html-style)
+                                   output-name directory file-name-root
+                                   &key &allow-other-keys)
+  (declare (ignore output-name directory file-name-root))
+  "")
 
 (defgeneric traverse-and-write-output-pages (style output pathname
                                                    &key &allow-other-keys)
@@ -310,31 +319,36 @@
 ;;; -----------------------------------------------------------------
 
 (defmethod format-docspec-element ((style html-style) target-type
-                                   (spec standard-plain-text) stream)
+                                   (spec standard-plain-text) stream
+                                   &key &allow-other-keys)
   (declare (ignore target-type))
   (format stream "~a" (text-element-text spec)))
 
 (defmethod format-docspec-element ((style html-style) target-type
-                                   (spec standard-paragraph-list) stream)
+                                   (spec standard-paragraph-list) stream
+                                   &key &allow-other-keys)
   (loop for (par . others) on (paragraphlist-element-items spec) do
     (with-div-wrapper (stream 'p)
       (format-docspec-element style target-type par stream))
     (when others (pprint-newline :mandatory stream))))
 
 (defmethod format-docspec-element ((style html-style) target-type
-                                   (spec standard-sequence) stream)
+                                   (spec standard-sequence) stream
+                                   &key &allow-other-keys)
   (loop for (item . others) on (sequence-element-items spec) do
     (format-docspec-element style target-type item stream)
     (when others (pprint-newline :mandatory stream))))
 
 (defmethod format-docspec-element ((style html-style) target-type
-                                   (code standard-code) stream)
+                                   (code standard-code) stream
+                                   &key &allow-other-keys)
   (declare (ignore target-type))
   (with-span-wrapper (stream 'pre)
     (princ (code-element-string code) stream)))
 
 (defmethod format-docspec-element ((style html-style) target-type
-                                   (spec standard-itemize) stream)
+                                   (spec standard-itemize) stream
+                                   &key &allow-other-keys)
   (with-div-wrapper (stream 'ul)
     (loop for (item . others) on (list-element-specs spec) do
       (with-div-wrapper (stream 'li)
@@ -342,7 +356,8 @@
       (when others (pprint-newline :mandatory stream)))))
 
 (defmethod format-docspec-element ((style html-style) target-type
-                                   (spec standard-enumerate) stream)
+                                   (spec standard-enumerate) stream
+                                   &key &allow-other-keys)
   (with-div-wrapper (stream 'ol)
     (loop for (item . others) on (list-element-specs spec) do
       (with-div-wrapper (stream 'li)
@@ -350,7 +365,8 @@
       (when others (pprint-newline :mandatory stream)))))
 
 (defmethod format-docspec-element ((style html-style) type
-                                   (spec standard-latex) stream)
+                                   (spec standard-latex) stream
+                                   &key &allow-other-keys)
   (format-docspec-element style type (canonicalize-element spec) stream))
 
 ;;; -----------------------------------------------------------------

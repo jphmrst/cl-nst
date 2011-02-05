@@ -44,7 +44,7 @@
 ;;; -----------------------------------------------------------------
 ;;; Standard documentation elements
 
-(def-target-type doc-element ())
+(def-target-type doc-element (:symbol-definition-checker element-type-p))
 
 (def-documentation (doc-element :plain)
  (:intro "A \\texttt{:plain} element should have one other element in the list, a string of plain text, with no backend-specific formatting.")
@@ -80,7 +80,7 @@
 ;;; -----------------------------------------------------------------
 ;;; Special callspec list headers
 
-(def-target-type callspec-special ())
+(def-target-type callspec-special (:symbol-definition-nocheck t))
 
 (def-documentation (callspec-special :seq)
   (:intro "The \\texttt{:seq} symbol indicates that the remaining specifiers of the list should be repeated in sequence.")
@@ -228,10 +228,32 @@
            (properties "List of property-value pairs to be associated with this documentation.  The property names should have be defined with the \\texttt{def-property-label} macro."))
   (:properties (manual-section docspecs)))
 
+(def-documentation (compiler-macro def-bare-string-element-tag)
+  (:intro "The \\texttt{def-bare-string-element-tag} macro specifies how an unannotated string in a documentation spec should be interpreted.")
+  (:callspec (tag &key (package name-or-package) (spec-type class-name)))
+  (:params (tag "Keyword tag within which the bare string should be wrapped.")
+           (name-or-package "Names the package within which this default applies.")
+           (class-name "Allows a particular documentation specification base type to qualify the default value."))
+  (:details (:latex "By default, a string will be interpreted as plain text.  In other words, the generic function for which this macro encapsulates a method declaration returns, by default \\texttt{:plain}, so that a bare \\texttt{string} is wrapped as:")
+            (:code "  (:plain string)"))
+  (:properties (manual-section docspecs)))
+
+(def-documentation (compiler-macro ensure-api-documentation)
+  (:intro "DefDoc provides \\texttt{ensure-api-documentation} as a top-level form to check that all symbols in a package are provided documentation.")
+  (:callspec (package &key (react flag) (error flag) (warning flag)
+                           (internal flag) (defdoc-only flag)))
+  (:params (package (:latex "The package to be checked"))
+           (error (:latex
+                   "If non-nil, raise an error on an undocumented symbol."))
+           (warning (:latex "If the \\texttt{:error} argument is non-nil, then this argument is ignored.  Otherwise, if non-nil a \\texttt{warning} (as opposed to a \\texttt{style-warning} if \\texttt{null}), is raised on an undocumented symbol."))
+           (internal (:latex "If non-nil, all symbols of the package are examined, not just the exported symbols."))
+           (defdoc-only (:latex "If non-nil, only documentation provided via DefDoc is considered ``passing'' for this check.  Otherwise, the check will accept regular Lisp docstrings.")))
+  (:properties (manual-section docspecs)))
+
 (def-documentation (compiler-macro def-property-label)
   (:intro "The \\texttt{def-property-label} macro declares a label for use in the \\texttt{:properties} of a documentation spec.")
-  (:properties (manual-section docspecs))
-  (:callspec (label-name () &body (:opt (:key-head :default-subsort name)))))
+  (:callspec (label-name () &body (:opt (:key-head :default-subsort name))))
+  (:properties (manual-section label-use)))
 
 (def-documentation (compiler-macro def-label-config)
   (:intro "The \\texttt{def-label-config} macro specifies information associated with particular uses, especially particular outputs, of a property label.")
@@ -248,7 +270,7 @@
            (value "Designates the property value with which certain values should be associated.")
            (title-spec-element "Spec element corresponding to the section title associated with a particular label value.")
            (symbol-list "Order of display associated with a particular label value."))
-  (:properties (manual-section docspecs)))
+  (:properties (manual-section label-use)))
 
 
 ;;; -----------------------------------------------------------------
@@ -267,18 +289,30 @@
            (base-class "Base class for the definition, by default \\texttt{output-contents}.")
            (title-spec "The title of the document component.")
            (author-spec "The author of the document component.")
-           (collection-form "One or more calls to the \\texttt{collect-} functions below.")
-;;;           (property-values "A list of label-value pairs.  The labels should have been defined via \\texttt{def-property-label}.")
-;;;           (grouping-label "Names a declared label.  The output will be divided into groups corresponding to the value stored against this label in the output set's contents.")
-;;;           (groups "Names and orders the values corresponding to the groups induced by the \\texttt{grouping-label} form.  When this form is provided, any values not in the list are ignored in the output.")
-;;;           (default-group "The default group to which specs which have no value stored for the \\texttt{grouping-label} property will be grouped.")
-;;;           (target-type "Includes all documentation specs for the given target type in the output set.  This form may appear multiple times in the macro body.")
-;;;           (all-symbols "Includes all symbols of the given package in the output set.  This form may appear multiple times in the macro body.")
-;;;           (documented-symbols "Includes all documented symbols of the given package in the output set.  This form may appear multiple times in the macro body.")
-;;;           (exported-symbols "Includes all exported symbols of the given package in the output set.  This form may appear multiple times in the macro body.")
-;;;           (with-output "Names output sets which should be taken as subcomponents of this output.")
-           )
+           (collection-form "One or more calls to the \\texttt{collect-} functions below."))
   (:properties (manual-section outspec)))
+
+(def-documentation (type output-contents)
+  (:intro "The \\texttt{output-contents} class --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (type grouped-output-contents)
+  (:intro "The \\texttt{grouped-output-contents} class --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (function format-doc)
+  (:intro "Function \\texttt{format-doc} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (function get-grouped-output-group)
+  (:intro "The \\texttt{get-grouped-output-group} function --- \\fbox{FILL IN}")
+  (:callspec (grouped-output))
+  (:properties (manual-section output-model)))
+
+(def-documentation (function get-grouped-output-labeldef)
+  (:intro "The \\texttt{get-grouped-output-labeldef} function --- \\fbox{FILL IN}")
+  (:callspec (grouped-output))
+  (:properties (manual-section output-model)))
 
 (def-documentation (compiler-macro collect-groups-by-label)
   (:intro "Macro \\texttt{collect-groups-by-label} forms groups of output units by grouping according to property label values.")
@@ -303,6 +337,19 @@
            (collection-form "One or more calls to \\texttt{collect-} functions which will be used to select the documentation specs to be grouped."))
   (:properties (manual-section outspec)))
 
+(def-documentation (compiler-macro collect-doc)
+  (:intro "Macro \\texttt{collect-doc} accumulates a single output element from a static document specification.  This macro allows literal text to be inserted into an output unit.")
+  (:callspec (options (:seq form)))
+  (:params (form (:latex "The forms are assembled into a document element."))
+           (options (:latex "In this version, no options are recognized and this argument is ignored.")))
+  (:details (:seq "For example:")
+            (:code "(collect-doc ()
+  (:latex \"And speaking of which:\")
+  (:enumerate ()
+    (:latex \"This stuff is cool.\")
+    (:latex \"This next stuff is confusing.\")))"))
+  (:properties (manual-section outspec)))
+
 (def-documentation (function collect-target-type)
   (:intro "Function \\texttt{collect-target-type} aggregates documentation specifications for the \\texttt{def-output-class} macro according to the target type to which the specifications is attached --- all functions, all compiler macros, or more typically, all of a particular user-defined target type.")
   (:params (target-name "The target type of interest.")
@@ -320,6 +367,14 @@
            (filter "As for \\texttt{collect-target-type}."))
   (:properties (manual-section outspec)))
 
+(def-documentation (compiler-macro collect-symbols)
+  (:intro "The \\texttt{collect-symbols} macro simply accumulates the documentation of the named symbols.")
+  (:callspec (package symbol-list (:seq filter)))
+  (:params (package "The package in which the symbols to be collected are interned.  Note that this package need not necessarily exist for the \\texttt{def-output-class} to be compiled; DefDoc will not attempt to access the package until the output unit is instantiated.")
+           (symbol-list "Symbols to be collected.")
+           (filter "As for \\texttt{collect-target-type}."))
+  (:properties (manual-section outspec)))
+
 (def-documentation (function collect-documented-symbols)
   (:intro "Function \\texttt{collect-documented-symbols} collects documentation from all symbols in the package, exported or not, which have documentation explicitly declared for them.")
   (:callspec (package-name (:seq filter)))
@@ -334,7 +389,7 @@
            (filter "As for \\texttt{collect-target-type}."))
   (:properties (manual-section outspec)))
 
-(def-documentation (function collect-output)
+(def-documentation (compiler-macro collect-output)
   (:intro "Function \\texttt{collect-output} allows included output class declarations to be nested within the including unit.")
   (:callspec (((:opt output-class-name)
                &key (class base-class) (title title-spec) (author author-spec))
@@ -366,6 +421,15 @@
            (target-type "The target-type of the spec."))
   (:properties (manual-section control)))
 
+(def-documentation (function get-spec-class)
+  (:intro "Function \\texttt{get-spec-class} --- \\fbox{FILL IN}")
+  (:callspec (package name form-list))
+  (:properties (manual-section control)))
+
+(def-documentation (function compile-spec)
+  (:intro "Function \\texttt{compile-spec} --- \\fbox{FILL IN}")
+  (:properties (manual-section control)))
+
 (def-documentation (setf get-doc-spec)
   (:blurb "Used with \\texttt{setf}, \\texttt{get-doc-spec} sets the docspec for an item of a particular target type.")
   (:properties (manual-section control)))
@@ -388,6 +452,12 @@
            (no-error "If nil (the default), the function will raise an error when a symbol which does not name a target type is looked up."))
   (:properties (manual-section targets)))
 
+(def-documentation (function get-doc-hash-of-target-type)
+  (:intro
+   "The \\texttt{get-doc-hash-of-target-type} function --- \\fbox{FILL IN}")
+  (:callspec (tag &key (package package-spec) (spec-type spec-type-name)))
+  (:properties (manual-section targets)))
+
 (def-documentation (compiler-macro def-target-type)
   (:intro "The \\texttt{def-target-type} macro defines a new documentation target type.")
   (:callspec (name (&key (class class-name))
@@ -395,7 +465,7 @@
   (:params (name "Symbolic name of the new target type.")
            (class-name "Class to be used as a record for the stored target type's information.  The default is \\texttt{standard-doc-target}; if another class is used it must support the \\texttt{:name} initarg and \\texttt{docstring-installer} accessor.")
            (docstring-installer "Function which installs a standard Lisp document string for targets of this type."))
-  (:properties (manual-section docspecs)))
+  (:properties (manual-section newtargetdef)))
 
 
 ;;; -----------------------------------------------------------------
@@ -410,54 +480,64 @@
   (:properties (manual-section model)))
 
 (def-documentation (function docspec-self)
-    (:intro "The \\texttt{docspec-self} accessor on documentation objects retrieves the symbolic name of the target of the documentation.")
-    (:properties (manual-section model)
-                 (anchor doc-spec)))
+  (:intro "The \\texttt{docspec-self} accessor on documentation objects retrieves the symbolic name of the target of the documentation.")
+  (:callspec (doc-spec))
+  (:properties (manual-section model)
+               (anchor doc-spec)))
 
 (def-documentation (function docspec-target-type)
-    (:intro "The \\texttt{docspec-target-type} accessor on documentation objects retrieves the symbolic name of the target type of the documentation.")
+  (:intro "The \\texttt{docspec-target-type} accessor on documentation objects retrieves the symbolic name of the target type of the documentation.")
+  (:callspec (doc-spec))
   (:properties (manual-section model)
                (anchor doc-spec)))
 
 (def-documentation (function docspec-tags)
-    (:intro "The \\texttt{docspec-tags} accessor on documentation objects retrieves the tags associated with a particular piece of documentation.")
+  (:intro "The \\texttt{docspec-tags} accessor on documentation objects retrieves the tags associated with a particular piece of documentation.")
+  (:callspec (doc-spec))
   (:properties (manual-section model)
-                 (anchor doc-spec)))
+               (anchor doc-spec)))
 
 (def-documentation (function docspec-descriptive)
-    (:intro "The \\texttt{docspec-descriptive} accessor on standard documentation objects retrieves a one-word descriptive string for the target.  Used in FILL IN")
-  (:properties (manual-section model)
-               (anchor doc-spec)))
+  (:intro "The \\texttt{docspec-descriptive} accessor on standard documentation objects retrieves a one-word descriptive string for the target.  Used in FILL IN")
+  (:callspec (standard-doc-spec))
+  (:properties (manual-section standard-model)
+               (anchor standard-doc-spec)))
 
 (def-documentation (function docspec-intro)
-    (:intro "The \\texttt{docspec-intro} accessor on standard documentation objects retrieves the introduction element.")
-  (:properties (manual-section model)
-               (anchor doc-spec)))
+  (:intro "The \\texttt{docspec-intro} accessor on standard documentation objects retrieves the introduction element.")
+  (:callspec (standard-doc-spec))
+  (:properties (manual-section standard-model)
+               (anchor standard-doc-spec)))
 
 (def-documentation (function docspec-blurb)
-    (:intro "The \\texttt{docspec-blurb} accessor on standard documentation objects retrieves the short description element.")
-  (:properties (manual-section model)
-               (anchor doc-spec)))
+  (:intro "The \\texttt{docspec-blurb} accessor on standard documentation objects retrieves the short description element.")
+  (:callspec (standard-doc-spec))
+  (:properties (manual-section standard-model)
+               (anchor standard-doc-spec)))
 
 (def-documentation (function docspec-details)
-    (:intro "The \\texttt{docspec-details} accessor on standard documentation objects retrieves the documentation's main body.")
-  (:properties (manual-section model)
-               (anchor doc-spec)))
+  (:intro "The \\texttt{docspec-details} accessor on standard documentation objects retrieves the documentation's main body.")
+  (:callspec (standard-doc-spec))
+  (:properties (manual-section standard-model)
+               (anchor standard-doc-spec)))
 
 (def-documentation (function docspec-params)
-    (:intro "The \\texttt{docspec-params} accessor on standard documentation objects retrieves documentation of the object's parameters.")
-  (:properties (manual-section model)
-               (anchor doc-spec)))
+  (:intro "The \\texttt{docspec-params} accessor on standard documentation objects retrieves documentation of the object's parameters.")
+  (:callspec (standard-doc-spec))
+  (:properties (manual-section standard-model)
+               (anchor standard-doc-spec)))
 
 (def-documentation (function docspec-callspecs)
-    (:intro "The \\texttt{docspec-callspecs} accessor on standard documentation objects retrieves the callspec element.")
-  (:properties (manual-section model)
-               (anchor doc-spec)))
+  (:intro "The \\texttt{docspec-callspecs} accessor on standard documentation objects retrieves the callspec element.")
+  (:callspec (standard-doc-spec))
+  (:properties (manual-section standard-model)
+               (anchor standard-doc-spec)))
 
 (def-documentation (function docspec-deprecated)
-    (:intro "The \\texttt{docspec-deprecated} accessor on standard documentation objects retrieves a deprecation flag.")
-  (:properties (manual-section model)
-               (anchor doc-spec)))
+  (:intro "The \\texttt{docspec-deprecated} accessor on standard documentation objects retrieves a deprecation flag.")
+  (:callspec (standard-doc-spec))
+  (:properties (manual-section standard-model)
+               (anchor standard-doc-spec)))
 
 (def-documentation (function get-label-symbol-value-translation)
   (:intro "Function \\texttt{get-label-symbol-value-translation} --- \\fbox{FILL IN}")
@@ -471,20 +551,36 @@
   (:intro "Type \\texttt{doc-label} --- \\fbox{FILL IN}")
   (:properties (manual-section control)))
 
-;;;(def-documentation (function get-compiled-output-framework)
-;;;  (:intro "Function \\texttt{get-compiled-output-framework} --- \\fbox{FILL IN}")
-;;;  (:properties (manual-section model)))
-
-;;;(def-documentation (function get-output-framework-class)
-;;;  (:intro "Function \\texttt{get-output-framework-class} --- \\fbox{FILL IN}")
-;;;  (:properties (manual-section model)))
-
 
 ;;; -----------------------------------------------------------------
 ;;; label-model
 
 (def-documentation (function get-label-class)
   (:intro "Function \\texttt{get-label-class} --- \\fbox{FILL IN}")
+  (:properties (manual-section label-model)))
+
+(def-documentation (function get-labeldef)
+  (:intro "Function \\texttt{get-labeldef} --- \\fbox{FILL IN}")
+  (:properties (manual-section label-model)))
+
+(def-documentation (function get-label-section-order-supp-p)
+  (:intro "Function \\texttt{get-label-section-order-supp-p} --- \\fbox{FILL IN}")
+  (:properties (manual-section label-model)))
+
+(def-documentation (function get-label-section-title-supp-p)
+  (:intro "Function \\texttt{get-label-section-title-supp-p} --- \\fbox{FILL IN}")
+  (:properties (manual-section label-model)))
+
+(def-documentation (function label-values)
+  (:intro "Function \\texttt{label-values} --- \\fbox{FILL IN}")
+  (:properties (manual-section label-model)))
+
+(def-documentation (function get-label-section-order)
+  (:intro "Function \\texttt{get-label-section-order} --- \\fbox{FILL IN}")
+  (:properties (manual-section label-model)))
+
+(def-documentation (function get-label-section-title)
+  (:intro "Function \\texttt{get-label-section-title} --- \\fbox{FILL IN}")
   (:properties (manual-section label-model)))
 
 (def-documentation (function get-labeldef)
@@ -503,12 +599,23 @@
   (:intro "Type \\texttt{labeled} --- \\fbox{FILL IN}")
   (:properties (manual-section label-model)))
 
+(def-documentation (function get-label-class)
+  (:intro "Function \\texttt{get-label-class} --- \\fbox{FILL IN}")
+  (:properties (manual-section get-label-class)))
+
 
 ;;; -----------------------------------------------------------------
 ;;; elements
 
 (def-documentation (compiler-macro def-element)
   (:intro "Compiler-macro \\texttt{def-element} --- \\fbox{FILL IN}")
+  (:callspec (name (new-class &key
+                              (class    base-case-name)
+                              (package  package-param-name)
+                              (spec     spec-param-name)
+                              (arg-list arg-list-param-name)
+                              (args     args-lambda-list))
+                   ((:seq slot-decl)) &body (:seq form)))
   (:properties (manual-section elements))
 )
 
@@ -520,28 +627,41 @@
   (:intro "Function \\texttt{text-element-text} --- \\fbox{FILL IN}")
   (:properties (manual-section elements)))
 
+(def-documentation (function element-type-p)
+  (:intro "Function \\texttt{element-type-p} --- \\fbox{FILL IN}")
+  (:properties (manual-section elements)))
+
+(def-documentation (function compile-element)
+  (:intro "Function \\texttt{compile-element} --- \\fbox{FILL IN}")
+  (:properties (manual-section elements)))
+
 (def-documentation (variable *default-element-class*)
   (:intro "Variable \\texttt{*default-element-class*} --- \\fbox{FILL IN}")
   (:properties (manual-section elements)))
 
 (def-documentation (function list-element-env-tag)
   (:intro "Function \\texttt{list-element-env-tag} --- \\fbox{FILL IN}")
+  (:callspec (list-element))
   (:properties (manual-section elements)))
 
 (def-documentation (function list-element-options)
   (:intro "Function \\texttt{list-element-options} --- \\fbox{FILL IN}")
+  (:callspec (list-element))
   (:properties (manual-section elements)))
 
 (def-documentation (function code-element-string)
   (:intro "Function \\texttt{code-element-string} --- \\fbox{FILL IN}")
+  (:callspec (code-element))
   (:properties (manual-section elements)))
 
 (def-documentation (function list-element-specs)
   (:intro "Function \\texttt{list-element-specs} --- \\fbox{FILL IN}")
+  (:callspec (list-element))
   (:properties (manual-section elements)))
 
 (def-documentation (function sequence-element-items)
   (:intro "Function \\texttt{sequence-element-items} --- \\fbox{FILL IN}")
+  (:callspec (standard-sequence))
   (:properties (manual-section elements)))
 
 (def-documentation (function paragraphlist-element-items)
@@ -551,9 +671,13 @@
 ;;; -----------------------------------------------------------------
 ;;; output-model
 
+(def-documentation (type output-framework)
+  (:intro "Type \\texttt{output-framework} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
 (def-documentation (function write-output)
   (:intro "The \\texttt{write-output} function is the main call for producing formatting output documentation.")
-  (:callspec ((style latex-style) output-name directory file-name
+  (:callspec (style output-name directory file-name
               &key (index flag) (table-of-contents flag)))
   (:params (style "Object specifying the style for the output.")
            (output-name "Name of the output unit to be formatted.")
@@ -564,6 +688,14 @@
   (:details "Other keyword arguments may be supported by other styles.")
   (:properties (manual-section styles)))
 
+(def-documentation (function get-filename-extension)
+  (:intro "The \\texttt{get-filename-extension} function returns a string with the filename extension which should be used for an output file under a particular style.")
+  (:callspec (style output-name directory file-name))
+  (:details "The arguments are as for \\texttt{write-output}.  For example, this function returns \\texttt{\".tex\"} for a \\LaTeX\\ file."
+            "The HTML style does not currently make full use of this style; some instances of \\texttt{\".html\"} are still hardcoded.")
+  (:properties (manual-section styles)
+               (anchor write-output)))
+
 (def-documentation (function format-docspec)
   (:intro "The \\texttt{format-docspec} function produces output from a documentation specification.")
   (:callspec (stream style spec target-type))
@@ -573,6 +705,15 @@
            (type "The target-type of the spec.  This value is redundant, since it can be retrieved from the spec, but is passed for dispatch by applications' methods."))
     (:properties (manual-section output-model)))
 
+(def-documentation (type docspec-element)
+  (:intro "The \\texttt{docspec-element} class --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (function canonicalize-element)
+  (:intro "The \\texttt{canonicalize-element} function --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)
+               (anchor docspec-element)))
+
 (def-documentation (function format-docspec-element)
   (:intro "The \\texttt{format-docspec-element} function produces output for one docspec element.")
   (:callspec (style target-type element stream))
@@ -580,7 +721,8 @@
            (target-type "The target-type of the spec.  This value is redundant, since it can be retrieved from the spec, but is passed for dispatch by applications' methods.")
            (element "The documentation spec.")
            (stream "Output stream for the result."))
-  (:properties (manual-section output-model)))
+  (:properties (manual-section output-model)
+               (anchor docspec-element)))
 
 (def-documentation (function format-output-preitem)
   (:intro "Function \\texttt{format-output-preitem} --- \\fbox{FILL IN}")
@@ -592,6 +734,31 @@
 
 (def-documentation (function format-default-output-contents-sep)
   (:intro "Function \\texttt{format-default-output-contents-sep} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (function format-output-trailer-docspec)
+  (:intro "Function \\texttt{format-output-trailer-docspec} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (function format-output-leader-docspec)
+  (:intro "Function \\texttt{format-output-leader-docspec} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (function output-contents-contents)
+  (:intro "Function \\texttt{output-contents-contents} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)
+               (anchor output-contents)))
+
+(def-documentation (variable *output-nesting-depth*)
+  (:intro "Variable \\texttt{*output-nesting-depth*} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (function format-doc-content-items)
+  (:intro "Function \\texttt{format-doc-content-items} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (function format-doc-content-item)
+  (:intro "Function \\texttt{format-doc-content-item} --- \\fbox{FILL IN}")
   (:properties (manual-section output-model)))
 
 (def-documentation (function format-output-contents-sep)
@@ -632,6 +799,18 @@
 
 (def-documentation (function format-output-trailer-material)
   (:intro "Function \\texttt{format-output-trailer-material} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (type explicit-doc-element)
+  (:intro "Class \\texttt{explicit-doc-element} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (function package-exports-p)
+  (:intro "Function \\texttt{package-exports-p} --- \\fbox{FILL IN}")
+  (:properties (manual-section output-model)))
+
+(def-documentation (function locate-package-home)
+  (:intro "Function \\texttt{locate-package-home} --- \\fbox{FILL IN}")
   (:properties (manual-section output-model)))
 
 
@@ -678,25 +857,34 @@
   (:intro "Type \\texttt{standard-sequence} --- \\fbox{FILL IN}")
   (:properties (manual-section standard-model)))
 
-(def-documentation (function callspec-keyarg)
-  (:intro "Function \\texttt{callspec-keyarg} --- \\fbox{FILL IN}")
+(def-documentation (type callspec-keyarg)
+  (:intro "The \\texttt{callspec-keyarg} class --- \\fbox{FILL IN}")
   (:properties (manual-section standard-model)))
 
-(def-documentation (function standard-doc-element)
-  (:intro "Function \\texttt{standard-doc-element} --- \\fbox{FILL IN}")
+(def-documentation (type standard-doc-element)
+  (:intro "Type \\texttt{standard-doc-element} --- \\fbox{FILL IN}")
   (:properties (manual-section standard-model)))
 
 (def-documentation (function callspec-item-to-lines)
   (:intro "Function \\texttt{callspec-item-to-lines} --- \\fbox{FILL IN}")
   (:properties (manual-section standard-model)))
 
+(def-documentation (function get-default-callspec-block-width)
+  (:intro "Function \\texttt{get-default-callspec-block-width} --- \\fbox{FILL IN}")
+  (:properties (manual-section standard-model)))
+
 (def-documentation (type standard-paragraph-list)
   (:intro "Class \\texttt{standard-paragraph-list} --- \\fbox{FILL IN}")
   (:properties (manual-section standard-model)))
 
-(def-documentation (type output-framework)
-  (:intro "Type \\texttt{output-framework} --- \\fbox{FILL IN}")
-  (:properties (manual-section output-model)))
+(def-documentation (type standard-sequence)
+  (:intro "Class \\texttt{standard-sequence} --- \\fbox{FILL IN}")
+  (:properties (manual-section standard-model)))
+
+(def-documentation (function sequence-element-items)
+  (:intro "Function \\texttt{sequence-element-items} --- \\fbox{FILL IN}")
+  (:properties (manual-section standard-model)
+               (anchor standard-sequence)))
 
 (def-documentation (type standard-output-framework)
   (:intro "Type \\texttt{standard-output-framework} --- \\fbox{FILL IN}")
@@ -716,22 +904,58 @@
 
 (def-documentation (function get-doc-tags)
   (:intro "Function \\texttt{get-doc-tags} --- \\fbox{FILL IN}")
+  (:callspec (name target-type))
   (:properties (manual-section control)))
 
 (def-documentation (type standard-itemize)
   (:intro "Type \\texttt{standard-itemize} --- \\fbox{FILL IN}")
-  (:properties (manual-section standard-model)))
+  (:properties (manual-section standard-model)
+               (anchor standard-simple-list-environment)))
 
 (def-documentation (function callspec-suffix)
   (:intro "Function \\texttt{callspec-suffix} --- \\fbox{FILL IN}")
   (:properties (manual-section standard-model)))
 
 (def-documentation (type standard-enumerate)
-  (:intro "Type \\texttt{standard-enumerate} --- \\fbox{FILL IN}")
+  (:intro "Class \\texttt{standard-enumerate} --- \\fbox{FILL IN}")
+  (:properties (manual-section standard-model)
+               (anchor standard-simple-list-environment)))
+
+(def-documentation (type callspec-sequence-of)
+  (:intro "Class \\texttt{callspec-sequence-of} --- \\fbox{FILL IN}")
   (:properties (manual-section standard-model)))
 
-(def-documentation (function callspec-sequence-of)
-  (:intro "Function \\texttt{callspec-sequence-of} --- \\fbox{FILL IN}")
+(def-documentation (function get-callspec-sequence-of-repeated)
+  (:intro "Function \\texttt{get-callspec-sequence-of-repeated} --- \\fbox{FILL IN}")
+  (:callspec (callspec-sequence-item))
+  (:properties (manual-section standard-model)
+               (anchor callspec-sequence-of)))
+
+(def-documentation (type callspec-optional)
+  (:intro "Class \\texttt{callspec-optional} --- \\fbox{FILL IN}")
+  (:properties (manual-section standard-model)))
+
+(def-documentation (function get-callspec-optional-option)
+  (:intro "Function \\texttt{get-callspec-optional-option} --- \\fbox{FILL IN}")
+  (:callspec (callspec-optional-item))
+  (:properties (manual-section standard-model)
+               (anchor callspec-optional)))
+
+(def-documentation (type callspec-bag-of)
+  (:intro "Class \\texttt{callspec-bag-of} --- \\fbox{FILL IN}")
+  (:properties (manual-section standard-model)))
+
+(def-documentation (type callspec-one-of)
+  (:intro "Class \\texttt{callspec-one-of} --- \\fbox{FILL IN}")
+  (:properties (manual-section standard-model)))
+
+(def-documentation (type callspec-items-holder)
+  (:intro "Class \\texttt{callspec-items-holder --- \\fbox{FILL IN}")
+  (:properties (manual-section standard-model)))
+
+(def-documentation (function get-callspec-holder-items)
+  (:intro "Function \\texttt{get-callspec-holder-items} --- \\fbox{FILL IN}")
+  (:callspec (callspec-holder))
   (:properties (manual-section standard-model)))
 
 (def-documentation (function get-output-framework)
@@ -751,12 +975,22 @@
   (:intro "Function \\texttt{get-doc-specs} --- \\fbox{FILL IN}")
   (:properties (manual-section control)))
 
-(def-documentation (function callspec-keyheaded)
-  (:intro "Function \\texttt{callspec-keyheaded} --- \\fbox{FILL IN}")
+(def-documentation (type callspec-keyheaded)
+  (:intro "Class \\texttt{callspec-keyheaded} --- \\fbox{FILL IN}")
   (:properties (manual-section standard-model)))
 
-(def-documentation (function standard-doc-label)
-  (:intro "Function \\texttt{standard-doc-label} --- \\fbox{FILL IN}")
+(def-documentation (function get-callspec-keyheaded-key)
+  (:intro "Function \\texttt{get-callspec-keyheaded-key} --- \\fbox{FILL IN}")
+  (:callspec (callspec-keyheaded))
+  (:properties (manual-section standard-model)))
+
+(def-documentation (function get-callspec-keyheaded-forms)
+  (:intro "Function \\texttt{get-callspec-keyheaded-forms} --- \\fbox{FILL IN}")
+  (:callspec (callspec-keyheaded))
+  (:properties (manual-section standard-model)))
+
+(def-documentation (type standard-doc-label)
+  (:intro "The \\texttt{standard-doc-label} class --- \\fbox{FILL IN}")
   (:properties (manual-section standard-model)))
 
 (def-documentation (type standard-callspec)
@@ -767,12 +1001,107 @@
   (:intro "Function \\texttt{callspec-to-lines} --- \\fbox{FILL IN}")
   (:properties (manual-section standard-model)))
 
-(def-documentation (function callspec-optional)
-  (:intro "Function \\texttt{callspec-optional} --- \\fbox{FILL IN}")
-  (:properties (manual-section standard-model)))
-
 (def-documentation (function process-standard-labeldef-form)
   (:intro "Function \\texttt{process-standard-labeldef-form} --- \\fbox{FILL IN}")
+  (:properties (manual-section standard-model)))
+
+(def-documentation (function lower-case-target-name)
+  (:intro "Function \\texttt{lower-case-target-name} --- \\fbox{FILL IN}")
+  (:properties (manual-section standard-model)))
+
+(def-documentation (function capitalized-target-name)
+  (:intro "Function \\texttt{capitalized-target-name} --- \\fbox{FILL IN}")
+  (:properties (manual-section standard-model)))
+
+(def-documentation (function standard-callspec-key)
+  (:intro "Function \\texttt{standard-callspec-key} --- \\fbox{FILL IN}")
+  (:callspec (standard-callspec))
+  (:properties (manual-section standard-model)
+               (anchor standard-callspec)))
+
+(def-documentation (function get-callspec-keyarg-key)
+  (:intro "Function \\texttt{get-callspec-keyarg-key} --- \\fbox{FILL IN}")
+  (:callspec (callspec-keyarg))
+  (:properties (manual-section standard-model)
+               (anchor callspec-keyarg)))
+
+(def-documentation (function standard-callspec-body-supp)
+  (:intro "Function \\texttt{standard-callspec-body-supp} --- \\fbox{FILL IN}")
+  (:callspec (standard-callspec))
+  (:properties (manual-section standard-model)
+               (anchor standard-callspec)))
+
+(def-documentation (function standard-callspec-mandatory)
+  (:intro "Function \\texttt{standard-callspec-mandatory} --- \\fbox{FILL IN}")
+  (:callspec (standard-callspec))
+  (:properties (manual-section standard-model)
+               (anchor standard-callspec)))
+
+(def-documentation (function standard-callspec-key-supp)
+  (:intro "Function \\texttt{standard-callspec-key-supp} --- \\fbox{FILL IN}")
+  (:callspec (standard-callspec))
+  (:properties (manual-section standard-model)
+               (anchor standard-callspec)))
+
+(def-documentation (function standard-callspec-optional)
+  (:intro "Function \\texttt{standard-callspec-optional} --- \\fbox{FILL IN}")
+  (:callspec (standard-callspec))
+  (:properties (manual-section standard-model)
+               (anchor standard-callspec)))
+
+(def-documentation (function get-callspec-keyarg-arg)
+  (:intro "Function \\texttt{get-callspec-keyarg-arg} --- \\fbox{FILL IN}")
+  (:properties (manual-section standard-model)))
+
+(def-documentation (function format-standard-docspec-callspec)
+  (:intro "Function \\texttt{format-standard-docspec-callspec} --- \\fbox{FILL IN}")
+  (:properties (manual-section standard-model)))
+
+(def-documentation (function standard-callspec-optional-supp)
+  (:intro "Function \\texttt{standard-callspec-optional-supp} --- \\fbox{FILL IN}")
+  (:callspec (standard-callspec))
+  (:properties (manual-section standard-model)
+               (anchor standard-callspec)))
+
+(def-documentation (type macrolist-callspec)
+  (:intro "The \\texttt{macrolist-callspec} class --- \\fbox{FILL IN}")
+  (:properties (manual-section standard-model)))
+
+(def-documentation (function format-standard-docspec-param-list-start)
+  (:intro "Function \\texttt{format-standard-docspec-param-list-start} --- \\fbox{FILL IN}")
+  (:properties (manual-section standard-model)))
+
+(def-documentation (function format-standard-docspec-param-list-item-start)
+  (:intro "Function \\texttt{format-standard-docspec-param-list-item-start} --- \\fbox{FILL IN}")
+  (:properties (manual-section standard-model)))
+
+(def-documentation (function format-standard-docspec-param-list-item-stop)
+  (:intro "Function \\texttt{format-standard-docspec-param-list-item-stop} --- \\fbox{FILL IN}")
+  (:callspec (standard-callspec))
+  (:properties (manual-section standard-model)))
+
+(def-documentation (function format-standard-docspec-param-list-stop)
+  (:intro "Function \\texttt{format-standard-docspec-param-list-stop} --- \\fbox{FILL IN}")
+  (:callspec (standard-callspec))
+  (:properties (manual-section standard-model)))
+
+(def-documentation (function format-standard-docspec-param-list-item)
+  (:intro "Function \\texttt{format-standard-docspec-param-list-item} --- \\fbox{FILL IN}")
+  (:callspec (standard-callspec))
+  (:properties (manual-section standard-model)))
+
+(def-documentation (function standard-callspec-body)
+  (:intro "Function \\texttt{standard-callspec-body} --- \\fbox{FILL IN}")
+  (:callspec (standard-callspec))
+  (:properties (manual-section standard-model)
+               (anchor standard-callspec)))
+
+(def-documentation (function format-standard-docspec-param-list)
+  (:intro "Function \\texttt{format-standard-docspec-param-list} --- \\fbox{FILL IN}")
+  (:properties (manual-section standard-model)))
+
+(def-documentation (function format-standard-docspec-literal-text)
+  (:intro "Function \\texttt{format-standard-docspec-literal-text} --- \\fbox{FILL IN}")
   (:properties (manual-section standard-model)))
 
 
@@ -805,6 +1134,10 @@
 
 (def-documentation (function width)
     (:callspec (lines))
+  (:properties (manual-section plaintext-model)))
+
+(def-documentation (function whitespace-p)
+    (:callspec (char))
   (:properties (manual-section plaintext-model)))
 
 (def-documentation (function flow)
@@ -891,6 +1224,10 @@
 
 (def-documentation (type latex-style)
   (:intro (:latex "The \\texttt{latex-style} class is a base class for \\LaTeX\\ document generation."))
+  (:properties (manual-section styles)))
+
+(def-documentation (type plaintext-style)
+  (:intro (:latex "The \\texttt{plaintext-style} class is a base class for generating text documents."))
   (:properties (manual-section styles)))
 
 (def-documentation (type full-package-latex-style-mixin)
@@ -982,6 +1319,14 @@
   (:intro "The \\texttt{def-doc-tag} macro is deprecated.")
   (:properties (manual-section deprecated)))
 
+(def-documentation (function tag-sort)
+  (:intro "Function \\texttt{tag-sort} --- \\fbox{FILL IN}")
+  (:properties (manual-section deprecated)))
+
+(def-documentation (function format-tag)
+  (:intro "Function \\texttt{format-tag} --- \\fbox{FILL IN}")
+  (:properties (manual-section deprecated)))
+
 (def-documentation (function package-list-group-header)
   (:intro "Function \\texttt{package-list-group-header} --- \\fbox{FILL IN}")
   (:properties (manual-section deprecated)))
@@ -991,8 +1336,13 @@
   (:properties (manual-section deprecated)))
 
 ;;; -----------------------------------------------------------------
+;;; Overall package documentation.
 
 (def-documentation (package :defdoc)
     (:blurb "Container for high-level use of the structured documentation manager DefDoc.")
   (:descriptive "Defdoc"))
 
+;;; -----------------------------------------------------------------
+;;; Issue warnings if anything is not documented.
+(ensure-api-documentation :defdoc)
+(ensure-api-documentation :defdoc-control-api)

@@ -21,6 +21,24 @@
 
 (in-package :defdoc-plaintext)
 
+(defclass plaintext-style () ())
+(defclass standard-docstring-style (plaintext-style) ())
+(defmethod format-docspec (stream (style standard-docstring-style)
+                                  spec type &key &allow-other-keys)
+  (format stream "~{~a~^~%~}" (spec-to-lines style type spec 79)))
+(defmethod format-docspec-element ((style standard-docstring-style)
+                                   target-type spec stream
+                                   &key &allow-other-keys)
+  (format stream "~{~a~^~%~}"
+    (output-lines style target-type spec 79)))
+
+;;; -----------------------------------------------------------------
+
+(defun whitespace-p (char)
+  (case char
+    ((#\Space #\Tab #\Newline \#Return \#Linefeed \#Page) t)
+    (otherwise nil)))
+
 (defun indent-by (lines length)
   (indent-with lines (make-string length :initial-element #\Space)))
 

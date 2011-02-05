@@ -32,7 +32,9 @@
    (lower-case  :initform nil :initarg :lower-case
                 :accessor lower-case-target-name)
    (docstring-installer :initarg :docstring-installer
-                        :accessor docstring-installer)))
+                        :accessor docstring-installer)
+   (symbol-definition-checker :initarg :symbol-definition-checker
+                              :accessor symbol-definition-checker)))
 (defmethod initialize-instance :after ((target standard-doc-target)
                                        &key &allow-other-keys)
   (with-accessors ((name name) (capitalized capitalized-target-name)
@@ -70,15 +72,37 @@
 
 (defmacro def-target-type (name (&key (class 'standard-doc-target)
                                       (capitalized nil capitalized-supp-p)
-                                      (lower-case nil lower-case-supp-p))
+                                      (lower-case nil lower-case-supp-p)
+                                      symbol-definition-nocheck
+                                      (symbol-definition-checker
+                                       nil symbol-definition-checker-supp-p))
                                 &body forms)
+  (unless symbol-definition-checker-supp-p
+    (cond
+      (symbol-definition-nocheck
+       (setf symbol-definition-checker `(lambda (e)
+                                          (declare (ignore e))
+                                          nil)
+             symbol-definition-checker-supp-p t))
+      (t (warn ":symbol-definition-checker for ~a not defined" name))))
   (multiple-value-bind (lisp-installer lisp-installer-supp-p)
       (decode-doctype-forms forms)
-    `(let ((target-spec (make-instance ',class :name ',name
-                                       ,@(when capitalized-supp-p
-                                           `(:capitalized ,capitalized))
-                                       ,@(when lower-case-supp-p
-                                           `(:lower-case ,lower-case)))))
+    `(let ((target-spec
+            (make-instance ',class
+              :name ',name
+              :symbol-definition-checker
+              #',(cond
+                   (symbol-definition-checker-supp-p
+                    symbol-definition-checker)
+                   (t `(lambda (s)
+                         (warn ,(concatenate 'string
+                                  "Could not check whether ~s is used as "
+                                  (symbol-name name)) s)
+                         nil)))
+              ,@(when capitalized-supp-p
+                  `(:capitalized ,capitalized))
+              ,@(when lower-case-supp-p
+                  `(:lower-case ,lower-case)))))
        (setf (docstring-installer target-spec)
              #',(cond
                   (lisp-installer-supp-p lisp-installer)
@@ -108,3 +132,53 @@
     (t (error "Cannot determine name use for documentation of ~s" name))))
 
 ;;; -----------------------------------------------------------------
+
+(defclass undoc-reporting ()
+  ((sym :initarg :symbol :reader sym)
+   (usage :initarg :usage :reader usage)))
+
+(defclass undoc-reporting-defdoc-only (undoc-reporting) ())
+(defmethod print-object ((ud undoc-reporting-defdoc-only) stream)
+  (format stream "No documentation in DefDoc for ~s as ~a"
+    (sym ud) (usage ud)))
+
+(defclass undoc-reporting-any (undoc-reporting) ())
+(defmethod print-object ((ud undoc-reporting-any) stream)
+  (format stream "No documentation for ~s as ~a"
+    (sym ud) (usage ud)))
+
+(define-condition error-undoc-reporting-defdoc-only
+    (undoc-reporting-defdoc-only error) ())
+(define-condition warning-undoc-reporting-defdoc-only
+    (undoc-reporting-defdoc-only warning) ())
+(define-condition style-warning-undoc-reporting-defdoc-only
+    (undoc-reporting-defdoc-only style-warning) ())
+(define-condition error-undoc-reporting-any
+    (undoc-reporting-any error) ())
+(define-condition warning-undoc-reporting-any
+    (undoc-reporting-any warning) ())
+(define-condition style-warning-undoc-reporting-any
+    (undoc-reporting-any style-warning) ())
+
+(defun warn-if-undocumented (sym &key error warning defdoc-only)
+  (flet ((test-pred (typ)
+           (cond
+             (defdoc-only (get-doc-spec sym typ))
+             (t (or (get-doc-spec sym typ) (documentation sym typ))))))
+    (let ((reactor (cond (error #'error) (t #'warn)))
+          (reaction-class (cond
+                            ((and defdoc-only error)
+                             'error-undoc-reporting-defdoc-only)
+                            ((and defdoc-only warning)
+                             'warning-undoc-reporting-defdoc-only)
+                            (defdoc-only
+                                'style-warning-undoc-reporting-defdoc-only)
+                            (error 'error-undoc-reporting-any)
+                            (warning 'warning-undoc-reporting-any)
+                            (t 'style-warning-undoc-reporting-any))))
+      (loop for typ in (get-doc-target-types) do
+        (let ((decl (gethash typ +doc-target-types+)))
+          (when (funcall (symbol-definition-checker decl) sym)
+            (unless (test-pred typ)
+              (funcall reactor reaction-class :symbol sym :usage typ))))))))
+

@@ -45,3 +45,19 @@
       (values name spec-type spec-args)))))
 
 ;;; -----------------------------------------------------------------
+
+(defmacro ensure-api-documentation (package &key error warning internal defdoc)
+  (let* ((sym (gensym)))
+    `(eval-when (:load-toplevel :execute)
+       (;; First pick the CL macro for iterating over a package's
+        ;; symbols: all internal or only external?
+        ,(if internal 'do-symbols 'do-external-symbols)
+
+        ;; Next the iteration variable and the name of the package
+        ;; over which we iterate.
+        (,sym ,package)
+
+         ;;; In the body of the do-symbols or do-external-symbols
+         ;;; iteration --- check the symbol.
+         (warn-if-undocumented ,sym :defdoc-only ,defdoc
+                               :error ,error :warning ,warning)))))

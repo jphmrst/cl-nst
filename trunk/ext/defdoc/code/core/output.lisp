@@ -62,8 +62,10 @@
                          (append ,@collectors)))
                  ',name))))))
 
-(defgeneric write-output (style output-name directory file-name
+(defgeneric write-output (style output-name directory file-name-root
                                 &key &allow-other-keys))
+(defgeneric get-filename-extension (style output-name directory file-name-root
+                                          &key &allow-other-keys))
 
 ;;; -----------------------------------------------------------------
 
@@ -139,9 +141,10 @@
 (defmethod format-doc (stream style (output output-contents)
                               &rest keyargs &key &allow-other-keys)
   (defdoc-debug "format-doc on output-contents ~s~%" (type-of output))
-  (apply #'format-output-leader-material style stream output keyargs)
-  (apply #'format-doc-content-items stream style output keyargs)
-  (apply #'format-output-trailer-material style stream output keyargs))
+  (pprint-logical-block (stream '(1 2))
+    (apply #'format-output-leader-material style stream output keyargs)
+    (apply #'format-doc-content-items stream style output keyargs)
+    (apply #'format-output-trailer-material style stream output keyargs)))
 
 (defgeneric format-doc-content-items (stream style output
                                              &key &allow-other-keys)
@@ -158,7 +161,10 @@
 
 (defgeneric format-doc-content-item (stream style output &key &allow-other-keys)
   (:method (stream style output &rest keyargs)
-    (apply #'format-doc stream style output keyargs)))
+    (apply #'format-doc stream style output keyargs))
+  (:method (stream style (spec doc-spec) &rest keyargs)
+    (apply #'format-docspec
+           stream style spec (docspec-target-type spec) keyargs)))
 
 (defgeneric format-output-preitem (style stream output spec
                                          &key &allow-other-keys)
