@@ -43,4 +43,7 @@
                                   :index t :table-of-contents t)
                  (#:defdoc-manual :rel-directory "doc/"
                                   :style #:manual-style
+                                  :index t :table-of-contents t)
+                 (#:defdoc-manual :rel-directory "doc/"
+                                  :style #:plaintext-style
                                   :index t :table-of-contents t)))

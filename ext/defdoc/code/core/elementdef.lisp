@@ -91,6 +91,9 @@
      (declare (ignore package spec))
      (error "Unrecognized element specifier: (~s~{ ~s~})" hd args)))
 
+(defgeneric element-type-p (elem)
+  (:method (e) (declare (ignore e)) nil))
+
 (defmacro def-element
     (name (new-class &key
                      (class 'defdoc-standard-model:standard-doc-element)
@@ -113,6 +116,8 @@
       (setf body `((destructuring-bind ,args ,arg-list ,@body))))
     `(progn
        (defclass ,new-class (,class) ,slots)
+       (defmethod element-type-p ((e (eql (find-class ',new-class)))) t)
+       (defmethod element-type-p ((e (eql ',name))) t)
        (defmethod compile-symbol-headed-element ((hd (eql ',name))
                                                  ,package ,spec ,arg-list)
          ,@(when declares `((declare ,@declares)))

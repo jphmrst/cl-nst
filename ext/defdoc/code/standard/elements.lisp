@@ -132,3 +132,14 @@
     :specs (mapcar (named-function make-standard-enumerate-mapper
                      (lambda (x) (compile-element package spec x))) items)
     :env-tag "enumerate"))
+
+;;; -----------------------------------------------------------------
+
+(def-contract (standard-elements-style-coverage (style type))
+    () ;; options
+  (has-method (format-docspec-element (style t standard-plain-text t) t))
+  (has-method (format-docspec-element (style t standard-paragraph-list t) t))
+  (has-method (format-docspec-element (style t standard-sequence t) t))
+  (has-method (format-docspec-element (style t standard-code t) t))
+  (has-method (format-docspec-element (style t standard-itemize t) t))
+  (has-method (format-docspec-element (style t standard-enumerate t) t)))

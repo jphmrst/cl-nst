@@ -76,6 +76,30 @@
   ;; Coerce that list to a string.
   (coerce (make-array (length output) :initial-contents output) 'string))
 
+(defun check-macro (output-stack)
+  (let (macro-name
+        (scanner output-stack))
+    (loop while (and scanner (alpha-char-p (car scanner))) do
+      (push (pop scanner) macro-name))
+    (setf macro-name (coerce (reverse macro-name) 'string))
+    (loop while (and scanner (whitespace-p (car scanner))) do
+      (pop scanner))
+    (cond
+      ((eql (car scanner) #\{)
+       (pop scanner)
+       (let ((buffer nil))
+         (loop while (and scanner (not (eql (car scanner) #\}))) do
+               (push (pop scanner) buffer))
+         (pop scanner)
+         (cond
+          ((or (string= macro-name "index"))
+           nil)
+          (t
+           (loop while buffer do
+                 (push (pop buffer) scanner))))
+         scanner))
+      (t output-stack))))
+
 ;;; -----------------------------------------------------------------
 ;;; Top-level LaTeX generation APIs.
 
@@ -347,7 +371,8 @@
   (declare (ignore stream name type spec)))
 
 (defmethod format-docspec-element ((style latex-style) target-type
-                                   (spec standard-plain-text) stream)
+                                   (spec standard-plain-text) stream
+                                   &key &allow-other-keys)
   (declare (ignore target-type))
   (with-accessors ((string text-element-text)) spec
     (let ((was-space t))
@@ -370,30 +395,35 @@
           finally (princ (coerce characters 'string) stream)))))
 
 (defmethod format-docspec-element ((style latex-style) target-type
-                                   (spec standard-latex) stream)
+                                   (spec standard-latex) stream
+                                   &key &allow-other-keys)
   (declare (ignore target-type))
   (princ (latex-element-latex spec) stream))
 
 (defmethod format-docspec-element ((style latex-style) target-type
-                                   (spec standard-paragraph-list) stream)
+                                   (spec standard-paragraph-list) stream
+                                   &key &allow-other-keys)
   (loop for (p-spec . other-specs) on (paragraphlist-element-items spec) do
     (format-docspec stream style p-spec target-type)
     (when other-specs (princ "\\par " stream))))
 
 (defmethod format-docspec-element ((style latex-style) target-type
-                                   (spec standard-sequence) stream)
+                                   (spec standard-sequence) stream
+                                   &key &allow-other-keys)
   (loop for (p-spec . other-specs) on (sequence-element-items spec) do
     (format-docspec stream style p-spec target-type)
     (when other-specs (princ " " stream))))
 
 (defmethod format-docspec-element ((style latex-style) target-type
-                                   (spec standard-code) stream)
+                                   (spec standard-code) stream
+                                   &key &allow-other-keys)
   (declare (ignore target-type))
   (format stream "\\begin{verbatim}~a\\end{verbatim}" (code-element-string spec)))
 
 (defmethod format-docspec-element ((style latex-style) target-type
                                    (spec standard-simple-list-environment)
-                                   stream)
+                                   stream
+                                   &key &allow-other-keys)
   (format stream "\\begin{~a}" (list-element-env-tag spec))
   (loop for spec in (list-element-specs spec) do
     (princ "\\item " stream)
@@ -505,16 +535,27 @@
 ;;; -----------------------------------------------------------------
 
 (defmethod write-output ((style latex-style) output-name directory file-name
+                         &rest keyargs
                          &key index table-of-contents &allow-other-keys)
   (write-latex-output output-name
                       :echo #'(lambda (&key &allow-other-keys)
                                 (format t "Writing ~a~%" output-name))
                       :directory directory
-                      :file (format nil "~a.tex" file-name)
+                      :file (format nil "~a~a"
+                              file-name
+                              (apply #'get-filename-extension
+                                     style output-name directory file-name
+                                     keyargs))
                       :standalone t
                       :index index :table-of-contents table-of-contents
                       :style style)
   (process-latex-document directory file-name :index index))
+
+(defmethod get-filename-extension ((style latex-style)
+                                   output-name directory file-name-root
+                                   &key &allow-other-keys)
+  (declare (ignore output-name directory file-name-root))
+  ".tex")
 
 ;;; -----------------------------------------------------------------
 

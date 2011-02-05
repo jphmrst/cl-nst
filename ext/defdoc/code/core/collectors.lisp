@@ -28,12 +28,12 @@
                                      ,(get-filter-predicate filters))
           nil))
 
-(defmacro collect-symbols (package symbols &rest filters)
-  (unless (listp symbols)
-    (setf symbols (list symbols)))
+(defmacro collect-symbols (package symbol-list &rest filters)
+  (unless (listp symbol-list)
+    (setf symbol-list (list symbol-list)))
   `(values
     `(let ((p (find-package ',',package)))
-       (get-symbol-list-specs (loop for s in ',',symbols
+       (get-symbol-list-specs (loop for s in ',',symbol-list
                                   collect (intern (symbol-name s) p))
                               ,',(get-filter-predicate filters)))
     nil))

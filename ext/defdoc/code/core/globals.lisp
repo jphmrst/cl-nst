@@ -28,7 +28,8 @@
   (:method (stream (style symbol) spec type &rest keyargs)
      (apply #'format-docspec stream (make-instance style) spec type keyargs)))
 
-(defgeneric format-docspec-element (style target-type element stream))
+(defgeneric format-docspec-element (style target-type element stream
+                                          &key &allow-other-keys))
 
 (define-condition option-without-required-option (warning)
   ((given :initarg :given :reader given)

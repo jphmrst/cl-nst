@@ -21,8 +21,12 @@
 (in-package :common-lisp-user)
 
 (defpackage :defdoc-docsyms
-    (:export #:manual-section
-             #:docspecs #:outspec #:defdoc-via-asdf #:styles #:latex #:html
+    (:export #:manual-section #:anchor
+
+             ;; Part 1 --- basic user operations
+             #:docspecs #:label-use #:outspec #:defdoc-via-asdf
+             #:styles #:latex #:html #:newtargetdef
+
              #:model #:standard-model
              #:output-model #:plaintext #:latex-style-model #:html-style-model
              #:doc-gen #:control #:targets #:label-model #:elements
@@ -35,12 +39,12 @@
   (:export #:*docstring-style*
            ;; globals.lisp
            #-allegro #:named-function
-           #:*latex-verbatim-width*
            #:format-doc
            #:format-docspec
            #:format-docspec-element
            #:package-exports-p
            #:locate-package-home
+           #:string-implicit-symbol-head
 
            ;; storage.lisp
            #:get-doc-spec
@@ -48,6 +52,8 @@
            #:get-doc-hash-of-target-type
 
            ;; labels.lisp
+           #:get-labeldef
+           #:get-label-class
            #:def-property-label
            #:labeled
            #:label-values
@@ -58,6 +64,9 @@
            #:get-label-section-title-supp-p
            #:get-label-section-order
            #:get-label-section-order-supp-p
+           #:doc-label #:standard-doc-label #:get-compiled-labeldef
+           #:process-standard-labeldef-form
+           #:def-label-config
 
            ;; targetdef.lisp
            #:standard-doc-target ;; not now in coredoc
@@ -77,25 +86,32 @@
            #:get-spec-class
 
            ;; elementdef.lisp
+           #:*default-element-class*
            #:docspec-element
+           #:canonicalize-element
            #:def-element
            #:canonicalize-element
            #:compile-element
            #:def-bare-string-element-tag
+           #:element-type-p
+           #:compile-string-element
 
            ;; tag.lisp
            #:get-doc-tags
            #:tag-sort
            #:format-tag
+           #:def-doc-tag
 
            ;; macro.lisp
            #:def-documentation
+           #:ensure-api-documentation
 
            ;; output.lisp
            #:*output-nesting-depth*
            #:*output-leader-title-format-string*
            #:def-output-class
            #:write-output
+           #:get-filename-extension
            #:format-default-output-contents-sep
            #:format-output-contents-sep
            #:output-contents
@@ -139,7 +155,7 @@
 
 (defpackage :defdoc-standard-model
   (:documentation "DefDoc internal organizational package - standard models")
-  (:use :defdoc-docsyms :common-lisp :defdoc-core)
+  (:use :defdoc-docsyms :common-lisp :defdoc-core :defcontract)
   #+allegro (:import-from excl #:named-function)
   (:export ;; standard.lisp
            #:compile-spec
@@ -202,6 +218,7 @@
            #:list-element-env-tag
            #:standard-itemize
            #:standard-enumerate
+           #:standard-elements-style-coverage
 
            ;; style.lisp
            #:candidate-home-packages
@@ -224,7 +241,6 @@
            ;; plaintext.lisp
            #:get-default-callspec-block-width
            #:whitespace-p
-           #:check-macro
            #:plaintext-style
            #:standard-docstring-style
            #:callspec-to-lines
@@ -242,6 +258,7 @@
   (:use :defdoc-docsyms :common-lisp :defdoc-core :defdoc-standard-model :defdoc-plaintext)
   #+allegro (:import-from excl #:named-function)
   (:export ;; latex.lisp
+           #:*latex-verbatim-width*
            #:latex-style
            #:standard-latex
            #:latex-element-latex
