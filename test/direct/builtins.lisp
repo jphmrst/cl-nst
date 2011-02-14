@@ -190,7 +190,24 @@
                 (:eval (incf zzz))
                 (:check (:true-form (eql zzz 1)))
                 (:eval (incf zzz))
-                (:check (:true-form (eql zzz 2))))))
+                (:check (:true-form (eql zzz 2)))))
+  (def-test criterion-head-1 (:applying-common-criterion :eq
+                               (('a) ('a))
+                               (('b) ('b))))
+  (def-test criterion-head-2 (:applying-common-criterion :seq
+                               (((:eql 'a) (:eql 'b)) ('(a b)))
+                               (((:eql 'c) (:eql 'd)) ('(c d)))))
+  (def-test criterion-head-3 (:applying-common-criterion :permute
+                               (((:seq (:eql 'a) (:eql 'b))) ('(b a)))
+                               (((:seq (:eql 'c) (:eql 'd))) ('(c d)))))
+  (def-test data-sets-1 (:with-common-criterion (:eq 'a)
+                          ('a) ('a)))
+  (def-test data-sets-2 (:with-common-criterion (:seq (:eql 'a) (:eql 'b))
+                          ('(a b))
+                          ((reverse '(b a)))))
+  (def-test data-sets-3 (:with-common-criterion (:permute (:seq (:eql 'a)
+                                                                (:eql 'b)))
+                          ('(b a)) ('(a b)))))
 
 (defparameter for-setup 0
   "This variable will be set by the setup-cleanup tests")

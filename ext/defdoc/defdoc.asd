@@ -137,7 +137,7 @@
                (:file "latex"  :depends-on ("standard" "plaintext"))
 
                ;; Converting specs to HTML
-               (:file "html"  :depends-on ("standard" "plaintext"))
+               (:file "html"  :depends-on ("standard" "latex" "plaintext"))
 
                ;; Programmatic API
                (:file "interfaces"  :depends-on ("standard"

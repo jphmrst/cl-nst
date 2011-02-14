@@ -329,20 +329,24 @@
                          collect (concatenate 'string "    " line))))))
       (t nil))))
 
+(defun fill-plain-text (string width)
+  (loop while (< 0 (length string))
+        for (last-of-first first-of-rest) = (get-first-break-edges string width)
+        if (<= (length string) width)
+          collect string into lines
+          and do (setf string "")
+        else
+          collect (subseq string 0 last-of-first) into lines
+          and do (setf string (subseq string first-of-rest))
+        end
+        finally (return-from fill-plain-text lines)))
+
 (defmethod output-lines (style target-type (doc standard-plain-text) width)
   (declare (ignore style target-type))
-  (let ((string (text-element-text doc)))
-    (loop while (< 0 (length string))
-          for (last-of-first first-of-rest)
-            = (get-first-break-edges string width)
-          if (<= (length string) width)
-            collect string into lines
-            and do (setf string "")
-          else
-            collect (subseq string 0 last-of-first) into lines
-            and do (setf string (subseq string first-of-rest))
-          end
-          finally (return-from output-lines lines))))
+  (fill-plain-text (text-element-text doc) width))
+
+(defmethod output-lines (style target-type (doc standard-emphasized) width)
+  (output-lines style target-type (emphasized-spec doc) width))
 
 (defmethod output-lines (style target-type (doc standard-paragraph-list) width)
   (let ((paragraph-specs (paragraphlist-element-items doc)))
@@ -370,6 +374,10 @@
                 ((< scan max)
                  (nconc lines (list (subseq string scan))))
                 (t lines)))))))
+
+(defmethod output-lines (style target-type (doc standard-inline) width)
+  (declare (ignore style target-type width))
+  (list (inline-element-string doc)))
 
 (defmethod output-lines (style target-type (doc standard-itemize) width)
   (let ((options (list-element-options doc))
@@ -399,6 +407,17 @@
                                    (if (> j 0) padding prefix)
                                    block-line))))))
 
+(defmethod output-lines (style target-type (spec standard-lisp-name) width)
+  (declare (ignore style target-type width))
+  (list (symbol-name (lisp-name spec))))
+
+(defmethod output-lines (style
+                         target-type (spec standard-outputset-element) width)
+  (output-lines (get-included-outputset-style style
+                                              (output-elem-style spec) spec)
+                target-type
+                (make-instance (output-elem-name spec)) width))
+
 (defun get-first-break-edges (string width)
   (let ((len (length string)))
     (cond
@@ -422,5 +441,22 @@
       (t
        (list width width)))))
 
+(defmethod output-lines (style target-type (doc standard-fillin-place) width)
+  (declare (ignore style target-type width))
+  (list "FILL IN"))
+
 ;;; -----------------------------------------------------------------
 
+(defcontract:def-contract (plaintext-methods-coverage)
+    () ;; options
+  (defcontract:has-method (output-lines (t t standard-plain-text stream) t))
+  (defcontract:has-method (output-lines (t t standard-paragraph-list stream) t))
+  (defcontract:has-method (output-lines (t t standard-sequence stream) t))
+  (defcontract:has-method (output-lines (t t standard-code stream) t))
+  (defcontract:has-method (output-lines (t t standard-itemize stream) t))
+  (defcontract:has-method (output-lines (t t standard-enumerate stream) t))
+  (defcontract:has-method (output-lines (t t standard-lisp-name stream) t))
+  (defcontract:has-method (output-lines (t t standard-emphasized stream) t))
+  (defcontract:has-method (output-lines (t t standard-fillin-place stream) t))
+  (defcontract:has-method (output-lines (t t standard-outputset-element stream)
+                                        t)))

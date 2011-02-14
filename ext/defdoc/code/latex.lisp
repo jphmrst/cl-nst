@@ -20,6 +20,12 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :defdoc-latex)
 
+(defgeneric index-lisp-name (style name kind)
+  (:method (style name kind) (declare (ignore style name kind)) t)
+  (:method (style (name (eql 'symbol)) kind) (declare (ignore style kind)) nil))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 (def-element :latex (standard-latex :class standard-doc-element
                                     :args (text))
      ((latex :initarg :latex :reader latex-element-latex))
@@ -35,6 +41,10 @@
                  (format stream "~:@_  - ~a ~w" slot (slot-value spec slot)))
                 (t (format stream "~:@_  - no ~a" slot))))
         (format stream " ]")))))
+(defmethod spaceheaded-element ((element standard-latex))
+  (whitespace-p (elt (latex-element-latex element) 0)))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (defmethod output-lines ((style plaintext-style)
                          target-type (spec standard-latex) width)
@@ -99,6 +109,38 @@
                  (push (pop buffer) scanner))))
          scanner))
       (t output-stack))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(def-element :latex-name (latex-name-element :class standard-doc-element) ()
+  (make-instance 'latex-name-element))
+(set-pprint-dispatch 'latex-name-element
+  (named-function pprint-latex-name-element
+    (lambda (stream spec)
+      (format stream "[ ~a ]" (type-of spec)))))
+
+(defmethod output-lines (style target-type (spec latex-name-element) width)
+  (declare (ignore style target-type width))
+  (list "LaTeX"))
+
+(defmethod canonicalize-element ((elem latex-name-element))
+    (make-instance 'standard-plain-text :text "LaTeX"))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(def-element :bibtex-name (bibtex-name-element :class standard-doc-element) ()
+  (make-instance 'bibtex-name-element))
+(set-pprint-dispatch 'bibtex-name-element
+  (named-function pprint-bibtex-name-element
+    (lambda (stream spec)
+      (format stream "[ ~a ]" (type-of spec)))))
+
+(defmethod output-lines (style target-type (spec bibtex-name-element) width)
+  (declare (ignore style target-type width))
+  (list "BibTeX"))
+
+(defmethod canonicalize-element ((elem bibtex-name-element))
+    (make-instance 'standard-plain-text :text "BibTeX"))
 
 ;;; -----------------------------------------------------------------
 ;;; Top-level LaTeX generation APIs.
@@ -313,6 +355,13 @@
     (declare (special *latex-sectioning-level*))
     (call-next-method)))
 
+(defmethod format-sequence-element-separator ((style latex-style)
+                                              target-type spec element1 element2
+                                              stream &key &allow-other-keys)
+  (declare (ignore target-type spec element1))
+  (when (spaceheaded-element element2)
+    (princ "\\ " stream)))
+
 (defmethod format-output-leader-material :before ((style latex-style)
                                                   stream output
                                                   &key &allow-other-keys)
@@ -408,17 +457,16 @@
     (when other-specs (princ "\\par " stream))))
 
 (defmethod format-docspec-element ((style latex-style) target-type
-                                   (spec standard-sequence) stream
-                                   &key &allow-other-keys)
-  (loop for (p-spec . other-specs) on (sequence-element-items spec) do
-    (format-docspec stream style p-spec target-type)
-    (when other-specs (princ " " stream))))
-
-(defmethod format-docspec-element ((style latex-style) target-type
                                    (spec standard-code) stream
                                    &key &allow-other-keys)
   (declare (ignore target-type))
   (format stream "\\begin{verbatim}~a\\end{verbatim}" (code-element-string spec)))
+
+(defmethod format-docspec-element ((style latex-style) target-type
+                                   (spec standard-inline) stream
+                                   &key &allow-other-keys)
+  (declare (ignore target-type))
+  (format stream "\\texttt{~a}" (inline-element-string spec)))
 
 (defmethod format-docspec-element ((style latex-style) target-type
                                    (spec standard-simple-list-environment)
@@ -430,6 +478,44 @@
     (format-docspec stream style spec target-type))
   (format stream "\\end{~a}" (list-element-env-tag spec)))
 
+(defmethod format-docspec-element ((style latex-style) target-type
+                                   (spec standard-lisp-name) stream
+                                   &key &allow-other-keys)
+  (declare (ignore target-type))
+  (let ((name (lisp-name spec))
+        (kind (lisp-name-kind spec)))
+    (when (index-lisp-name style name kind)
+      (format stream "\\index{~a@\\texttt{~:*~a}}" name))
+    (format stream "\\texttt{~a}" name)))
+
+(defmethod format-docspec-element ((style latex-style) target-type
+                                   (spec standard-emphasized) stream
+                                   &rest keyvals)
+  (format stream "\\emph{")
+  (apply #'format-docspec-element
+         style target-type (emphasized-spec spec) stream keyvals)
+  (format stream "}"))
+
+(defmethod format-docspec-element ((style latex-style) target-type
+                                   (name latex-name-element) stream
+                                   &key in-seq &allow-other-keys)
+  (declare (ignore target-type))
+  (format stream "\\LaTeX")
+  (when in-seq (format stream "\\ ")))
+
+(defmethod format-docspec-element ((style latex-style) target-type
+                                   (name bibtex-name-element) stream
+                                   &key in-seq &allow-other-keys)
+  (declare (ignore target-type))
+  (format stream "Bib$\\!$\\TeX")
+  (when in-seq (format stream "\\ ")))
+
+(defmethod format-docspec-element ((style latex-style) target-type
+                                   (name standard-fillin-place) stream
+                                   &key &allow-other-keys)
+  (declare (ignore target-type))
+  (format stream "\\fbox{FILL IN}"))
+
 (defgeneric latex-section-formatter (style sectioning-level)
   (:method (style level)
      (declare (ignore style))
@@ -437,8 +523,9 @@
        ((1) "\\section{~a}")
        ((2) "\\subsection{~a}")
        ((3) "\\subsubsection{~a}")
-       ((4) "\\paragraph{~a}")
-       ((5) "\\subparagraph{~a}")
+       ((4) "\\subsubsection*{~a}")
+       ((5) "\\paragraph{~a}")
+       ((6) "\\subparagraph{~a}")
        (otherwise (error "Too deeply grouped.")))))
 
 (defmethod format-output-leader-title :around ((style latex-style) stream
@@ -556,6 +643,71 @@
                                    &key &allow-other-keys)
   (declare (ignore output-name directory file-name-root))
   ".tex")
+
+;;; -----------------------------------------------------------------
+
+(defclass docspec-par-latex-style () ())
+
+(defmethod format-output-contents-sep ((style docspec-par-latex-style)
+                                       stream output spec1 spec2
+                                       &key &allow-other-keys)
+  (declare (ignore output spec1 spec2))
+  (format stream "\\par "))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(defclass docspec-fancy-header-latex-style (docspec-par-latex-style)
+  ())
+
+(defgeneric default-format-fancy-header-target-type (style target-type
+                                                           spec name stream)
+  (:method (style target-type spec name stream)
+    (declare (ignore spec name style))
+    (princ (capitalized-target-name (get-target-type target-type)) stream)))
+
+(defgeneric format-fancy-header-target-type (style target-type spec name stream)
+  (:method ((style docspec-fancy-header-latex-style)
+            target-type spec name stream)
+    (default-format-fancy-header-target-type style target-type
+      spec name stream))
+  (:method ((style docspec-fancy-header-latex-style)
+            (target-type (eql 'function)) spec name stream)
+    (declare (ignore spec))
+    (cond
+     ((and (fboundp name) (typep (symbol-function name) 'generic-function))
+      (princ "Generic function" stream))
+     (t (call-next-method)))))
+
+(defmethod format-docspec
+    :before (stream (style docspec-fancy-header-latex-style)
+                    (spec standard-doc-spec) target-type &key &allow-other-keys)
+  (let ((self (docspec-self spec)))
+    (multiple-value-bind (home-package exported-p)
+        (locate-package-home style target-type spec self)
+      (princ "\\vspace{1ex}\\noindent\\begin{tabular}{@{}l@{}}\\begin{minipage}{\\textwidth}\\bfseries\\itshape\\mbox{" stream)
+      (format-fancy-header-target-type style target-type spec self stream)
+      (format stream " ~a}\\hspace*{\\fill} \\hspace*{\\fill}\\mbox{~a :~a}\\end{minipage}\\\\\\hline\\end{tabular}\\\\"
+              (symbol-name self)
+              (if exported-p "Package" "Internal to")
+              (package-name home-package)))))
+
+(defmethod format-standard-docspec-details-sep ((s latex-style) type spec stream
+                                                &key &allow-other-keys)
+  (declare (ignore type spec))
+  (format stream "\\par "))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;;; Methods for LaTeX styles that uses an {itemize} for organizing the
+;;; specs.
+
+(defmethod format-itemized-list-start ((style latex-style) stream)
+  (format stream "\\begin{itemize}"))
+(defmethod format-itemized-list-end ((style latex-style) stream)
+  (format stream "\\end{itemize}"))
+(defmethod format-itemized-list-item-start ((style latex-style) stream)
+  (format stream "\\item "))
+(defmethod format-itemized-list-item-end ((style latex-style) stream)
+  (declare (ignore stream)))
 
 ;;; -----------------------------------------------------------------
 

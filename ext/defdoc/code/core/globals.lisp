@@ -24,12 +24,6 @@
 
 (defgeneric string-implicit-symbol-head (package spec string))
 (defgeneric format-doc (stream style spec &key &allow-other-keys))
-(defgeneric format-docspec (stream style spec type &key &allow-other-keys)
-  (:method (stream (style symbol) spec type &rest keyargs)
-     (apply #'format-docspec stream (make-instance style) spec type keyargs)))
-
-(defgeneric format-docspec-element (style target-type element stream
-                                          &key &allow-other-keys))
 
 (define-condition option-without-required-option (warning)
   ((given :initarg :given :reader given)
@@ -87,3 +81,8 @@
            (declare (ignore style target-type spec))
            (let ((package (symbol-package symbol)))
              (values package (package-exports-p package symbol)))))
+
+(defun whitespace-p (char)
+  (case char
+    ((#\Space #\Tab #\Newline \#Return \#Linefeed \#Page) t)
+    (otherwise nil)))

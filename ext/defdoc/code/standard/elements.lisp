@@ -39,6 +39,37 @@
                  (format stream "~:@_  - ~a ~w" slot (slot-value spec slot)))
                 (t (format stream "~:@_  - no ~a" slot))))
         (format stream " ]")))))
+(defmethod spaceheaded-element ((element standard-plain-text))
+  (whitespace-p (elt (text-element-text element) 0)))
+
+(def-element :lisp (standard-lisp-name :class standard-doc-element
+                                       :args (kind name))
+    ((kind :initarg :kind :reader lisp-name-kind)
+     (name :initarg :name :reader lisp-name))
+  (unless (get-target-type kind t)
+    (warn "No target-type ~s, used as :lisp name kind of ~s" kind name))
+  (make-instance 'standard-lisp-name :kind kind :name name))
+(set-pprint-dispatch 'standard-lisp-name
+  (named-function pprint-standard-lisp-name
+    (lambda (stream spec)
+      (format stream "{~a ~s}" (lisp-name-kind spec) (lisp-name spec)))))
+
+(def-element :emph (standard-emphasized :class standard-doc-element
+                                        :package package :spec spec
+                                        :args (&rest specs))
+    ((spec :initarg :spec :reader emphasized-spec))
+  (make-instance 'standard-emphasized
+    :spec (cond
+            ((eql (length specs) 1) (compile-element package spec (car specs)))
+            (t (mapcar (named-function make-standard-emph-mapper
+                          (lambda (x) (compile-element package spec x)))
+                       specs)))))
+(set-pprint-dispatch 'standard-emphasized
+  (named-function pprint-standard-emphasized
+    (lambda (stream spec)
+      (format stream "{emph: ~w}" (emphasized-spec spec)))))
+(defmethod spaceheaded-element ((element standard-emphasized))
+  (spaceheaded-element (emphasized-spec element)))
 
 (def-element :paragraphs (standard-paragraph-list :class standard-doc-element
                                                   :package package :spec spec
@@ -61,6 +92,8 @@
                 (t (format stream "~:@_  - no ~a" slot))))
         (format stream " ]")))))
 
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 (def-element :seq (standard-sequence :class standard-doc-element
                                      :package package :spec spec
                                      :arg-list args)
@@ -82,6 +115,27 @@
                 (t (format stream "~:@_  - no ~a" slot))))
         (format stream " ]")))))
 
+(defmethod format-docspec-element (style target-type (spec standard-sequence)
+                                         stream &rest keyvals)
+  (loop for (item . others) on (sequence-element-items spec) do
+    (apply #'format-docspec-element style target-type item stream keyvals)
+    (when others
+      (apply #'format-sequence-element-separator
+             style target-type spec item (car others) stream keyvals))))
+
+(defgeneric format-sequence-element-separator (style target-type spec
+                                                     element1 element2 stream
+                                                     &key &allow-other-keys)
+  (:method (style target-type spec element1 element2 stream
+                  &key &allow-other-keys)
+    (declare (ignore style target-type spec element1 element2 stream))))
+
+(defmethod spaceheaded-element ((element standard-sequence))
+  (let ((subs (sequence-element-items element)))
+    (and subs (spaceheaded-element (car subs)))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 (def-element :code (standard-code :class standard-doc-element :args (string))
     ((code :initarg :code :reader code-element-string))
   (make-instance 'standard-code :code string))
@@ -96,6 +150,24 @@
                  (format stream "~:@_  - ~a ~w" slot (slot-value spec slot)))
                 (t (format stream "~:@_  - no ~a" slot))))
         (format stream " ]")))))
+
+(def-element :inline (standard-inline :class standard-doc-element
+                                      :args (string))
+    ((inline :initarg :inline :reader inline-element-string))
+  (make-instance 'standard-inline :inline string))
+(set-pprint-dispatch 'standard-inline
+  (named-function pprint-standard-inline
+    (lambda (stream spec)
+      (pprint-logical-block (stream '(1))
+        (format stream "[ ~a" (type-of spec))
+        (loop for slot in '(inline) do
+              (cond
+                ((slot-boundp spec slot)
+                 (format stream "~:@_  - ~a ~w" slot (slot-value spec slot)))
+                (t (format stream "~:@_  - no ~a" slot))))
+        (format stream " ]")))))
+(defmethod spaceheaded-element ((element standard-inline))
+  (whitespace-p (elt (inline-element-string element) 0)))
 
 (defclass standard-simple-list-environment (standard-doc-element)
     ((specs :initarg :specs :reader list-element-specs)
@@ -133,13 +205,58 @@
                      (lambda (x) (compile-element package spec x))) items)
     :env-tag "enumerate"))
 
+(def-element :fill-in (standard-fillin-place :class standard-doc-element) ()
+  (make-instance 'standard-fillin-place))
+(set-pprint-dispatch 'standard-fillin-place
+  (named-function pprint-standard-fillin-place
+    (lambda (stream spec)
+      (format stream "[ placeholder fill-in ]" (type-of spec)))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(def-element :output-set (standard-outputset-element
+                          :class standard-doc-element
+                          :args (name &key (style nil style-supp-p)))
+    ((name :initarg :name :accessor output-elem-name)
+     (style :initarg :style :accessor output-elem-style)
+     (style-supp-p :initarg :style-supp-p :accessor output-elem-style-supp-p))
+  (make-instance 'standard-outputset-element
+    :name name :style style :style-supp-p style-supp-p))
+(set-pprint-dispatch 'standard-outputset-element
+  (named-function pprint-standard-outputset-element
+    (lambda (stream spec)
+      (with-accessors ((name output-elem-name)
+                       (style output-elem-style)
+                       (style-supp-p output-elem-style-supp-p)) spec
+        (format stream "[ output-set name=~a style=~a ]" name
+                (if style-supp-p style "<unnamed>"))))))
+
+(defmethod format-docspec-element (style target-type
+                                         (spec standard-outputset-element)
+                                         stream &rest keyvals)
+  (declare (ignore target-type))
+  (apply #'format-doc stream
+         (get-included-outputset-style style (output-elem-style spec) spec)
+         (make-instance (output-elem-name spec)) keyvals))
+
 ;;; -----------------------------------------------------------------
 
 (def-contract (standard-elements-style-coverage (style type))
     () ;; options
-  (has-method (format-docspec-element (style t standard-plain-text t) t))
-  (has-method (format-docspec-element (style t standard-paragraph-list t) t))
-  (has-method (format-docspec-element (style t standard-sequence t) t))
-  (has-method (format-docspec-element (style t standard-code t) t))
-  (has-method (format-docspec-element (style t standard-itemize t) t))
-  (has-method (format-docspec-element (style t standard-enumerate t) t)))
+  (has-method (format-doc (stream style standard-doc-spec) t))
+  (has-method (format-doc (stream style output-contents) t))
+  (has-method (format-doc (stream style explicit-doc-element) t))
+  (has-method (format-docspec (stream style standard-doc-spec t) t))
+  (has-method (format-docspec-element (style t standard-fillin-place stream) t))
+  (has-method (format-docspec-element (style t standard-plain-text stream) t))
+  (has-method (format-docspec-element (style t standard-paragraph-list stream)
+                                      t))
+  (has-method (format-docspec-element (style t standard-sequence stream) t))
+  (has-method (format-docspec-element (style t standard-code stream) t))
+  (has-method (format-docspec-element (style t standard-inline stream) t))
+  (has-method (format-docspec-element (style t standard-itemize stream) t))
+  (has-method (format-docspec-element (style t standard-enumerate stream) t))
+  (has-method (format-docspec-element (style t standard-lisp-name stream) t))
+  (has-method (format-docspec-element (style t standard-emphasized stream) t))
+  (has-method (format-docspec-element (style t standard-outputset-element
+                                             stream) t)))

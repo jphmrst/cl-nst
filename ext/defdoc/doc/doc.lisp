@@ -24,9 +24,8 @@
 
 (def-documentation (type asdf-defdoc::defdoc-asdf)
   (:intro (:latex "The \\texttt{defdoc-asdf} class gives an ASDF system the effect that, when loaded, it should generate system documentation."))
-  (:details (:seq
-             "For example"
-             (:code "(defsystem :defdoc-doc
+  (:details (:seq "For example:"
+                  (:code "(defsystem :defdoc-doc
   :description \"Documentation builder for defdoc\"
   :class defdoc-asdf
   :depends-on ( :defdoc :asdf-defdoc )
@@ -37,18 +36,18 @@
                      :rel-directory \"doc/\"
                      :style #:manual-style
                      :index t :table-of-contents t)))")
-             (:latex "The \\texttt{defdoc-asdf} class allows three new forms in the body of a system:")
-             (:itemize ()
-               (:seq (:latex "The \\texttt{:documents-system} forms names the ASDF system which this system documents."))
-               (:seq (:latex "The \\texttt{:documentation-package} names the package in which the symbols used in the \\texttt{:build-output} forms actually live.  Since this is an ASDF system definition, we cannot assume that this package will be loaded before the system definition."))
-               (:seq (:latex "The \\texttt{:build-output} form specifies the output units to be generated for this system.  Each element of this list is either a symbol naming an output unit, or is a list headed by such a symbol with the remaining elements taken as keyword arguments:")
-                     (:itemize ()
-                        (:latex "The \\texttt{:package} argument overrides the \\texttt{documentation-package} form for this output unit.")
-                        (:latex "The \\texttt{:style} argument names the style class which should be instantiated for this output unit.")
-                        (:latex "The \\texttt{:rel-directory} and \\texttt{:abs-directory} arguments specify the directory into which the documentation should be written.  DefDoc takes the \\texttt{:rel-directory} argument to be relative to the directory holding the ASDF system definition, and the \\texttt{:abs-directory} argument to be an absolute directory reference.  At most one of these keyword arguments should be given.")
-                        (:latex "The \\texttt{:filename} argument should be astring naming the root of the file to be written.  If omitted, the name of the symbol ")
-                        (:latex "The \\texttt{:index} argument, if non-nil, indicates that output should include an index if the style supports it.")
-                        (:latex "The \\texttt{:table-of-contents} argument, if non-nil, indicates that output should include a table of contents if the style supports it."))))))
+                  (:latex "The \\texttt{defdoc-asdf} class allows three new forms in the body of a system:")
+                  (:itemize ()
+                    (:seq (:latex "The \\texttt{:documents-system} forms names the ASDF system which this system documents."))
+                    (:seq (:latex "The \\texttt{:documentation-package} names the package in which the symbols used in the \\texttt{:build-output} forms actually live.  Since this is an ASDF system definition, we cannot assume that this package will be loaded before the system definition."))
+                    (:seq (:latex "The \\texttt{:build-output} form specifies the output units to be generated for this system.  Each element of this list is either a symbol naming an output unit, or is a list headed by such a symbol with the remaining elements taken as keyword arguments:")
+                          (:itemize ()
+                            (:latex "The \\texttt{:package} argument overrides the \\texttt{documentation-package} form for this output unit.")
+                            (:latex "The \\texttt{:style} argument names the style class which should be instantiated for this output unit.")
+                            (:latex "The \\texttt{:rel-directory} and \\texttt{:abs-directory} arguments specify the directory into which the documentation should be written.  DefDoc takes the \\texttt{:rel-directory} argument to be relative to the directory holding the ASDF system definition, and the \\texttt{:abs-directory} argument to be an absolute directory reference.  At most one of these keyword arguments should be given.")
+                            (:latex "The \\texttt{:filename} argument should be astring naming the root of the file to be written.  If omitted, the name of the symbol ")
+                            (:latex "The \\texttt{:index} argument, if non-nil, indicates that output should include an index if the style supports it.")
+                            (:latex "The \\texttt{:table-of-contents} argument, if non-nil, indicates that output should include a table of contents if the style supports it."))))))
   (:properties (manual-section defdoc-via-asdf)))
 (ensure-api-documentation :asdf-defdoc)
 
@@ -71,8 +70,9 @@
                                   (defdoc-via-asdf
                                    :leader (:latex "DefDoc integrates with ASDF to coordinate documentation generation.  Currently, DefDoc provides an interim base ASDF system, under which the ASDF \\texttt{load-op} triggers document generation.  We plan to develop a second base system which supports a new operator \\texttt{doc-op}, with distinguished components loaded only for the documentation, and not the standard component load or test."))
                                   (styles :title "The output style"
-                                   :order (write-output
-                                           latex-style symbol-homing-style)
+                                   :order (write-output plaintext-style
+                                           latex-style itemized-list-style symbol-homing-style
+                                           html-style)
                                    :leader (:latex "This section discusses \\emph{styles}, classes encapsulating various options for documentation generation.  Style classes allow output document generation to be consolidated into a single generic function \\texttt{write-output}.  DefDoc exports a number of pre-defined output styles."))
                                   (latex :title (:latex "Other \\LaTeX\\ generators")
                                    :order (write-spec-latex
@@ -81,35 +81,85 @@
                                    :leader (:latex "DefDoc's facilities for generating documentation fully from output unit definitions is attractive, but is not always feasible, in particular for existing projects to which DefDoc is gradually applied.  This section documents the API for an alternative mode for using DefDoc for \\LaTeX\\ documentation, where snippets of generated \\LaTeX\\ source are included in a manually-constructed top-level \\LaTeX\\ document.  These functions, for the most part, wrap a call to the \\texttt{format-doc} or \\texttt{format-docspec} control API functions with stream-opening and other administrative environment setup."))
                                   (html :title (:latex "Other HTML generators"))
                                   (newtargetdef
-                                   :title (:latex "Defining target types"))))
+                                   :title (:latex "Defining target types")
+                                   :leader (:seq "DefDoc includes target type definitions for all of the legal targets of Common Lisp documentation: " (:lisp symbol function) ", " (:lisp symbol compiler-macro) ", " (:lisp symbol setf) ", " (:lisp symbol method-combination) ", " (:lisp symbol type) ", " (:lisp symbol structure) " and " (:lisp symbol variable) " as well as " (:lisp symbol method) ", " (:lisp symbol symbol) " and " (:lisp symbol keyword) ".  Defining additional target types is straightforward."))))
       (collect-exported-symbols :defdoc)
       (collect-symbols #:asdf #:defdoc-asdf)))
-  (collect-output (:title "Customizing and extending styles")
-    (collect-output (:title "Documentation model")
+  (collect-output (:title "Customizing and extending styles"
+                   :leader (:seq "This section describes how the standard document style classes work, and how they can be customized and extended.  The "
+                                 (:emph "content")
+                                 " of output documents is specified separately from their "
+                                 (:emph "layout")
+                                 ": contents have a uniform internal representation, which is converted, according to method dispatching on style classes, to plain text, "
+                                 (:latex-name)
+                                 ", HTML, or other document forms.  We first describe the "
+                                 (:emph "standard documentation model")
+                                 " into which "
+                                 (:lisp compiler-macro def-documentation)
+                                 " translates documentation, the "
+                                 (:emph "output model")
+                                 " into which "
+                                 (:lisp compiler-macro def-output-class)
+                                 " translates output contents, and the general functions which traverse output contents.  We then present the extensions to the output model for "
+                                 (:latex-name)
+                                 " and HTML generation.  Finally, there are macros which check style implementations to ensure adequate method definitions."))
+    (collect-output
+        (:title "Documentation model"
+                :leader (:seq "DefDoc provides a standard documentation model into which "
+                              (:lisp compiler-macro def-documentation)
+                              " translates documentation by default, although package authors can override this representation. In this section we distinguish the "
+                              (:emph "core")
+                              " model, which all models must extend, from the particulars of the standard model."))
       (collect-groups-by-label
           (manual-section :package :defdoc
                           :groups '((model :title "The core document model"
-                                           :order (doc-spec))
+                                     :order (doc-spec docspec-element)
+                                     :leader (:seq "The internal model of the documentation attached to Lisp artifacts is based around two top-level superclasses.  The " (:lisp type doc-spec) " class collects all of the different documenting elements associated with an artifact. In the standard model, elements can include a short blurb, a text introduction, an explanation of function arguments, specifications of function calls, and a detailed description.  A " (:lisp type doc-spec) " instance contains " (:lisp type docspec-element) " instances modeling each element. Subclasses of " (:lisp type docspec-element) " provided in the standard model include atomic elements such as a snippet of plain text or " (:latex-name) ", as well as aggregating elements such as sequences of paragraphs or itemized lists."))
                                     (standard-model
-                                     :title "The standard document model"
-                                     :order (standard-doc-spec
-                                             standard-callspec
+                                     :title "Standard documentation specifications"
+                                     :order (standard-doc-spec))
+                                    (standard-model-elements
+                                     :title "Specification elements"
+                                     :order (standard-doc-element
+                                             standard-sequence
+                                             standard-paragraph-list
+                                             standard-code
+                                             standard-emphasized
+                                             standard-lisp-name
+                                             standard-inline
                                              standard-simple-list-environment
                                              standard-enumerate
                                              standard-itemize
-                                             standard-code
-                                             standard-output-framework
-                                             standard-sequence))))
+                                             standard-outputset-element
+                                             standard-fillin-place))
+                                    (standard-model-callspecs
+                                     :title "Call specifications"
+                                     :order (standard-callspec))
+                                    (output-model
+                                     :title "Output document structure"
+                                     :order (output-framework))))
+        (collect-exported-symbols :defdoc-control-api)))
+    (collect-output (:title "Formatting standard output documents")
+      (collect-groups-by-label
+          (manual-section
+           :package :defdoc
+           :groups '((standard-model-spec-formatting
+                      :title "Documentation specifications")
+                     (standard-model-element-formatting
+                      :title "Documentation elements")
+                     (standard-model-output-formatting
+                      :title "Output documents")))
         (collect-exported-symbols :defdoc-control-api)))
     (collect-groups-by-label
         (manual-section :package :defdoc
-                        :groups '((output-model :order (output-framework))
-                                  plaintext
+                        :groups '(plaintext
                                   (latex-style-model
                                    :order (standard-latex
                                            full-package-latex-style-mixin
                                            package-list-latex-mixin))
-                                  html-style-model))
+                                  html-style-model
+                                  (api-checks
+                                   :title (:latex "Method verification"))))
       (collect-exported-symbols :defdoc-control-api)))
   (collect-output (:title "Customizing documentation models")
     (collect-groups-by-label
@@ -126,9 +176,15 @@
 (defclass manual-style (symbol-homing-style
                         latex-style
                         docspec-fancy-header-latex-style) ())
+(defclass sublist-style (symbol-homing-style latex-style itemized-list-style)
+  ())
 (defmethod candidate-home-packages ((style manual-style) target-type spec)
   (declare (ignore target-type spec))
   '(:defdoc-control-api :asdf-defdoc :defdoc))
+(defmethod get-included-outputset-style ((outer manual-style)
+                                         inner-style contained)
+  (declare (ignore inner-style contained))
+  'sublist-style)
 
 (def-label-config (:label manual-section :package :defdoc-docsyms)
   (docspecs :title "Providing documentation")
@@ -142,7 +198,6 @@
   (elements :title "Documentation model elements")
   (label-model :title "Accessing labels and values")
   (output-model :title "Output models")
-  (standard-model :title "The standard documentation model")
   (plaintext :title "Generating plain text")
   (latex :title (:latex "Generating \\LaTeX"))
   (latex-style-model :title (:latex "The \\LaTeX\\ model"))

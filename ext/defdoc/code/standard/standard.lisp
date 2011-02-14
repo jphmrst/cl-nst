@@ -77,9 +77,12 @@
                                   &rest keyargs)
   (apply #'format-standard-docspec-intro-section style type spec stream keyargs)
   (apply #'format-standard-docspec-usage-section style type spec stream keyargs)
+  (when (apply #'check-standard-docspec-details-sep
+               style type spec stream keyargs)
+    (apply #'format-standard-docspec-details-sep
+           style type spec stream keyargs))
   (apply #'format-standard-docspec-details-section
-         style type spec stream keyargs)
-  )
+         style type spec stream keyargs))
 
 (defgeneric format-standard-docspec-intro-section
     (style type spec stream &key &allow-other-keys)
@@ -161,6 +164,19 @@
     (style type spec name stream &key &allow-other-keys)
   (:method (style type spec name stream &key &allow-other-keys)
     (declare (ignore style type spec name stream))))
+
+(defgeneric check-standard-docspec-details-sep (style type spec stream
+                                                      &key &allow-other-keys)
+  (:method (style type spec stream &key &allow-other-keys)
+    (declare (ignore style type stream))
+    (with-unpacked-standard-spec (nil nil intro-supp-p nil params-supp-p nil nil
+                                      nil details-supp-p callspec) spec
+      (and intro-supp-p details-supp-p (not params-supp-p) (not callspec)))))
+
+(defgeneric format-standard-docspec-details-sep (style type spec stream
+                                                       &key &allow-other-keys)
+  (:method (style type spec stream &key &allow-other-keys)
+    (declare (ignore style type spec stream))))
 
 (defgeneric format-standard-docspec-details-section
     (style type spec stream &key &allow-other-keys)
@@ -244,7 +260,7 @@
          ((:tags) (setf (docspec-tags spec) form-args))
          ((:params)
           (setf (docspec-params spec)
-                (loop for (id forms) in form-args
+                (loop for (id . forms) in form-args
                   collect (list id (compile-element package spec forms)))))
          ((:intro)       (setting-accessor docspec-intro))
          ((:blurb)       (setting-accessor docspec-blurb))

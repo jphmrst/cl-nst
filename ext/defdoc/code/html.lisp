@@ -333,18 +333,18 @@
     (when others (pprint-newline :mandatory stream))))
 
 (defmethod format-docspec-element ((style html-style) target-type
-                                   (spec standard-sequence) stream
-                                   &key &allow-other-keys)
-  (loop for (item . others) on (sequence-element-items spec) do
-    (format-docspec-element style target-type item stream)
-    (when others (pprint-newline :mandatory stream))))
-
-(defmethod format-docspec-element ((style html-style) target-type
                                    (code standard-code) stream
                                    &key &allow-other-keys)
   (declare (ignore target-type))
   (with-span-wrapper (stream 'pre)
     (princ (code-element-string code) stream)))
+
+(defmethod format-docspec-element ((style html-style) target-type
+                                   (code standard-inline) stream
+                                   &key &allow-other-keys)
+  (declare (ignore target-type))
+  (with-span-wrapper (stream 'tt)
+    (princ (inline-element-string code) stream)))
 
 (defmethod format-docspec-element ((style html-style) target-type
                                    (spec standard-itemize) stream
@@ -364,10 +364,41 @@
         (format-docspec-element style target-type item stream))
       (when others (pprint-newline :mandatory stream)))))
 
+(defmethod format-docspec-element ((style html-style) target-type
+                                   (spec standard-lisp-name) stream
+                                   &key &allow-other-keys)
+  (declare (ignore target-type width))
+  (format stream "<tt>~a</tt>" (lisp-name spec)))
+
+(defmethod format-docspec-element ((style html-style) target-type
+                                   (spec standard-emphasized) stream
+                                   &rest keyvals)
+  (with-span-wrapper (stream 'em)
+    (apply #'format-docspec-element
+           style target-type (emphasized-spec spec) stream keyvals)))
+
 (defmethod format-docspec-element ((style html-style) type
                                    (spec standard-latex) stream
                                    &key &allow-other-keys)
   (format-docspec-element style type (canonicalize-element spec) stream))
+
+(defmethod format-docspec-element ((style html-style) target-type
+                                   (name latex-name-element) stream
+                                   &key &allow-other-keys)
+  (declare (ignore target-type))
+  (format stream "L<small><sup>A</sup></small>T<sub>E</sub>X"))
+
+(defmethod format-docspec-element ((style html-style) target-type
+                                   (name bibtex-name-element) stream
+                                   &key &allow-other-keys)
+  (declare (ignore target-type))
+  (format stream "BibT<sub>E</sub>X"))
+
+(defmethod format-docspec-element ((style html-style) target-type
+                                   (name standard-fillin-place) stream
+                                   &key &allow-other-keys)
+  (declare (ignore target-type))
+  (format stream "<font color=\"#ff0000\"><b>FILL IN</b></font>"))
 
 ;;; -----------------------------------------------------------------
 
@@ -391,6 +422,20 @@
   (pprint-newline :mandatory stream)
   (with-div-wrapper (stream 'dd)
     (call-next-method)))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;;; Methods for HTML styles that uses an itemized list for organizing
+;;; the specs.
+
+(defmethod format-itemized-list-start ((style html-style) stream)
+  (format stream "<ul>"))
+(defmethod format-itemized-list-end ((style html-style) stream)
+  (format stream "</ul>"))
+(defmethod format-itemized-list-item-start ((style html-style) stream)
+  (format stream "<li>"))
+(defmethod format-itemized-list-item-end ((style html-style) stream)
+  (format stream "</li>"))
+
 
 
 

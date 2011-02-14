@@ -25,10 +25,14 @@
 
              ;; Part 1 --- basic user operations
              #:docspecs #:label-use #:outspec #:defdoc-via-asdf
-             #:styles #:latex #:html #:newtargetdef
+             #:styles #:latex #:html #:newtargetdef #:api-checks
 
-             #:model #:standard-model
+             #:model #:standard-model #:standard-model-elements
+             #:standard-model-callspecs #:standard-model-spec-formatting
+             #:standard-model-element-formatting
+             #:standard-model-output-formatting
              #:output-model #:plaintext #:latex-style-model #:html-style-model
+
              #:doc-gen #:control #:targets #:label-model #:elements
              #:deprecated))
 
@@ -45,6 +49,7 @@
            #:package-exports-p
            #:locate-package-home
            #:string-implicit-symbol-head
+           #:whitespace-p
 
            ;; storage.lisp
            #:get-doc-spec
@@ -93,7 +98,7 @@
            #:canonicalize-element
            #:compile-element
            #:def-bare-string-element-tag
-           #:element-type-p
+           #:element-type-p #:spaceheaded-element
            #:compile-string-element
 
            ;; tag.lisp
@@ -130,6 +135,7 @@
            #:format-output-leader-title
            #:format-output-trailer-material
            #:format-output-trailer-docspec
+           #:get-included-outputset-style
 
            ;; collectors.lisp
            #:collect-target-type
@@ -177,6 +183,8 @@
            #:format-standard-docspec-param-list-item
            #:format-standard-docspec-param-list-item-start
            #:format-standard-docspec-param-list-item-stop
+           #:check-standard-docspec-details-sep
+           #:format-standard-docspec-details-sep
 
            ;; callspec.lisp
            #:standard-callspec
@@ -212,6 +220,8 @@
            #:sequence-element-items
            #:standard-code
            #:code-element-string
+           #:standard-inline
+           #:inline-element-string
            #:standard-simple-list-environment
            #:list-element-specs
            #:list-element-options
@@ -219,12 +229,23 @@
            #:standard-itemize
            #:standard-enumerate
            #:standard-elements-style-coverage
+           #:standard-outputset-element
+           #:output-elem-name #:output-elem-name-supp-p
+           #:output-elem-style #:output-elem-style-supp-p
+           #:standard-lisp-name
+           #:lisp-name-kind
+           #:lisp-name
+           #:standard-emphasized
+           #:emphasized-spec
+           #:standard-fillin-place
+           #:format-sequence-element-separator
 
            ;; style.lisp
            #:candidate-home-packages
-           #:symbol-homing-style
-           #:docspec-par-latex-style
-           #:docspec-fancy-header-latex-style))
+           #:symbol-homing-style #:symbol-homes #:use-internal-names
+           #:itemized-list-style
+           #:format-itemized-list-start #:format-itemized-list-end
+           #:format-itemized-list-item-start #:format-itemized-list-item-end))
 
 (defpackage :defdoc-plaintext
   (:documentation "DefDoc internal organizational package - LaTeX backend")
@@ -240,7 +261,6 @@
 
            ;; plaintext.lisp
            #:get-default-callspec-block-width
-           #:whitespace-p
            #:plaintext-style
            #:standard-docstring-style
            #:callspec-to-lines
@@ -251,7 +271,8 @@
            #:callspec-item-to-lines
            #:output-lines
            #:callspec-prefix
-           #:callspec-suffix))
+           #:callspec-suffix
+           #:plaintext-methods-coverage))
 
 (defpackage :defdoc-latex
   (:documentation "DefDoc internal organizational package - LaTeX backend")
@@ -260,6 +281,7 @@
   (:export ;; latex.lisp
            #:*latex-verbatim-width*
            #:latex-style
+           #:latex-name-element #:bibtex-name-element
            #:standard-latex
            #:latex-element-latex
            #:*defdoc-latex-default-directory*
@@ -270,6 +292,10 @@
            #:package-list-overall-header
            #:package-list-group-header
            #:package-list-entry
+           #:index-lisp-name
+
+           #:docspec-par-latex-style
+           #:docspec-fancy-header-latex-style
 
            #:write-spec-latex #:write-doctype-latex
            #:write-package-specs-latex #:write-latex-output

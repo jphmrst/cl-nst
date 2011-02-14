@@ -34,11 +34,6 @@
 
 ;;; -----------------------------------------------------------------
 
-(defun whitespace-p (char)
-  (case char
-    ((#\Space #\Tab #\Newline \#Return \#Linefeed \#Page) t)
-    (otherwise nil)))
-
 (defun indent-by (lines length)
   (indent-with lines (make-string length :initial-element #\Space)))
 
