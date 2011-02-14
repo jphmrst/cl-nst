@@ -22,6 +22,9 @@
 (in-package :defdoc-core)
 
 (defclass docspec-element () ())
+
+(defgeneric format-docspec-element (style target-type element stream
+                                          &key &allow-other-keys))
 (defgeneric canonicalize-element (element))
 
 ;;; -----------------------------------------------------------------
@@ -83,8 +86,8 @@
 (defgeneric get-element-aggregation (package spec elements)
   (:method (package spec elements)
      (declare (ignore package spec))
-     (make-instance 'defdoc-standard-model:standard-paragraph-list
-       :paragraphs elements)))
+     (make-instance 'defdoc-standard-model:standard-sequence
+       :elements elements)))
 
 (defgeneric compile-symbol-headed-element (hd package spec args)
   (:method (hd package spec args)
@@ -122,3 +125,6 @@
                                                  ,package ,spec ,arg-list)
          ,@(when declares `((declare ,@declares)))
          ,@body))))
+
+(defgeneric spaceheaded-element (element)
+  (:method (element) (declare (ignore element)) nil))

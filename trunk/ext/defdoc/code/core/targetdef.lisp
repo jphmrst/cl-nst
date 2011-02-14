@@ -77,32 +77,32 @@
                                       (symbol-definition-checker
                                        nil symbol-definition-checker-supp-p))
                                 &body forms)
-  (unless symbol-definition-checker-supp-p
-    (cond
-      (symbol-definition-nocheck
-       (setf symbol-definition-checker `(lambda (e)
+  (cond
+    ((and symbol-definition-nocheck symbol-definition-checker-supp-p)
+     (warn "Set :symbol-definition-nocheck for target type ~s; ignoring :symbol-definition-checker"
+           name))
+
+    (symbol-definition-nocheck
+     (setf symbol-definition-checker `(lambda (e)
                                           (declare (ignore e))
                                           nil)
-             symbol-definition-checker-supp-p t))
-      (t (warn ":symbol-definition-checker for ~a not defined" name))))
+           symbol-definition-checker-supp-p t))
+
+    ((not symbol-definition-checker-supp-p)
+     (warn ":symbol-definition-checker for ~a not defined" name)
+     (setf symbol-definition-checker `(lambda (e)
+                                          (declare (ignore e))
+                                          nil)
+           symbol-definition-checker-supp-p t)))
+
   (multiple-value-bind (lisp-installer lisp-installer-supp-p)
       (decode-doctype-forms forms)
     `(let ((target-spec
             (make-instance ',class
               :name ',name
-              :symbol-definition-checker
-              #',(cond
-                   (symbol-definition-checker-supp-p
-                    symbol-definition-checker)
-                   (t `(lambda (s)
-                         (warn ,(concatenate 'string
-                                  "Could not check whether ~s is used as "
-                                  (symbol-name name)) s)
-                         nil)))
-              ,@(when capitalized-supp-p
-                  `(:capitalized ,capitalized))
-              ,@(when lower-case-supp-p
-                  `(:lower-case ,lower-case)))))
+              :symbol-definition-checker #',symbol-definition-checker
+              ,@(when capitalized-supp-p `(:capitalized ,capitalized))
+              ,@(when lower-case-supp-p  `(:lower-case ,lower-case)))))
        (setf (docstring-installer target-spec)
              #',(cond
                   (lisp-installer-supp-p lisp-installer)
@@ -133,16 +133,16 @@
 
 ;;; -----------------------------------------------------------------
 
-(defclass undoc-reporting ()
+(define-condition undoc-reporting ()
   ((sym :initarg :symbol :reader sym)
    (usage :initarg :usage :reader usage)))
 
-(defclass undoc-reporting-defdoc-only (undoc-reporting) ())
+(define-condition undoc-reporting-defdoc-only (undoc-reporting) ())
 (defmethod print-object ((ud undoc-reporting-defdoc-only) stream)
   (format stream "No documentation in DefDoc for ~s as ~a"
     (sym ud) (usage ud)))
 
-(defclass undoc-reporting-any (undoc-reporting) ())
+(define-condition undoc-reporting-any (undoc-reporting) ())
 (defmethod print-object ((ud undoc-reporting-any) stream)
   (format stream "No documentation for ~s as ~a"
     (sym ud) (usage ud)))

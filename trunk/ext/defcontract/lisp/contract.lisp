@@ -21,28 +21,40 @@
 (in-package :defcontract)
 
 (defmacro def-contract ((name &rest arg-specs) options &body forms)
-  (let ((keyarg-defs (make-hash-table :test 'eq)))
-    (loop for spec in arg-specs do
-      (when (symbolp spec)
-        (setf spec `(,spec type)))
-      (destructuring-bind (name typ) spec
-        (setf (gethash name keyarg-defs) typ)))
-    `(progn
-       (defclass ,name () ())
-       (defmethod run-contract-enforcement
-           ((o ,name) &key ,@(loop for arg being the hash-keys of keyarg-defs
-                                   collect arg))
-         ,@(loop for arg-name being the hash-keys of keyarg-defs
-                 using (hash-value arg-kind)
-                 append
-                 (cond
-                   ((eq arg-kind 'type)
-                    `((unless (find-class ,arg-name)
-                        ,(generate-consequence options "~s should be a type"
-                                               arg-name))))
-                   (t nil)))
-         ,@(loop for form in forms
-               collect (generate-clause-code (car form) (cdr form)
-                                keyarg-defs options))
-         t))))
+  (let ((kdefs (make-hash-table :test 'eq)))
+    (destructuring-bind (&key entail &allow-other-keys) options
+      (loop for spec in arg-specs do
+        (when (symbolp spec) (setf spec `(,spec type)))
+        (destructuring-bind (name typ) spec
+          (setf (gethash name kdefs) typ)))
+      (loop for contract in entail
+          if (symbolp contract) collect contract into supercontracts
+          if (listp contract) collect contract into recursives
+          finally
+            (return-from def-contract
+              `(progn
+                 (defclass ,name ,supercontracts ())
+                 (defmethod run-contract-enforcement
+                     ((o ,name) &key
+                      ,@(loop for k being the hash-keys of kdefs collect k))
+                   ,@(when supercontracts `((call-next-method)))
+                   ,@(loop for contract-call in recursives
+                         collect (let ((subcon (car contract-call))
+                                       (subargs (cdr contract-call)))
+                                   `(run-contract-enforcement ',subcon
+                                                              ,@subargs)))
+                   ,@(loop for arg-name being the hash-keys of kdefs
+                         using (hash-value arg-kind)
+                         append
+                           (cond
+                             ((eq arg-kind 'type)
+                              `((unless (find-class ,arg-name)
+                                  ,(generate-consequence options
+                                                         "~s should be a type"
+                                                         arg-name))))
+                             (t nil)))
+                   ,@(loop for form in forms
+                         collect (generate-clause-code (car form) (cdr form)
+                                                       kdefs options))
+                   t)))))))
 

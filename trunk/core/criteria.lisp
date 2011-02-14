@@ -676,3 +676,34 @@
               (:eval (incf zzz))
               (:check (:true-form (eql zzz 2)))))")))
   )
+
+(def-criterion (:applying-common-criterion (:forms criterion-head &body data-sets) :ignore)
+  (let ((criterion-list-prefix (cond
+                                 ((symbolp criterion-head)
+                                  (list criterion-head))
+                                 ((listp criterion-head) criterion-head)
+                                 (t (error "Expected symbol or list, got ~s"
+                                           criterion-head)))))
+    (loop for (criterion-args data-forms) in data-sets
+          for subresult = (check-criterion-on-form
+                                (append criterion-list-prefix criterion-args)
+                                `(list ,@data-forms))
+        append (check-result-warnings subresult) into warnings
+        append (check-result-failures subresult) into failures
+        append (check-result-errors subresult) into errors
+        append (check-result-info subresult) into info
+        finally (return (make-and-calibrate-check-result :warnings warnings
+                                                         :failures failures
+                                                         :errors errors
+                                                         :info info)))))
+(defdoc:def-documentation (criterion :applying-common-criterion)
+    (:intro (:seq "The " (:lisp criterion :applying-common-criterion) " criterion applies one criterion to several pairs of criterion arguments and data forms."))
+  (:callspec ((:alt criterion (criterion (:seq arg)))
+              (:seq ( (:seq (((:seq arg)) ((:seq form)))))))))
+
+(def-criterion-alias (:with-common-criterion criterion &body forms)
+  `(:applying-common-criterion ,criterion
+     ,@(loop for form in forms collect `(nil ,form))))
+(defdoc:def-documentation (criterion :with-common-criterion)
+    (:intro (:seq "The " (:lisp criterion :with-common-criterion) " criterion applies one criterion to several data forms."))
+  (:callspec ((:alt criterion (criterion (:seq arg))) (:seq ((:seq form))))))

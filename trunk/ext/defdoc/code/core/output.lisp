@@ -220,3 +220,16 @@
 (defgeneric format-output-trailer-docspec (style trailer stream)
   (:method (style trailer stream)
     (format-docspec-element style nil trailer stream)))
+
+(defgeneric get-included-outputset-style (outer-style inner-style contained)
+  (:method :around (outer-style inner-style contained)
+    (declare (ignore outer-style inner-style contained))
+    (let ((result (call-next-method)))
+      (cond
+        ((symbolp result) (make-instance result))
+        (t result))))
+  (:method (outer-style inner-style contained)
+    (declare (ignore contained))
+    (cond
+      (inner-style inner-style)
+      (t outer-style))))

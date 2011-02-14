@@ -139,9 +139,9 @@
                         :latex (format nil "\\label{~a:primary}" self))
                       (call-next-method)))))
 
-(defmethod defdoc-control-api:format-docspec-element ((style nst-item-style)
-                                   (target-type (eql 'nst::criterion))
-                                   (spec defdoc-control-api:standard-doc-spec) stream)
+(defmethod defdoc-control-api:format-docspec-element
+    ((style nst-item-style) (target-type (eql 'nst::criterion))
+     (spec defdoc-control-api:standard-doc-spec) stream &key &allow-other-keys)
   (with-accessors ((self defdoc-control-api:docspec-self)) spec
     (format stream "\\subsubsection{The \\texttt{~s} criterion}" self)
     (call-next-method)))
@@ -164,14 +164,14 @@
 
 (defclass nst-quickref (defdoc:latex-style) ())
 (defmethod defdoc-control-api:get-latex-output-file-name ((style nst-quickref)
-                                              usage name)
+                                                          usage name)
   (string-downcase (concatenate 'string
                      (symbol-name name) "_"
                      (symbol-name usage) "_"
                      (symbol-name (type-of style)) ".tex")))
 (defmethod defdoc-control-api:format-docspec-element
     ((style nst-quickref) target-type
-     (spec defdoc-control-api:standard-doc-spec) stream)
+     (spec defdoc-control-api:standard-doc-spec) stream &key &allow-other-keys)
   (defdoc-control-api:with-unpacked-standard-spec
       (self intro intro-supp-p params params-supp-p
             short short-supp-p full full-supp-p

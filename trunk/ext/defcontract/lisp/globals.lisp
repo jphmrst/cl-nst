@@ -27,27 +27,43 @@
 
 (defgeneric generate-clause-code (tag clause-args keyarg-defs contract-opts))
 
+(defmethod generate-clause-code (tag x y z)
+  (declare (ignore x y z))
+  (error "Unknown contract clause ~s" tag))
+
 (defmethod generate-clause-code ((tag (eql 'has-method))
                                  clause-args keyarg-defs contract-opts)
   (destructuring-bind (method-spec) clause-args
     (destructuring-bind (method-name method-arg-spec result-type-spec)
         method-spec
       (declare (ignore result-type-spec))
-      (let ((actual-args-specs (loop for spec in method-arg-spec
-                                   collect
-                                     (cond
-                                       ((eq spec t) '(find-class t))
-                                       ((gethash spec keyarg-defs)
-                                        `(find-class ,spec))
-                                       ((symbolp spec) `(find-class ',spec))
-                                       (t
-                                        (error "Got ~s, expect symbol" spec))))))
-        `(unless (#-clozure-common-lisp closer-mop:compute-applicable-methods-using-classes
-                  #+clozure-common-lisp compute-applicable-methods-using-classes
-                  (symbol-function ',method-name) (list ,@actual-args-specs))
-           ,(generate-consequence contract-opts "No method ~s ~s"
-                                  `',method-name `',method-arg-spec))))))
+      (loop for spec in method-arg-spec
+            if (eq spec t)
+              collect '(find-class t) into actual-args-specs
+              and collect t into display-arg-specs
+            else if (gethash spec keyarg-defs)
+                   collect `(find-class ,spec) into actual-args-specs
+                   and collect spec into display-arg-specs
+            else if (symbolp spec)
+                   collect `(find-class ',spec) into actual-args-specs
+                   and collect `',spec into display-arg-specs
+            else do (error "Got ~s, expect symbol" spec) end
+            finally
+         (return-from generate-clause-code
+           `(unless (#-clozure-common-lisp
+                     closer-mop:compute-applicable-methods-using-classes
+                     #+clozure-common-lisp
+                     compute-applicable-methods-using-classes
+
+                     (symbol-function ',method-name) (list ,@actual-args-specs))
+              ,(generate-consequence contract-opts "No method ~s ~s"
+                                     `',method-name
+                                     `(list ,@display-arg-specs))))))))
 
 (defun generate-consequence (options string-or-class &rest args)
   (declare (ignore options))
   `(warn ,string-or-class ,@args))
+
+(defgeneric run-contract-enforcement (contract &key &allow-other-keys)
+  (:method ((contract symbol) &rest keyvals)
+    (apply #'run-contract-enforcement (make-instance contract) keyvals)))

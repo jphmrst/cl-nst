@@ -23,9 +23,23 @@
   (:use :common-lisp :defcontract
         :defdoc-core :defdoc-collectors :defdoc-standard-model
         :defdoc-plaintext :defdoc-latex :defdoc-html)
-  #+allegro (:import-from excl #:named-function))
+  #+allegro (:import-from excl #:named-function)
+  (:export #:style-coverage))
 
 (in-package :defdoc-interfaces)
+
+(def-contract (style-coverage (style type))
+    (:entail ((plaintext-methods-coverage)
+              (standard-elements-style-coverage :style style))) ;; options
+  (has-method (format-docspec-element (style t standard-latex t) t))
+  (has-method (format-docspec-element (style t latex-name-element t) t))
+  (has-method (format-docspec-element (style t bibtex-name-element t) t)))
+
+(def-contract (all-styles-coverage)
+    (:entail ((plaintext-methods-coverage)
+              (style-coverage :style 'plaintext-style)
+              (style-coverage :style 'latex-style)
+              (style-coverage :style 'html-style))))
 
 (defmacro repackage-symbols (forms &body specs)
   (let ((sources (make-hash-table :test 'eq))
@@ -102,8 +116,9 @@
           ;; Last symbols --- not sorted by file
           #:get-grouped-output-labeldef #:compile-element #:get-spec-class #:element-type-p #:format-doc #:format-tag #:tag-sort #:get-label-section-title-supp-p #:*output-leader-title-format-string* #:get-grouped-output-group #:get-label-section-order-supp-p #:get-label-section-title #:get-label-section-order #:get-doc-hash-of-target-type #:label-values #:canonicalize-element
           ;; globals.lisp
+          #-allegro #:named-function
           #:*docstring-style* #:format-docspec #:format-docspec-element
-          #:package-exports-p #:locate-package-home
+          #:package-exports-p #:locate-package-home #:whitespace-p
           ;; storage.lisp
           #:get-doc-spec #:get-doc-specs
           ;; labels.lisp
@@ -119,7 +134,7 @@
           #:*spec-class* #:doc-spec #:docspec-self #:docspec-target-type
           #:docspec-tags
           ;; elementdef.lisp
-          #:docspec-element #:*default-element-class*
+          #:docspec-element #:*default-element-class* #:spaceheaded-element
           #:string-implicit-symbol-head #:compile-string-element
           ;; tag.lisp
           #:get-doc-tags
@@ -134,13 +149,16 @@
           #:format-output-leader-material #:format-output-leader-docspec
           #:format-output-leader-sep #:format-output-leader-title
           #:format-output-trailer-material #:format-output-trailer-docspec
+          #:get-included-outputset-style
           ;; collectors.lisp
           #:explicit-doc-element #:grouped-output-contents))
   (:defdoc-standard-model
-      (:defdoc
-          ;; style.lisp
-          #:candidate-home-packages #:symbol-homing-style
-          #:docspec-par-latex-style #:docspec-fancy-header-latex-style)
+      (:defdoc ;; style.lisp
+          #:candidate-home-packages
+          #:symbol-homing-style #:symbol-homes #:use-internal-names
+          #:itemized-list-style
+          #:format-itemized-list-start #:format-itemized-list-end
+          #:format-itemized-list-item-start #:format-itemized-list-item-end)
       (:defdoc-control-api
           ;; standard.lisp
           #:standard-doc-spec #:get-element-for-docspec-format
@@ -154,6 +172,8 @@
           #:format-standard-docspec-param-list-item
           #:format-standard-docspec-param-list-item-stop
           #:format-standard-docspec-param-list-item-start
+          #:check-standard-docspec-details-sep
+          #:format-standard-docspec-details-sep
           ;; callspec.lisp
           #:standard-callspec #:callspec-sequence-of #:callspec-optional
           #:callspec-keyheaded #:callspec-keyarg #:standard-callspec
@@ -171,10 +191,17 @@
           #:standard-doc-element #:standard-plain-text #:text-element-text
           #:standard-paragraph-list #:paragraphlist-element-items
           #:standard-sequence #:sequence-element-items #:standard-code
+          #:standard-inline #:inline-element-string
           #:code-element-string #:standard-simple-list-environment
           #:list-element-specs #:list-element-options #:list-element-env-tag
           #:standard-itemize #:standard-enumerate
-          #:standard-elements-style-coverage))
+          #:standard-outputset-element
+          #:output-elem-name #:output-elem-name-supp-p
+          #:output-elem-style #:output-elem-style-supp-p
+          #:standard-elements-style-coverage
+          #:standard-lisp-name #:lisp-name-kind #:lisp-name
+          #:standard-emphasized #:emphasized-spec
+          #:standard-fillin-place #:format-sequence-element-separator))
   (:defdoc-plaintext
       (:defdoc
           ;; plaintext.lisp
@@ -187,8 +214,9 @@
           #:standard-docstring-style #:callspec-item-to-lines #:output-lines
           #:callspec-prefix #:callspec-suffix #:standard-docstring-style
           #:callspec-to-lines #:callspec-item-to-lines #:output-lines
-          #:callspec-prefix #:callspec-suffix #:whitespace-p
-          #:get-default-callspec-block-width))
+          #:callspec-prefix #:callspec-suffix
+          #:get-default-callspec-block-width
+          #:plaintext-methods-coverage))
   (:defdoc-latex
       (:defdoc
           #:*defdoc-latex-default-directory*
@@ -204,6 +232,9 @@
           #:package-list-overall-header #:package-list-group-header
           #:package-list-entry #:get-latex-output-file-name
           #:package-list-overall-header
+          #:index-lisp-name
+          #:latex-name-element #:bibtex-name-element
+          #:docspec-par-latex-style #:docspec-fancy-header-latex-style
           #:*latex-full-package-item-header-macro*
           #:*defdoc-latex-default-directory*))
   (:defdoc-html
@@ -216,6 +247,8 @@
           #:format-html-output-index-page-header-block
           #:get-html-disambiguator #:format-content-anchor
           #:write-html-output-index-page
-          #:format-html-output-index-page-headers #:format-content-link)))
+          #:format-html-output-index-page-headers #:format-content-link))
+  (:defdoc-interfaces
+      (:defdoc-control-api #:style-coverage)))
 
-(apply-contract standard-elements-style-coverage :style 'plaintext-style)
+(apply-contract all-styles-coverage)

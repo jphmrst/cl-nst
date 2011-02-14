@@ -84,3 +84,6 @@
 
 (def-target-type method (:symbol-definition-nocheck t))
 
+(def-target-type symbol (:symbol-definition-nocheck t))
+(def-target-type keyword (:symbol-definition-nocheck t))
+

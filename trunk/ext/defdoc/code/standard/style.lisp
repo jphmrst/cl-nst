@@ -51,47 +51,26 @@
 
 ;;; -----------------------------------------------------------------
 
-(defclass docspec-par-latex-style () ())
+(defclass itemized-list-style () ())
 
-(defmethod format-output-contents-sep ((style docspec-par-latex-style)
-                                       stream output spec1 spec2
-                                       &key &allow-other-keys)
-  (declare (ignore output spec1 spec2))
-  (format stream "\\par "))
+(defgeneric format-itemized-list-start (style stream))
+(defgeneric format-itemized-list-end (style stream))
+(defgeneric format-itemized-list-item-start (style stream))
+(defgeneric format-itemized-list-item-end (style stream))
 
-;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+(defmethod format-doc-content-item (stream (style itemized-list-style) spec
+                                           &key &allow-other-keys)
+  (declare (ignore spec))
+  (format-itemized-list-item-start style stream)
+  (call-next-method)
+  (format-itemized-list-item-end style stream))
 
-(defclass docspec-fancy-header-latex-style (docspec-par-latex-style)
-  ())
+(defmethod format-output-leader-material ((style itemized-list-style) stream
+                                          output &key &allow-other-keys)
+  (declare (ignore output))
+  (format-itemized-list-start style stream))
+(defmethod format-output-trailer-material ((style itemized-list-style) stream
+                                           output &key &allow-other-keys)
+  (declare (ignore output))
+  (format-itemized-list-end style stream))
 
-(defgeneric default-format-fancy-header-target-type (style target-type
-                                                           spec name stream)
-  (:method (style target-type spec name stream)
-    (declare (ignore spec name style))
-    (princ (capitalized-target-name (get-target-type target-type)) stream)))
-
-(defgeneric format-fancy-header-target-type (style target-type spec name stream)
-  (:method ((style docspec-fancy-header-latex-style)
-            target-type spec name stream)
-    (default-format-fancy-header-target-type style target-type
-      spec name stream))
-  (:method ((style docspec-fancy-header-latex-style)
-            (target-type (eql 'function)) spec name stream)
-    (declare (ignore spec))
-    (cond
-     ((and (fboundp name) (typep (symbol-function name) 'generic-function))
-      (princ "Generic function" stream))
-     (t (call-next-method)))))
-
-(defmethod format-docspec
-    :before (stream (style docspec-fancy-header-latex-style)
-                    (spec standard-doc-spec) target-type &key &allow-other-keys)
-  (let ((self (docspec-self spec)))
-    (multiple-value-bind (home-package exported-p)
-        (locate-package-home style target-type spec self)
-      (princ "\\vspace{1ex}\\noindent\\begin{tabular}{@{}p{\\textwidth}@{}}\\bfseries\\itshape " stream)
-      (format-fancy-header-target-type style target-type spec self stream)
-      (format stream " ~a\\hspace*{\\fill}~a :~a\\\\\\hline\\end{tabular}\\\\"
-              (symbol-name self)
-              (if exported-p "Package" "Internal to")
-              (package-name home-package)))))

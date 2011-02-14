@@ -83,9 +83,8 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(defun get-specs-by-target-type (target-name &rest filters)
+(defun get-specs-by-target-type (target-name filter)
   (loop for spec being the hash-values of (gethash target-name +defdocs+)
-        for filter in filters
         if (funcall filter spec) collect spec))
 
 (defun get-symbol-list-specs (symbols filter)

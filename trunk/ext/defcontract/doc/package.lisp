@@ -1,6 +1,6 @@
-;;; File enforce.lisp
+;;; File package.lisp
 ;;;
-;;; This file is part of the DefContract API checker system.
+;;; This file is part of the DefContract API contract enforcement system.
 ;;;
 ;;; Copyright (c) 2011 Smart Information Flow Technologies.
 ;;; Written by John Maraist.
@@ -10,15 +10,17 @@
 ;;; as published by the Free Software Foundation, either version 3 of
 ;;; the License, or (at your option) any later version.
 ;;;
-;;; Defcontract is distributed in the hope that it will be useful, but
+;;; DefContract is distributed in the hope that it will be useful, but
 ;;; WITHOUT ANY WARRANTY; without even the implied warranty of
 ;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 ;;; Lesser General Public License for more details.
 ;;;
 ;;; You should have received a copy of the GNU Lesser General Public
-;;; License along with Defcontract.  If not, see
+;;; License along with DefContract.  If not, see
 ;;; <http://www.gnu.org/licenses/>.
-(in-package :defcontract)
+(in-package :common-lisp-user)
 
-(defmacro apply-contract (name &rest keyvals &key &allow-other-keys)
-  `(run-contract-enforcement ',name ,@keyvals))
+(defpackage :sift.defcontract-doc
+  (:documentation "Unit and regression testing for Common Lisp")
+  (:nicknames :defcontract-doc)
+  (:use :common-lisp :defdoc :defcontract :defcontract-docsyms))

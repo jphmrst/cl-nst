@@ -51,7 +51,6 @@
 
 (defmethod format-docspec (stream (style plaintext-style)
                                   (spec doc-spec) target-type
-                                  &rest keyargs
                                   &key (width 78) &allow-other-keys)
   (format stream "~{~a~%~}" (output-lines style target-type spec width)))
 

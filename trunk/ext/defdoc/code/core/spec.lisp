@@ -31,6 +31,9 @@
    (target-type :initarg :target-type :reader docspec-target-type)
    (tags :initarg :tags :accessor docspec-tags)))
 
+(defgeneric format-docspec (stream style spec type &key &allow-other-keys)
+  (:method (stream (style symbol) spec type &rest keyargs)
+    (apply #'format-docspec stream (make-instance style) spec type keyargs)))
 (defmethod format-doc (stream style (spec doc-spec) &rest keyargs)
   (apply #'format-docspec
          stream style spec (docspec-target-type spec) keyargs))
