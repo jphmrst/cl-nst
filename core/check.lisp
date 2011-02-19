@@ -401,7 +401,7 @@ as errors arising from within the ."
      (t redef))))
 (def-documentation (compiler-macro def-criterion-alias)
   (:tags primary)
-  (:properties (api-summary primary))
+  (:properties (nst-manual criterion-alias) (api-summary primary))
     (:intro (:latex "The simplest mechanism for defining a new criterion involves simply
 defining one criterion to rewrite as another using
 \\texttt{def-criterion-alias}:\\index{def-criterion-alias@\\texttt{def-criterion-alias}}"))
