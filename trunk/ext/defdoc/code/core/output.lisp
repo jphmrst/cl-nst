@@ -28,7 +28,7 @@
 
   ;; Decode the name-or-spec
   (destructuring-bind (name &key (class 'output-contents)
-                                 title author leader trailer
+                                 short-title title author leader trailer
                        &allow-other-keys)
       name-or-spec
 
@@ -58,12 +58,28 @@
                    ,@(when title
                        `((setf (output-contents-title ,initial)
                                (compile-element *package* nil ',title))))
+                   ,@(when short-title
+                       `((setf (output-contents-short-title ,initial)
+                               (compile-element *package* nil ',short-title))))
                    (setf (output-contents-contents ,initial)
                          (append ,@collectors)))
                  ',name))))))
 
 (defgeneric write-output (style output-name directory file-name-root
-                                &key &allow-other-keys))
+                                &key &allow-other-keys)
+  (:method :around (style output-name directory file-name-root
+                          &key &allow-other-keys)
+    (declare (ignore style output-name directory file-name-root))
+    (let ((*print-length* nil)
+          (*print-lines* nil)
+          (*print-level* nil)
+          (*print-pretty* t)
+          (*print-circle* nil))
+      (call-next-method)))
+  (:method ((symbol symbol) output-name directory file-name-root
+            &rest keyvals &key &allow-other-keys)
+    (apply #'write-output (make-instance symbol)
+           output-name directory file-name-root keyvals)))
 (defgeneric get-filename-extension (style output-name directory file-name-root
                                           &key &allow-other-keys))
 
@@ -81,17 +97,22 @@
 ;;; -----------------------------------------------------------------
 
 (defclass output-contents ()
-  ((contents :initform nil :initarg :contents :reader contents
-             :accessor output-contents-contents)
-   (title    :initform nil :initarg :title    :reader unit-title
-             :accessor output-contents-title)
-   (author   :initform nil :initarg :author   :reader author
-             :accessor output-contents-author)
-   (leader   :initform nil :initarg :leader   :reader leader
-             :accessor output-contents-leader)
-   (trailer  :initform nil :initarg :trailer  :reader trailer
-             :accessor output-contents-trailer)))
+  ((contents    :initform nil :initarg :contents :reader contents
+                :accessor output-contents-contents)
+   (short-title :initform nil :initarg :short-title :reader unit-short-title
+                :accessor output-contents-short-title)
+   (title       :initform nil :initarg :title    :reader unit-title
+                :accessor output-contents-title)
+   (author      :initform nil :initarg :author   :reader author
+                :accessor output-contents-author)
+   (leader      :initform nil :initarg :leader   :reader leader
+                :accessor output-contents-leader)
+   (trailer     :initform nil :initarg :trailer  :reader trailer
+                :accessor output-contents-trailer)))
 
+(defgeneric get-output-unit-short-title (o)
+  (:method (o) (declare (ignore o)))
+  (:method ((o output-contents)) (unit-short-title o)))
 (defgeneric get-output-unit-title (o)
   (:method (o) (declare (ignore o)))
   (:method ((o output-contents)) (unit-title o)))
@@ -138,13 +159,17 @@
 
 (defparameter *output-nesting-depth* 0)
 
-(defmethod format-doc (stream style (output output-contents)
-                              &rest keyargs &key &allow-other-keys)
-  (defdoc-debug "format-doc on output-contents ~s~%" (type-of output))
+(defun format-output-contents-actual (stream style output &rest keyargs
+                                             &key &allow-other-keys)
   (pprint-logical-block (stream '(1 2))
     (apply #'format-output-leader-material style stream output keyargs)
     (apply #'format-doc-content-items stream style output keyargs)
     (apply #'format-output-trailer-material style stream output keyargs)))
+
+(defmethod format-doc (stream style (output output-contents)
+                              &rest keyargs &key &allow-other-keys)
+  (defdoc-debug "format-doc on output-contents ~s~%" (type-of output))
+  (apply #'format-output-contents-actual stream style output keyargs))
 
 (defgeneric format-doc-content-items (stream style output
                                              &key &allow-other-keys)

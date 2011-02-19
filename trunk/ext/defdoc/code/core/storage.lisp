@@ -84,8 +84,10 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (defun get-specs-by-target-type (target-name filter)
-  (loop for spec being the hash-values of (gethash target-name +defdocs+)
-        if (funcall filter spec) collect spec))
+  (let ((hash (gethash target-name +defdocs+)))
+    (when (hash-table-p hash)
+      (loop for spec being the hash-values of hash
+          if (funcall filter spec) collect spec))))
 
 (defun get-symbol-list-specs (symbols filter)
   (loop for s in symbols

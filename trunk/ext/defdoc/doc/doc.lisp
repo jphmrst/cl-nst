@@ -53,13 +53,15 @@
 
 (def-output-class (defdoc-manual
                       :title "DefDoc user manual" :author "John Maraist"
+                      :short-title "DefDoc"
                       :leader (:latex "DefDoc allows programmers and authors to base all program documentation and manuals on declarations within the program source.  By generating the manual, reference card, and docstrings from a common set of declarations, DefDoc helps eliminate the possibility of documents containing inconsistent, outdated material."))
-  (collect-output (:title "Basic operations")
+  (collect-output (:title "Basic operations" :short-title "Basics")
     (collect-groups-by-label
         (manual-section :package :defdoc
                         :groups '((docspecs :order (def-documentation
                                                        def-target-type)
                                             :title "Writing documentation"
+                                            :short-title "Writing docs"
                                    :leader (:latex "DefDoc uses a small set of macros for adding documentation to source code.  Its primary macro is \\texttt{def-documentation}, which attaches documentation to a target.  Targets include, by default, anything to which the Lisp \\texttt{documentation} model applies --- \\texttt{function}s, \\texttt{type}s, \\texttt{compiler-macro}s and so forth, as well as individual generic function methods; authors can also create additional target types."))
                                   label-use
                                   (outspec
@@ -70,22 +72,27 @@
                                   (defdoc-via-asdf
                                    :leader (:latex "DefDoc integrates with ASDF to coordinate documentation generation.  Currently, DefDoc provides an interim base ASDF system, under which the ASDF \\texttt{load-op} triggers document generation.  We plan to develop a second base system which supports a new operator \\texttt{doc-op}, with distinguished components loaded only for the documentation, and not the standard component load or test."))
                                   (styles :title "The output style"
+                                   :short-title "Output style"
                                    :order (write-output plaintext-style
                                            latex-style itemized-list-style symbol-homing-style
                                            html-style)
                                    :leader (:latex "This section discusses \\emph{styles}, classes encapsulating various options for documentation generation.  Style classes allow output document generation to be consolidated into a single generic function \\texttt{write-output}.  DefDoc exports a number of pre-defined output styles."))
                                   (latex :title (:latex "Other \\LaTeX\\ generators")
+                                   :short-title (:latex "\\LaTeX")
                                    :order (write-spec-latex
                                            write-doctype-latex
                                            write-package-specs-latex)
                                    :leader (:latex "DefDoc's facilities for generating documentation fully from output unit definitions is attractive, but is not always feasible, in particular for existing projects to which DefDoc is gradually applied.  This section documents the API for an alternative mode for using DefDoc for \\LaTeX\\ documentation, where snippets of generated \\LaTeX\\ source are included in a manually-constructed top-level \\LaTeX\\ document.  These functions, for the most part, wrap a call to the \\texttt{format-doc} or \\texttt{format-docspec} control API functions with stream-opening and other administrative environment setup."))
-                                  (html :title (:latex "Other HTML generators"))
+                                  (html :title "Other HTML generators"
+                                   :short-title "HTML")
                                   (newtargetdef
-                                   :title (:latex "Defining target types")
+                                   :title "Defining target types"
+                                   :short-title "Defining targets"
                                    :leader (:seq "DefDoc includes target type definitions for all of the legal targets of Common Lisp documentation: " (:lisp symbol function) ", " (:lisp symbol compiler-macro) ", " (:lisp symbol setf) ", " (:lisp symbol method-combination) ", " (:lisp symbol type) ", " (:lisp symbol structure) " and " (:lisp symbol variable) " as well as " (:lisp symbol method) ", " (:lisp symbol symbol) " and " (:lisp symbol keyword) ".  Defining additional target types is straightforward."))))
       (collect-exported-symbols :defdoc)
       (collect-symbols #:asdf #:defdoc-asdf)))
   (collect-output (:title "Customizing and extending styles"
+                   :short-title "Styles"
                    :leader (:seq "This section describes how the standard document style classes work, and how they can be customized and extended.  The "
                                  (:emph "content")
                                  " of output documents is specified separately from their "
@@ -105,6 +112,7 @@
                                  " and HTML generation.  Finally, there are macros which check style implementations to ensure adequate method definitions."))
     (collect-output
         (:title "Documentation model"
+                :short-title "Docs model"
                 :leader (:seq "DefDoc provides a standard documentation model into which "
                               (:lisp compiler-macro def-documentation)
                               " translates documentation by default, although package authors can override this representation. In this section we distinguish the "
@@ -113,42 +121,71 @@
       (collect-groups-by-label
           (manual-section :package :defdoc
                           :groups '((model :title "The core document model"
+                                     :short-title "Core model"
                                      :order (doc-spec docspec-element)
                                      :leader (:seq "The internal model of the documentation attached to Lisp artifacts is based around two top-level superclasses.  The " (:lisp type doc-spec) " class collects all of the different documenting elements associated with an artifact. In the standard model, elements can include a short blurb, a text introduction, an explanation of function arguments, specifications of function calls, and a detailed description.  A " (:lisp type doc-spec) " instance contains " (:lisp type docspec-element) " instances modeling each element. Subclasses of " (:lisp type docspec-element) " provided in the standard model include atomic elements such as a snippet of plain text or " (:latex-name) ", as well as aggregating elements such as sequences of paragraphs or itemized lists."))
                                     (standard-model
                                      :title "Standard documentation specifications"
+                                     :short-title "Standard specs"
                                      :order (standard-doc-spec))
                                     (standard-model-elements
                                      :title "Specification elements"
+                                     :short-title "Elements"
+                                     :leader (:seq "A documentation spec as implemented by "
+                                              (:lisp type doc-spec)
+                                              " and its subclasses encapsulates all of the information to be associated a Lisp entity.  Each documentation spec may contain multiple, distinct textual "
+                                              (:emph "elements")
+                                              ".  The different element types include atomic plain or styled text, or references to Lisp elements, as well as more complicated aggregators of subelements into paragraph lists, or itemized or enumerated lists. This section details the standard extensions to " (:lisp type docspec-element) " provided by DefDoc.")
                                      :order (standard-doc-element
+                                             def-element
+                                             standard-plain-text
+                                             standard-lisp-name
+                                             standard-code
+                                             standard-inline
+                                             standard-fillin-place
+                                             standard-emphasized
                                              standard-sequence
                                              standard-paragraph-list
-                                             standard-code
-                                             standard-emphasized
-                                             standard-lisp-name
-                                             standard-inline
                                              standard-simple-list-environment
                                              standard-enumerate
                                              standard-itemize
-                                             standard-outputset-element
-                                             standard-fillin-place))
+                                             standard-outputset-element))
                                     (standard-model-callspecs
                                      :title "Call specifications"
+                                     :short-title "Call specs"
                                      :order (standard-callspec))
                                     (output-model
                                      :title "Output document structure"
-                                     :order (output-framework))))
+                                     :short-title "Output structure"
+                                     :order (output-contents
+                                             explicit-doc-element))))
         (collect-exported-symbols :defdoc-control-api)))
-    (collect-output (:title "Formatting standard output documents")
+    (collect-output (:title "Formatting standard output documents"
+                            :short-title "Formatting output")
       (collect-groups-by-label
           (manual-section
            :package :defdoc
            :groups '((standard-model-spec-formatting
-                      :title "Documentation specifications")
+                      :title "Documentation specifications"
+                      :short-title "Specs")
                      (standard-model-element-formatting
-                      :title "Documentation elements")
+                      :title "Documentation elements"
+                      :short-title "Elements")
                      (standard-model-output-formatting
-                      :title "Output documents")))
+                      :title "Output documents"
+                      :short-title "Output")))
+        (collect-exported-symbols :defdoc-control-api)))
+    (collect-output (:title "Plaintext styles" :short-title "Plaintext")
+      (collect-groups-by-label
+          (manual-section
+           :package :defdoc
+           :groups '((plaintext-docstrings
+                      :title "Retrieving traditional docstrings"
+                      :short-title "Docstrings")
+                     (plaintext-utils
+                      :title "Some useful functions"
+                      :short-title "Functions"
+                      :order (output-lines))))
         (collect-exported-symbols :defdoc-control-api)))
     (collect-groups-by-label
         (manual-section :package :defdoc
@@ -158,10 +195,11 @@
                                            full-package-latex-style-mixin
                                            package-list-latex-mixin))
                                   html-style-model
-                                  (api-checks
-                                   :title (:latex "Method verification"))))
+                                  (api-checks :title "Method verification"
+                                   :short-title "Methods")))
       (collect-exported-symbols :defdoc-control-api)))
-  (collect-output (:title "Customizing documentation models")
+  (collect-output (:title "Customizing documentation models"
+                          :short-title "Customization")
     (collect-groups-by-label
         (manual-section :package :defdoc
                         :groups '(doc-gen control targets label-model

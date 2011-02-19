@@ -55,6 +55,7 @@
               (;; The DEFDOC package, plus internal packages and
                ;; documentation generation.
                (:file "package")
+               (:file "misc" :depends-on ("package"))
 
                (:module "core" :depends-on ("package") :components
 
@@ -137,7 +138,8 @@
                (:file "latex"  :depends-on ("standard" "plaintext"))
 
                ;; Converting specs to HTML
-               (:file "html"  :depends-on ("standard" "latex" "plaintext"))
+               (:file "html"  :depends-on ("standard"
+                                           "misc" "latex" "plaintext"))
 
                ;; Programmatic API
                (:file "interfaces"  :depends-on ("standard"

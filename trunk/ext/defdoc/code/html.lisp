@@ -70,10 +70,33 @@
                                                 &key &allow-other-keys)
   (:method (style output out top base-link &key &allow-other-keys)
     (declare (ignore style output out top base-link)))
-  (:method ((style html-style) output out top base-link
-            &key &allow-other-keys)
+  (:method ((style html-style) output out top base-link &rest keyargs)
     (with-div-wrapper (out 'body)
-      (format-doc out style output :base-link base-link :top top))))
+      (apply #'format-doc out style output :base-link base-link :top top
+             keyargs))))
+
+(defgeneric format-output-html-pretitle (style stream output
+                                               &key &allow-other-keys)
+  (:method (style stream output &key base-link context &allow-other-keys)
+    (declare (ignore output))
+    (when context
+      (princ "<hr />" stream)
+      (loop for (enc . others) on (reverse context) do
+        (format-link-to-content style stream enc base-link
+               #'(lambda (o)
+                   (let ((short (get-output-unit-short-title o)))
+                     (cond
+                       (short
+                        (format-docspec-element style nil short stream))
+                       (t (format-content-anchor stream style o base-link)))))
+               )
+        (when others (princ " - " stream)))
+      (princ "<hr />" stream))))
+
+(defmethod format-output-leader-material ((style html-style)
+                                          stream output &rest keyargs)
+  (apply #'format-output-html-pretitle style stream output keyargs)
+  (call-next-method))
 
 (defmethod format-output-leader-title ((style html-style) stream output
                                        &key top &allow-other-keys)
@@ -153,9 +176,11 @@
            style (make-instance this-name) pathname keyargs))
 
   ;; Next: an actual output-contents instance.
-  (:method ((style html-style) (output output-contents) pathname &rest keyargs)
+  (:method ((style html-style) (output output-contents) pathname
+            &rest keyargs &key (context nil) &allow-other-keys)
     ;; (format t "~%~%>> ~s~%" output)
-    (let ((this-name (get-html-disambiguator output)))
+    (let ((other-keyargs (prune-keyargs keyargs :context))
+          (this-name (get-html-disambiguator output)))
       (unless (gethash this-name *processed-output-units*)
         (let ((this-file (gethash this-name *output-unit-name-hash*)))
           (unless this-file
@@ -173,18 +198,20 @@
           ;; Traverse this page's contents, and write their pages.
           (loop for item in (output-contents-contents output) do
             (apply #'traverse-and-write-output-pages
-                   style item pathname keyargs))))))
+                   style item pathname
+                   :context (cons output context) other-keyargs))))))
 
   ;; Next: a docspec.
   (:method ((style html-style) (spec standard-doc-spec) pathname
-            &key &allow-other-keys)
+            &rest keyargs &key &allow-other-keys)
     (let ((this-file (get-content-link-filename spec)))
 
       ;; Write this output's HTML page
       (with-open-file (out (merge-pathnames this-file pathname)
                            :direction :output
                            :if-exists :supersede :if-does-not-exist :create)
-        (format-docspec out style spec (docspec-target-type spec)))))
+        (let ((*output-nesting-depth* 0))
+          (apply #'format-doc out style spec keyargs)))))
   )
 
 (defgeneric get-html-disambiguator (item)
@@ -210,16 +237,24 @@
 
 ;;; -----------------------------------------------------------------
 
+(defun format-link-to-content (style stream output base-link
+                                     &optional (anchor-extractor nil))
+  (unless anchor-extractor
+    (setf anchor-extractor
+          #'(lambda (o) (format-content-anchor stream style o base-link))))
+  (format stream "<a href=\"")
+  (format-content-link stream style output base-link)
+  (format stream "\">")
+  (funcall anchor-extractor output)
+  (format stream "</a>"))
+
+
 (defmethod format-doc (stream (style html-style) output
                               &key base-link &allow-other-keys)
   (declare (special *output-nesting-depth*))
   (cond
     ((> *output-nesting-depth* 0)
-     (format stream "<a href=\"")
-     (format-content-link stream style output base-link)
-     (format stream "\">")
-     (format-content-anchor stream style output base-link)
-     (format stream "</a>"))
+     (format-link-to-content style stream output base-link))
     (t (call-next-method))))
 
 (defgeneric format-content-link (stream style output base-link)
@@ -399,6 +434,13 @@
                                    &key &allow-other-keys)
   (declare (ignore target-type))
   (format stream "<font color=\"#ff0000\"><b>FILL IN</b></font>"))
+
+(defmethod format-docspec-element ((style html-style) target-type
+                                   (doc standard-outputset-element) stream
+                                   &rest keyvals)
+  (declare (ignore target-type))
+  (apply #'format-output-contents-actual
+         stream style (make-instance (output-elem-name doc)) keyvals))
 
 ;;; -----------------------------------------------------------------
 

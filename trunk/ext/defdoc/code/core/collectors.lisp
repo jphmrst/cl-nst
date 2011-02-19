@@ -33,6 +33,7 @@
     (setf symbol-list (list symbol-list)))
   `(values
     `(let ((p (find-package ',',package)))
+       (unless p (error "No such package ~s" ',',package))
        (get-symbol-list-specs (loop for s in ',',symbol-list
                                   collect (intern (symbol-name s) p))
                               ,',(get-filter-predicate filters)))

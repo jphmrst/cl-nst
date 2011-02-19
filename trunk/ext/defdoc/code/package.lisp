@@ -31,10 +31,15 @@
              #:standard-model-callspecs #:standard-model-spec-formatting
              #:standard-model-element-formatting
              #:standard-model-output-formatting
-             #:output-model #:plaintext #:latex-style-model #:html-style-model
+             #:output-model
+             #:plaintext-utils #:plaintext-docstrings
+             #:latex-style-model #:html-style-model
 
              #:doc-gen #:control #:targets #:label-model #:elements
              #:deprecated))
+
+(defpackage :defdoc-utils
+    (:export #:prune-keyargs))
 
 (defpackage :defdoc-core
   (:documentation "DefDoc internal organizational package - core operations")
@@ -112,6 +117,7 @@
            #:ensure-api-documentation
 
            ;; output.lisp
+           #:format-output-contents-actual
            #:*output-nesting-depth*
            #:*output-leader-title-format-string*
            #:def-output-class
@@ -121,7 +127,7 @@
            #:format-output-contents-sep
            #:output-contents
            #:output-contents-contents
-           #:get-output-unit-title
+           #:get-output-unit-short-title #:get-output-unit-title
            #:get-output-unit-author
            #:get-output-unit-leader
            #:get-output-unit-trailer
@@ -304,7 +310,7 @@
 (defpackage :defdoc-html
   (:documentation "DefDoc internal organizational package - HTML backend")
   (:use :defdoc-docsyms :common-lisp :defdoc-core :defdoc-standard-model
-        :defdoc-plaintext :defdoc-latex)
+        :defdoc-plaintext :defdoc-latex :defdoc-utils)
   #+allegro (:import-from excl #:named-function)
   (:export ;; html.lisp
            #:with-div-wrapper

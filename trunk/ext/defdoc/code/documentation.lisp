@@ -1,4 +1,4 @@
-;;; File coredoc.lisp
+;;; File documentation.lisp
 ;;;
 ;;; This file is part of the DefDoc documentation support package.
 ;;;
@@ -301,9 +301,9 @@
   (:properties (manual-section output-model)))
 
 (def-documentation (function format-doc)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-doc)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section output-model)))
 
@@ -377,9 +377,9 @@
   (:properties (manual-section outspec)))
 
 (def-documentation (function collect-target-type)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function collect-target-type)
-          " aggregates documentation specifications for the "
+          " function aggregates documentation specifications for the "
           (:lisp compiler-macro def-output-class)
           " macro according to the target type to which the specifications is attached --- all functions, all compiler macros, or more typically, all of a particular user-defined target type.")
   (:params (target-name "The target type of interest.")
@@ -399,9 +399,9 @@
   (:properties (manual-section outspec)))
 
 (def-documentation (function collect-exported-symbols)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function collect-exported-symbols)
-          " collects documentation from the symbols exported from a particular package.")
+          " function collects documentation from the symbols exported from a particular package.")
   (:callspec (package-name (:seq filter)))
   (:params (package-name "The package whose symbols' documentation specs are collected.")
            (filter "As for "
@@ -423,9 +423,9 @@
   (:properties (manual-section outspec)))
 
 (def-documentation (function collect-documented-symbols)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function collect-documented-symbols)
-          " collects documentation from all symbols in the package, exported or not, which have documentation explicitly declared for them.")
+          " function collects documentation from all symbols in the package, exported or not, which have documentation explicitly declared for them.")
   (:callspec (package-name (:seq filter)))
   (:params (package-name "The package whose symbols' documentation specs are collected.")
            (filter "As for "
@@ -434,9 +434,9 @@
   (:properties (manual-section outspec)))
 
 (def-documentation (function collect-all-symbols)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function collect-all-symbols)
-          " collects documentation for all symbols in a package.")
+          " function collects documentation for all symbols in a package.")
   (:callspec (package-name (:seq filter)))
   (:params (package-name "The package whose symbols' documentation specs are collected.")
            (filter "As for "
@@ -445,9 +445,9 @@
   (:properties (manual-section outspec)))
 
 (def-documentation (compiler-macro collect-output)
-  (:intro "Function "
+  (:intro "The "
           (:lisp compiler-macro collect-output)
-          " allows included output class declarations to be nested within the including unit.")
+          " function allows included output class declarations to be nested within the including unit.")
   (:callspec (((:opt output-class-name)
                &key (class base-class) (title title-spec) (author author-spec))
               &body
@@ -467,9 +467,9 @@
   (:properties (manual-section outspec)))
 
 (def-documentation (function collect-named-output)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function collect-named-output)
-          " includes the instantiation of a named output unit class as a component of another output unit.")
+          " function includes the instantiation of a named output unit class as a component of another output unit.")
   (:callspec (output-unit-name))
   (:params (output-unit-name "The output unit class to be included."))
   (:details "DefDoc does "
@@ -496,17 +496,17 @@
   (:properties (manual-section control)))
 
 (def-documentation (function get-spec-class)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-spec-class)
-          " --- "
+          " function --- "
           (:fill-in))
   (:callspec (package name form-list))
   (:properties (manual-section control)))
 
 (def-documentation (function compile-spec)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function compile-spec)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section control)))
 
@@ -652,16 +652,16 @@
                (anchor standard-doc-spec)))
 
 (def-documentation (function get-label-symbol-value-translation)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-label-symbol-value-translation)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section control)))
 
 (def-documentation (function get-target-type-docspecs)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-target-type-docspecs)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section control)))
 
@@ -677,72 +677,72 @@
 ;;; label-model
 
 (def-documentation (function get-label-class)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-label-class)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section label-model)))
 
 (def-documentation (function get-labeldef)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-labeldef)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section label-model)))
 
 (def-documentation (function get-label-section-order-supp-p)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-label-section-order-supp-p)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section label-model)))
 
 (def-documentation (function get-label-section-title-supp-p)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-label-section-title-supp-p)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section label-model)))
 
 (def-documentation (function label-values)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function label-values)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section label-model)))
 
 (def-documentation (function get-label-section-order)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-label-section-order)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section label-model)))
 
 (def-documentation (function get-label-section-title)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-label-section-title)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section label-model)))
 
 (def-documentation (function get-labeldef)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-labeldef)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section label-model)))
 
 (def-documentation (function get-compiled-labeldef)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-compiled-labeldef)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section label-model)))
 
 (def-documentation (function label-value)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function label-value)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section label-model)))
 
@@ -754,9 +754,9 @@
   (:properties (manual-section label-model)))
 
 (def-documentation (function get-label-class)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-label-class)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section get-label-class)))
 
@@ -776,99 +776,40 @@
                               (arg-list arg-list-param-name)
                               (args     args-lambda-list))
                    ((:seq slot-decl)) &body (:seq form)))
-  (:properties (manual-section elements))
+  (:properties (manual-section standard-model-elements))
 )
 
 (def-documentation (function compile-string-element)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function compile-string-element)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section elements)))
 
 (def-documentation (function spaceheaded-element)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function spaceheaded-element)
-          " --- "
-          (:fill-in))
-  (:properties (manual-section elements)))
-
-(def-documentation (function text-element-text)
-  (:intro "Function "
-          (:lisp function text-element-text)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section elements)))
 
 (def-documentation (function element-type-p)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function element-type-p)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section elements)))
 
 (def-documentation (function compile-element)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function compile-element)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section elements)))
 
 (def-documentation (variable *default-element-class*)
   (:intro "Variable "
           (:lisp variable *default-element-class*)
-          " --- "
-          (:fill-in))
-  (:properties (manual-section elements)))
-
-(def-documentation (function list-element-env-tag)
-  (:intro "Function "
-          (:lisp function list-element-env-tag)
-          " --- "
-          (:fill-in))
-  (:callspec (list-element))
-  (:properties (manual-section standard-model-elements)
-               (anchor standard-simple-list-environment)))
-
-(def-documentation (function list-element-options)
-  (:intro "Function "
-          (:lisp function list-element-options)
-          " --- "
-          (:fill-in))
-  (:callspec (list-element))
-  (:properties (manual-section standard-model-elements)
-               (anchor standard-simple-list-environment)))
-
-(def-documentation (function code-element-string)
-  (:intro "Function "
-          (:lisp function code-element-string)
-          " --- "
-          (:fill-in))
-  (:callspec (code-element))
-  (:properties (anchor standard-code)
-               (manual-section standard-model-elements)))
-
-(def-documentation (function inline-element-string)
-  (:intro "Function "
-          (:lisp function inline-element-string)
-          " --- "
-          (:fill-in))
-  (:callspec (code-element))
-  (:properties (anchor standard-inline)
-               (manual-section standard-model-elements)))
-
-(def-documentation (function list-element-specs)
-  (:intro "Function "
-          (:lisp function list-element-specs)
-          " --- "
-          (:fill-in))
-  (:callspec (list-element))
-  (:properties (manual-section standard-model-elements)
-               (anchor standard-simple-list-environment)))
-
-(def-documentation (function paragraphlist-element-items)
-  (:intro "Function "
-          (:lisp function paragraphlist-element-items)
           " --- "
           (:fill-in))
   (:properties (manual-section elements)))
@@ -948,37 +889,37 @@
                (anchor docspec-element)))
 
 (def-documentation (function format-output-preitem)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-output-preitem)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-output-formatting)))
 
 (def-documentation (function format-output-postitem)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-output-postitem)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-output-formatting)))
 
 (def-documentation (function format-default-output-contents-sep)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-default-output-contents-sep)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-output-formatting)))
 
 (def-documentation (function format-output-trailer-docspec)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-output-trailer-docspec)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-output-formatting)))
 
 (def-documentation (function format-output-leader-docspec)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-output-leader-docspec)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-output-formatting)))
 
@@ -999,87 +940,101 @@
   (:properties (manual-section output-model)))
 
 (def-documentation (function format-doc-content-items)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-doc-content-items)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-output-formatting)))
 
 (def-documentation (function format-doc-content-item)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-doc-content-item)
-          " --- "
+          " function --- "
+          (:fill-in))
+  (:properties (manual-section standard-model-output-formatting)))
+
+(def-documentation (function format-output-contents-actual)
+  (:intro "The "
+          (:lisp function format-output-contents-actual)
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-output-formatting)))
 
 (def-documentation (function format-output-contents-sep)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-output-contents-sep)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-output-formatting)))
 
 (def-documentation (function process-standard-output-framework-form)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function process-standard-output-framework-form)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section output-model)
                (anchor standard-output-framework)))
 
 (def-documentation (function get-output-unit-title)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-output-unit-title)
-          " --- "
+          " function --- "
+          (:fill-in))
+  (:properties (manual-section output-model) (anchor output-contents)))
+
+(def-documentation (function get-output-unit-short-title)
+  (:intro "The "
+          (:lisp function get-output-unit-short-title)
+          " function --- "
           (:fill-in))
   (:properties (manual-section output-model) (anchor output-contents)))
 
 (def-documentation (function get-output-unit-author)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-output-unit-author)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section output-model) (anchor output-contents)))
 
 (def-documentation (function get-output-unit-leader)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-output-unit-leader)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section output-model) (anchor output-contents)))
 
 (def-documentation (function get-output-unit-trailer)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-output-unit-trailer)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section output-model) (anchor output-contents)))
 
 (def-documentation (function format-output-leader-material)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-output-leader-material)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-output-formatting)))
 
 (def-documentation (function format-output-leader-sep)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-output-leader-sep)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-output-formatting)))
 
 (def-documentation (function format-output-leader-title)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-output-leader-title)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-output-formatting)))
 
 (def-documentation (function format-output-trailer-material)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-output-trailer-material)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-output-formatting)))
 
@@ -1091,16 +1046,16 @@
   (:properties (manual-section output-model)))
 
 (def-documentation (function package-exports-p)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function package-exports-p)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section output-model)))
 
 (def-documentation (function locate-package-home)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function locate-package-home)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section output-model)))
 
@@ -1224,26 +1179,19 @@
           " objects.")
   (:properties (manual-section control)))
 
-(def-documentation (type standard-sequence)
-  (:intro "Type "
-          (:lisp type standard-sequence)
-          " --- "
-          (:fill-in))
-  (:properties (manual-section standard-model-elements)))
-
 (def-documentation (function sequence-element-items)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function sequence-element-items)
-          " --- "
+          " function --- "
           (:fill-in))
   (:callspec (standard-sequence))
   (:properties (manual-section standard-model-elements)
                (anchor standard-sequence)))
 
 (def-documentation (function format-sequence-element-separator)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-sequence-element-separator)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-element-formatting)
                (anchor standard-sequence)))
@@ -1255,187 +1203,237 @@
   (:properties (manual-section standard-model-callspecs)))
 
 (def-documentation (type standard-doc-element)
-  (:intro "Type "
+  (:intro "The "
           (:lisp type standard-doc-element)
-          " --- "
-          (:fill-in))
+          " class is the common superclass of the standard element types, and is a subclass of "
+          (:lisp type docspec-element) ".")
   (:properties (manual-section standard-model-elements)))
 
 (def-documentation (function callspec-item-to-lines)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function callspec-item-to-lines)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-callspecs)))
 
 (def-documentation (function get-default-callspec-block-width)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-default-callspec-block-width)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-callspecs)))
 
 (def-documentation (type standard-paragraph-list)
-  (:intro "Class "
-          (:lisp type standard-paragraph-list)
-          " --- "
-          (:fill-in))
+  (:intro "The " (:lisp type standard-paragraph-list)
+          " class is a container for a sequence of elements, each taken to be a separate paragraph.  It implements the "
+          (:lisp doc-element :paragraphs) " element.")
   (:properties (manual-section standard-model-elements)))
+
+(def-documentation (function paragraphlist-element-items)
+  (:intro "The "
+          (:lisp function paragraphlist-element-items)
+          " accessor references the elements wrapped by a "
+          (:lisp type standard-paragraph-list) " element.")
+  (:callspec (standard-paragraph-list))
+  (:properties (manual-section standard-model-elements)
+               (anchor standard-paragraph-list)))
 
 (def-documentation (type standard-sequence)
-  (:intro "Class "
-          (:lisp type standard-sequence)
-          " --- "
-          (:fill-in))
+  (:intro "The " (:lisp type standard-sequence)
+          " class is a container for a sequence of consecutive appended elements, and implements the "
+          (:lisp doc-element :seq) " element.")
   (:properties (manual-section standard-model-elements)))
 
+(def-documentation (type standard-plain-text)
+  (:intro "The "
+          (:lisp type standard-plain-text)
+          " class wraps a string of plain text, and implements the "
+          (:lisp doc-element :plain)
+          " element.")
+  (:properties (manual-section standard-model-elements)))
+
+(def-documentation (function text-element-text)
+  (:intro "The " (:lisp function text-element-text)
+          " accessor returns the string of plain text wrapped by a "
+          (:lisp type standard-plain-text) " instance.")
+  (:callspec (standard-plain-text))
+  (:properties (manual-section standard-model-elements)
+               (anchor standard-plain-text)))
+
 (def-documentation (type standard-lisp-name)
-  (:intro "Class "
-          (:lisp type standard-lisp-name)
-          " --- "
-          (:fill-in))
+  (:intro "The " (:lisp type standard-lisp-name)
+          " class represents a reference to a Lisp name, and implements the "
+          (:lisp doc-element :lisp) " element.")
   (:properties (manual-section standard-model-elements)))
 
 (def-documentation (function lisp-name)
-  (:intro "Function "
-          (:lisp function lisp-name)
-          " --- "
-          (:fill-in))
+  (:intro "The " (:lisp function lisp-name)
+          " function returns the symbol referenced by a "
+          (:lisp type standard-lisp-name) " instance.")
+  (:callspec (standard-lisp-name))
   (:properties (manual-section standard-model-elements)
                (anchor standard-lisp-name)))
 
 (def-documentation (function lisp-name-kind)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function lisp-name-kind)
-          " --- "
-          (:fill-in))
+          " function returns the target type referenced by a "
+          (:lisp type standard-lisp-name) " instance.")
+  (:callspec (standard-lisp-name))
   (:properties (manual-section standard-model-elements)
                (anchor standard-lisp-name)))
 
 (def-documentation (type standard-emphasized)
-  (:intro "Class "
-          (:lisp type standard-emphasized)
-          " --- "
-          (:fill-in))
+  (:intro "The " (:lisp type standard-emphasized)
+          " class wrap an element which should be emphasized in its presentation, and implements the "
+          (:lisp doc-element :emph) " element.")
   (:properties (manual-section standard-model-elements)))
 
 (def-documentation (function emphasized-spec)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function emphasized-spec)
-          " --- "
-          (:fill-in))
+          " function returns the wrapped spec of a "
+          (:lisp type standard-emphasized) " instance.")
+  (:callspec (standard-emphasized))
   (:properties (manual-section standard-model-elements)
                (anchor standard-emphasized)))
 
 (def-documentation (type standard-fillin-place)
-  (:intro "Class "
-          (:lisp type standard-fillin-place)
-          " --- "
-          (:fill-in))
+  (:intro "The " (:lisp type standard-fillin-place)
+          " class represents a note to the author to complete documentation. It implements the "
+          (:lisp doc-element :fill-in) " element.")
   (:properties (manual-section standard-model-elements)))
 
 (def-documentation (function sequence-element-items)
-  (:intro "Function "
-          (:lisp function sequence-element-items)
-          " --- "
-          (:fill-in))
+  (:intro "The " (:lisp function sequence-element-items)
+          " function returns the list of items of a "
+          (:lisp type standard-sequence) " instance.")
+  (:callspec (standard-sequence))
   (:properties (manual-section standard-model-elements)
                (anchor standard-sequence)))
 
 (def-documentation (type standard-output-framework)
-  (:intro "Type "
-          (:lisp type standard-output-framework)
-          " --- "
-          (:fill-in))
+  (:intro "The " (:lisp type standard-output-framework)
+          " class represents " (:fill-in) ", and implements the "
+          (:lisp doc-element :XXXXX) " element.")
   (:properties (manual-section standard-model)))
 
 (def-documentation (function doc-label-name)
-  (:intro "Function "
-          (:lisp function doc-label-name)
-          " --- "
-          (:fill-in))
+  (:intro "The " (:lisp function doc-label-name)
+          " function --- "
+          (:fill-in) " instance.")
   (:properties (manual-section control)))
 
 (def-documentation (type standard-simple-list-environment)
-  (:intro "Type "
-          (:lisp type standard-simple-list-environment)
-          " --- "
-          (:fill-in))
+  (:intro "Type " (:lisp type standard-simple-list-environment)
+          " is the common superclass of elements that contain a sequence of subelements.")
   (:properties (manual-section standard-model-elements)))
+
+(def-documentation (function list-element-env-tag)
+  (:intro "The " (:lisp function list-element-env-tag)
+          " accessor references the particular list type tag in a "
+          (:lisp type standard-simple-list-environment) " object.")
+  (:callspec (standard-simple-list-environment))
+  (:properties (manual-section standard-model-elements)
+               (anchor standard-simple-list-environment)))
+
+(def-documentation (function list-element-options)
+  (:intro "The " (:lisp function list-element-options)
+          " accessor references the options given for a "
+          (:lisp type standard-simple-list-environment) " object.")
+  (:callspec (list-element))
+  (:properties (manual-section standard-model-elements)
+               (anchor standard-simple-list-environment)))
+
+(def-documentation (function list-element-specs)
+  (:intro "The " (:lisp function list-element-specs)
+          " accessor references the contained element items in a "
+          (:lisp type standard-simple-list-environment) " object.")
+  (:callspec (list-element))
+  (:properties (manual-section standard-model-elements)
+               (anchor standard-simple-list-environment)))
 
 (def-documentation (type standard-code)
-  (:intro "Type "
-          (:lisp type standard-code)
-          " --- "
-          (:fill-in))
+  (:intro "The " (:lisp type standard-code)
+          " class wraps a string of code which should be blocked off as-is, and implements the "
+          (:lisp doc-element :code) " element.")
   (:properties (manual-section standard-model-elements)))
+
+(def-documentation (function code-element-string)
+  (:intro "The " (:lisp function code-element-string)
+          " accessor returns the string wrapped by a "
+          (:lisp type standard-code) " object.")
+  (:callspec (standard-code))
+  (:properties (anchor standard-code)
+               (manual-section standard-model-elements)))
 
 (def-documentation (type standard-inline)
-  (:intro "Type "
-          (:lisp type standard-inline)
-          " --- "
-          (:fill-in))
+  (:intro "The " (:lisp type standard-inline)
+          " class wraps a string of code which should be inlined into running text as-is, and implements the "
+          (:lisp doc-element :inline) " element.")
   (:properties (manual-section standard-model-elements)))
 
+(def-documentation (function inline-element-string)
+  (:intro "The " (:lisp function inline-element-string)
+          " accessor returns the string wrapped by a "
+          (:lisp type standard-inline) " instance.")
+  (:callspec (code-element))
+  (:properties (anchor standard-inline)
+               (manual-section standard-model-elements)))
+
 (def-documentation (function get-doc-tags)
-  (:intro "Function "
-          (:lisp function get-doc-tags)
-          " --- "
-          (:fill-in))
+  (:intro "The " (:lisp function get-doc-tags)
+          " function --- " (:fill-in))
   (:callspec (name target-type))
   (:properties (manual-section control)))
 
 (def-documentation (type standard-itemize)
-  (:intro "Type "
-          (:lisp type standard-itemize)
-          " --- "
-          (:fill-in))
+  (:intro "The " (:lisp type standard-itemize)
+          " class represents an itemized list, and implements the "
+          (:lisp doc-element :itemize) " element.")
   (:properties (manual-section standard-model-elements)
                (anchor standard-simple-list-environment)))
 
 (def-documentation (function callspec-suffix)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function callspec-suffix)
-          " --- "
-          (:fill-in))
+          " function returns the suffix element of a "
+          (:lisp type standard-callspec) " instance.")
+  (:callspec (standard-callspec))
   (:properties (manual-section standard-model-callspecs)))
 
 (def-documentation (type standard-enumerate)
-  (:intro "Class "
-          (:lisp type standard-enumerate)
-          " --- "
-          (:fill-in))
+  (:intro "The " (:lisp type standard-enumerate)
+          " class represents an enumerated list, and implements the "
+          (:lisp doc-element :enumerate) " element.")
   (:properties (manual-section standard-model-elements)
                (anchor standard-simple-list-environment)))
 
 (def-documentation (type standard-outputset-element)
-  (:intro "Class "
-          (:lisp type standard-outputset-element)
-          " --- "
-          (:fill-in))
+  (:intro "The " (:lisp type standard-outputset-element)
+          " class holds the name of a class corresponding to a piece of output to be included. It implements the "
+          (:lisp doc-element :output-set) " element.")
   (:properties (manual-section standard-model-elements)))
 
 (def-documentation (function output-elem-name)
-  (:intro "Function "
+  (:intro "The "
           (:lisp type output-elem-name)
-          " --- "
-          (:fill-in))
+          " function returns the output set name referenced by a "
+          (:lisp type standard-outputset-element) " instance.")
   (:properties (manual-section standard-model-elements)
                (anchor standard-outputset-element)))
 
 (def-documentation (function output-elem-style)
-  (:intro "Function "
-          (:lisp type output-elem-style)
-          " --- "
-          (:fill-in))
+  (:intro "The " (:lisp type output-elem-style)
+          " function returns the style, if any, referenced by a "
+          (:lisp type standard-outputset-element) " instance.")
   (:properties (manual-section standard-model-elements)
                (anchor standard-outputset-element)))
 
 (def-documentation (function output-elem-style-supp-p)
-  (:intro "Function "
-          (:lisp type output-elem-style-supp-p)
-          " --- "
-          (:fill-in))
+  (:intro "The " (:lisp type output-elem-style-supp-p)
+          " function returns whether a style is named for a "
+          (:lisp type standard-outputset-element) " instance.")
   (:properties (manual-section standard-model-elements)
                (anchor standard-outputset-element)))
 
@@ -1447,11 +1445,11 @@
   (:properties (manual-section standard-model-callspecs)))
 
 (def-documentation (function get-callspec-sequence-of-repeated)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-callspec-sequence-of-repeated)
-          " --- "
+          " function --- "
           (:fill-in))
-  (:callspec (callspec-sequence-item))
+  (:callspec (callspec-sequence-of))
   (:properties (manual-section standard-model-callspecs)
                (anchor callspec-sequence-of)))
 
@@ -1463,9 +1461,9 @@
   (:properties (manual-section standard-model-callspecs)))
 
 (def-documentation (function get-callspec-optional-option)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-callspec-optional-option)
-          " --- "
+          " function --- "
           (:fill-in))
   (:callspec (callspec-optional-item))
   (:properties (manual-section standard-model-callspecs)
@@ -1493,39 +1491,39 @@
   (:properties (manual-section standard-model-callspecs)))
 
 (def-documentation (function get-callspec-holder-items)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-callspec-holder-items)
-          " --- "
+          " function --- "
           (:fill-in))
   (:callspec (callspec-holder))
   (:properties (manual-section standard-model-callspecs)))
 
 (def-documentation (function get-output-framework)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-output-framework)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model)))
 
 (def-documentation (function output-framework-name)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function output-framework-name)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section output-model)
                (anchor output-framework)))
 
 (def-documentation (function callspec-prefix)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function callspec-prefix)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-callspecs)))
 
 (def-documentation (function get-doc-specs)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-doc-specs)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section control)))
 
@@ -1537,17 +1535,17 @@
   (:properties (manual-section standard-model-callspecs)))
 
 (def-documentation (function get-callspec-keyheaded-key)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-callspec-keyheaded-key)
-          " --- "
+          " function --- "
           (:fill-in))
   (:callspec (callspec-keyheaded))
   (:properties (manual-section standard-model-callspecs)))
 
 (def-documentation (function get-callspec-keyheaded-forms)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-callspec-keyheaded-forms)
-          " --- "
+          " function --- "
           (:fill-in))
   (:callspec (callspec-keyheaded))
   (:properties (manual-section standard-model-callspecs)))
@@ -1566,119 +1564,119 @@
   (:properties (manual-section standard-model-callspecs)))
 
 (def-documentation (function callspec-to-lines)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function callspec-to-lines)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-callspecs)))
 
 (def-documentation (function process-standard-labeldef-form)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function process-standard-labeldef-form)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section label-model)))
 
 (def-documentation (function lower-case-target-name)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function lower-case-target-name)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section targets)))
 
 (def-documentation (function capitalized-target-name)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function capitalized-target-name)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section targets)))
 
 (def-documentation (function standard-callspec-key)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function standard-callspec-key)
-          " --- "
+          " function --- "
           (:fill-in))
   (:callspec (standard-callspec))
   (:properties (manual-section standard-model-callspecs)
                (anchor standard-callspec)))
 
 (def-documentation (function get-callspec-keyarg-key)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-callspec-keyarg-key)
-          " --- "
+          " function --- "
           (:fill-in))
   (:callspec (callspec-keyarg))
   (:properties (manual-section standard-model-callspecs)
                (anchor callspec-keyarg)))
 
 (def-documentation (function standard-callspec-body-supp)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function standard-callspec-body-supp)
-          " --- "
+          " function --- "
           (:fill-in))
   (:callspec (standard-callspec))
   (:properties (manual-section standard-model-callspecs)
                (anchor standard-callspec)))
 
 (def-documentation (function standard-callspec-mandatory)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function standard-callspec-mandatory)
-          " --- "
+          " function --- "
           (:fill-in))
   (:callspec (standard-callspec))
   (:properties (manual-section standard-model-callspecs)
                (anchor standard-callspec)))
 
 (def-documentation (function standard-callspec-key-supp)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function standard-callspec-key-supp)
-          " --- "
+          " function --- "
           (:fill-in))
   (:callspec (standard-callspec))
   (:properties (manual-section standard-model-callspecs)
                (anchor standard-callspec)))
 
 (def-documentation (function standard-callspec-optional)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function standard-callspec-optional)
-          " --- "
+          " function --- "
           (:fill-in))
   (:callspec (standard-callspec))
   (:properties (manual-section standard-model-callspecs)
                (anchor standard-callspec)))
 
 (def-documentation (function get-callspec-keyarg-arg)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function get-callspec-keyarg-arg)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-callspecs)))
 
 (def-documentation (function format-standard-docspec-callspec)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-standard-docspec-callspec)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-element-formatting)))
 
 (def-documentation (function format-standard-docspec-details-sep)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-standard-docspec-details-sep)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-spec-formatting)))
 
 (def-documentation (function check-standard-docspec-details-sep)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function check-standard-docspec-details-sep)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-spec-formatting)))
 
 (def-documentation (function standard-callspec-optional-supp)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function standard-callspec-optional-supp)
-          " --- "
+          " function --- "
           (:fill-in))
   (:callspec (standard-callspec))
   (:properties (manual-section standard-model-callspecs)
@@ -1691,63 +1689,63 @@
   (:properties (manual-section standard-model-callspecs)))
 
 (def-documentation (function format-standard-docspec-param-list-start)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-standard-docspec-param-list-start)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-spec-formatting)))
 
 (def-documentation (function format-standard-docspec-param-list-item-start)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-standard-docspec-param-list-item-start)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-spec-formatting)))
 
 (def-documentation (function format-standard-docspec-param-list-item-stop)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-standard-docspec-param-list-item-stop)
-          " --- "
+          " function --- "
           (:fill-in))
   (:callspec (standard-callspec))
   (:properties (manual-section standard-model-spec-formatting)))
 
 (def-documentation (function format-standard-docspec-param-list-stop)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-standard-docspec-param-list-stop)
-          " --- "
+          " function --- "
           (:fill-in))
   (:callspec (standard-callspec))
   (:properties (manual-section standard-model-callspecs-formatting)))
 
 (def-documentation (function format-standard-docspec-param-list-item)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-standard-docspec-param-list-item)
-          " --- "
+          " function --- "
           (:fill-in))
   (:callspec (standard-callspec))
   (:properties (manual-section standard-model-callspecs-formatting)))
 
 (def-documentation (function standard-callspec-body)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function standard-callspec-body)
-          " --- "
+          " function --- "
           (:fill-in))
   (:callspec (standard-callspec))
   (:properties (manual-section standard-model-callspecs)
                (anchor standard-callspec)))
 
 (def-documentation (function format-standard-docspec-param-list)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-standard-docspec-param-list)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-spec-formatting)))
 
 (def-documentation (function format-standard-docspec-literal-text)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function format-standard-docspec-literal-text)
-          " --- "
+          " function --- "
           (:fill-in))
   (:properties (manual-section standard-model-spec-formatting)))
 
@@ -1758,54 +1756,54 @@
 (def-documentation (type standard-docstring-style)
   (:intro "The " (:lisp type standard-docstring-style)
           " class is a standard implementation of the default style for docstring generation.")
-  (:properties (manual-section plaintext-model)))
-
-(def-documentation (type standard-plain-text)
-  (:intro "Type "
-          (:lisp type standard-plain-text)
-          " --- "
-          (:fill-in))
-  (:properties (manual-section plaintext-model)))
+  (:properties (manual-section plaintext-docstrings)))
 
 (def-documentation (function indent-with)
+  (:intro "The " (:lisp function indent-with) " function --- " (:fill-in))
     (:callspec (lines length))
-  (:properties (manual-section plaintext-model)))
+  (:properties (manual-section plaintext-utils)))
 
 (def-documentation (function adjoin-blocks)
+   (:intro "The " (:lisp function adjoin-blocks) " function --- " (:fill-in))
     (:callspec (lines length))
-  (:properties (manual-section plaintext-model)))
+  (:properties (manual-section plaintext-utils)))
 
 (def-documentation (function indent-by)
+   (:intro "The " (:lisp function indent-by) " function --- " (:fill-in))
     (:callspec (lines length))
-  (:properties (manual-section plaintext-model)))
+  (:properties (manual-section plaintext-utils)))
 
 (def-documentation (function bracket-with)
+   (:intro "The " (:lisp function bracket-with) " function --- " (:fill-in))
     (:callspec (lines prefix suffix))
-  (:properties (manual-section plaintext-model)))
+  (:properties (manual-section plaintext-utils)))
 
 (def-documentation (function width)
+   (:intro "The " (:lisp function width) " function --- " (:fill-in))
     (:callspec (lines))
-  (:properties (manual-section plaintext-model)))
+  (:properties (manual-section plaintext-utils)))
 
 (def-documentation (function whitespace-p)
+   (:intro "The " (:lisp function whitespace-p) " function --- " (:fill-in))
     (:callspec (char))
-  (:properties (manual-section plaintext-model)))
+  (:properties (manual-section plaintext-utils)))
 
 (def-documentation (function flow)
+   (:intro "The " (:lisp function flow) " function --- " (:fill-in))
     (:callspec (formatter artifacts max))
-  (:properties (manual-section plaintext-model)))
+  (:properties (manual-section plaintext-utils)))
 
 (def-documentation (function output-lines)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function output-lines)
-          " --- "
+          " function --- "
           (:fill-in))
-  (:properties (manual-section plaintext-model)))
+  (:properties (manual-section plaintext-utils)))
 
 (def-documentation (variable *docstring-style*)
   (:intro "The " (:lisp variable *docstring-style*)
           " variable specifies the style used when generating docstrings.")
-  (:properties (manual-section plaintext-model)))
+  (:properties (manual-section plaintext-docstrings)))
 
 
 ;;; -----------------------------------------------------------------
@@ -1891,9 +1889,9 @@
   (:properties (manual-section latex)))
 
 (def-documentation (function process-latex-document)
-  (:intro "Function "
+  (:intro "The "
           (:lisp function process-latex-document)
-          " is a utility function which runs "
+          " function is a utility function which runs "
           (:latex-name)
           " and associated tools on a particular file.")
   (:callspec (directory file-name-root &key (bibtex flag) (index flag)))
@@ -1911,7 +1909,7 @@
   (:properties (manual-section latex)))
 
 (def-documentation (function write-latex-output)
-  (:intro "Function " (:lisp function write-latex-output) " --- " (:fill-in))
+  (:intro "The " (:lisp function write-latex-output) " function --- " (:fill-in))
   (:properties (manual-section latex-style-model)))
 
 (def-documentation (function write-doctype-latex)
@@ -1931,7 +1929,7 @@
   (:properties (manual-section latex)))
 
 (def-documentation (function get-element-for-docspec-format)
-  (:intro "Function " (:lisp function get-element-for-docspec-format) " --- "
+  (:intro "The " (:lisp function get-element-for-docspec-format) " function --- "
           (:fill-in))
   (:properties (manual-section latex-style-model)))
 
@@ -1963,17 +1961,17 @@
   (:properties (manual-section latex-style-model)))
 
 (def-documentation (function latex-element-latex)
-  (:intro "Function " (:lisp function latex-element-latex) " --- " (:fill-in))
+  (:intro "The " (:lisp function latex-element-latex) " function --- " (:fill-in))
   (:properties (manual-section latex-style-model)
                (anchor standard-latex)))
 
 (def-documentation (function package-list-overall-header)
-  (:intro "Function " (:lisp function package-list-overall-header) " --- "
+  (:intro "The " (:lisp function package-list-overall-header) " function --- "
           (:fill-in))
   (:properties (manual-section latex-style-model)))
 
 (def-documentation (function get-latex-output-file-name)
-  (:intro "Function " (:lisp function get-latex-output-file-name) " --- "
+  (:intro "The " (:lisp function get-latex-output-file-name) " function --- "
           (:fill-in))
   (:properties (manual-section latex-style-model)))
 
@@ -1982,7 +1980,7 @@
   (:properties (manual-section latex-style-model)))
 
 (def-documentation (function index-lisp-name)
-  (:intro "Function " (:lisp function index-lisp-name) " --- " (:fill-in))
+  (:intro "The " (:lisp function index-lisp-name) " function --- " (:fill-in))
   (:properties (manual-section latex-style-model)))
 
 
@@ -2063,20 +2061,20 @@
   (:properties (manual-section deprecated)))
 
 (def-documentation (function tag-sort)
-  (:intro "Function " (:lisp function tag-sort) " --- " (:fill-in))
+  (:intro "The " (:lisp function tag-sort) " function --- " (:fill-in))
   (:properties (manual-section deprecated)))
 
 (def-documentation (function format-tag)
-  (:intro "Function " (:lisp function format-tag) " --- " (:fill-in))
+  (:intro "The " (:lisp function format-tag) " function --- " (:fill-in))
   (:properties (manual-section deprecated)))
 
 (def-documentation (function package-list-group-header)
-  (:intro "Function " (:lisp function package-list-group-header) " --- "
+  (:intro "The " (:lisp function package-list-group-header) " function --- "
           (:fill-in))
   (:properties (manual-section deprecated)))
 
 (def-documentation (function package-list-entry)
-  (:intro "Function " (:lisp function package-list-entry) " --- " (:fill-in))
+  (:intro "The " (:lisp function package-list-entry) " function --- " (:fill-in))
   (:properties (manual-section deprecated)))
 
 ;;; -----------------------------------------------------------------

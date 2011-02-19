@@ -139,9 +139,10 @@
           ;; tag.lisp
           #:get-doc-tags
           ;; output.lisp
-          #:*output-nesting-depth*
+          #:*output-nesting-depth* #:format-output-contents-actual
           #:format-default-output-contents-sep #:format-output-contents-sep
-          #:output-contents #:output-contents-contents #:get-output-unit-title
+          #:output-contents #:output-contents-contents
+          #:get-output-unit-short-title #:get-output-unit-title
           #:get-output-unit-author #:get-output-unit-leader
           #:get-output-unit-trailer
           #:format-doc-content-items #:format-doc-content-item

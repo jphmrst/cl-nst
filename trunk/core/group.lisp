@@ -295,7 +295,7 @@
                ',group-name))))))))
 (def-documentation (compiler-macro def-test-group)
   (:tags primary)
-  (:properties (api-summary primary))
+  (:properties (nst-manual groups) (api-summary primary))
   (:intro (:latex "The \\texttt{def-test-group}
 form\\index{group}\\index{test group|see{group}} defines a group of the
 given name, providing one instantiation of the bindings of the given fixtures
