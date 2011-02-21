@@ -39,7 +39,8 @@
              #:deprecated))
 
 (defpackage :defdoc-utils
-    (:export #:prune-keyargs))
+  (:use :common-lisp)
+  (:export #:prune-keyargs))
 
 (defpackage :defdoc-core
   (:documentation "DefDoc internal organizational package - core operations")
