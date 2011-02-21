@@ -24,5 +24,6 @@
   (loop while arg-list
         for key = (pop arg-list)
         for value = (pop arg-list)
-        if (not (member key keys)) append (list key value) into result
-          finally (return-from prune-keyargs result)))
+        unless (member key keys)
+        append (list key value) into result
+        finally (return result)))
