@@ -1086,7 +1086,7 @@
   (:callspec (style target-type spec))
   (:properties (manual-section standard-model) (anchor symbol-homing-style)))
 
-#:symbol-homing-style #:use-internal-names
+;;; #:symbol-homing-style #:use-internal-names
 
 (def-documentation (type itemized-list-style)
   (:intro "The " (:lisp type itemized-list-style)
