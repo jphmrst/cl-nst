@@ -26,8 +26,8 @@
 ;;; Documentation generator for interactive commands and session
 ;;; flags.
 
-(defdoc:def-target-type command ())
-(defdoc:def-target-type switch ())
+(defdoc:def-target-type command (:symbol-definition-nocheck t))
+(defdoc:def-target-type switch (:symbol-definition-nocheck t))
 
 ;;; ----------------------------------------------------------------------
 ;;; Function version of the command-line interpreter.  The main logic
