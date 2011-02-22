@@ -239,7 +239,7 @@ directory, especially \\texttt{self-test/core/builtin-checks.lisp},
 holds the NST tests for NST and contain many examples (some of which
 we have adapted for this manual).  Known bugs and infelicities,
 platform-specific release notes, and other technical materials are
-available via the link on NST's CLiki page, \\textsl{cliki.net/NST}\enspace."))
+available via the link on NST's CLiki page, \\textsl{cliki.net/NST}\\enspace."))
     ;; Set the style to be associated with this output set.
     ;;
     ;; (:style style-class)
@@ -310,8 +310,8 @@ package \\texttt{nst-criteria-api}."))
     (collect-output (:title "Reporting forms"
                             :leader "NST provides functions both for building test reports, and for adding information to a report.")
       (collect-symbols :nst (#:make-success-report #:make-failure-report
-                       #:make-warning-report #:make-error-report
-                       #:add-error #:add-failure #:add-info)))
+                             #:make-warning-report #:make-error-report
+                             #:add-error #:add-failure #:add-info)))
     (collect-output (:title "Processing subcriteria"
                             :leader (:latex "
 The criterion itself can contain \\emph{subcriteria} which can be
@@ -319,9 +319,31 @@ incorporated into the main criterion's assessment.  NST provides two
 functions which trigger testing by a subcriterion, each returning the
 check's result report."))
       (collect-symbols :nst (#:check-criterion-on-value
-                             #:check-criterion-on-form))))
+                             #:check-criterion-on-form)))
     (collect-output (:title "General criteria definitions")
-      (collect-symbols :nst #:def-criterion))
+      (collect-symbols :nst #:def-criterion)))
+  (collect-output (:title "Verifying invariants against sampled data"
+                          :short-title "Invariants"
+                          :leader (:seq "The " (:lisp criterion :sample) (:latex " criterion provides random
+generation of data for validating program properties.  Our approach is
+based on Claessen and Hughes's Quickcheck\\footnote{Koen Claessen and
+  John Hughes, ``QuickCheck: a lightweight tool for random testing of
+  Haskell programs,'' from \\emph{Proceedings of the International
+    Conference on Functional Programming}, 2000.  QuickCheck papers,
+  code and other resources are available at
+  \\textsl{www.cs.chalmers.se/\~{}rjmh/QuickCheck}~.}.
+\\par
+This style of testing is somewhat more complicated than specific tests
+on single, bespoke forms.  There are two distinct efforts, which we
+address in the next two sections: describing how the sample data is to
+be generated, and specifying the test itself.")))
+    (collect-output (:title "Generating sample data")
+      (collect-doc () (:seq "Data generation is centered around the generic function " (:lisp function arbitrary) ". "))
+      (collect-symbols :nst (#:arbitrary))
+      (collect-doc () (:file :latex "doc/snippets/arbitrary-builtin.tex"
+                             :asdf :nst)))
+    (collect-output (:title "Invariants as tests")
+      (collect-symbols :keyword (#:sample))))
 
 ;;;  (defdoc:collect-groups-by-label
 ;;;   (nst::nst-manual :groups '(nst::sample

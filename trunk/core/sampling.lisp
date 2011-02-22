@@ -551,7 +551,7 @@
 
     result))
 (defdoc:def-documentation (criterion :sample)
-    (:intro (:latex "Invariants to be tested, and the domains over which they range, are specified with the \\texttt{:sample} criterion:\\indexKeyword{sample}"))
+    (:intro (:latex "Invariants to be tested, and the domains over which they range, are specified with the \\texttt{:sample} criterion:"))
   (:callspec (&key (verify FORM)
                    (value LAMBDA-LIST)
                    (domains (:seq (NAME SPEC)))
@@ -572,7 +572,7 @@
            (where-ignore
             (:latex "List of domain variables which are not mentioned in the \\texttt{where} clause.  These names will be declared as ignored in appropriate bindings, suppressing warnings under Lisps which check for such things in interpreted expressions.  This list need not be given explicitly when no \\texttt{where} argument is given.  Similarly, the \\texttt{where-declare} argument accepts a list of declarations to be associated with the \\texttt{where} form."))
            (sample-size
-            (:latex "Gives the base specification of the number of value sets which will be generated.  Two further arguments have some bearing on the number of generation attempts when the \\texttt{where} argument is non-\\texttt{t}.  The \\texttt{qualifying-sample}\\indexKeyword{qualifying-sample} argument gives the minimum acceptable size of actual tested values, not counting sets rejected via the \\texttt{where} expression.  The \\texttt{max-tries}\\indexKeyword{max-tries} argument gives the maximum number of value sets to be generated.")))
+            (:latex "Gives the base specification of the number of value sets which will be generated.  Two further arguments have some bearing on the number of generation attempts when the \\texttt{where} argument is non-\\texttt{t}.  The \\texttt{qualifying-sample} argument gives the minimum acceptable size of actual tested values, not counting sets rejected via the \\texttt{where} expression.  The \\texttt{max-tries} argument gives the maximum number of value sets to be generated.")))
   (:details (:seq
           (:plain "Examples:")
           (:code
