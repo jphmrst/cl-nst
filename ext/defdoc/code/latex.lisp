@@ -155,6 +155,7 @@
     "\\documentclass{article}
 \\usepackage{times}
 \\usepackage{helvet}
+\\usepackage{array}
 \\usepackage[pdftex]{hyperref}")
 
 (defgeneric get-latex-output-file-name (style usage name)

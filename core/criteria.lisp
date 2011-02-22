@@ -31,7 +31,7 @@
   (make-success-report))
 (defdoc:def-documentation (criterion :pass)
   (:properties (nst-manual misc-criteria))
-  (:intro (:latex "A trivial test, which always passes."))
+  (:intro (:seq "The " (:lisp criterion :pass) (:latex " is a trivial test, which always passes.")))
   (:details (:seq
              (:plain "Example:")
              (:code "(def-test passing-test :pass 3 4 \"sd\")"))))
@@ -40,7 +40,7 @@
   (make-failure-report :format (car args) :args (cdr args)))
 (defdoc:def-documentation (criterion :fail)
   (:callspec (format-string (:seq form)))
-  (:intro (:latex "A trivial test, which always fails.  The format string and arguments should be suitable for the Lisp \\texttt{format} function."))
+  (:intro (:seq "The " (:lisp criterion :fail) (:latex " criterion is a trivial test which always fails.  The format string and arguments should be suitable for the Lisp \\texttt{format} function.")))
   (:details (:seq
           (:plain "Example:")
           (:code
@@ -51,7 +51,7 @@
 (defdoc:def-documentation (criterion :warn)
   (:properties (nst-manual misc-criteria))
   (:callspec (format-string (:seq form)))
-  (:intro (:latex "Issue a warning.  The format string and arguments should be suitable for the Lisp \\texttt{format} function."))
+  (:intro (:seq "The " (:lisp criterion :warn) (:latex " criterion issues a warning.  The format string and arguments should be suitable for the Lisp \\texttt{format} function.")))
   (:details (:seq
              (:plain "Example:")
              (:code "(:warn \"\~{}d is not a perfect square\" 5)"))))
@@ -63,7 +63,7 @@
                            :args (list bool))))
 (defdoc:def-documentation (criterion :true-form)
   (:callspec (bool))
-  (:intro (:latex ""))
+  (:intro (:seq "The " (:lisp criterion :true-form) (:latex " criterion checks that a form evaluates to non-nil")))
 ;;;  (:details (:seq
 ;;;          (:plain "Example:")
 ;;;          (:code "")
@@ -79,7 +79,7 @@
 (defdoc:def-documentation (criterion :true)
     (:properties (nst-manual basic-criteria))
   (:callspec ())
-  (:intro "The \\texttt{:true} criterion expects one form, which is evaluated at testing time; the criterion requires the result to be non-nil.")
+  (:intro (:seq "The " (:lisp criterion :true) (:latex " criterion expects one form, which is evaluated at testing time; the criterion requires the result to be non-nil.")))
 ;;;  (:details (:seq
 ;;;          (:plain "Example:")
 ;;;          (:code "")
@@ -95,7 +95,7 @@
 (defdoc:def-documentation (criterion :eq)
     (:properties (nst-manual basic-criteria))
   (:callspec (target))
-  (:intro (:latex "The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \\texttt{eq}."))
+  (:intro (:seq "The " (:lisp criterion :eq) " criterion checks a form using " (:lisp function eq) ".  The criterion argument and the form under test are both evaluated at testing time."))
   (:details (:seq (:plain "Example:")
                (:code "(def-test eq1 (:eq 'b) (cadr '(a b c)))"))))
 
@@ -103,7 +103,7 @@
 (defdoc:def-documentation (criterion :symbol)
     (:properties (nst-manual basic-criteria))
   (:callspec (name))
-  (:intro (:latex "The form under test is evaluated at testing time.  The criterion requires that the result be a symbol which is \\texttt{eq} to the symbol name given as the criterion argument."))
+  (:intro (:seq "The " (:lisp criterion :symbol) " criterion checks that its form under test evaluates to a symbol which is " (:lisp function eq) " to the symbol name given as the criterion argument."))
   (:details (:seq
           (:plain "Example:")
           (:code "(def-test sym1  (:symbol a) (car '(a b c)))")
@@ -118,7 +118,7 @@
 (defdoc:def-documentation (criterion :eql)
     (:properties (nst-manual basic-criteria))
   (:callspec (target))
-  (:intro (:latex "The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \\texttt{eql}."))
+  (:intro (:seq "The " (:lisp criterion :eql) " criterion checks a form using " (:lisp function eql) ".  The criterion argument and the form under test are both evaluated at testing time."))
   (:details (:seq
           (:plain "Example:")
           (:code "(def-test eql1 (:eql 2) (cadr '(1 2 3)))"))))
@@ -131,7 +131,7 @@
 (defdoc:def-documentation (criterion :equal)
     (:properties (nst-manual basic-criteria))
   (:callspec (target))
-  (:intro (:latex "The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \\texttt{equal}.")))
+  (:intro (:seq "The " (:lisp criterion :equal) " criterion checks a form using " (:lisp function eql) ".  The criterion argument and the form under test are both evaluated at testing time.")))
 
 (def-criterion (:equalp (:forms target) (:values actual))
   (if (equalp (eval target) actual)
@@ -141,13 +141,13 @@
 (defdoc:def-documentation (criterion :equalp)
     (:properties (nst-manual basic-criteria))
   (:callspec (target))
-  (:intro (:latex "The criterion argument and the form under test are both evaluated at testing time; the criterion requires that the results be \\texttt{equalp}.")))
+  (:intro (:seq "The " (:lisp criterion :equalp) " criterion checks a form using " (:lisp function equalp) ".  The criterion argument and the form under test are both evaluated at testing time.")))
 
 (def-criterion-alias (:forms-eq)    `(:predicate eq))
 (defdoc:def-documentation (criterion :forms-eq)
     (:properties (nst-manual basic-criteria))
   (:callspec ())
-  (:intro (:latex "The two forms under test are both evaluated at testing time; the criterion requires that the results be \\texttt{eq}."))
+  (:intro (:seq "The " (:lisp criterion :forms-eq) " criterion compares its two forms under test using " (:lisp function eq) ".  The forms are both evaluated at testing time."))
   (:details (:seq
           (:plain "Example:")
           (:code "(def-test eqforms1 :forms-eq (cadr '(a b c)) (caddr '(a c b)))"))))
@@ -155,7 +155,7 @@
 (defdoc:def-documentation (criterion :forms-eql)
     (:properties (nst-manual basic-criteria))
   (:callspec ())
-  (:intro (:latex "The two forms under test are both evaluated at testing time; the criterion requires that the results be \\texttt{eql}."))
+  (:intro (:seq "The " (:lisp criterion :forms-eql) " criterion compares its two forms under test using " (:lisp function eql) ".  The two forms under test are both evaluated at testing time."))
   (:details (:seq
           (:plain "Example:")
           (:code "(def-test eqlforms1 :forms-eql (cadr '(a 3 c)) (caddr '(a c 3)))"))))
@@ -163,12 +163,12 @@
 (defdoc:def-documentation (criterion :forms-equal)
     (:properties (nst-manual basic-criteria))
   (:callspec ())
-  (:intro (:latex "The two forms under test are both evaluated at testing time; the criterion requires that the results be \\texttt{equal}.")))
+  (:intro (:seq "The " (:lisp criterion :forms-equal) " criterion compares its two forms under test using " (:lisp function equal) ".  The forms are both evaluated at testing time.")))
 (def-criterion-alias (:value-list further) `(:apply list ,further))
 (defdoc:def-documentation (criterion :value-list)
   (:properties (nst-manual multiple-values-criteria))
   (:callspec (further))
-  (:intro (:latex "Converts multiple values into a single list value.")))
+  (:intro :seq "The" (:lisp criterion :value-list) " criterion converts multiple values into a single list value."))
 
 (def-criterion (:predicate (:forms pred) (:values &rest vals))
   (if (apply (eval `(function ,pred)) vals)
@@ -178,7 +178,7 @@
 (defdoc:def-documentation (criterion :predicate)
     (:properties (nst-manual basic-criteria))
   (:callspec (pred))
-  (:intro (:latex "The criterion argument is a symbol (unquoted) or a lambda expression; at testing time, the forms under test are evaluated and passed to the denoted function.  The criterion expects that the result of the function is non-nil."))
+  (:intro (:seq "The " (:lisp criterion :predicate) " criterion applies a predicate to the result of evaluating its form under test.  The criterion argument is a symbol (unquoted) or a lambda expression; at testing time, the forms under test are evaluated and passed to the denoted function.  The criterion expects that the result of the function is non-nil."))
   (:details (:seq
           (:plain "Example:")
           (:code "(def-test pred1 (:predicate numberp) 3)")
@@ -191,7 +191,7 @@
 (defdoc:def-documentation (criterion :drop-values)
   (:properties (nst-manual multiple-values-criteria))
   (:callspec (criterion))
-  (:intro (:latex "Checks the primary value according to the subordinate criterion, ignoring any additional returned values from the evaluation of the form under test.")))
+  (:intro (:seq "The " (:lisp criterion :drop-values) " criterion checks the primary value according to the subordinate criterion, ignoring any additional returned values from the evaluation of the form under test.")))
 
 (def-criterion (:dump-forms (:forms blurb) (:values &rest forms))
   (format t "~%~a~%" blurb)
@@ -200,7 +200,7 @@
 (defdoc:def-documentation (criterion :dump-forms)
   (:properties (nst-manual misc-criteria))
   (:callspec (blurb))
-  (:intro (:latex "For debugging NST criteria: fails after writing the current forms to standard output.")))
+  (:intro (:seq "The " (:lisp criterion :dump-forms) " criterion is for debugging NST criteria. It fails after writing the current forms to standard output.")))
 
 (def-criterion (:info (:forms string subcriterion) (:form expr-list-form))
   (let ((subcheck (check-criterion-on-form subcriterion expr-list-form)))
@@ -209,7 +209,7 @@
 (defdoc:def-documentation (criterion :info)
   (:properties (nst-manual misc-criteria))
   (:callspec (string subcriterion))
-  (:intro (:latex "Add an informational note to the check result."))
+  (:intro (:seq "The " (:lisp criterion :info) (:latex " criterion adds an informational note to the check result.")))
   (:details (:seq
              (:plain "Example:")
              (:code "(def-test known-bug (:info \"Known bug\" (:eql 3)) 4)"))))
@@ -247,7 +247,7 @@
 (defdoc:def-documentation (criterion :err)
     (:properties (nst-manual basic-criteria))
   (:callspec (&key (type CLASS)))
-  (:intro (:latex "At testing time, evaluates the form under test, expecting the evaluation to raise some condition.  If the \\textit{CLASS} argument is supplied, the criterion expects the raised condition to be a subclass.  Note that the name of the type should \\emph{not} be quoted; it is not evaluated."))
+  (:intro (:seq "The " (:lisp criterion :err) (:latex " criterion evaluates the form under test, expecting the evaluation to raise some condition.  If the \\textit{CLASS} argument is supplied, the criterion expects the raised condition to be a subclass.  Note that the name of the type should \\emph{not} be quoted; it is not evaluated.")))
   (:details (:seq
           (:plain "Examples:")
           (:code "(def-test err1 (:err :type error) (error \"this should be caught\"))")
@@ -280,7 +280,7 @@
 (defdoc:def-documentation (criterion :perf)
     (:properties (nst-manual basic-criteria))
   (:callspec (&key (ms MILLISECS) (sec SECONDS) (min MINUTES)))
-  (:intro (:latex "Evaluates the forms under test at testing time, and expects the evaluation to complete within the given time limit."))
+  (:intro (:seq "The " (:lisp criterion :perf) " criterion evaluates the forms under test at testing time, checking that the evaluation completes within the given time limit."))
   (:details (:seq
           (:plain "Example:")
           (:code "(def-test perf1 (:perf :min 2) (ack 3 5))"))))
@@ -296,7 +296,7 @@
 (defdoc:def-documentation (criterion :not)
     (:properties (nst-manual compound-criteria))
   (:callspec (subcriterion))
-  (:intro (:latex "Passes when testing according to \\texttt{subcriterion} fails (but does not throw an error)."))
+  (:intro (:seq "The " (:lisp criterion :not) (:latex " criterion passes when testing according to \\texttt{subcriterion} fails (but does not throw an error).")))
   (:details (:seq
           (:plain "Example:")
           (:code "(def-test not1 (:not (:symbol b)) 'a)"))))
@@ -317,7 +317,7 @@
 (defdoc:def-documentation (criterion :all)
   (:properties (nst-manual compound-criteria))
   (:callspec ((:seq subcriterion)))
-  (:intro (:latex "This criterion brings several other criteria under one check, and verifies that they all pass."))
+  (:intro (:seq "The " (:lisp criterion :all) (:latex " criterion brings several other criteria under one check, and verifies that they all pass.")))
   (:details (:seq
              (:plain "Example:")
              (:code "(def-check not1 ()
@@ -358,7 +358,7 @@
 (defdoc:def-documentation (criterion :any)
   (:properties (nst-manual compound-criteria))
   (:callspec ((:seq subcriterion)))
-  (:intro (:latex "Passes when any of the subordinate criteria pass."))
+  (:intro (:seq "The " (:lisp criterion :any) (:latex " criterion passes when any of the subordinate criteria pass.")))
   (:details (:seq
              (:plain "Example:")
              (:code "(def-check not1 ()
@@ -372,7 +372,7 @@
 (defdoc:def-documentation (criterion :apply)
   (:properties (nst-manual compound-criteria))
   (:callspec (FUNCTION CRITERION))
-  (:intro (:latex "At testing time, first evaluates the forms under test, applying \\texttt{FUNCTION} to them.  The overall criterion passes or fails exactly when the subordinate \\texttt{CRITERION} with the application's multiple result values."))
+  (:intro (:seq "The " (:lisp criterion :apply) (:latex " criterion first evaluates the forms under test, applying \\texttt{FUNCTION} to them.  The overall criterion passes or fails exactly when the subordinate \\texttt{CRITERION} with the application's multiple result values.")))
   (:details (:seq
              (:plain "Example:")
              (:code "(def-test applycheck (:apply cadr (:eql 10)) '(0 10 20))"))))
@@ -398,7 +398,7 @@
 (defdoc:def-documentation (criterion :check-err)
   (:properties (nst-manual compound-criteria))
   (:callspec (criterion))
-  (:intro (:latex "Like \\texttt{:err}, but proceeds according to the subordinate criterion rather than simply evaluating the input forms."))
+  (:intro (:seq "The " (:lisp criterion :check-err) (:latex " criterion is like \\texttt{:err}, but proceeds according to the subordinate criterion rather than simply evaluating the input forms.")))
   (:details (:seq
              (:plain "Example:")
              (:code "(def-test check-err1
@@ -413,7 +413,7 @@
 (defdoc:def-documentation (criterion :progn)
   (:properties (nst-manual compound-criteria))
   (:callspec ((:seq form) subcriterion))
-  (:intro (:latex "At testing time, first evaluates the \\texttt{FORM}s in order, and then proceeds with evaluation of the forms under test according to the subordinate criterion."))
+  (:intro (:seq "The " (:lisp criterion :progn) (:latex " criterion first evaluates the \\texttt{FORM}s in order, and then proceeds with evaluation of the forms under test according to the subordinate criterion.")))
   (:details (:seq
              (:plain "Example:")
              (:code "(def-test form1 (:progn (setf zz 3) (:eql 3)) zz)"))))
@@ -424,7 +424,7 @@
 (defdoc:def-documentation (criterion :proj)
   (:properties (nst-manual compound-criteria))
   (:callspec (indices criterion))
-  (:intro (:latex "Rearranges the forms under test by selecting a new list according to the index numbers into the old list.  Checking of the reorganized forms continues according to the subordinate criterion."))
+  (:intro (:seq "The " (:lisp criterion :proj) (:latex " criterion rearranges the forms under test by selecting a new list according to the index numbers into the old list.  Checking of the reorganized forms continues according to the subordinate criterion.")))
   (:details (:seq
              (:plain "Example:")
              (:code "(def-test proj-1
@@ -436,7 +436,7 @@
 (defdoc:def-documentation (criterion :values)
   (:properties (nst-manual multiple-values-criteria))
   (:callspec ((:seq subcriterion)))
-  (:intro (:latex "Checks each of the forms under test according to the respective subordinate criterion.")))
+  (:intro ":seq " (:lisp criterion :values) " criterion (The is) checks each of the forms under test according to the respective subordinate criterion."))
 
 (def-criterion (:each (:forms criterion) (:values l))
   (block each
@@ -459,7 +459,7 @@
 (defdoc:def-documentation (criterion :each)
   (:properties (nst-manual list-criteria))
   (:callspec (criterion))
-  (:intro (:latex "At testing time, evaluates the form under test, expecting to find a list as a result.  Expects that each argument of the list according to the subordinate \\texttt{criterion}, and passes when all of these checks pass."))
+  (:intro (:seq "The " (:lisp criterion :each) (:latex " criterion evaluates the form under test, expecting to find a list as a result.  Expects that each argument of the list according to the subordinate \\texttt{criterion}, and passes when all of these checks pass.")))
   (:details (:seq
              (:plain "Example:")
              (:code "(def-test each1 (:each (:symbol a)) '(a a a a a))"))))
@@ -487,7 +487,7 @@
 (defdoc:def-documentation (criterion :seq)
   (:properties (nst-manual list-criteria))
   (:callspec ((:seq subcriterion)))
-  (:intro (:latex "Evaluates its input form, checks each of its elements according to the respective subordinate criterion, and passes when all of them pass."))
+  (:intro (:seq "The " (:lisp criterion :seq) (:latex " criterion evaluates its input form, checks each of its elements according to the respective subordinate criterion, and passes when all of them pass.")))
   (:details (:seq
              (:plain "Example:")
              (:code "(def-check seqcheck
@@ -508,7 +508,7 @@
 (defdoc:def-documentation (criterion :permute)
   (:properties (nst-manual list-criteria))
   (:callspec (criterion))
-  (:intro (:latex "At testing time, evaluates the form under test, expecting to find a list as a result.  The criterion expects to find that some permutation of this list will satisfy the subordinate criterion."))
+  (:intro (:seq "The " (:lisp criterion :permute) (:latex " criterion evaluates the form under test, expecting to find a list as a result.  The criterion expects to find that some permutation of this list will satisfy the subordinate criterion.")))
   (:details (:seq
              (:plain "Examples:")
              (:code "(def-test permute1 (:permute (:each (:eq 'a))) '(a a))")
@@ -541,7 +541,7 @@
 (defdoc:def-documentation (criterion :across)
   (:properties (nst-manual vector-criteria))
   (:callspec ((:seq subcriterion)))
-  (:intro (:latex "Like \\texttt{:seq}, but for a vector instead of a list."))
+  (:intro (:seq "The " (:lisp criterion :across) (:latex " criterion is like \\texttt{:seq}, but for a vector instead of a list.")))
   (:details (:seq
              (:plain "Example:")
              (:code "(def-check across1
@@ -569,7 +569,7 @@
 (defdoc:def-documentation (criterion :slots)
   (:properties (nst-manual class-criteria))
   (:callspec ((:seq (slot-name subcriterion))))
-  (:intro (:latex "Evaluates its input form, and passes when the value at each given slot satisfies the corresponding subordinate constraint."))
+  (:intro (:seq "The " (:lisp criterion :slots) (:latex " criterion evaluates its input form, and passes when the value at each given slot satisfies the corresponding subordinate constraint.")))
   (:details (:seq
              (:plain "Example:")
              (:code "(defclass classcheck ()
@@ -689,7 +689,7 @@
 (defdoc:def-documentation (criterion :process)
   (:properties (nst-manual processes-criteria))
   (:callspec ((:seq form)))
-  (:intro (:latex "The \\texttt{:process} criterion allows simple interleaving of Lisp function calls and NST checks, to allow checking of intermediate states of an arbitrarily-long process."))
+  (:intro (:seq "The " (:lisp criterion :process) " criterion allows simple interleaving of Lisp function calls and NST checks, to allow checking of intermediate states of an arbitrarily-long process."))
   (:details (:latex "This criterion takes as its body a list of forms.  The first element of each form should be a symbol:")
             (:itemize ()
               (:latex "\\texttt{:eval} --- Heads a list of forms which should be evaluated.")

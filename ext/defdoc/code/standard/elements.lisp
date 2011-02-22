@@ -239,6 +239,42 @@
          (get-included-outputset-style style (output-elem-style spec) spec)
          (make-instance (output-elem-name spec)) keyvals))
 
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(def-element :file (standard-file-element
+                    :class standard-doc-element
+                    :args (re-tag file-path &key asdf))
+    ((re-tag :initarg :re-tag :accessor file-element-re-tag)
+     (file-path :initarg :file-path :accessor file-element-path)
+     (asdf :initarg :asdf :accessor file-element-asdf))
+  (make-instance 'standard-file-element
+    :re-tag re-tag :file-path file-path :asdf asdf))
+(set-pprint-dispatch 'standard-file-element
+  (named-function pprint-standard-file-element
+    (lambda (stream spec)
+      (with-accessors ((re-tag file-element-re-tag)
+                       (file-path file-element-path)
+                       (asdf file-element-asdf)) spec
+        (format stream "[ file ~a -- ~a ]" file-path re-tag)))))
+
+(defmethod format-docspec-element (style type (spec standard-file-element)
+                                         stream &rest keyvals)
+  (with-accessors ((re-tag file-element-re-tag)
+                   (file-path file-element-path)
+                   (asdf file-element-asdf)) spec
+    (cond
+      (asdf (setf file-path (asdf:system-relative-pathname asdf file-path))))
+    (apply #'format-docspec-element
+           style type
+           (compile-element *package* nil
+                            `(,re-tag
+                              ,(with-output-to-string (out)
+                                 (with-open-file (in file-path)
+                                   (loop for ch = (read-char in nil nil)
+                                         while ch
+                                         do (format out "~a" ch))))))
+           stream keyvals)))
+
 ;;; -----------------------------------------------------------------
 
 (def-contract (standard-elements-style-coverage (style type))
@@ -259,4 +295,6 @@
   (has-method (format-docspec-element (style t standard-lisp-name stream) t))
   (has-method (format-docspec-element (style t standard-emphasized stream) t))
   (has-method (format-docspec-element (style t standard-outputset-element
-                                             stream) t)))
+                                             stream) t))
+  (has-method (format-docspec-element (style t standard-file-element stream)
+                                      t)))

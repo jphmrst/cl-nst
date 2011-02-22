@@ -1,0 +1,146 @@
+
+NST provides method of \texttt{arbitrary} for many standard Lisp
+types, listed in Table~\ref{table:built-in-arbitrary-types}.  Types in
+the first column --- the standard numeric types plus the common
+supertype \texttt{t} --- are not associated with additional keyword
+arguments.\indexLisp{t}\indexLisp{complex}\indexLisp{integer}\indexLisp{ratio}\indexLisp{single-float}
+\begin{verbatim}
+  (nst:arbitrary t)
+  (nst:arbitrary 'complex)
+  (nst:arbitrary 'integer)
+  (nst:arbitrary 'ratio)
+  (nst:arbitrary 'single-float)
+\end{verbatim}
+Keyword arguments for other NST-provided type specifiers
+are as follows:
+\begin{table}
+\begin{center}
+  \texttt{
+    \begin{tabular}{lll|ll||l}
+      \multicolumn{5}{c}{\textrm{\textbf{Standard Lisp types}}}
+          & \multicolumn{1}{c}{\textrm{\textbf{Other types}}}
+      \\ \hline
+         number  & character & symbol & cons   & hash-table & scalar
+      \\ real & string    &        & list   & &
+      \\ rational &       &        & vector & &
+      \\ integer  &       &        & array  & &
+      \\ float &&&&t&
+      \\ fixnum &&&& &
+      \\ bignum &&&& &
+      \\ ratio &&&& &
+      \\ \multicolumn{2}{l}{short-float\footnotemark} &&& &
+      \\ \multicolumn{2}{l}{single-float} &&& &
+      \\ \multicolumn{2}{l}{double-float\addtocounter{footnote}{-1}\footnotemark} &&& &
+      \\ \multicolumn{2}{l}{long-float} &&& &
+      \\ complex &&&& &
+      \\ \cline{1-3} \multicolumn{3}{c}{\textrm{Considered \texttt{scalar}}}
+    \end{tabular}}
+\end{center}
+\caption{NST provides methods of generic function \texttt{arbitrary} generating values of the types in this table.}
+\label{table:built-in-arbitrary-types}
+\end{table}
+\footnotetext{Not available on Allegro Lisp.}
+
+\begin{itemize}
+\item Types \texttt{character} and \texttt{string}:\indexLisp{character}\indexLisp{string}
+  \begin{itemize}
+  \item Argument \texttt{noncontrol}.  Excludes the control characters
+    associated with ASCII code 0 through 31.\indexLisp{noncontrol}
+  \item Argument \texttt{range}.  Allows the range of characters to be
+    restricted to a particular subset:\indexLisp{range}\indexKeyword{standard}
+    \begin{center}
+      \begin{tabular}{>{\ttfamily:}c|l}
+        \multicolumn{1}{c|}{Value} & \multicolumn{1}{c}{Meaning}
+        \\ \hline standard & Codes up to 96
+        \\ ascii & Codes through 127
+        \\ ascii-ext & Codes through 255
+      \end{tabular}
+    \end{center}
+    Omitted or with any other value, characters with any code up to
+    \texttt{char-code-limit} can result.  Examples:
+\begin{verbatim}
+  (nst:arbitrary 'character)
+  (nst:arbitrary '(character :noncontrol t
+                             :range :standard))
+\end{verbatim}
+  \end{itemize}
+  
+\item Type \texttt{symbol}:\indexLisp{symbol}\indexKeyword{existing}\indexKeyword{exported}\indexKeyword{package}\indexKeyword{nonnull}\indexKeyword{gensym}
+  \begin{itemize}
+  \item Argument \texttt{existing}.  If non-nil, requires that the
+    result be a previously-interned symbol.
+  \item Argument \texttt{exported}.  Requires that the result be not
+    only a previously-interned symbol, but also one exported by its
+    package.  Ignored if \texttt{:existing} is explicitly set to nil.
+  \item Argument \texttt{package}.  Specifies the package from which
+    the symbol will be generated.  If omitted, a package is selected
+    at random from the existing ones.
+  \item Argument \texttt{nonnull}.  If non-nil, allows
+    \texttt{arbitrary} to ignore other restriction to guarantee
+    returning a non-nil symbol.  When null, \texttt{arbitrary} may
+    return nil.
+  \item Argument \texttt{gensym}.  If non-nil, and if
+    \texttt{:existing} is explicitly set to nil, returns a new
+    uninterned symbol.
+  \end{itemize}
+  
+\item Type \texttt{cons}:\indexLisp{cons}\indexKeyword{car}\indexKeyword{cdr}
+  \begin{itemize}
+  \item Arguments \texttt{car} and \texttt{cdr} should be additional
+    type specifications, used direct the generation of respectively
+    the left and right elements of the result.  Each defaults to
+    \texttt{t}~.
+  \end{itemize}
+  
+\item Types \texttt{list} and \texttt{vector}:\indexLisp{list}\indexLisp{vector}\indexKeyword{length}\indexKeyword{elem}
+  \begin{itemize}
+  \item Argument \texttt{length} specifies the length of the structure.
+    If omitted, will be randomly generated.
+  \item Argument \texttt{elem} directs the generation of the
+    container's elements.  For both, the default element type is
+    \texttt{t}~.
+  \end{itemize}
+
+\item Type \texttt{array}:
+  \begin{itemize}
+  \item Argument \texttt{elem}.  As for \texttt{list} and
+    \texttt{vector}.
+  \item Argument \texttt{dimens}.  Should be a list of nonnegative
+    integers specifying the length of each dimension of the array.  If
+    omitted, will be randomly generated.
+  \item Argument \texttt{rank}.  Specifies the number of dimensions.
+    If omitted but \texttt{:dimens} is given, will be set to the
+    length of \texttt{:dimens}.  If both \texttt{:rank} and
+    \texttt{:dimens} are omitted, then both are randomly generated.
+  \end{itemize}
+  
+\item Type \texttt{hash-table}:\indexLisp{hash-table}\indexKeyword{size}\indexKeyword{test}\indexKeyword{key}\indexKeyword{val}
+  \begin{itemize}
+  \item Argument \texttt{size}.  Specifies the number of entries in
+    the table.  If omitted, will be randomly generated.
+  \item Argument \texttt{test}.  Specifies the hash table's test
+    function.  If omitted, will be randomly selected from \texttt{eq},
+    \texttt{eql}, \texttt{equal} and
+    \texttt{equalp}.\indexLisp{eq}\indexLisp{eql}\indexLisp{equal}\indexLisp{equalp}
+  \item Arguments \texttt{key} and \texttt{val} direct the generation
+    of the table's keys and values, respectively.  For the keys, the
+    default element type is \texttt{t} when the test function is
+    \texttt{eq} or \texttt{eql}, and \texttt{scalar} otherwise.  For
+    the values, the default element type is \texttt{t}~.\indexLisp{scalar}
+  \end{itemize}
+\end{itemize}
+
+Beyond those standard Lisp types, NST provides the type
+\texttt{scalar} as a supertype of the numeric types plus
+\texttt{character}, \texttt{string} and \texttt{symbol}.  Users may
+extend this definition to include additional type specifications, as
+we discuss below.  Types are not associated with \texttt{scalar} are
+referred to as \emph{compound} (although there is no corresponding
+type specification).  To avoid generating structures too large to hold
+in memory, NST provides the global variable
+\texttt{*max-compound-structure-depth*}\label{max-compound-structure-depth}\indexLispGlobal{max-compound-structure-depth}
+and the macro \texttt{compund-structure}.
+\input{../gen/*max-compound-structure-depth*_variable_nst-item-style}
+\input{../gen/compound-structure_compiler-macro_nst-item-style}
+\par
+\input{../gen/def-arbitrary-instance-type_compiler-macro_nst-item-style}
