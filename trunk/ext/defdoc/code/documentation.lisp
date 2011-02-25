@@ -1086,8 +1086,6 @@
   (:callspec (style target-type spec))
   (:properties (manual-section standard-model) (anchor symbol-homing-style)))
 
-;;; #:symbol-homing-style #:use-internal-names
-
 (def-documentation (type itemized-list-style)
   (:intro "The " (:lisp type itemized-list-style)
           " class is a mixin style, intended as one of a number of superclasses in a style definition.  This class arranges its contents in an itemized list, rather than the default arrangement of labeled sections.")
