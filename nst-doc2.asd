@@ -42,5 +42,5 @@
                    ;;               :index t :table-of-contents t)
                    (#:the-manual :rel-directory "doc/"
                                  :filename-root "new-manual"
-                                 :style #:nst-item-style
+                                 :style #:manual-primary-style
                                  :index t :table-of-contents t)))

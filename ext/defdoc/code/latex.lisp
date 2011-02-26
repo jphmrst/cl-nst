@@ -143,7 +143,82 @@
     (make-instance 'standard-plain-text :text "BibTeX"))
 
 ;;; -----------------------------------------------------------------
+;;; Lisp macros for defining related families of LaTeX-related generic
+;;; functions.
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;;; Functions corresponding to LaTeX length commands.
+
+(defpackage :defdoc-latex-contextualized)
+
+(defvar *latex-length-commands* (make-hash-table :test 'eq)
+  "Set containing the symbols naming LaTeX langth commands defined using the def-latex-length-generic macro.")
+(defgeneric get-latex-length-generic-macroname (lisp-fname))
+(defmacro def-latex-length-generic (lisp-fname latex-macroname
+                                               &rest default-and-contexts)
+  (let ((style (gensym)) (item (gensym)) (context (gensym))
+        (contextual-fname (intern (symbol-name lisp-fname)
+                                  (find-package :defdoc-latex-contextualized))))
+    (when (null default-and-contexts)
+      (setf default-and-contexts '(nil)))
+    (destructuring-bind (default . contexts) default-and-contexts
+      `(progn
+         (setf (gethash ',lisp-fname *latex-length-commands*) t)
+         (defgeneric ,lisp-fname (,style ,item)
+           (:method (,style ,item)
+             (declare (ignore ,style ,item))
+             ,default))
+         (defgeneric ,contextual-fname (,style ,context ,item)
+           (:method (,style ,context ,item)
+             (declare (ignore ,style ,item ,context))
+             nil))
+         (defmethod get-latex-length-generic-macroname ((fn (eql ',lisp-fname)))
+           ,latex-macroname)
+         ,@(loop for (context-name value) in contexts
+                 collect `(defmethod ,contextual-fname
+                              (,style (,context (eql ,context-name)) ,item)
+                            (declare (ignore ,style ,item))
+                            ,value))))))
+
+(def-latex-length-generic latex-parskip "parskip")
+(def-latex-length-generic latex-parindent "parindent")
+
+(defgeneric format-latex-global-length-commands (style item stream)
+  (:method (style item stream)
+    (loop for fname being the hash-keys of *latex-length-commands* do
+      (let ((value (funcall fname style item)))
+        (when value
+          (format stream "\\~a ~a~%"
+            (get-latex-length-generic-macroname fname) value))))))
+
+(defgeneric format-latex-local-length-commands (style context item stream)
+  (:method (style context item stream)
+    (loop for fname being the hash-keys of *latex-length-commands* do
+      (let* ((contextual-fname
+              (intern (symbol-name fname)
+                      (find-package :defdoc-latex-contextualized)))
+             (value (funcall contextual-fname style context item)))
+        (when value
+          (format stream "\\~a ~a~%"
+            (get-latex-length-generic-macroname fname) value))))))
+
+;;; -----------------------------------------------------------------
 ;;; Top-level LaTeX generation APIs.
+
+(defgeneric get-latex-document-class (style item)
+  (:method (style item)
+    (declare (ignore style item))
+    (values *latex-default-documentclass* nil)))
+
+(defgeneric get-latex-usepackage-specs (style item)
+  (:method (style item)
+    (declare (ignore style item))
+    *latex-default-usepackage-specs*))
+
+(defgeneric get-latex-primary-tocdepth (style item)
+  (:method (style item)
+    (declare (ignore style item))
+    *default-primary-tocdepth*))
 
 (defvar *latex-sectioning-level* -1)
 (defvar *defdoc-latex-default-directory* "./")
@@ -151,12 +226,30 @@
 (defvar *latex-verbatim-width* 57)
 (defvar *latex-generate-index* nil)
 (defvar *latex-generate-toc* nil)
-(defvar *latex-default-header-matter*
-    "\\documentclass{article}
-\\usepackage{times}
-\\usepackage{helvet}
-\\usepackage{array}
-\\usepackage[pdftex]{hyperref}")
+(defvar *latex-default-documentclass* "article")
+(defvar *latex-default-usepackage-specs*
+    '(times helvet array (hyperref pdftex)))
+(defvar *default-primary-tocdepth* nil)
+
+
+(defun format-command-with-optional-args (stream command arg opt-args)
+  (format stream "\\~a" command)
+  (cond
+    ((or (null opt-args) (eq t opt-args)))
+    ((listp opt-args)
+     (format stream "[~{~a~^,~}]" opt-args))
+    (t
+     (format stream "[~a]" opt-args)))
+  (format stream "{~a}" arg))
+
+(defun format-usepackage-specs (stream specs)
+  (loop for spec in specs do
+    (format stream "~%")
+    (cond
+      ((listp spec)
+       (format-command-with-optional-args stream "usepackage"
+                                          (car spec) (cdr spec)))
+      (t (format-command-with-optional-args stream "usepackage" spec nil)))))
 
 (defgeneric get-latex-output-file-name (style usage name)
   (:method ((style symbol) usage name)
@@ -170,28 +263,42 @@
 (defgeneric format-latex-standalone-header (style stream out &optional
                                                              contents index)
   (:method (style stream (out output-contents) &optional contents index)
-     (format stream "~a" *latex-default-header-matter*)
-     (when index
-       (format stream "\\usepackage{makeidx}~%\\makeindex~%"))
-     (let ((title (get-output-unit-title out))
-           (author (get-output-unit-author out)))
-       (when (or title author)
-         (cond
+    (multiple-value-bind (class class-args)
+        (get-latex-document-class style out)
+      (format-command-with-optional-args stream
+                                         "documentclass" class class-args))
+    (format-usepackage-specs stream (get-latex-usepackage-specs style out))
+    (when index
+      (format stream "~%\\usepackage{makeidx}~%\\makeindex~%"))
+    (let ((title (get-output-unit-title out))
+          (author (get-output-unit-author out)))
+      (when (or title author)
+        (cond
           (title (princ "\\title{" stream)
                  (format-docspec-element style nil title stream)
                  (format stream "}~%"))
           (t (format stream "\\title{}~%")))
-         (cond
+        (cond
           (author (format stream "\\author{")
                   (format-docspec-element style nil author stream)
                   (format stream "}~%"))
-          (t
-           (format stream "\\author{}~%"))))
-       (format stream "\\begin{document}~%")
-       (when (or title author)
-         (format stream "\\maketitle~%"))
-       (when contents
-         (format stream "\\tableofcontents~%")))))
+          (t (format stream "\\author{}~%"))))
+      (let ((primary-tocdepth (get-latex-primary-tocdepth style out)))
+        (when primary-tocdepth
+          (format stream "\\addtocontents{toc}{\\setcounter{tocdepth}{~d}}~%"
+            primary-tocdepth)))
+      (format stream "\\begin{document}~%")
+      (when (or title author)
+        (format-latex-local-length-commands style :toc out stream)
+        (format stream "\\maketitle~%"))
+      (format-latex-precontents style out stream)
+      (when contents
+        (format stream "\\tableofcontents~%"))
+      (format-latex-global-length-commands style out stream))))
+
+(defgeneric format-latex-precontents (style item stream)
+  (:method (style out stream)
+    (declare (ignore style out stream))))
 
 (defgeneric format-latex-standalone-footer (style stream out &optional index)
   (:method (style stream (out output-contents) &optional index)
@@ -356,6 +463,15 @@
     (declare (special *latex-sectioning-level*))
     (call-next-method)))
 
+(defvar *aftermatter-tocdepth* nil)
+(defmethod format-docspec-aftermatter-mark ((style latex-style) mark stream
+                                             &key &allow-other-keys)
+  (declare (ignore mark))
+  (princ "\\appendix " stream)
+  (when *aftermatter-tocdepth*
+    (format stream "\\addtocontents{toc}{\\setcounter{tocdepth}{~d}}"
+      *aftermatter-tocdepth*)))
+
 (defmethod format-sequence-element-separator ((style latex-style)
                                               target-type spec element1 element2
                                               stream &key &allow-other-keys)
@@ -363,12 +479,18 @@
   (when (spaceheaded-element element2)
     (princ "\\ " stream)))
 
+(defgeneric format-latex-pre-output-leader-material (style stream output
+                                                           &key
+                                                           &allow-other-keys)
+  (:method (style stream output &key &allow-other-keys)
+    (declare (ignore style))
+    (when (and *latex-generate-toc* (eql *latex-sectioning-level* 0)
+               (get-output-unit-title output))
+      (format stream "\\vspace*{1em}"))))
+
 (defmethod format-output-leader-material :before ((style latex-style)
-                                                  stream output
-                                                  &key &allow-other-keys)
-  (when (and *latex-generate-toc* (eql *latex-sectioning-level* 0)
-             (get-output-unit-title output))
-    (format stream "\\vspace*{1em}")))
+                                                  stream output &rest keyvals)
+  (apply #'format-latex-pre-output-leader-material style stream output keyvals))
 
 (defmethod format-default-output-contents-sep ((style latex-style)
                                                stream output spec1 spec2)
@@ -657,6 +779,37 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+(defclass docspec-list-latex-style ()
+  ((list-name :reader docspec-list-environment-name)))
+
+(defmethod format-output-leader-material ((style docspec-list-latex-style)
+                                          stream output &key &allow-other-keys)
+  (declare (ignore output))
+  (call-next-method)
+  (format stream "\\begin{~a}" (docspec-list-environment-name style)))
+(defmethod format-output-trailer-material ((style docspec-list-latex-style)
+                                           stream output &key &allow-other-keys)
+  (declare (ignore output))
+  (format stream "\\end{~a}" (docspec-list-environment-name style))
+  (call-next-method))
+(defmethod format-output-preitem ((style docspec-list-latex-style)
+                                  stream output item &key &allow-other-keys)
+  (declare (ignore output item))
+  (princ "\\item " stream)
+  (call-next-method))
+
+(defclass docspec-itemize-latex-style (docspec-list-latex-style) ())
+(defmethod initialize-instance :after ((o docspec-itemize-latex-style)
+                                       &key &allow-other-keys)
+  (setf (slot-value o 'list-name) "itemize"))
+
+(defclass docspec-enumerate-latex-style (docspec-list-latex-style) ())
+(defmethod initialize-instance :after ((o docspec-enumerate-latex-style)
+                                       &key &allow-other-keys)
+  (setf (slot-value o 'list-name) "enumerate"))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 (defclass docspec-fancy-header-latex-style (docspec-par-latex-style)
   ())
 
@@ -723,8 +876,10 @@
                  clisp lispworks) (error "Not implemented on this system."))
          (run-latex ()
            #+allegro (excl:run-shell-command
-                      (format nil "pdflatex ~a.tex" bare-name))
-           #+sbcl (sb-ext:run-program "pdflatex" (list (format nil "~a.tex"
+                      (format nil "pdflatex -interaction=batchmode ~a.tex"
+                        bare-name))
+           #+sbcl (sb-ext:run-program "pdflatex" (list "-interaction=batchmode"
+                                                       (format nil "~a.tex"
                                                          bare-name))
                                       :wait t :search t :output nil :error t)
 ;;;           #+clozure (run-program "pdflatex" (list (format nil "~a.tex"
@@ -736,8 +891,8 @@
            #-(or allegro sbcl) (error "Not implemented on this system."))
          (run-bibtex ()
            #+allegro (excl:run-shell-command
-                      (format nil "bibtex ~a" bare-name))
-           #+sbcl (sb-ext:run-program "bibtex" (list bare-name)
+                      (format nil "bibtex -terse ~a" bare-name))
+           #+sbcl (sb-ext:run-program "bibtex" (list "-terse" bare-name)
                                       :wait t :search t :output nil :error t)
 ;;;           #+clozure (run-program "bibtex" (list bare-name)
 ;;;                                  :wait t :search t :output nil :error t)

@@ -144,20 +144,20 @@ calls to the NST API.  Specifically:
                                         :SYSTEM-NAME))))
 \end{verbatim}
 \item NST API functions for running tests are:
-\begin{tightlist}
+\begin{itemize}
 \item\texttt{nst:run-package}
 \item\texttt{nst:run-group}
 \item\texttt{nst:run-test}
-\end{tightlist}
+\end{itemize}
 \item The main NST API function for printing the results of testing is
   \texttt{asdf:report-multiple}\,.  In situations where only a single
   package, group or test is associated with a system, one of the
   following function may be more convenient:
-  \begin{tightlist}
+  \begin{itemize}
   \item\texttt{nst:report-package}
   \item\texttt{nst:report-group}
   \item\texttt{nst:report-test}
-  \end{tightlist}
+  \end{itemize}
 \end{itemize}
 When providing an explicit \texttt{asdf:perform} method, it is also
 necessary to explicitly list system dependencies to NST and to the
