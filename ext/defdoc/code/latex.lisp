@@ -205,6 +205,17 @@
 ;;; -----------------------------------------------------------------
 ;;; Top-level LaTeX generation APIs.
 
+(defvar *latex-sectioning-level* -1)
+(defvar *defdoc-latex-default-directory* "./")
+(defvar *latex-full-package-item-header-macro* "\\paragraph")
+(defvar *latex-verbatim-width* 57)
+(defvar *latex-generate-index* nil)
+(defvar *latex-generate-toc* nil)
+(defvar *latex-default-documentclass* "article")
+(defvar *latex-default-usepackage-specs*
+    '(times helvet array (hyperref pdftex)))
+(defvar *default-primary-tocdepth* nil)
+
 (defgeneric get-latex-document-class (style item)
   (:method (style item)
     (declare (ignore style item))
@@ -219,17 +230,6 @@
   (:method (style item)
     (declare (ignore style item))
     *default-primary-tocdepth*))
-
-(defvar *latex-sectioning-level* -1)
-(defvar *defdoc-latex-default-directory* "./")
-(defvar *latex-full-package-item-header-macro* "\\paragraph")
-(defvar *latex-verbatim-width* 57)
-(defvar *latex-generate-index* nil)
-(defvar *latex-generate-toc* nil)
-(defvar *latex-default-documentclass* "article")
-(defvar *latex-default-usepackage-specs*
-    '(times helvet array (hyperref pdftex)))
-(defvar *default-primary-tocdepth* nil)
 
 
 (defun format-command-with-optional-args (stream command arg opt-args)
