@@ -210,7 +210,7 @@ available from compile-time forward.")
   :filter flag-filter)
 (def-documentation (switch :debug-on-fail)
   (:callspec (flag))
-  (:intro (:latex "The \\texttt{:debug-on-error} switch controls NST's behavior when a test fails  When non-nil, NST will break into the debugger when it encounters a failing test."))
+  (:intro (:latex "The \\texttt{:debug-on-fail} switch controls NST's behavior when a test fails  When non-nil, NST will break into the debugger when it encounters a failing test."))
   (:details (:latex "This behavior is less useful than it may seem; by the time the results of the test are examined for failure, the stack from the actual form evaluation will usually have been released.  Still, this switch is useful for inspecting the environment in which a failing test was run.")
          (:latex "Note that both \\texttt{:debug-on-error} and \\texttt{:debug-on-fail} apply in the case of an error; if the latter is set but the former is not, then the debugger will be entered after an erring test completes.")
          (:latex "The \\texttt{:debug} command is a short-cut for setting this property.\\index{debug@\\texttt{:debug}}")))
@@ -236,7 +236,7 @@ available from compile-time forward.")
 (def-documentation (switch :verbose)
   (:callspec (setting))
   (:intro (:latex "The \\texttt{:verbosity} switch controls the level of NST's output."))
-  (:details (:latex "Valid settings are:\\begin{tightlist}\\item\\texttt{:silent} (aka \\texttt{nil})\\item\\texttt{:quiet} (aka \\texttt{:default})\\item\\texttt{:verbose} (aka \\texttt{t})\\item\\texttt{:vverbose}\\item\\texttt{:trace}\\end{tightlist}")
+  (:details (:latex "Valid settings are:\\begin{itemize}\\item\\texttt{:silent} (aka \\texttt{nil})\\item\\texttt{:quiet} (aka \\texttt{:default})\\item\\texttt{:verbose} (aka \\texttt{t})\\item\\texttt{:vverbose}\\item\\texttt{:trace}\\end{itemize}")
          (:latex "The \\texttt{:report} and \\texttt{:detail} commands operate by setting minimum levels of verbosity.")))
 
 #+allegro
@@ -265,7 +265,7 @@ available from compile-time forward.")
 (def-documentation (command :help)
   (:callspec ())
   (:blurb "Print a list of commands.")
-  (:intro (:latex "The \\texttt{:help} command gives a complete inventory ofruntime system commands.")))
+  (:intro (:latex "The \\texttt{:help} command gives a complete inventory of runtime system commands.")))
 
 (def-nst-interactive-command
     (:debug :short-help "Activate NST debugging."
@@ -432,7 +432,7 @@ The last form shows all interesting results."
 (def-documentation (command :clear)
   (:callspec ())
   (:blurb "Clear test results.")
-  (:intro (:latex "The \\texttt{:clear} command empties NST's store of test results.")))
+  (:intro (:latex "The \\texttt{:clear} command empties NST's internal record of test results.")))
 
 (def-nst-interactive-command
     (:set :short-help "Set or show an NST property."
@@ -446,7 +446,7 @@ The last form shows all interesting results."
       (value-supp-p (set-nst-property name value))
       (t (show-nst-property name))))
 (def-documentation (command :set)
-  (:callspec () (package) (group) (group test))
+  (:callspec (property) (property value))
   (:blurb "Set or show a property value setting.")
   (:intro (:latex "The \\texttt{:set} command assigns or displays the values of NST runtime switches.")))
 
@@ -474,13 +474,17 @@ The last form shows all interesting results."
 (def-documentation (command :undef)
   (:callspec (group) (group test))
   (:blurb "Erase the definition of an NST group or test.")
-  (:intro (:latex "The \\texttt{:undef} command retracts the definition of an NST group or test.")))
+  (:intro (:latex "The \\texttt{:undef} command retracts the definition of an NST group or test."))
+  (:callspec (group-name) (group-name test-name))
+  (:details "Currently, NST does require that the symbols passed to "
+            (:lisp command :undef)
+            " be correctly package-qualified."))
 
 (def-nst-interactive-command
     (:unset :short-help "Clear an NST property." :args (name))
     (set-nst-property name nil))
 (def-documentation (command :unset)
-  (:callspec (name))
+  (:callspec (property))
   (:blurb "Clear an NST runtime property value setting.")
   (:intro (:latex "The \\texttt{:unset} command clears the values of NST runtime switches.")))
 

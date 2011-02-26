@@ -128,6 +128,7 @@
            #:format-output-contents-sep
            #:output-contents
            #:output-contents-contents
+           #:output-contents-style
            #:get-output-unit-short-title #:get-output-unit-title
            #:get-output-unit-author
            #:get-output-unit-leader
@@ -143,10 +144,12 @@
            #:format-output-trailer-material
            #:format-output-trailer-docspec
            #:get-included-outputset-style
+           #:format-docspec-aftermatter-mark
 
            ;; collectors.lisp
            #:collect-target-type
            #:collect-symbols
+           #:collect-docspec
            #:collect-exported-symbols
            #:collect-documented-symbols
            #:collect-all-symbols
@@ -155,6 +158,8 @@
            #:collect-doc
            #:explicit-doc-element
            #:collect-groups-by-label
+           #:aftermatter
+           #:aftermatter-contents
            #:grouped-output-contents
            #:get-grouped-output-labeldef
            #:get-grouped-output-group))
@@ -293,6 +298,9 @@
            #:latex-element-latex
            #:*defdoc-latex-default-directory*
            #:*latex-full-package-item-header-macro*
+           #:get-latex-primary-tocdepth #:*default-primary-tocdepth*
+           #:latex-parskip #:latex-parindent
+           #:*aftermatter-tocdepth*
            #:package-list-latex-mixin
            #:get-latex-output-file-name
            #:full-package-latex-style-mixin
@@ -300,8 +308,12 @@
            #:package-list-group-header
            #:package-list-entry
            #:index-lisp-name
+           #:get-latex-document-class #:get-latex-usepackage-specs
+           #:format-latex-pre-output-leader-material
+           #:format-latex-precontents
 
-           #:docspec-par-latex-style
+           #:docspec-itemize-latex-style #:docspec-enumerate-latex-style
+           #:docspec-list-latex-style #:docspec-par-latex-style
            #:docspec-fancy-header-latex-style
 
            #:write-spec-latex #:write-doctype-latex

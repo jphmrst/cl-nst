@@ -28,7 +28,22 @@
                                      ,(get-filter-predicate filters))
           nil))
 
-(defmacro collect-symbols (package symbol-list &rest filters)
+(defmacro collect-docspec (symbol type &key (style nil style-supp-p)
+                                  &allow-other-keys)
+  (cond
+    ((listp symbol) (setf symbol (intern (symbol-name (first symbol))
+                                         (find-package (second symbol)))))
+    ((symbolp symbol) t)
+    (t (error "Expected symbol or (symbol package-name), got ~s ~s"
+              (type-of symbol) symbol)))
+  `(values `(let ((the-spec (list (get-doc-spec ',',symbol ',',type))))
+              (unless the-spec
+                (error "No ~s docspec for ~s" ',',type ',',symbol))
+              (list (make-instance 'output-contents :contents the-spec
+                      ,@',(when style-supp-p `(:style ',style)))))
+           nil))
+
+(defmacro collect-symbols (package symbol-list &key filters)
   (unless (listp symbol-list)
     (setf symbol-list (list symbol-list)))
   `(values
@@ -56,29 +71,42 @@
                                      ,(get-filter-predicate filters) t)
    nil))
 
-(defmacro collect-output (name-or-spec &rest forms)
-  (let ((name) (options))
+(defmacro collect-output (name-or-namespec options &rest forms)
+  (let (name spec)
     (cond (;; There's a list of some sort
-           (listp name-or-spec)
+           (listp name-or-namespec)
 
            (cond
-            ((and (car name-or-spec) (symbolp (car name-or-spec))
-                  (not (keywordp (car name-or-spec))))
-             (setf name (car name-or-spec) options (cdr name-or-spec)))
+            ((and (car name-or-namespec) (symbolp (car name-or-namespec))
+                  (not (keywordp (car name-or-namespec))))
+             (setf name (car name-or-namespec) spec (cdr name-or-namespec)))
 
-            (t (setf name (gensym) options name-or-spec))))
+            (t (setf name (gensym) spec name-or-namespec))))
 
           (;; There's just a bare symbol.
-           (symbolp name-or-spec)
-           (setf name name-or-spec options nil))
+           (symbolp name-or-namespec)
+           (setf name name-or-namespec spec nil))
 
-          (t (error "Expected symbol or list, got ~s" name-or-spec)))
+          (t (error "Expected symbol or list, got ~s" name-or-namespec)))
 
-    `(values `(list (make-instance ',',name))
-             `((def-output-class (,',name ,@',options) ,@',forms)))))
+    `(values `(list (make-instance ',',name ,@',options))
+             `((def-output-class (,',name ,@',spec) ,@',forms)))))
 
 (defun collect-named-output (name)
   (values `(list (make-instance ',name)) nil))
+
+;;; -----------------------------------------------------------------
+;;; Aftermatter aka appendices.
+
+(defmacro aftermatter (&rest keyargs &key &allow-other-keys)
+  `(values `(list (make-instance 'aftermatter-contents ,@',keyargs))
+           nil))
+
+(defclass aftermatter-contents () ())
+
+(defmethod format-doc (stream style (mark aftermatter-contents)
+                              &rest keyvals &key &allow-other-keys)
+  (apply #'format-docspec-aftermatter-mark style mark stream keyvals))
 
 ;;; -----------------------------------------------------------------
 ;;; Literal insertion of docspec forms.

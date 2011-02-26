@@ -55,7 +55,7 @@
                       :title "DefDoc user manual" :author "John Maraist"
                       :short-title "DefDoc"
                       :leader (:latex "DefDoc allows programmers and authors to base all program documentation and manuals on declarations within the program source.  By generating the manual, reference card, and docstrings from a common set of declarations, DefDoc helps eliminate the possibility of documents containing inconsistent, outdated material."))
-  (collect-output (:title "Basic operations" :short-title "Basics")
+  (collect-output (:title "Basic operations" :short-title "Basics") ()
     (collect-groups-by-label
         (manual-section :package :defdoc
                         :groups '((docspecs :order (def-documentation
@@ -109,7 +109,7 @@
                                  (:lisp compiler-macro def-output-class)
                                  " translates output contents, and the general functions which traverse output contents.  We then present the extensions to the output model for "
                                  (:latex-name)
-                                 " and HTML generation.  Finally, there are macros which check style implementations to ensure adequate method definitions."))
+                                 " and HTML generation.  Finally, there are macros which check style implementations to ensure adequate method definitions.")) ()
     (collect-output
         (:title "Documentation model"
                 :short-title "Docs model"
@@ -117,7 +117,7 @@
                               (:lisp compiler-macro def-documentation)
                               " translates documentation by default, although package authors can override this representation. In this section we distinguish the "
                               (:emph "core")
-                              " model, which all models must extend, from the particulars of the standard model."))
+                              " model, which all models must extend, from the particulars of the standard model.")) ()
       (collect-groups-by-label
           (manual-section :package :defdoc
                           :groups '((model :title "The core document model"
@@ -161,7 +161,7 @@
                                              explicit-doc-element))))
         (collect-exported-symbols :defdoc-control-api)))
     (collect-output (:title "Formatting standard output documents"
-                            :short-title "Formatting output")
+                            :short-title "Formatting output") ()
       (collect-groups-by-label
           (manual-section
            :package :defdoc
@@ -175,7 +175,7 @@
                       :title "Output documents"
                       :short-title "Output")))
         (collect-exported-symbols :defdoc-control-api)))
-    (collect-output (:title "Plaintext styles" :short-title "Plaintext")
+    (collect-output (:title "Plaintext styles" :short-title "Plaintext") ()
       (collect-groups-by-label
           (manual-section
            :package :defdoc
@@ -199,7 +199,7 @@
                                    :short-title "Methods")))
       (collect-exported-symbols :defdoc-control-api)))
   (collect-output (:title "Customizing documentation models"
-                          :short-title "Customization")
+                          :short-title "Customization") ()
     (collect-groups-by-label
         (manual-section :package :defdoc
                         :groups '(doc-gen control targets label-model

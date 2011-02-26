@@ -29,6 +29,7 @@
 
     (cons 'progn result)))
 
+(defdoc-indentation :paragraphs 0 :keyword)
 (defdoc-indentation :itemize 1 :keyword)
 (defdoc-indentation :enumerate 1 :keyword)
 (defdoc-indentation :docstring-installer 1 :keyword)
@@ -39,7 +40,10 @@
 (defdoc-indentation def-output-framework 2 :defdoc)
 (defdoc-indentation def-target-type 2 :defdoc)
 (defdoc-indentation collect-groups-by-label 1 :defdoc)
-(defdoc-indentation collect-output 1 :defdoc)
+(defdoc-indentation collect-output 2 :defdoc)
+(defdoc-indentation collect-doc 1 :defdoc)
+(defdoc-indentation collect-symbols 1 :defdoc)
+(defdoc-indentation collect-docspec 2 :defdoc)
 
 (defdoc-indentation with-unpacked-standard-spec 2 :defdoc-control-api)
 

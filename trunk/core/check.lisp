@@ -368,7 +368,7 @@ as errors arising from within the ."
   (:tags deprecated)
   (:properties (api-summary deprecated))
     (:deprecated t)
-    (:blurb (:latex "The \\texttt{def-values-criterion} macro was deprecated as of NST 1.3.0. For new criteria, use \\texttt{def-criterion} instead.  In the short term, code using \texttt{def-values-criterion} should continue to work as before.")))
+    (:blurb (:latex "The \\texttt{def-values-criterion} macro was deprecated as of NST 1.3.0. For new criteria, use \\texttt{def-criterion} instead.  In the short term, code using \\texttt{def-values-criterion} should continue to work as before.")))
 
 
 #+allegro (excl::define-simple-parser def-form-criterion caadr :nst-criterion)

@@ -97,18 +97,19 @@
 ;;; -----------------------------------------------------------------
 
 (defclass output-contents ()
-  ((contents    :initform nil :initarg :contents :reader contents
-                :accessor output-contents-contents)
+  ((contents :initform nil :initarg :contents :reader contents
+             :accessor output-contents-contents)
    (short-title :initform nil :initarg :short-title :reader unit-short-title
                 :accessor output-contents-short-title)
-   (title       :initform nil :initarg :title    :reader unit-title
-                :accessor output-contents-title)
-   (author      :initform nil :initarg :author   :reader author
-                :accessor output-contents-author)
-   (leader      :initform nil :initarg :leader   :reader leader
-                :accessor output-contents-leader)
-   (trailer     :initform nil :initarg :trailer  :reader trailer
-                :accessor output-contents-trailer)))
+   (title   :initform nil :initarg :title    :reader unit-title
+            :accessor output-contents-title)
+   (author  :initform nil :initarg :author   :reader author
+            :accessor output-contents-author)
+   (leader  :initform nil :initarg :leader   :reader leader
+            :accessor output-contents-leader)
+   (trailer :initform nil :initarg :trailer  :reader trailer
+            :accessor output-contents-trailer)
+   (style   :initform nil :initarg :style :reader output-contents-style)))
 
 (defgeneric get-output-unit-short-title (o)
   (:method (o) (declare (ignore o)))
@@ -169,7 +170,8 @@
 (defmethod format-doc (stream style (output output-contents)
                               &rest keyargs &key &allow-other-keys)
   (defdoc-debug "format-doc on output-contents ~s~%" (type-of output))
-  (apply #'format-output-contents-actual stream style output keyargs))
+  (apply #'format-output-contents-actual stream
+         (resolve-outputset-style style output) output keyargs))
 
 (defgeneric format-doc-content-items (stream style output
                                              &key &allow-other-keys)
@@ -258,3 +260,13 @@
     (cond
       (inner-style inner-style)
       (t outer-style))))
+
+(defun resolve-outputset-style (outer-style inner-output-container)
+  (get-included-outputset-style outer-style
+                                (output-contents-style inner-output-container)
+                                inner-output-container))
+
+(defgeneric format-docspec-aftermatter-mark (style mark stream
+                                                   &key &allow-other-keys)
+  (:method (style mark stream &key &allow-other-keys)
+    (declare (ignore style mark stream))))

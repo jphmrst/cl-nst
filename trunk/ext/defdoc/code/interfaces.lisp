@@ -111,7 +111,8 @@
           ;; collectors.lisp
           #:collect-target-type #:collect-symbols #:collect-exported-symbols
           #:collect-documented-symbols #:collect-all-symbols #:collect-output
-          #:collect-named-output #:collect-doc #:collect-groups-by-label)
+          #:collect-named-output #:collect-doc #:collect-groups-by-label
+          #:aftermatter #:aftermatter-contents #:collect-docspec)
       (:defdoc-control-api
           ;; Last symbols --- not sorted by file
           #:get-grouped-output-labeldef #:compile-element #:get-spec-class #:element-type-p #:format-doc #:format-tag #:tag-sort #:get-label-section-title-supp-p #:*output-leader-title-format-string* #:get-grouped-output-group #:get-label-section-order-supp-p #:get-label-section-title #:get-label-section-order #:get-doc-hash-of-target-type #:label-values #:canonicalize-element
@@ -141,7 +142,7 @@
           ;; output.lisp
           #:*output-nesting-depth* #:format-output-contents-actual
           #:format-default-output-contents-sep #:format-output-contents-sep
-          #:output-contents #:output-contents-contents
+          #:output-contents #:output-contents-contents #:output-contents-style
           #:get-output-unit-short-title #:get-output-unit-title
           #:get-output-unit-author #:get-output-unit-leader
           #:get-output-unit-trailer
@@ -150,7 +151,7 @@
           #:format-output-leader-material #:format-output-leader-docspec
           #:format-output-leader-sep #:format-output-leader-title
           #:format-output-trailer-material #:format-output-trailer-docspec
-          #:get-included-outputset-style
+          #:get-included-outputset-style #:format-docspec-aftermatter-mark
           ;; collectors.lisp
           #:explicit-doc-element #:grouped-output-contents))
   (:defdoc-standard-model
@@ -223,9 +224,14 @@
           #:*defdoc-latex-default-directory*
           #:*latex-full-package-item-header-macro*
           #:*latex-verbatim-width* #:latex-style #:write-spec-latex
+          #:get-latex-primary-tocdepth #:*default-primary-tocdepth*
+          #:*aftermatter-tocdepth*
+          #:latex-parskip #:latex-parindent
           #:write-doctype-latex #:write-package-specs-latex
           #:write-latex-output #:process-latex-document
-          #:full-package-latex-style-mixin)
+          #:docspec-par-latex-style #:docspec-fancy-header-latex-style
+          #:docspec-itemize-latex-style #:docspec-enumerate-latex-style
+          #:docspec-list-latex-style #:full-package-latex-style-mixin)
       (:defdoc-control-api
           ;; latex.lisp
           #:standard-latex #:latex-element-latex #:package-list-latex-mixin
@@ -233,11 +239,13 @@
           #:package-list-overall-header #:package-list-group-header
           #:package-list-entry #:get-latex-output-file-name
           #:package-list-overall-header
+          #:format-latex-pre-output-leader-material
+          #:format-latex-precontents
           #:index-lisp-name
           #:latex-name-element #:bibtex-name-element
-          #:docspec-par-latex-style #:docspec-fancy-header-latex-style
           #:*latex-full-package-item-header-macro*
-          #:*defdoc-latex-default-directory*))
+          #:*defdoc-latex-default-directory*
+          #:get-latex-document-class #:get-latex-usepackage-specs))
   (:defdoc-html
       (:defdoc #:html-style)
       (:defdoc-control-api

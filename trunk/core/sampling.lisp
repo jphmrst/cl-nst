@@ -39,7 +39,10 @@
 (def-documentation (variable *max-compound-structure-depth*)
   (:tags sample)
   (:properties (api-summary sample))
-    (:blurb (:latex "The \\texttt{*max-compound-structure-depth*} variable sets the maximum nesting depth of compound data structures: beyond that depth, \\texttt{scalar} rather than \\texttt{t} is the default element generator.  This restriction does not apply to explicitly specified element types, only to the use of defaults.")))
+  (:blurb "The " (:lisp variable *max-compound-structure-depth*)
+          " variable sets the maximum nesting depth of compound data structures: beyond that depth, " (:lisp symbol scalar)
+          " rather than " (:lisp symbol t)
+          " is the default element generator.  This restriction does not apply to explicitly specified element types, only to the use of defaults."))
 
 (defmacro compound-structure (&body forms)
   `(let ((*current-compound-structure-depth*
@@ -48,7 +51,11 @@
 (def-documentation (compiler-macro compound-structure)
   (:tags sample)
   (:properties (api-summary sample))
-    (:blurb (:latex "The \\texttt{compound-structure} macro wraps substructure which should be considered compound for the limits set by \\texttt{*max-compound-structure-depth*}.")))
+  (:blurb "The "
+          (:lisp compiler-macro compound-structure)
+          " macro wraps substructure which should be considered compound for the limits set by "
+          (:lisp variable *max-compound-structure-depth*)
+          "."))
 
 (defgeneric arbitrary (typ)
   (:method ((spec cons))
@@ -58,8 +65,11 @@
 (def-documentation (function arbitrary)
   (:tags sample)
   (:properties (api-summary sample))
-    (:intro (:latex "This function takes a single argument, which determines the type of the value to be generated.  For simple types, the name of the type (or the class object, such as returned by \\texttt{find-class}) by itself is a complete specification.  For more complicated types, \\texttt{arbitrary} can also take a list argument, where the first element gives the type and the remaining elements are keyword argument providing additional requirements for the generated value.")))
-
+    (:intro "This function takes a single argument, which determines the type of the value to be generated.  For simple types, the name of the type (or the class object, such as returned by "
+          (:lisp function find-class)
+          ") by itself is a complete specification.  For more complicated types, "
+          (:lisp function arbitrary)
+          " can also take a list argument, where the first element gives the type and the remaining elements are keyword argument providing additional requirements for the generated value."))
 
 (define-nst-error unknown-arbitrary-domain
     ((domain  :initarg :domain  :reader domain)
@@ -113,20 +123,27 @@
 (def-documentation (compiler-macro def-arbitrary-instance-type)
   (:tags sample)
   (:properties (api-summary sample))
-    (:intro (:latex "New type specifications for invariant-testing. are defined with the \\texttt{def-arbitrary-instance-type}\\indexLisp{def-arbitrary-instance-type} macro."))
+  (:intro "New type specifications for invariant-testing. are defined with the "
+          (:lisp compiler-macro def-arbitrary-instance-type) " macro.")
   (:callspec ((spec-name &key (params formals) (scalar bool) (key key))
               &body (:seq form)))
-  (:params (formals (:latex "Formal parameter definition used to pass subcomponent types."))
+  (:params (formals "Formal parameter definition used to pass subcomponent types.")
            (scalar (:seq
-                    (:latex "When a non-null value is provided for the \\texttt{:scalar} argument, the new specifier is taken to be generable by the \\texttt{scalar} specification.")
+                    "When a non-null value is provided for the "
+                    (:lisp keyword :scalar)
+                    " argument, the new specifier is taken to be generable by the "
+                    (:lisp keyword :scalar)
+                    " specification."
                     (:code "  (def-arbitrary-instance-type (ratio :scalar t)
     (/ (arbitrary 'integer)
        (let ((raw (arbitrary (find-class 'integer))))
          (cond
            ((< raw 0) raw)
            (t (+ 1 raw))))))")))
-           (key (:seq
-                 (:latex "The \\texttt{:key} argument gives a list of keyword arguments which may accompany the new specification.  For the \\texttt{cons} type, keyword arguments allow specifications for the left and right components:")
+           (key (:seq "The " (:lisp :keyword :key)
+                      " argument gives a list of keyword arguments which may accompany the new specification.  For the "
+                      (:lisp function cons)
+                      " type, keyword arguments allow specifications for the left and right components:"
                  (:code "  (def-arbitrary-instance-type (cons :key ((car t car-supp-p)
                                            (cdr t cdr-supp-p)))
     (compound-structure
@@ -139,7 +156,9 @@
                     *max-compound-structure-depth*))
        (setf cdr 'scalar))
      (cons (arbitrary car) (arbitrary cdr))))")))
-           (form (:latex "Construct and return (as if through progn) the arbtrary instance."))))
+           (form "Construct and return (as if through "
+                 (:lisp compiler-macro progn)
+                 ") the arbtrary instance.")))
 
 (def-arbitrary-instance-type (number :param n)
     (arbitrary (arbitrary-grounded-type n)))
@@ -551,7 +570,9 @@
 
     result))
 (defdoc:def-documentation (criterion :sample)
-    (:intro (:latex "Invariants to be tested, and the domains over which they range, are specified with the \\texttt{:sample} criterion:"))
+    (:intro "Invariants to be tested, and the domains over which they range, are specified with the "
+            (:lisp :keyword :sample)
+            " criterion:")
   (:callspec (&key (verify FORM)
                    (value LAMBDA-LIST)
                    (domains (:seq (NAME SPEC)))
@@ -562,17 +583,36 @@
                    (qualifying-sample NUMBER)
                    (max-tries NUMBER)))
   (:params (verify
-            (:latex "The the expression to be (repeatedly) evaluated, which is expected always to return a non-null value.  This is the sole required argument, although in any particular use it is unlikely to be the only argument given."))
+            "The the expression to be (repeatedly) evaluated, which is expected always to return a non-null value.  This is the sole required argument, although in any particular use it is unlikely to be the only argument given.")
            (domains
-            (:latex "Declares the variables in the \\texttt{verify} expression which are to be given multiple randomized values.  The default value is \\texttt{nil}, denoting an empty list."))
+            "Declares the variables in the "
+            (:lisp param verify)
+            " expression which are to be given multiple randomized values.  The default value is "
+            (:inline "nil")
+            ", denoting an empty list.")
            (value
-            (:latex "A lambda list to which the values given by the argument form should be applied. The default value is \\texttt{nil}, denoting no such arguments."))
+            (:seq "A lambda list to which the values given by the argument form should be applied. The default value is "
+                  (:inline "nil")
+                  ", denoting no such arguments."))
            (where
-            (:latex "A condition which determines the validity of the input argument.  For example, the condition would assert that a number is positive in an application where a negative value would be known to cause a failure.  The default value is \\texttt{t}, allowing any values."))
+            (:seq "A condition which determines the validity of the input argument.  For example, the condition would assert that a number is positive in an application where a negative value would be known to cause a failure.  The default value is "
+                  (:inline "t")
+                  ", allowing any values."))
            (where-ignore
-            (:latex "List of domain variables which are not mentioned in the \\texttt{where} clause.  These names will be declared as ignored in appropriate bindings, suppressing warnings under Lisps which check for such things in interpreted expressions.  This list need not be given explicitly when no \\texttt{where} argument is given.  Similarly, the \\texttt{where-declare} argument accepts a list of declarations to be associated with the \\texttt{where} form."))
+            (:seq "List of domain variables which are not mentioned in the "
+                  (:lisp param where) " clause.  These names will be declared as ignored in appropriate bindings, suppressing warnings under Lisps which check for such things in interpreted expressions.  This list need not be given explicitly when no "
+                  (:lisp param where) " argument is given.  Similarly, the "
+                  (:lisp param where-declare)
+                  " argument accepts a list of declarations to be associated with the "
+                  (:lisp param where) " form."))
            (sample-size
-            (:latex "Gives the base specification of the number of value sets which will be generated.  Two further arguments have some bearing on the number of generation attempts when the \\texttt{where} argument is non-\\texttt{t}.  The \\texttt{qualifying-sample} argument gives the minimum acceptable size of actual tested values, not counting sets rejected via the \\texttt{where} expression.  The \\texttt{max-tries} argument gives the maximum number of value sets to be generated.")))
+            (:seq "Gives the base specification of the number of value sets which will be generated.  Two further arguments have some bearing on the number of generation attempts when the "
+                  (:lisp param where) " argument is non-" (:lisp symbol t)
+                  ".  The " (:lisp param qualifying-sample)
+                  " argument gives the minimum acceptable size of actual tested values, not counting sets rejected via the "
+                  (:lisp param where) " expression.  The "
+                  (:lisp param max-tries)
+                  " argument gives the maximum number of value sets to be generated.")))
   (:details (:seq
           (:plain "Examples:")
           (:code
