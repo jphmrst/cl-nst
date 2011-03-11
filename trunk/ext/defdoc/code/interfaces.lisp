@@ -96,8 +96,12 @@
                          "Programmatic control of document generation.")))
   (:defdoc-core
       (:defdoc
+          ;; globals.lisp
+          #:def-style-class
           ;; targetdef.lisp
           #:def-target-type
+          ;; targets.lisp
+          #:param
           ;; elementdef.lisp
           #:def-element #:def-bare-string-element-tag
           ;; labels.lisp
@@ -160,7 +164,8 @@
           #:symbol-homing-style #:symbol-homes #:use-internal-names
           #:itemized-list-style
           #:format-itemized-list-start #:format-itemized-list-end
-          #:format-itemized-list-item-start #:format-itemized-list-item-end)
+          #:format-itemized-list-item-start #:format-itemized-list-item-end
+          #:def-standard-style-class)
       (:defdoc-control-api
           ;; standard.lisp
           #:standard-doc-spec #:get-element-for-docspec-format
@@ -201,9 +206,11 @@
           #:output-elem-name #:output-elem-name-supp-p
           #:output-elem-style #:output-elem-style-supp-p
           #:standard-elements-style-coverage
+          #:standard-reference #:referenced-name
           #:standard-lisp-name #:lisp-name-kind #:lisp-name
-          #:standard-emphasized #:emphasized-spec
-          #:standard-fillin-place #:format-sequence-element-separator))
+          #:standard-emphasized #:emphasized-spec #:standard-fillin-place
+          #:standard-file-element #:file-element-re-tag #:file-element-path
+          #:file-element-asdf #:format-sequence-element-separator))
   (:defdoc-plaintext
       (:defdoc
           ;; plaintext.lisp
@@ -231,7 +238,8 @@
           #:write-latex-output #:process-latex-document
           #:docspec-par-latex-style #:docspec-fancy-header-latex-style
           #:docspec-itemize-latex-style #:docspec-enumerate-latex-style
-          #:docspec-list-latex-style #:full-package-latex-style-mixin)
+          #:docspec-list-latex-style #:full-package-latex-style-mixin
+          #:def-latex-style-class)
       (:defdoc-control-api
           ;; latex.lisp
           #:standard-latex #:latex-element-latex #:package-list-latex-mixin

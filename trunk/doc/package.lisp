@@ -28,6 +28,7 @@
     (:import-from #+sbcl sb-mop #-sbcl mop
                   #:generic-function-methods #:method-specializers
                   #:eql-specializer-object)
+    (:import-from :nst #:criterion #:command)
     #+(or openmcl clozure)
     (:import-from ccl
                   #:extract-lambda-list

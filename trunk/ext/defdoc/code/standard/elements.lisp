@@ -42,6 +42,15 @@
 (defmethod spaceheaded-element ((element standard-plain-text))
   (whitespace-p (elt (text-element-text element) 0)))
 
+(def-element :ref (standard-reference :class standard-doc-element
+                                      :args (name))
+    ((name :initarg :name :reader referenced-name))
+  (make-instance 'standard-reference :name name))
+(set-pprint-dispatch 'standard-reference
+  (named-function pprint-standard-reference
+    (lambda (stream spec)
+      (format stream "{reference to ~s}" (referenced-name spec)))))
+
 (def-element :lisp (standard-lisp-name :class standard-doc-element
                                        :args (kind name))
     ((kind :initarg :kind :reader lisp-name-kind)
@@ -292,6 +301,7 @@
   (has-method (format-docspec-element (style t standard-inline stream) t))
   (has-method (format-docspec-element (style t standard-itemize stream) t))
   (has-method (format-docspec-element (style t standard-enumerate stream) t))
+  (has-method (format-docspec-element (style t standard-reference stream) t))
   (has-method (format-docspec-element (style t standard-lisp-name stream) t))
   (has-method (format-docspec-element (style t standard-emphasized stream) t))
   (has-method (format-docspec-element (style t standard-outputset-element

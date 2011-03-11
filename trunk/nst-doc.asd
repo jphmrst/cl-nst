@@ -21,22 +21,34 @@
 
 (defpackage :nst-doc-asd (:use :common-lisp :asdf))
 (in-package :nst-doc-asd)
+(asdf:oos 'asdf:load-op :asdf-defdoc)
 
 (defsystem :nst-doc
+    :class defdoc-asdf
     :description "Documentation builder for NST"
-    :depends-on ( :nst )
+    :depends-on ( :nst :asdf-defdoc )
+    :documents-system :nst
     :components ((:module "doc" :components
-                          (;; The NST package, plus internal packages
-                           ;; and documentation generation.
-                           (:file "package")
+                          ((:file "package")
+                           (:file "doc"  :depends-on ("package"))
+                           (:file "manual"   :depends-on ("doc"))
+                           (:file "quickref" :depends-on ("doc")))))
 
-                           ;; Helper functions.
-                           (:file "doc"  :depends-on ("package"))))))
+    :documentation-package :nst-doc
+    :build-output ((#:the-manual :rel-directory "doc/"
+                                 :filename-root "html"
+                                 :style #:html-style
+                                 :index t :table-of-contents t)
+                   (#:the-manual :rel-directory "doc/"
+                                 :filename-root "nst-manual"
+                                 :style #:manual-primary-style
+                                 :index t :table-of-contents t)
+                   (#:the-manual :rel-directory "doc/"
+                                 :filename-root "nst-manual"
+                                 :style #:plaintext-style
+                                 :index t :table-of-contents t)))
 
 (defmethod asdf:perform ((op load-op)
                          (system (eql (asdf:find-system :nst-doc))))
-  (funcall (symbol-function (intern (symbol-name '#:build-nst-docs) :nst-doc))))
-
-(defmethod asdf:operation-done-p ((op load-op)
-                                  (system (eql (asdf:find-system :nst-doc))))
-  nil)
+  (call-next-method)
+  (funcall (symbol-function (intern (symbol-name '#:build-quickref) :nst-doc))))

@@ -212,6 +212,14 @@
                            :if-exists :supersede :if-does-not-exist :create)
         (let ((*output-nesting-depth* 0))
           (apply #'format-doc out style spec keyargs)))))
+
+  ;; Default: do nothing.
+  (:method ((style html-style) (spec explicit-doc-element)
+            pathname &key &allow-other-keys)
+    (declare (ignore pathname)))
+  (:method ((style html-style) (spec aftermatter-contents)
+            pathname &key &allow-other-keys)
+    (declare (ignore pathname)))
   )
 
 (defgeneric get-html-disambiguator (item)
@@ -277,15 +285,14 @@
         (t (concatenate 'string (symbol-name (gensym)) ".html")))))
   (:method ((output grouped-output-contents))
     (let ((title (get-output-unit-title output)))
-      (cond
-        (title (with-output-to-string (s)
-                 (princ "__" s)
+      (with-output-to-string (s)
+        (cond
+          (title (princ "__" s)
                  (format-docspec-element (make-instance
                                              'standard-docstring-style)
                                          nil title s)
-                 (princ ".html" s)))
-        (t (with-output-to-string (s)
-             (format s "___~a__~a.html"
+                 (princ ".html" s))
+          (t (format s "___~a__~a.html"
                (doc-label-name (get-grouped-output-labeldef output))
                (get-grouped-output-group output))))))))
 
@@ -441,6 +448,12 @@
   (declare (ignore target-type))
   (apply #'format-output-contents-actual
          stream style (make-instance (output-elem-name doc)) keyvals))
+
+(defmethod format-docspec-element ((style html-style) target-type
+                                   (doc standard-reference) stream
+                                   &rest keyvals)
+  (declare (ignore target-type stream))
+  (warn "Generating nothing for reference ~s" doc))
 
 ;;; -----------------------------------------------------------------
 

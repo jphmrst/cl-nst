@@ -445,6 +445,18 @@
   (declare (ignore style target-type width))
   (list "FILL IN"))
 
+(defmethod output-lines (style target-type (doc standard-reference) width)
+  (declare (ignore style target-type width))
+  (warn "Generating nothing for reference ~s" doc))
+
+(defmethod output-lines (style target-type (doc standard-file-element) width)
+  (declare (ignore style target-type width))
+  (warn "[ File: ~s ]" doc))
+
+(defmethod output-lines (style target-type (doc aftermatter-contents) width)
+  (declare (ignore style target-type))
+  (list "" (make-string width :initial-element #\-) ""))
+
 ;;; -----------------------------------------------------------------
 
 (defcontract:def-contract (plaintext-methods-coverage)

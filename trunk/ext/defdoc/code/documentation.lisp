@@ -300,6 +300,12 @@
           (:fill-in))
   (:properties (manual-section output-model)))
 
+(def-documentation (type aftermatter-contents)
+  (:intro "Instances of the " (:lisp type aftermatter-contents)
+          " class mark "
+          (:fill-in))
+  (:properties (manual-section output-model)))
+
 (def-documentation (function format-doc)
   (:intro "The "
           (:lisp function format-doc)
@@ -374,6 +380,18 @@
   (:enumerate ()
     (:latex \"This stuff is cool.\")
     (:latex \"This next stuff is confusing.\")))"))
+  (:properties (manual-section outspec)))
+
+(def-documentation (compiler-macro collect-docspec)
+  (:intro "The "
+          (:lisp compiler-macro collect-docspec)
+          " macro --- " (:fill-in))
+  (:properties (manual-section outspec)))
+
+(def-documentation (compiler-macro aftermatter)
+  (:intro "The "
+          (:lisp compiler-macro aftermatter)
+          " macro --- " (:fill-in))
   (:properties (manual-section outspec)))
 
 (def-documentation (function collect-target-type)
@@ -932,6 +950,19 @@
   (:properties (manual-section output-model)
                (anchor output-contents)))
 
+(def-documentation (function output-contents-style)
+  (:intro "The accessor "
+          (:lisp function output-contents-style)
+          " references the list naming the style associated with a "
+          (:lisp type output-contents)
+          " object.  This style is not " (:emph "necessarily")
+          " used by actual output generators; the "
+          (:lisp function resolve-outputset-style) " and "
+          (:lisp function get-included-outputset-style)
+          " functions determine the style selected at each call.")
+  (:properties (manual-section output-model)
+               (anchor output-contents)))
+
 (def-documentation (variable *output-nesting-depth*)
   (:intro "Variable "
           (:lisp variable *output-nesting-depth*)
@@ -1130,6 +1161,21 @@
   (:intro "The " (:lisp type docspec-par-latex-style)
           " style mixin inserts a paragraph break between consecutive documentation units.")
   (:properties (manual-section styles)))
+
+(def-documentation (type docspec-list-latex-style)
+  (:intro "The " (:lisp type docspec-list-latex-style)
+          " style mixin is a superclass for styles which place their contents inside of a list-making environment, each under its own " (:inline "\\item") ".")
+  (:properties (manual-section styles)))
+
+(def-documentation (type docspec-itemize-latex-style)
+  (:intro "The " (:lisp type docspec-itemize-latex-style)
+          " style mixin generates output contents as elements of an itemized list.")
+  (:properties (manual-section styles) (anchor docspec-list-latex-style)))
+
+(def-documentation (type docspec-enumerate-latex-style)
+  (:intro "The " (:lisp type docspec-enumerate-latex-style)
+          " style mixin generates output contents as elements of an enumerated list.")
+  (:properties (manual-section styles) (anchor docspec-list-latex-style)))
 
 (def-documentation (type docspec-fancy-header-latex-style)
   (:intro "The " (:lisp type docspec-fancy-header-latex-style)
@@ -1399,6 +1445,50 @@
           (:lisp type standard-callspec) " instance.")
   (:callspec (standard-callspec))
   (:properties (manual-section standard-model-callspecs)))
+
+(def-documentation (type standard-reference)
+  (:intro "The " (:lisp type standard-reference)
+          " class represents a reference to a named item or documentation section. "
+          (:fill-in))
+  (:properties (manual-section standard-model-elements)))
+
+(def-documentation (function referenced-name)
+  (:intro "The "
+          (:lisp function referenced-name)
+          " function returns the symbolic name of interest of a "
+          (:lisp type standard-reference) " instance.")
+  (:callspec (standard-reference))
+  (:properties (manual-section standard-reference)))
+
+(def-documentation (type standard-file-element)
+  (:intro "The " (:lisp type standard-file-element)
+          " class represents a reference to a file to be included in documentation output. "
+          (:fill-in))
+  (:properties (manual-section standard-model-elements)))
+
+(def-documentation (function file-element-re-tag)
+  (:intro "The "
+          (:lisp function file-element-re-tag)
+          " function returns the " (:fill-in) " of a "
+          (:lisp type file-element-re-tag) " instance.")
+  (:callspec (standard-file-element))
+  (:properties (manual-section standard-file-element)))
+
+(def-documentation (function file-element-asdf)
+  (:intro "The "
+          (:lisp function file-element-asdf)
+          " function returns the " (:fill-in) " of a "
+          (:lisp type file-element-asdf) " instance.")
+  (:callspec (standard-file-element))
+  (:properties (manual-section standard-file-element)))
+
+(def-documentation (function file-element-path)
+  (:intro "The "
+          (:lisp function file-element-path)
+          " function returns the " (:fill-in) " of a "
+          (:lisp type file-element-path) " instance.")
+  (:callspec (standard-file-element))
+  (:properties (manual-section standard-file-element)))
 
 (def-documentation (type standard-enumerate)
   (:intro "The " (:lisp type standard-enumerate)
@@ -1812,6 +1902,16 @@
           " variable specifies the maximum line length in verbatim mode")
   (:properties (manual-section latex-style-model)))
 
+(def-documentation (variable *default-primary-tocdepth*)
+  (:intro "The " (:lisp variable *default-primary-tocdepth*)
+          " variable --- " (:fill-in))
+  (:properties (manual-section latex-style-model)))
+
+(def-documentation (variable *aftermatter-tocdepth*)
+  (:intro "The " (:lisp variable *aftermatter-tocdepth*)
+          " variable --- " (:fill-in))
+  (:properties (manual-section latex-style-model)))
+
 (def-documentation (function write-spec-latex)
   (:intro "The " (:lisp function write-spec-latex)
           " function writes a single document spec to a "
@@ -1908,6 +2008,45 @@
 
 (def-documentation (function write-latex-output)
   (:intro "The " (:lisp function write-latex-output) " function --- " (:fill-in))
+  (:properties (manual-section latex-style-model)))
+
+(def-documentation (function latex-parindent)
+  (:intro "The " (:lisp function latex-parindent) " function --- " (:fill-in))
+  (:properties (manual-section latex-style-model)))
+
+(def-documentation (function get-latex-primary-tocdepth)
+  (:intro "The " (:lisp function get-latex-primary-tocdepth)
+          " function --- " (:fill-in))
+  (:properties (manual-section latex-style-model)))
+
+(def-documentation (function latex-parskip)
+  (:intro "The " (:lisp function latex-parskip)
+          " function --- " (:fill-in))
+  (:properties (manual-section latex-style-model)))
+
+(def-documentation (function format-latex-pre-output-leader-material)
+  (:intro "The " (:lisp function format-latex-pre-output-leader-material)
+          " function --- " (:fill-in))
+  (:properties (manual-section latex-style-model)))
+
+(def-documentation (function get-latex-usepackage-specs)
+  (:intro "The " (:lisp function get-latex-usepackage-specs)
+          " function --- " (:fill-in))
+  (:properties (manual-section latex-style-model)))
+
+(def-documentation (function format-latex-precontents)
+  (:intro "The " (:lisp function format-latex-precontents)
+          " function --- " (:fill-in))
+  (:properties (manual-section latex-style-model)))
+
+(def-documentation (function get-latex-document-class)
+  (:intro "The " (:lisp function get-latex-document-class)
+          " function --- " (:fill-in))
+  (:properties (manual-section latex-style-model)))
+
+(def-documentation (function format-docspec-aftermatter-mark)
+  (:intro "The " (:lisp function format-docspec-aftermatter-mark)
+          " function --- " (:fill-in))
   (:properties (manual-section latex-style-model)))
 
 (def-documentation (function write-doctype-latex)
@@ -2104,6 +2243,36 @@
           " --- "
           (:fill-in))
   (:properties (manual-section api-checks)))
+
+(def-documentation (compiler-macro def-style-class)
+  (:intro "The "
+          (:lisp compiler-macro def-style-class)
+          " macro --- "
+          (:fill-in))
+  (:properties (manual-section styles)))
+
+(def-documentation (compiler-macro def-standard-style-class)
+  (:intro "The "
+          (:lisp compiler-macro def-standard-style-class)
+          " macro --- "
+          (:fill-in))
+  (:properties (manual-section styles)))
+
+(def-documentation (compiler-macro def-latex-style-class)
+  (:intro "The "
+          (:lisp compiler-macro def-latex-style-class)
+          " macro --- "
+          (:fill-in))
+  (:properties (manual-section latex)))
+
+(def-documentation (compiler-macro docspec-list-latex-style)
+  (:intro "The "
+          (:lisp type docspec-list-latex-style)
+          " style mixin class --- "
+          (:fill-in))
+  (:properties (manual-section latex)))
+
+
 
 ;;; -----------------------------------------------------------------
 ;;; Issue warnings if anything is not documented.

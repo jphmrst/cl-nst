@@ -131,7 +131,7 @@
   (:method-combination append :most-specific-last)
   (:method append (o) (declare (ignore o)))
   (:method append ((o output-contents))
-    (loop for fn-name in '(title author leader trailer)
+    (loop for fn-name in '(title author style leader trailer)
           if (and (slot-boundp o fn-name) (slot-value o fn-name))
             collect fn-name)))
 (set-pprint-dispatch 'output-contents

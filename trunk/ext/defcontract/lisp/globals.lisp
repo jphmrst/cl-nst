@@ -60,6 +60,15 @@
                                      `',method-name
                                      `(list ,@display-arg-specs))))))))
 
+(defmethod generate-clause-code ((tag (eql 'is-subtype-of))
+                                 clause-args keyarg-defs contract-opts)
+  (declare (ignore keyarg-defs contract-opts))
+  (loop for (subtype supertype) in clause-args
+        collect `(warn "Not checking subtypes: ~s of ~s" ',subtype ',supertype)
+          into subtype-checks
+        finally (return-from generate-clause-code
+                  `(progn ,@subtype-checks))))
+
 (defun generate-consequence (options string-or-class &rest args)
   (declare (ignore options))
   `(warn ,string-or-class ,@args))

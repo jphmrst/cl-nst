@@ -68,9 +68,16 @@
 (defmethod format-output-leader-material ((style itemized-list-style) stream
                                           output &key &allow-other-keys)
   (declare (ignore output))
+  (format t "XXXXXXXXXX~%")
   (format-itemized-list-start style stream))
 (defmethod format-output-trailer-material ((style itemized-list-style) stream
                                            output &key &allow-other-keys)
   (declare (ignore output))
   (format-itemized-list-end style stream))
 
+(defmacro def-standard-style-class (name superclasses fields
+                                         (&rest keyvals &key &allow-other-keys)
+                                         &body class-forms)
+  `(progn
+     (def-style-class ,name ,superclasses ,fields ,keyvals ,@class-forms)
+     ))
