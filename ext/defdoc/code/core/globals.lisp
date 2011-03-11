@@ -86,3 +86,8 @@
   (case char
     ((#\Space #\Tab #\Newline \#Return \#Linefeed \#Page) t)
     (otherwise nil)))
+
+(defmacro def-style-class (name superclasses fields (&key &allow-other-keys)
+                                &body class-forms)
+  `(defclass ,name ,superclasses ,fields ,@class-forms))
+

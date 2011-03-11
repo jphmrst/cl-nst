@@ -77,8 +77,11 @@
          options
        class)))
 
+(defgeneric doc-label-name (label)
+  (:method ((s symbol)) s))
 (defclass doc-label ()
      ((label-name :initarg :name :reader doc-label-name)))
+
 
 (defclass standard-doc-label (doc-label)
      ((default-subsort :accessor standard-label-default-subsort)))

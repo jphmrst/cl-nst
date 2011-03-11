@@ -178,6 +178,7 @@
            (group-trailer-spec (make-hash-table :test 'eq))
            (grouping-label-def (get-labeldef grouping-label))
            (group-hash (make-hash-table :test 'eq)))
+      (unless grouping-label-def (setf grouping-label-def grouping-label))
       (loop for group-spec in group-specs do
         (cond ((symbolp group-spec) (push group-spec allowed))
               ((listp group-spec)
@@ -266,20 +267,20 @@
                 (defdoc-debug " --> group ~s ~s~%" group spec-list)
 
                 (let ((optionals nil))
-                (when (gethash group group-title-spec)
-                  (push (gethash group group-title-spec) optionals)
-                  (push :title optionals))
-                (when (gethash group group-leader-spec)
-                  (push (gethash group group-leader-spec) optionals)
-                  (push :leader optionals))
-                (when (gethash group group-trailer-spec)
-                  (push (gethash group group-trailer-spec) optionals)
-                  (push :trailer optionals))
+                  (when (gethash group group-title-spec)
+                    (push (gethash group group-title-spec) optionals)
+                    (push :title optionals))
+                  (when (gethash group group-leader-spec)
+                    (push (gethash group group-leader-spec) optionals)
+                    (push :leader optionals))
+                  (when (gethash group group-trailer-spec)
+                    (push (gethash group group-trailer-spec) optionals)
+                    (push :trailer optionals))
 
-                (apply #'make-instance 'grouped-output-contents
-                       :labeldef grouping-label-def :group group
-                       :contents spec-list
-                       optionals))))))))
+                  (apply #'make-instance 'grouped-output-contents
+                         :labeldef grouping-label-def :group group
+                         :contents spec-list
+                         optionals))))))))
 
 (defun extract-and-refine-group-names (group-hash
                                        &key (allowed-list

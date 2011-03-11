@@ -211,18 +211,25 @@
     (collect-exported-symbols :defdoc)
     (collect-exported-symbols :defdoc-control-api)))
 
-(defclass manual-style (symbol-homing-style
-                        latex-style
+(def-latex-style-class style-mixin (symbol-homing-style) ()
+                       (:usepackage '(array (hyperref pdftex) times helvet)
+                        :primary-tocdepth 2
+                        :parskip "0.6em"
+                        ;; :contextualized-parskip ((:toc "-0.6pt"))
+                        :parindent "0em"))
+
+(defclass manual-style (style-mixin latex-style
                         docspec-fancy-header-latex-style) ())
-(defclass sublist-style (symbol-homing-style latex-style itemized-list-style)
+(defclass sublist-style (style-mixin latex-style itemized-list-style)
   ())
 (defmethod candidate-home-packages ((style manual-style) target-type spec)
   (declare (ignore target-type spec))
   '(:defdoc-control-api :asdf-defdoc :defdoc))
-(defmethod get-included-outputset-style ((outer manual-style)
-                                         inner-style contained)
-  (declare (ignore inner-style contained))
-  'sublist-style)
+;;;(defmethod get-included-outputset-style ((outer manual-style)
+;;;                                         inner-style contained)
+;;;  (declare (ignore inner-style contained))
+;;;  (call-next-method) ;; 'sublist-style
+;;;  )
 
 (def-label-config (:label manual-section :package :defdoc-docsyms)
   (docspecs :title "Providing documentation")

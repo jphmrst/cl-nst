@@ -289,10 +289,10 @@
             primary-tocdepth)))
       (format stream "\\begin{document}~%")
       (when (or title author)
-        (format-latex-local-length-commands style :toc out stream)
         (format stream "\\maketitle~%"))
       (format-latex-precontents style out stream)
       (when contents
+        (format-latex-local-length-commands style :toc out stream)
         (format stream "\\tableofcontents~%"))
       (format-latex-global-length-commands style out stream))))
 
@@ -492,6 +492,20 @@
                                                   stream output &rest keyvals)
   (apply #'format-latex-pre-output-leader-material style stream output keyvals))
 
+(defgeneric format-latex-post-output-leader-material (style stream output
+                                                            &key
+                                                            &allow-other-keys)
+  (:method (style stream output &key &allow-other-keys)
+    (declare (ignore style stream output)))
+  (:method (style stream (output output-contents) &key &allow-other-keys)
+    (declare (ignore style))
+    (format stream "\\label{~a}" (type-of output))))
+
+(defmethod format-output-leader-material :after ((style latex-style)
+                                                 stream output &rest keyvals)
+  (apply #'format-latex-post-output-leader-material
+         style stream output keyvals))
+
 (defmethod format-default-output-contents-sep ((style latex-style)
                                                stream output spec1 spec2)
   (declare (ignore output spec1 spec2))
@@ -610,6 +624,13 @@
     (when (index-lisp-name style name kind)
       (format stream "\\index{~a@\\texttt{~:*~a}}" name))
     (format stream "\\texttt{~a}" name)))
+
+(defmethod format-docspec-element ((style latex-style) target-type
+                                   (spec standard-reference) stream
+                                   &key &allow-other-keys)
+  (declare (ignore target-type))
+  (let ((name (referenced-name spec)))
+    (format stream "\\ref{~a}" name)))
 
 (defmethod format-docspec-element ((style latex-style) target-type
                                    (spec standard-emphasized) stream
@@ -918,3 +939,44 @@
     (when index (run-makeindex))
     (when (or bibtex index) (run-latex))
     (run-latex)))
+
+;;; -----------------------------------------------------------------
+
+(defmacro def-latex-style-class (name superclasses fields
+                                      (&rest keyvals &key
+                                             (usepackage nil usepackage-supp-p)
+                                             (primary-tocdepth
+                                              nil primary-tocdepth-supp-p)
+                                             (contextualized-parskip
+                                              nil contextualized-parskip-supp-p)
+                                             (parskip nil parskip-supp-p)
+                                             (parindent nil parindent-supp-p)
+                                             &allow-other-keys)
+                                      &body class-forms)
+  `(progn
+     (def-standard-style-class ,name ,superclasses ,fields ,keyvals
+                               ,@class-forms)
+     ,@(when usepackage-supp-p
+         `((defmethod get-latex-usepackage-specs ((style ,name) item)
+             (declare (ignorable item))
+             ,usepackage)))
+     ,@(when primary-tocdepth-supp-p
+         `((defmethod get-latex-primary-tocdepth ((style ,name) item)
+             (declare (ignorable item))
+             ,primary-tocdepth)))
+     ,@(when parskip-supp-p
+         `((defmethod latex-parskip ((style ,name) item)
+             (declare (ignorable item))
+             ,parskip)))
+     ,@(when contextualized-parskip-supp-p
+         (loop for (context form) in contextualized-parskip
+               collect
+               `(defmethod defdoc-latex-contextualized::latex-parskip
+                    ((style ,name) (context (eql ,context)) item)
+                  (declare (ignorable item))
+                  ,form)))
+     ,@(when parindent-supp-p
+         `((defmethod latex-parindent ((style ,name) item)
+             (declare (ignorable item))
+             ,parindent)))))
+

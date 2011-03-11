@@ -140,7 +140,7 @@
          (cond
            ((< raw 0) raw)
            (t (+ 1 raw))))))")))
-           (key (:seq "The " (:lisp :keyword :key)
+           (key (:seq "The " (:lisp keyword :key)
                       " argument gives a list of keyword arguments which may accompany the new specification.  For the "
                       (:lisp function cons)
                       " type, keyword arguments allow specifications for the left and right components:"
@@ -571,7 +571,7 @@
     result))
 (defdoc:def-documentation (criterion :sample)
     (:intro "Invariants to be tested, and the domains over which they range, are specified with the "
-            (:lisp :keyword :sample)
+            (:lisp keyword :sample)
             " criterion:")
   (:callspec (&key (verify FORM)
                    (value LAMBDA-LIST)

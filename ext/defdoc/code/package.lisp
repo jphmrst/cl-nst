@@ -56,6 +56,7 @@
            #:locate-package-home
            #:string-implicit-symbol-head
            #:whitespace-p
+           #:def-style-class
 
            ;; storage.lisp
            #:get-doc-spec
@@ -87,6 +88,9 @@
            #:def-target-type
            #:capitalized-target-name
            #:lower-case-target-name
+
+           ;; targets.lisp
+           #:param
 
            ;; spec.lisp
            #:*spec-class*
@@ -238,6 +242,7 @@
            #:list-element-specs
            #:list-element-options
            #:list-element-env-tag
+           #:standard-reference #:referenced-name
            #:standard-itemize
            #:standard-enumerate
            #:standard-elements-style-coverage
@@ -250,6 +255,8 @@
            #:standard-emphasized
            #:emphasized-spec
            #:standard-fillin-place
+           #:standard-file-element #:file-element-re-tag #:file-element-path
+           #:file-element-asdf
            #:format-sequence-element-separator
 
            ;; style.lisp
@@ -257,7 +264,8 @@
            #:symbol-homing-style #:symbol-homes #:use-internal-names
            #:itemized-list-style
            #:format-itemized-list-start #:format-itemized-list-end
-           #:format-itemized-list-item-start #:format-itemized-list-item-end))
+           #:format-itemized-list-item-start #:format-itemized-list-item-end
+           #:def-standard-style-class))
 
 (defpackage :defdoc-plaintext
   (:documentation "DefDoc internal organizational package - LaTeX backend")
@@ -311,6 +319,7 @@
            #:get-latex-document-class #:get-latex-usepackage-specs
            #:format-latex-pre-output-leader-material
            #:format-latex-precontents
+           #:def-latex-style-class
 
            #:docspec-itemize-latex-style #:docspec-enumerate-latex-style
            #:docspec-list-latex-style #:docspec-par-latex-style

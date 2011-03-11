@@ -26,4 +26,5 @@
   (:documentation "DefContract API enforcement system")
   (:use :common-lisp :defcontract-docsyms)
   #+allegro (:import-from excl #:named-function)
-  (:export #:def-contract #:apply-contract #:has-method))
+  (:export #:def-contract #:apply-contract
+           #:has-method #:is-subtype-of))
