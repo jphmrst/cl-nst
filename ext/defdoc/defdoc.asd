@@ -51,7 +51,7 @@
     :in-order-to ((test-op (test-op :defdoc-test)))
     :depends-on ( :closer-mop :defcontract )
     :components
-    ((:module "code" :components
+    ((:module "lisp" :components
               (;; The DEFDOC package, plus internal packages and
                ;; documentation generation.
                (:file "package")

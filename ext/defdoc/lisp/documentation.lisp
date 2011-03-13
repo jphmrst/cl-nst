@@ -1907,6 +1907,11 @@
           " variable --- " (:fill-in))
   (:properties (manual-section latex-style-model)))
 
+(def-documentation (variable *default-secnumdepth*)
+  (:intro "The " (:lisp variable *default-secnumdepth*)
+          " variable --- " (:fill-in))
+  (:properties (manual-section latex-style-model)))
+
 (def-documentation (variable *aftermatter-tocdepth*)
   (:intro "The " (:lisp variable *aftermatter-tocdepth*)
           " variable --- " (:fill-in))
@@ -2016,6 +2021,11 @@
 
 (def-documentation (function get-latex-primary-tocdepth)
   (:intro "The " (:lisp function get-latex-primary-tocdepth)
+          " function --- " (:fill-in))
+  (:properties (manual-section latex-style-model)))
+
+(def-documentation (function get-latex-secnumdepth)
+  (:intro "The " (:lisp function get-latex-secnumdepth)
           " function --- " (:fill-in))
   (:properties (manual-section latex-style-model)))
 

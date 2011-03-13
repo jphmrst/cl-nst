@@ -232,6 +232,7 @@
           #:*latex-full-package-item-header-macro*
           #:*latex-verbatim-width* #:latex-style #:write-spec-latex
           #:get-latex-primary-tocdepth #:*default-primary-tocdepth*
+          #:get-latex-secnumdepth #:*default-secnumdepth*
           #:*aftermatter-tocdepth*
           #:latex-parskip #:latex-parindent
           #:write-doctype-latex #:write-package-specs-latex

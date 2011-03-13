@@ -215,6 +215,7 @@
 (defvar *latex-default-usepackage-specs*
     '(times helvet array (hyperref pdftex)))
 (defvar *default-primary-tocdepth* nil)
+(defvar *default-secnumdepth* nil)
 
 (defgeneric get-latex-document-class (style item)
   (:method (style item)
@@ -230,6 +231,11 @@
   (:method (style item)
     (declare (ignore style item))
     *default-primary-tocdepth*))
+
+(defgeneric get-latex-secnumdepth (style item)
+  (:method (style item)
+    (declare (ignore style item))
+    *default-secnumdepth*))
 
 
 (defun format-command-with-optional-args (stream command arg opt-args)
@@ -287,6 +293,9 @@
         (when primary-tocdepth
           (format stream "\\addtocontents{toc}{\\setcounter{tocdepth}{~d}}~%"
             primary-tocdepth)))
+      (let ((secnumdepth (get-latex-secnumdepth style out)))
+        (when secnumdepth
+          (format stream "\\setcounter{secnumdepth}{~d}~%" secnumdepth)))
       (format stream "\\begin{document}~%")
       (when (or title author)
         (format stream "\\maketitle~%"))
@@ -945,6 +954,8 @@
 (defmacro def-latex-style-class (name superclasses fields
                                       (&rest keyvals &key
                                              (usepackage nil usepackage-supp-p)
+                                             (secnumdepth nil
+                                                          secnumdepth-supp-p)
                                              (primary-tocdepth
                                               nil primary-tocdepth-supp-p)
                                              (contextualized-parskip
@@ -964,6 +975,10 @@
          `((defmethod get-latex-primary-tocdepth ((style ,name) item)
              (declare (ignorable item))
              ,primary-tocdepth)))
+     ,@(when secnumdepth-supp-p
+         `((defmethod get-latex-secnumdepth ((style ,name) item)
+             (declare (ignorable item))
+             ,secnumdepth)))
      ,@(when parskip-supp-p
          `((defmethod latex-parskip ((style ,name) item)
              (declare (ignorable item))
