@@ -307,6 +307,7 @@
            #:*defdoc-latex-default-directory*
            #:*latex-full-package-item-header-macro*
            #:get-latex-primary-tocdepth #:*default-primary-tocdepth*
+           #:get-latex-secnumdepth #:*default-secnumdepth*
            #:latex-parskip #:latex-parindent
            #:*aftermatter-tocdepth*
            #:package-list-latex-mixin

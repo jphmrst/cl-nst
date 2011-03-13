@@ -117,6 +117,8 @@
 (defgeneric get-output-unit-title (o)
   (:method (o) (declare (ignore o)))
   (:method ((o output-contents)) (unit-title o)))
+(defgeneric get-output-unit-order (o)
+  (:method (o) (declare (ignore o))))
 (defgeneric get-output-unit-author (o)
   (:method (o) (declare (ignore o)))
   (:method ((o output-contents)) (author o)))
@@ -209,7 +211,7 @@
      (defdoc-debug "format-output-leader-material on output-contents ~s~%"
         (type-of output))
      (apply #'format-output-leader-title style stream output keyargs)
-     (let ((leader (output-contents-leader output)))
+     (let ((leader (get-output-unit-leader output)))
        (when leader
          (format-output-leader-docspec style leader stream)
          (format-output-leader-sep style stream output)))))
@@ -241,7 +243,7 @@
   (:method (style stream output &key &allow-other-keys)
     (declare (ignore style stream output)))
   (:method (style stream (output output-contents) &key &allow-other-keys)
-     (let ((trailer (output-contents-trailer output)))
+     (let ((trailer (get-output-unit-trailer output)))
        (when trailer
          (format-output-trailer-docspec style trailer stream)))))
 (defgeneric format-output-trailer-docspec (style trailer stream)

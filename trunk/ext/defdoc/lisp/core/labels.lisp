@@ -144,6 +144,8 @@
   (:method append (label-def value style output &key
                              (title nil title-supp-p)
                              (order nil order-supp-p)
+                             (leader nil leader-supp-p)
+                             (trailer nil trailer-supp-p)
                              &allow-other-keys)
     (let* ((ignores ())
            (l-spec (cond ((eq label-def t) (let ((id (gensym)))
@@ -177,6 +179,24 @@
               (defmethod get-label-section-order-supp-p
                   (,l-spec ,v-spec ,o-spec)
                 ,@(when ignores `((declare (ignore ,@ignores))))
+                t)))
+        ,@(when leader-supp-p
+            (addressed-labelconfig-keyarg :leader)
+            `((defmethod get-label-section-leader (,l-spec ,v-spec ,o-spec)
+                ,@(when ignores `((declare (ignore ,@ignores))))
+                ',leader)
+              (defmethod get-label-section-leader-supp-p
+                  (,l-spec ,v-spec ,o-spec)
+                ,@(when ignores `((declare (ignore ,@ignores))))
+                t)))
+        ,@(when trailer-supp-p
+            (addressed-labelconfig-keyarg :trailer)
+            `((defmethod get-label-section-trailer (,l-spec ,v-spec ,o-spec)
+                ,@(when ignores `((declare (ignore ,@ignores))))
+                ',trailer)
+              (defmethod get-label-section-trailer-supp-p
+                  (,l-spec ,v-spec ,o-spec)
+                ,@(when ignores `((declare (ignore ,@ignores))))
                 t))))))
   (:method :around (label-def value style output
                               &rest key-args &key &allow-other-keys)
@@ -207,6 +227,8 @@
 
 (defgeneric get-label-section-title (label value output))
 (defgeneric get-label-section-order (label value output))
+(defgeneric get-label-section-leader (label value output))
+(defgeneric get-label-section-trailer (label value output))
 
 (defmacro def-generic-fn-default-nil (name params)
   `(defgeneric ,name ,params
@@ -214,3 +236,7 @@
 
 (def-generic-fn-default-nil get-label-section-title-supp-p (label value output))
 (def-generic-fn-default-nil get-label-section-order-supp-p (label value output))
+(def-generic-fn-default-nil get-label-section-leader-supp-p (label
+                                                             value output))
+(def-generic-fn-default-nil get-label-section-trailer-supp-p (label
+                                                              value output))

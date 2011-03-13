@@ -233,54 +233,66 @@
              (apply #'extract-and-refine-group-names group-hash
                     `(,@(when groups-supp-p `(:allowed-list ,allowed))))))
         (loop for group in group-name-list
-            collect
-              (let ((spec-list (gethash group group-hash))
-                    (item-order (gethash group group-order-spec)))
-                (cond
-                 (item-order
-                  (labels ((position-of (z)
-                             (position z item-order :test 'eq))
+              collect
 
-                           (output-framework-specs-sorter (x y)
-                             (let* ((xp (position-of (docspec-self x)))
-                                    (yp (position-of (docspec-self y)))
-                                    (xap (let ((xa (label-value x 'anchor)))
-                                           (when xa (position-of xa))))
-                                    (yap (let ((ya (label-value y 'anchor)))
-                                           (when ya (position-of ya))))
-                                    (num-xp (numberp xp))
-                                    (num-yp (numberp yp))
-                                    (num-xap (numberp xap))
-                                    (num-yap (numberp yap)))
-                               (cond
-                                ((and num-xp num-yp)   (< xp yp))
-                                ((and num-xp num-yap)  (<= xp yap))
-                                ((and num-xap num-yp)  (< xap yp))
-                                (num-xp                t)
-                                (num-yp                nil)
-                                ((and num-xap num-yap) (< xap yap))
-                                (num-xap               t)
-                                (num-yap               nil)
-                                (t                     nil)))))
-                    (setf spec-list
-                          (sort spec-list #'output-framework-specs-sorter)))))
-                (defdoc-debug " --> group ~s ~s~%" group spec-list)
+              (let ((optionals nil))
+                (when (gethash group group-title-spec)
+                  (push (gethash group group-title-spec) optionals)
+                  (push :title optionals))
+                (when (gethash group group-leader-spec)
+                  (push (gethash group group-leader-spec) optionals)
+                  (push :leader optionals))
+                (when (gethash group group-trailer-spec)
+                  (push (gethash group group-trailer-spec) optionals)
+                  (push :trailer optionals))
+                (let ((this-group-object
+                       (apply #'make-instance 'grouped-output-contents
+                              :labeldef grouping-label-def :group group
+                              optionals)))
 
-                (let ((optionals nil))
-                  (when (gethash group group-title-spec)
-                    (push (gethash group group-title-spec) optionals)
-                    (push :title optionals))
-                  (when (gethash group group-leader-spec)
-                    (push (gethash group group-leader-spec) optionals)
-                    (push :leader optionals))
-                  (when (gethash group group-trailer-spec)
-                    (push (gethash group group-trailer-spec) optionals)
-                    (push :trailer optionals))
+                  (let ((spec-list (gethash group group-hash))
+                        (item-order (gethash group group-order-spec)))
 
-                  (apply #'make-instance 'grouped-output-contents
-                         :labeldef grouping-label-def :group group
-                         :contents spec-list
-                         optionals))))))))
+                    ;; If no contents order is explicitly specified,
+                    ;; try pulling it from the labelspec or otherwise
+                    ;; via the new output collection object.
+                    (unless item-order
+                      (setf item-order
+                            (get-output-unit-order this-group-object)))
+
+                    (cond
+                      (item-order
+                       (labels ((position-of (z)
+                                  (position z item-order :test 'eq))
+
+                                (output-framework-specs-sorter (x y)
+                                  (let* ((xp (position-of (docspec-self x)))
+                                         (yp (position-of (docspec-self y)))
+                                         (xap (let ((xa (label-value x 'anchor)))
+                                                (when xa (position-of xa))))
+                                         (yap (let ((ya (label-value y 'anchor)))
+                                                (when ya (position-of ya))))
+                                         (num-xp (numberp xp))
+                                         (num-yp (numberp yp))
+                                         (num-xap (numberp xap))
+                                         (num-yap (numberp yap)))
+                                    (cond
+                                      ((and num-xp num-yp)   (< xp yp))
+                                      ((and num-xp num-yap)  (<= xp yap))
+                                      ((and num-xap num-yp)  (< xap yp))
+                                      (num-xp                t)
+                                      (num-yp                nil)
+                                      ((and num-xap num-yap) (< xap yap))
+                                      (num-xap               t)
+                                      (num-yap               nil)
+                                      (t                     nil)))))
+                         (setf spec-list
+                           (sort spec-list #'output-framework-specs-sorter)))))
+                    (defdoc-debug " --> group ~s ~s~%" group spec-list)
+
+                    (setf (output-contents-contents this-group-object)
+                          spec-list)
+                    this-group-object))))))))
 
 (defun extract-and-refine-group-names (group-hash
                                        &key (allowed-list
@@ -309,18 +321,41 @@
     result))
 
 (defclass grouped-output-contents (output-contents)
-  ((labeldef :initform nil :initarg :labeldef :reader get-grouped-output-labeldef)
-   (group    :initform nil :initarg :group    :reader get-grouped-output-group)))
-(defmethod get-output-unit-title ((o grouped-output-contents))
-  (let ((result (call-next-method)))
-    (cond
-     (result result)
-     (t (with-accessors ((label get-grouped-output-labeldef)
-                         (group get-grouped-output-group)) o
-          (cond
-            ((get-label-section-title-supp-p label group o)
-             (get-label-section-title label group o))
-           (t nil)))))))
+  ((labeldef :initform nil :initarg :labeldef
+             :reader get-grouped-output-labeldef)
+   (group    :initform nil :initarg :group
+             :reader get-grouped-output-group)))
+
+(defmacro def-grouped-contents-method-via-label-spec (grouped-output-method
+                                                      label-spec-supp-method
+                                                      label-spec-method
+                                                      &key (full-spec t))
+  (let ((o (gensym)))
+    `(defmethod ,grouped-output-method ((,o grouped-output-contents))
+       (let ((result (call-next-method)))
+         (cond
+           (result result)
+           (t (with-accessors ((label get-grouped-output-labeldef)
+                               (group get-grouped-output-group)) ,o
+                (cond
+                  ((,label-spec-supp-method label group ,o)
+                   ,(cond
+                      (full-spec
+                       `(compile-element *package* ,o
+                                         (,label-spec-method label group ,o)))
+                      (t `(,label-spec-method label group ,o))))
+                  (t nil)))))))))
+(def-grouped-contents-method-via-label-spec get-output-unit-title
+    get-label-section-title-supp-p get-label-section-title
+    :full-spec nil)
+(def-grouped-contents-method-via-label-spec get-output-unit-order
+    get-label-section-order-supp-p get-label-section-order
+    :full-spec nil)
+(def-grouped-contents-method-via-label-spec get-output-unit-leader
+    get-label-section-leader-supp-p get-label-section-leader)
+(def-grouped-contents-method-via-label-spec get-output-unit-trailer
+    get-label-section-trailer-supp-p get-label-section-trailer)
+
 (defmethod pprint-output-contents-fields append ((o grouped-output-contents))
   (loop for fn-name in '(group)
     if (and (slot-boundp o fn-name) (slot-value o fn-name)) collect fn-name))
