@@ -250,17 +250,13 @@ the system\'s results."
 
             ;; For running possibly several (or none) of each.
             (t
-             (loop for pk in packages do
-                   (format t "~%")
-                   (nst-fn run-package pk))
+             (loop for pk in packages do (nst-fn run-package pk))
              (loop for spec in group-specs do
-                   (let ((group (group-spec-symbol spec)))
-                     (format t "~%")
-                     (nst-fn run-group group)))
+               (let ((group (group-spec-symbol spec)))
+                 (nst-fn run-group group)))
              (loop for spec in test-specs do
-                   (multiple-value-bind (group test) (test-spec-symbols spec)
-                     (format t "~%")
-                     (nst-fn run-test group test)))))
+               (multiple-value-bind (group test) (test-spec-symbols spec)
+                 (nst-fn run-test group test)))))
           (nst-fn restore-protected-option-values protected-values)))
 
       ;; Then, do whatever else.
@@ -270,23 +266,25 @@ the system\'s results."
 
       (let ((requested-error (error-when-nst c)))
         (when requested-error
-          (let ((results (funcall (symbol-function (intern (symbol-name '#:report-multiple)
-                                                           :nst))
-                                  (cond
-                                    (single-package (list single-package))
-                                    (t packages))
-                                  (cond
-                                    (single-group (list single-group))
-                                    (t group-specs))
-                                  (cond
-                                    (single-package (list single-package))
-                                    (t test-specs)))))
+          (let ((results (nst-fn multiple-report
+                                   (cond
+                                     (single-package (list single-package))
+                                     (t packages))
+                                   (cond
+                                     (single-group (list single-group))
+                                     (t group-specs))
+                                   (cond
+                                     (single-package (list single-package))
+                                     (t test-specs)))))
             (case requested-error
               ((t :fail)
-               (when (or (funcall (intern (symbol-name '#:result-stats-erring)
-                                          :nst) results)
-                         (funcall (intern (symbol-name '#:result-stats-failing)
-                                          :nst) results))
+               (when (or (> (nst-fn result-stats-erring results) 0)
+                         (> (nst-fn result-stats-failing results) 0))
+                 (error 'requested-error-on-test-failure)))
+              ((:warn)
+               (when (or (> (nst-fn result-stats-erring results) 0)
+                         (> (nst-fn result-stats-failing results) 0)
+                         (> (nst-fn result-stats-warning results) 0))
                  (error 'requested-error-on-test-failure))))))))))
 
 (defun group-spec-symbol (spec)

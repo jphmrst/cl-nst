@@ -84,7 +84,8 @@ of names of fixtures that are used by TEST-GROUP."))
 
 (defgeneric package-groups (package-or-symbol))
 (defmethod package-groups ((s symbol))
-  (package-groups (find-package s)))
+  (when s
+    (package-groups (find-package s))))
 (defmethod package-groups ((p package))
   (let ((group-hash (gethash p +package-groups+)))
     (when group-hash
