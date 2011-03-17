@@ -38,4 +38,3 @@ individual tests used to test that system")
   "Dynamically-scoped variable used to indicate whether one system is being
 tested on behalf on another.  If non-nil, then reporting of a system\'s results
 may be suppressed.")
-
