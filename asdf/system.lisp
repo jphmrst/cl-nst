@@ -59,7 +59,13 @@
                  :documentation
                  "A list of NST tests, each given as a three-element list
                   of a package name, the test's group name, and the test
-                  name."))
+                  name.")
+
+      (error-when-nst :initarg :error-when-nst
+                        :reader error-when-nst
+                        :initform nil
+                        :documentation
+                        "Indicates whether NST should throw an error when tests fail."))
 
   (:documentation "Class of ASDF systems that use NST for their test-op."))
 
@@ -224,41 +230,64 @@ the system\'s results."
           (nst-fn run-debug-options debug-args)
           (cond
 
-           ;; For running a single package.
-           (single-package
-            (nst-fn run-package single-package))
+            ;; For running a single package.
+            (single-package
+             (nst-fn run-package single-package))
 
-           ;; For running a single group.
-           (single-group
-            (let ((group-actual (intern (symbol-name (cdr single-group))
-                                        (find-package (car single-group)))))
-              (nst-fn run-group group-actual)))
+            ;; For running a single group.
+            (single-group
+             (let ((group-actual (intern (symbol-name (cdr single-group))
+                                         (find-package (car single-group)))))
+               (nst-fn run-group group-actual)))
 
-           ;; For running a single test.
-           (single-test
-            (let ((group-actual (intern (symbol-name (cadr single-test))
-                                        (find-package (car single-test))))
-                  (test-actual (intern (symbol-name (caddr single-test))
-                                       (find-package (car single-test)))))
-              (nst-fn run-test group-actual test-actual)))
+            ;; For running a single test.
+            (single-test
+             (let ((group-actual (intern (symbol-name (cadr single-test))
+                                         (find-package (car single-test))))
+                   (test-actual (intern (symbol-name (caddr single-test))
+                                        (find-package (car single-test)))))
+               (nst-fn run-test group-actual test-actual)))
 
-           ;; For running possibly several (or none) of each.
-           (t
-            (loop for pk in packages do
-              (format t "~%")
-              (nst-fn run-package pk))
-            (loop for spec in group-specs do
-              (let ((group (group-spec-symbol spec)))
-                (format t "~%")
-                (nst-fn run-group group)))
-            (loop for spec in test-specs do
-              (multiple-value-bind (group test) (test-spec-symbols spec)
-                (format t "~%")
-                (nst-fn run-test group test)))))
-          (nst-fn restore-protected-option-values protected-values))))
+            ;; For running possibly several (or none) of each.
+            (t
+             (loop for pk in packages do
+                   (format t "~%")
+                   (nst-fn run-package pk))
+             (loop for spec in group-specs do
+                   (let ((group (group-spec-symbol spec)))
+                     (format t "~%")
+                     (nst-fn run-group group)))
+             (loop for spec in test-specs do
+                   (multiple-value-bind (group test) (test-spec-symbols spec)
+                     (format t "~%")
+                     (nst-fn run-test group test)))))
+          (nst-fn restore-protected-option-values protected-values)))
 
-    ;; Then, do whatever else.
-    (call-next-method)))
+      ;; Then, do whatever else.
+      (call-next-method)
+
+      ;; Do we want to throw an error if tests pass?
+
+      (let ((requested-error (error-when-nst c)))
+        (when requested-error
+          (let ((results (funcall (symbol-function (intern (symbol-name '#:report-multiple)
+                                                           :nst))
+                                  (cond
+                                    (single-package (list single-package))
+                                    (t packages))
+                                  (cond
+                                    (single-group (list single-group))
+                                    (t group-specs))
+                                  (cond
+                                    (single-package (list single-package))
+                                    (t test-specs)))))
+            (case requested-error
+              ((t :fail)
+               (when (or (funcall (intern (symbol-name '#:result-stats-erring)
+                                          :nst) results)
+                         (funcall (intern (symbol-name '#:result-stats-failing)
+                                          :nst) results))
+                 (error 'requested-error-on-test-failure))))))))))
 
 (defun group-spec-symbol (spec)
   (destructuring-bind (pk . gr) spec
@@ -268,3 +297,5 @@ the system\'s results."
   (destructuring-bind (pk gr ts) spec
     (values (intern (symbol-name gr) (find-package pk))
             (intern (symbol-name ts) (find-package pk)))))
+
+(define-condition requested-error-on-test-failure (error) ())
