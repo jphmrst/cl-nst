@@ -461,7 +461,7 @@ additional package."))
                        (:lisp compiler-macro nst-cmd)
                        " without a command argument repeats the last test-executing command.")))
 
-  (collect-doc () (:file :latex "doc/manual/asdf.tex" :asdf :nst))
+  (collect-doc () (:file :latex "doc/asdf.tex" :asdf :nst))
 
   (aftermatter)
   (collect-output (:style docspec-itemize-latex-style) ()
