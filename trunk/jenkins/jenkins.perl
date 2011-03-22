@@ -8,6 +8,7 @@ use POSIX;
 use FindBin;
 use lib ( $FindBin::Bin );  # The absolute directory where this file
                             # lives.
+chdir $FindBin::Bin;
 
 use Carp qw ( verbose );
 use Cwd;
