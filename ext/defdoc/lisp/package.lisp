@@ -177,7 +177,8 @@
 
 (defpackage :defdoc-standard-model
   (:documentation "DefDoc internal organizational package - standard models")
-  (:use :defdoc-docsyms :common-lisp :defdoc-core :defcontract)
+  (:use :defdoc-docsyms :common-lisp :defdoc-core
+        #-clozure-common-lisp :defcontract)
   #+allegro (:import-from excl #:named-function)
   (:export ;; standard.lisp
            #:compile-spec
@@ -349,3 +350,5 @@
            #:get-content-link-filename
            #:format-content-anchor
            #:html-free-paragraph-docspec-element))
+
+#+sbcl (require :sb-posix)

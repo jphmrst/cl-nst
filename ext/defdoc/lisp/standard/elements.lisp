@@ -286,6 +286,7 @@
 
 ;;; -----------------------------------------------------------------
 
+#-clozure-common-lisp
 (def-contract (standard-elements-style-coverage (style type))
     () ;; options
   (has-method (format-doc (stream style standard-doc-spec) t))
