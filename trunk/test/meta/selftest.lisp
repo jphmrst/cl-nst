@@ -136,9 +136,9 @@
       (---form-true (eql nst-meta-sources::*nst-fc1* 2))
       (---form-true (eql nst-meta-sources::*nst-fc2* 1))))
 
-#-lispworks
+#-(or lispworks clozure-common-lisp)
 (def-test-group dispatched-tests ())
-#-lispworks
+#-(or lispworks clozure-common-lisp)
 (def-test (methods-1 :group dispatched-tests)
     (--nst-group mnstmeth-src::method-tests
       (---test-passes mnstmeth-src::method-tests mnstmeth-src::t-p)

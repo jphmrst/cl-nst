@@ -459,6 +459,7 @@
 
 ;;; -----------------------------------------------------------------
 
+#-clozure-common-lisp
 (defcontract:def-contract (plaintext-methods-coverage)
     () ;; options
   (defcontract:has-method (output-lines (t t standard-plain-text stream) t))

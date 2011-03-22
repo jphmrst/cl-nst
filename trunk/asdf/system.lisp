@@ -62,10 +62,16 @@
                   name.")
 
       (error-when-nst :initarg :error-when-nst
-                        :reader error-when-nst
-                        :initform nil
-                        :documentation
-                        "Indicates whether NST should throw an error when tests fail."))
+                      :reader error-when-nst
+                      :initform nil
+                      :documentation
+                      "Indicates whether NST should throw an error when tests fail.")
+
+      (action-on-error :initarg :action-on-error
+                       :reader action-on-error
+                       :initform '(error 'requested-error-on-test-failure)
+                       :documentation
+                       "Describes the error action taken by NST on behalf of error-when-nst."))
 
   (:documentation "Class of ASDF systems that use NST for their test-op."))
 
@@ -157,6 +163,34 @@ convenient and harmless."
 ;;;                (asdf:test-op ,@the-test-steps)
 ;;;                ,@other-ops))))))
 
+(defgeneric get-test-specs (system)
+  (:method (s) (declare (ignore s)) (values nil nil nil))
+  (:method ((s symbol))
+    (get-test-specs (asdf:find-system s)))
+  (:method ((s nst-test-holder))
+    (with-accessors ((single-package nst-package)
+                     (single-group nst-group)
+                     (single-test nst-test)
+
+                     (packages-here nst-packages)
+                     (groups-here nst-groups)
+                     (tests-here nst-tests)
+
+                     (nst-systems nst-systems)) s
+      (loop for sys in nst-systems
+            for (ps gs ts) = (multiple-value-list (get-test-specs sys))
+            append ps into packages
+            append gs into groups
+            append ts into tests
+            finally
+         (setf packages (nconc packages packages-here)
+               groups (nconc groups groups-here)
+               tests (nconc tests tests-here))
+         (when single-package (push single-package packages))
+         (when single-group (push single-group groups))
+         (when single-test (push single-test tests))
+         (return-from get-test-specs
+           (values packages groups tests))))))
 
 (defmethod all-nst-tested ((nst-test-holder nst-test-holder)
                            &optional
@@ -263,29 +297,26 @@ the system\'s results."
       (call-next-method)
 
       ;; Do we want to throw an error if tests pass?
-
-      (let ((requested-error (error-when-nst c)))
+      (let ((requested-error (error-when-nst c))
+            (error-action (action-on-error c)))
         (when requested-error
-          (let ((results (nst-fn multiple-report
-                                   (cond
-                                     (single-package (list single-package))
-                                     (t packages))
-                                   (cond
-                                     (single-group (list single-group))
-                                     (t group-specs))
-                                   (cond
-                                     (single-package (list single-package))
-                                     (t test-specs)))))
-            (case requested-error
-              ((t :fail)
-               (when (or (> (nst-fn result-stats-erring results) 0)
-                         (> (nst-fn result-stats-failing results) 0))
-                 (error 'requested-error-on-test-failure)))
-              ((:warn)
-               (when (or (> (nst-fn result-stats-erring results) 0)
-                         (> (nst-fn result-stats-failing results) 0)
-                         (> (nst-fn result-stats-warning results) 0))
-                 (error 'requested-error-on-test-failure))))))))))
+          (multiple-value-bind (package-specs group-specs test-specs)
+              (get-test-specs c)
+            (let ((results (nst-fn multiple-report
+                                   package-specs group-specs test-specs)))
+              (case requested-error
+                ((t :fail)
+                 (when (or (> (nst-fn result-stats-erring results) 0)
+                           (> (nst-fn result-stats-failing results) 0))
+                   (eval error-action)))
+                ((:warn)
+                 (when (or (> (nst-fn result-stats-erring results) 0)
+                           (> (nst-fn result-stats-failing results) 0)
+                           (> (nst-fn result-stats-warning results) 0))
+                   (eval error-action)))
+                ((:err)
+                 (when (> (nst-fn result-stats-erring results) 0)
+                   (eval error-action)))))))))))
 
 (defun group-spec-symbol (spec)
   (destructuring-bind (pk . gr) spec

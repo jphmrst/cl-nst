@@ -49,7 +49,7 @@
     :author "John Maraist <lisper@maraist.org>"
     :license "LGPL 3.latest"
     :in-order-to ((test-op (test-op :defdoc-test)))
-    :depends-on ( :closer-mop :defcontract )
+    :depends-on ( :closer-mop #-clozure-common-lisp :defcontract )
     :components
     ((:module "lisp" :components
               (;; The DEFDOC package, plus internal packages and
