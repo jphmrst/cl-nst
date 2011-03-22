@@ -33,7 +33,7 @@ die "CLOSER_MOP_DIR not a directory" unless -d $ENV{CLOSER_MOP_DIR};
 my $closerdir = $ENV{CLOSER_MOP_DIR};
 
 my $nstdirlisp = $FindBin::Bin . "/nstdir.lisp";
-open DIRSETTER, ("> ".$nstdirlisp);
+open DIRSETTER, ("> ".$FindBin::Bin."/".$nstdirlisp);
 print DIRSETTER "(defconstant +NST-DIRECTORY+ #p\"", $nstdir, "\")\n";
 print DIRSETTER "(defconstant +CLOSER-DIRECTORY+ #p\"", $closerdir, "\")\n";
 close DIRSETTER;
