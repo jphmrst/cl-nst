@@ -1,4 +1,6 @@
 
+* 3.0.3 - in Subversion HEAD
+
 * 3.0.2 - public release, March 23, 2010
  - Defdoc now provides a system asdf-defdoc, which defines a base ASDF
    system for more conveniently associating a system with the
