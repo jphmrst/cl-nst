@@ -13,4 +13,5 @@
 
 (asdf:oos 'asdf:load-op :nst)
 (asdf:oos 'asdf:load-op :asdf-nst)
-(setf nst::*nst-verbosity* 0)
+(setf nst::*nst-verbosity* 0
+      nst::*default-report-verbosity* 3)

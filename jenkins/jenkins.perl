@@ -25,6 +25,10 @@ use Sys::Hostname;
 
 my @failures;
 
+unlink "log"  if (-x "log") && !(-d "log");
+mkdir "log"  if !(-x "log");
+die "Can't create/verify log directory" unless -d "log";
+
 die "NST_DIR not set" unless defined $ENV{NST_DIR};
 die "NST_DIR not a directory" unless -d $ENV{NST_DIR};
 my $nstdir = $ENV{NST_DIR};
@@ -105,12 +109,31 @@ my @lisps = ({
             );
 
 sub runLisp {
+  my $tag = shift;
   my $name = shift;
   my $action = shift;
   my @call = @_;
-  print "Running $name\n", join(' ', @call), "\n";
-  my $result = system @call;
-  push @failures, "$name exits with failure $action"  if ($result != 0);
+  print "Running $name\n";
+  # print join(' ', @call), "\n";
+  my $OLD_OUT = \*STDOUT;
+  my $pid = fork;
+  if ($pid == 0) {
+    my $logfile = lc "log/$tag.log";
+    open STDOUT, "> $logfile" or die "Can't reset STDOUT: $!";
+    open STDERR, ">&STDOUT" or die "Can't dup STDERR to STDOUT: $!";
+    select STDERR; $| = 1;      # make unbuffered
+    select STDOUT; $| = 1;      # make unbuffered
+    exec @call;
+    exit 1;
+  }
+  waitpid $pid, 0;
+  my $result = $?;
+  if ($result != 0) {
+    push @failures, "$name exits with failure $action";
+    print "$name exits with failure $action\n";
+  } else {
+    print "Normal exit\n";
+  }
   return $result;
 }
 
@@ -137,10 +160,10 @@ foreach my $lispConfig (@lisps) {
         push @precall, @$fileArgsLead;
         push @precall, "path-init.lisp";
 
-        runLisp $name, 'on full recompile',
+        runLisp "$tag-full", $name, 'on full recompile',
           @precall, @$fileArgsLead, "test-nst-force.lisp", @$trailArgs;
         print " - - - - - - - - - -\n";
-        runLisp $name, 'loading without recompile',
+        runLisp "$tag-load", $name, 'loading without recompile',
           @precall, @$fileArgsLead, "test-nst-noforce.lisp", @$trailArgs;
       } else {
         push @failures, "No binary $executable for $name";
@@ -151,19 +174,6 @@ foreach my $lispConfig (@lisps) {
   }
 }
   print "====================\n";
-
-# if (!(defined $ENV{SKIP_NST_SBCL_UPCASE})) {
-#   if (defined $ENV{NST_SBCL_UPCASE} && -x $ENV{NST_SBCL_UPCASE}) {
-#     print "Running Allegro\n";
-#     system $ENV{NST_SBCL_UPCASE},
-#       "--lose-on-corruption", "--no-sysinit", "--no-userinit",
-#         "--load", $nstdirlisp, "--load", "require-asdf.lisp",
-#           "--load", "path-init.lisp",
-#             "--load", "quit.lisp", "--end-toplevel-options";
-#   } else {
-#     push @failures, "No binary for Allegro Lisp";
-#   }
-# }
 
 if ($#failures >= 0) {
   foreach my $f (@failures) {
