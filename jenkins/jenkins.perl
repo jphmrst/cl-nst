@@ -38,7 +38,8 @@ die "CLOSER_MOP_DIR not a directory" unless -d $ENV{CLOSER_MOP_DIR};
 my $closerdir = $ENV{CLOSER_MOP_DIR};
 
 my $nstdirlisp = $FindBin::Bin . "/nstdir.lisp";
-open DIRSETTER, ("> ".$FindBin::Bin."/".$nstdirlisp);
+print "Writing $nstdirlisp\n";
+open DIRSETTER, ("> ".$nstdirlisp);
 print DIRSETTER "(defconstant +NST-DIRECTORY+ #p\"", $nstdir, "\")\n";
 print DIRSETTER "(defconstant +CLOSER-DIRECTORY+ #p\"", $closerdir, "\")\n";
 close DIRSETTER;
@@ -73,7 +74,7 @@ my @lisps = ({
              },
              {
               tag => 'NST_CLISP_UPCASE',
-              name => "CLISP default",
+              name => "CLISP uppercase",
               leadArgs => [ "-on-error", "exit", "-x" ],
               fileArgsLead => [ "-i" ],
               trailArgs => [ "-i", "quit.lisp" ]
@@ -86,8 +87,15 @@ my @lisps = ({
               trailArgs => [ "-i", "quit.lisp" ]
              },
              {
+              tag => 'NST_CCL64_UPCASE',
+              name => "64-bit Clozure CL",
+              leadArgs => [ "--no-init", "--batch" ],
+              fileArgsLead => [ "--load" ],
+              trailArgs => [ "--load", "quit.lisp" ]
+             },
+             {
               tag => 'NST_CCL_UPCASE',
-              name => "Clozure CL default",
+              name => "Clozure CL",
               leadArgs => [ "--no-init", "--batch" ],
               fileArgsLead => [ "--load" ],
               trailArgs => [ "--load", "quit.lisp" ]
@@ -113,7 +121,7 @@ sub runLisp {
   my $name = shift;
   my $action = shift;
   my @call = @_;
-  print "Running $name\n";
+  print "Running $name $action\n";
   # print join(' ', @call), "\n";
   my $OLD_OUT = \*STDOUT;
   my $pid = fork;
@@ -171,6 +179,8 @@ foreach my $lispConfig (@lisps) {
     } else {
       push @failures, "$tag not set";
     }
+  } else {
+    print "Skipping $name\n";
   }
 }
   print "====================\n";
