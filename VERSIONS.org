@@ -1,12 +1,13 @@
 
-* 3.0.2 - at Subversion HEAD
+* 3.0.2 - public release, March 23, 2010
  - Defdoc now provides a system asdf-defdoc, which defines a base ASDF
    system for more conveniently associating a system with the
    documents to be generated when loading it.  This system should be
    considered an alpha release and subject to significant change; see
    the trac tickets under the "Documentation" component for an
    indication of how we see this feature evolving.
- - Ticket 197: started an HTML backend for DefDoc.
+ - Ticket 197: started an HTML backend for DefDoc.  Doesn't really
+   work well at this point.
  - Added three criterion.  All three should be considered in alpha
    testing: feedback is welcome; when we commit to a final form for
    these criteria, we'll roll up the minor version number.
@@ -36,6 +37,10 @@
    (function ...) on others.
  - Reworked the internal organization of the XUnit output generator.
  - This document is now in Emacs Org-mode format.
+ - We now check for compatibility across (most of) the platforms we
+   try to support using Jenkins instead of the previous home-grown
+   script.
+ - Considerable streamlining of documentation.
 
 * 3.0.1 - public release, December 29, 2010
  - Execution of one group can now be triggered by another group, as a
