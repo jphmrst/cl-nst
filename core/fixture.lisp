@@ -288,7 +288,7 @@
                                            (find-package :keyword))))))))
 
                    ',name)))))))
-(def-documentation (compiler-macro def-fixtures)
+(def-documentation (macro def-fixtures)
   (:tags primary)
   (:properties (nst-manual fixtures) (api-summary primary))
   (:intro (:latex "Fixtures\\index{fixtures} are data structures and values which may be
@@ -387,7 +387,7 @@ setting may vary for individual fixtures.")
   `(let ,(loop for fixture in fixtures
                append (get-fixture-bindings fixture))
      ,@forms))
-(def-documentation (compiler-macro with-fixtures)
+(def-documentation (macro with-fixtures)
   (:tags &rest)
   (:properties (nst-manual fixtures) (api-summary &rest))
     (:intro (:latex "The \\texttt{with-fixtures} macro faciliates debugging and other non-NST uses of fixtures sets:"))

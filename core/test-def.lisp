@@ -271,7 +271,7 @@ first element is that symbol and whose remaining elements are options."
                  ;; Store the new artifact against the uses of its
                  ;; name in NST.
                  (note-executable ',test-name tproto)))))))))
-(def-documentation (compiler-macro def-test)
+(def-documentation (macro def-test)
     (:properties (nst-manual tests) (nst-control-api primary))
     (:tags primary)
     (:intro (:latex "Individual unit tests are encoded with the \\texttt{def-test} form:"))

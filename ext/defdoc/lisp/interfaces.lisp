@@ -103,7 +103,7 @@
           ;; targetdef.lisp
           #:def-target-type
           ;; targets.lisp
-          #:param
+          #:param #:macro
           ;; elementdef.lisp
           #:def-element #:def-bare-string-element-tag
           ;; labels.lisp

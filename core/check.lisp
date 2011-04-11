@@ -245,7 +245,7 @@ as errors arising from within the ."
            ,core-form)
          ,@(when docstring
              `((setf (documentation ',name :nst-criterion) ,docstring)))))))
-(def-documentation (compiler-macro def-criterion)
+(def-documentation (macro def-criterion)
   (:tags primary)
   (:properties (api-summary primary))
   (:intro (:latex "The \\texttt{def-criterion} macro defines a new criterion for use in NST tests.  These criteria definitions are like generic function method definitions with two sets of formal parameters: the forms provided as the actual parameters of the criterion  itself, and the values arising from the evaluation of the forms under test.\\index{def-criterion@\texttt{def-criterion}}"))
@@ -301,7 +301,7 @@ as errors arising from within the ."
                ,@forms))))
        ,@(when docstring
            `((setf (documentation ',name :nst-criterion) ,docstring))))))
-(def-documentation (compiler-macro def-criterion-unevaluated)
+(def-documentation (macro def-criterion-unevaluated)
   (:tags deprecated)
   (:properties (api-summary deprecated))
   (:deprecated t)
@@ -364,7 +364,7 @@ as errors arising from within the ."
                    (returning-criterion-config-error
                        (,(format nil "Error from criterion ~s body" name))
                      (eval (progn ,@forms))))))))))))
-(def-documentation (compiler-macro def-values-criterion)
+(def-documentation (macro def-values-criterion)
   (:tags deprecated)
   (:properties (api-summary deprecated))
     (:deprecated t)
@@ -379,7 +379,7 @@ as errors arising from within the ."
     `(defmethod apply-criterion ((top (eql ',name)) ,ap ,form-formal)
        (destructuring-bind ,args-formals ,ap
          (eval (progn ,@forms))))))
-(def-documentation (compiler-macro def-form-criterion)
+(def-documentation (macro def-form-criterion)
   (:tags deprecated)
   (:properties (api-summary deprecated))
     (:deprecated t)
@@ -399,7 +399,7 @@ as errors arising from within the ."
                                `((setf (documentation ',name :nst-criterion)
                                    ,docstring-or-form)))))
      (t redef))))
-(def-documentation (compiler-macro def-criterion-alias)
+(def-documentation (macro def-criterion-alias)
   (:tags primary)
   (:properties (nst-manual criterion-alias) (api-summary primary))
     (:intro (:latex "The simplest mechanism for defining a new criterion involves simply
@@ -415,7 +415,7 @@ defining one criterion to rewrite as another using
   (warn 'nst-soft-deprecation
         :old-name 'def-value-check :replacement 'def-criterion)
   `(def-values-criterion ,@args))
-(def-documentation (compiler-macro def-values-check)
+(def-documentation (macro def-values-check)
   (:tags deprecated)
   (:properties (api-summary deprecated))
   (:deprecated t)
@@ -426,7 +426,7 @@ defining one criterion to rewrite as another using
   (warn 'nst-soft-deprecation
         :old-name 'def-control-check :replacement 'def-criterion)
   `(def-form-criterion ,@args))
-(def-documentation (compiler-macro def-control-check)
+(def-documentation (macro def-control-check)
   (:tags deprecated)
   (:properties (api-summary deprecated))
   (:deprecated t)
@@ -437,7 +437,7 @@ defining one criterion to rewrite as another using
   (warn 'nst-soft-deprecation
         :old-name 'def-check-alias :replacement 'def-criterion-alias)
   `(def-criterion-alias ,@args))
-(def-documentation (compiler-macro def-check-alias)
+(def-documentation (macro def-check-alias)
   (:tags deprecated)
   (:properties (api-summary deprecated))
   (:deprecated t)

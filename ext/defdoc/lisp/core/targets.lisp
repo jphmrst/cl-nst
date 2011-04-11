@@ -29,12 +29,18 @@
           (with-output-to-string (stream)
             (format-docspec stream *docstring-style* spec 'function)))))
 
-(def-target-type compiler-macro (:lower-case "macro"
-                                 :symbol-definition-checker macro-function)
+(def-target-type compiler-macro (:symbol-definition-checker compiler-macro-function)
   (:docstring-installer (name spec)
     (setf (documentation name 'compiler-macro)
           (with-output-to-string (stream)
             (format-docspec stream *docstring-style* spec 'compiler-macro)))))
+
+(def-target-type macro (:symbol-definition-checker macro-function)
+  (:docstring-installer (name spec)
+    (let ((docstring (with-output-to-string (stream)
+                       (format-docspec stream *docstring-style* spec 'macro))))
+      (setf (documentation name 'function) docstring
+            (documentation (macro-function name) 'function) docstring))))
 
 (def-target-type setf (:symbol-definition-nocheck t)
   (:docstring-installer (name spec)

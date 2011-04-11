@@ -932,7 +932,7 @@ six-value summary of the results:
   (warn 'nst-soft-deprecation :old-name 'emit-warning
         :replacement '(make-warning-report))
   `(make-warning-report ,@args))
-(def-documentation (compiler-macro emit-warning)
+(def-documentation (macro emit-warning)
   (:tags deprecated)
   (:properties (api-summary deprecated))
   (:deprecated t)
@@ -956,7 +956,7 @@ six-value summary of the results:
   (warn 'nst-soft-deprecation :old-name 'emit-failure
         :replacement '(make-failure-report))
   `(make-failure-report ,@args))
-(def-documentation (compiler-macro emit-failure)
+(def-documentation (macro emit-failure)
   (:tags deprecated)
   (:properties (api-summary deprecated))
   (:deprecated t)
@@ -976,7 +976,7 @@ six-value summary of the results:
   (warn 'nst-soft-deprecation :old-name 'emit-success
         :replacement '(make-success-report))
   `(make-success-report ,@args))
-(def-documentation (compiler-macro emit-success)
+(def-documentation (macro emit-success)
   (:tags deprecated)
   (:properties (api-summary deprecated))
   (:deprecated t)
