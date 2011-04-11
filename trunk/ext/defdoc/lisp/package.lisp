@@ -90,7 +90,7 @@
            #:lower-case-target-name
 
            ;; targets.lisp
-           #:param
+           #:param #:macro
 
            ;; spec.lisp
            #:*spec-class*

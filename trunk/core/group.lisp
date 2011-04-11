@@ -293,7 +293,7 @@
                    (note-executable ',group-name ,*group-object-variable*)))
 
                ',group-name))))))))
-(def-documentation (compiler-macro def-test-group)
+(def-documentation (macro def-test-group)
   (:tags primary)
   (:properties (nst-manual groups) (api-summary primary))
   (:intro (:latex "The \\texttt{def-test-group}

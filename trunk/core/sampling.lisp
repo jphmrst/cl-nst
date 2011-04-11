@@ -48,11 +48,10 @@
   `(let ((*current-compound-structure-depth*
           (+ 1 *current-compound-structure-depth*)))
      ,@forms))
-(def-documentation (compiler-macro compound-structure)
+(def-documentation (macro compound-structure)
   (:tags sample)
   (:properties (api-summary sample))
-  (:blurb "The "
-          (:lisp compiler-macro compound-structure)
+  (:blurb "The " (:lisp macro compound-structure)
           " macro wraps substructure which should be considered compound for the limits set by "
           (:lisp variable *max-compound-structure-depth*)
           "."))
@@ -120,11 +119,11 @@
        ,@(when scalar-p
            `((setf (gethash ,type-spec +scalar-generable-types+) t)))
        (setf (gethash ,type-spec +arbitrary-generable-types+) t))))
-(def-documentation (compiler-macro def-arbitrary-instance-type)
+(def-documentation (macro def-arbitrary-instance-type)
   (:tags sample)
   (:properties (api-summary sample))
   (:intro "New type specifications for invariant-testing. are defined with the "
-          (:lisp compiler-macro def-arbitrary-instance-type) " macro.")
+          (:lisp macro def-arbitrary-instance-type) " macro.")
   (:callspec ((spec-name &key (params formals) (scalar bool) (key key))
               &body (:seq form)))
   (:params (formals "Formal parameter definition used to pass subcomponent types.")
@@ -157,8 +156,7 @@
        (setf cdr 'scalar))
      (cons (arbitrary car) (arbitrary cdr))))")))
            (form "Construct and return (as if through "
-                 (:lisp compiler-macro progn)
-                 ") the arbtrary instance.")))
+                 (:lisp macro progn) ") the arbtrary instance.")))
 
 (def-arbitrary-instance-type (number :param n)
     (arbitrary (arbitrary-grounded-type n)))

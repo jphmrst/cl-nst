@@ -528,7 +528,7 @@ The last form shows all interesting results."
 
 (defmacro nst-cmd (&rest args)
   `(apply #'run-nst-command ',args))
-(def-documentation (compiler-macro nst-cmd)
+(def-documentation (macro nst-cmd)
   (:tags control)
   (:properties (api-summary control))
     (:intro (:latex "User-level NST operations are accessible from the REPL via the~\\texttt{nst-cmd}\\index{nst-cmd@\\texttt{nst-cmd}} macro."))

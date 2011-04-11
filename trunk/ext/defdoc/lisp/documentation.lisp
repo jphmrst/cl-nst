@@ -174,7 +174,7 @@
 ;;; Main macros
 
 
-(def-documentation (compiler-macro def-documentation)
+(def-documentation (macro def-documentation)
   (:intro "The " (:lisp compiler-macro def-documentation)
           " macro attaches user documentation to a function, macro, or other documentable entity.")
   (:callspec (name &body
@@ -197,7 +197,7 @@
                        " macro."))
   (:properties (manual-section docspecs)))
 
-(def-documentation (compiler-macro def-bare-string-element-tag)
+(def-documentation (macro def-bare-string-element-tag)
   (:intro "The " (:lisp compiler-macro def-bare-string-element-tag)
           " macro specifies how an unannotated string in a documentation spec should be interpreted.")
   (:callspec (tag &key (package name-or-package) (spec-type class-name)))
@@ -212,7 +212,7 @@
             (:code "  (:plain string)"))
   (:properties (manual-section docspecs)))
 
-(def-documentation (compiler-macro ensure-api-documentation)
+(def-documentation (macro ensure-api-documentation)
   (:intro "DefDoc provides "
           (:lisp compiler-macro ensure-api-documentation)
           " as a top-level form to check that all symbols in a package are provided documentation.")
@@ -234,7 +234,7 @@
            (defdoc-only "If non-nil, only documentation provided via DefDoc is considered ``passing'' for this check.  Otherwise, the check will accept regular Lisp docstrings."))
   (:properties (manual-section docspecs)))
 
-(def-documentation (compiler-macro def-property-label)
+(def-documentation (macro def-property-label)
   (:intro "The " (:lisp compiler-macro def-property-label)
           " macro declares a label for use in the "
           (:lisp keyword :properties)
@@ -242,7 +242,7 @@
   (:callspec (label-name () &body (:opt (:key-head :default-subsort name))))
   (:properties (manual-section label-use)))
 
-(def-documentation (compiler-macro def-label-config)
+(def-documentation (macro def-label-config)
   (:intro "The " (:lisp compiler-macro def-label-config)
           " macro specifies information associated with particular uses, especially particular outputs, of a property label.")
   (:callspec ((&key (label label-name)
@@ -268,7 +268,7 @@
 ;;; -----------------------------------------------------------------
 ;;; outspec
 
-(def-documentation (compiler-macro def-output-class)
+(def-documentation (macro def-output-class)
   (:intro "The " (:lisp compiler-macro def-output-class)
           " macro defines the contents of an output document.")
   (:callspec ((output-class-name &key (class base-class)
@@ -334,7 +334,7 @@
   (:callspec (outer-style inner-style contained))
   (:properties (manual-section output-model)))
 
-(def-documentation (compiler-macro collect-groups-by-label)
+(def-documentation (macro collect-groups-by-label)
   (:intro "Macro "
           (:lisp compiler-macro collect-groups-by-label)
           " forms groups of output units by grouping according to property label values.")
@@ -367,7 +367,7 @@
                             " functions which will be used to select the documentation specs to be grouped."))
   (:properties (manual-section outspec)))
 
-(def-documentation (compiler-macro collect-doc)
+(def-documentation (macro collect-doc)
   (:intro "Macro "
           (:lisp compiler-macro collect-doc)
           " accumulates a single output element from a static document specification.  This macro allows literal text to be inserted into an output unit.")
@@ -382,13 +382,13 @@
     (:latex \"This next stuff is confusing.\")))"))
   (:properties (manual-section outspec)))
 
-(def-documentation (compiler-macro collect-docspec)
+(def-documentation (macro collect-docspec)
   (:intro "The "
           (:lisp compiler-macro collect-docspec)
           " macro --- " (:fill-in))
   (:properties (manual-section outspec)))
 
-(def-documentation (compiler-macro aftermatter)
+(def-documentation (macro aftermatter)
   (:intro "The "
           (:lisp compiler-macro aftermatter)
           " macro --- " (:fill-in))
@@ -427,7 +427,7 @@
                    "."))
   (:properties (manual-section outspec)))
 
-(def-documentation (compiler-macro collect-symbols)
+(def-documentation (macro collect-symbols)
   (:intro "The " (:lisp compiler-macro collect-symbols)
           " macro simply accumulates the documentation of the named symbols.")
   (:callspec (package symbol-list (:seq filter)))
@@ -462,7 +462,7 @@
                    "."))
   (:properties (manual-section outspec)))
 
-(def-documentation (compiler-macro collect-output)
+(def-documentation (macro collect-output)
   (:intro "The "
           (:lisp compiler-macro collect-output)
           " function allows included output class declarations to be nested within the including unit.")
@@ -565,7 +565,7 @@
   (:callspec (tag &key (package package-spec) (spec-type spec-type-name)))
   (:properties (manual-section targets)))
 
-(def-documentation (compiler-macro def-target-type)
+(def-documentation (macro def-target-type)
   (:intro "The " (:lisp compiler-macro def-target-type)
           " macro defines a new documentation target type.")
   (:callspec (name (&key (class class-name))
@@ -782,7 +782,7 @@
 ;;; -----------------------------------------------------------------
 ;;; elements
 
-(def-documentation (compiler-macro def-element)
+(def-documentation (macro def-element)
   (:intro "Compiler-macro "
           (:lisp compiler-macro def-element)
           " --- "
@@ -1216,7 +1216,7 @@
           ".")
   (:properties (manual-section standard-model)))
 
-(def-documentation (compiler-macro with-unpacked-standard-spec)
+(def-documentation (macro with-unpacked-standard-spec)
   (:intro "The " (:lisp compiler-macro with-unpacked-standard-spec)
           " macro provides deconstruction of "
           (:lisp compiler-macro standard-doc-spec)
@@ -2134,11 +2134,11 @@
 ;;; -----------------------------------------------------------------
 ;;; HTML
 
-(def-documentation (compiler-macro with-div-wrapper)
+(def-documentation (macro with-div-wrapper)
   (:intro "The " (:lisp compiler-macro with-div-wrapper) " macro " (:fill-in))
   (:properties (manual-section html-style-model)))
 
-(def-documentation (compiler-macro with-span-wrapper)
+(def-documentation (macro with-span-wrapper)
   (:intro "The " (:lisp compiler-macro with-span-wrapper) " macro " (:fill-in))
   (:properties (manual-section html-style-model)))
 
@@ -2203,7 +2203,7 @@
 ;;; -----------------------------------------------------------------
 ;;; deprecated
 
-(def-documentation (compiler-macro def-doc-tag)
+(def-documentation (macro def-doc-tag)
   (:intro "The " (:lisp compiler-macro def-doc-tag) " macro is deprecated.")
   (:properties (manual-section deprecated)))
 
@@ -2254,28 +2254,28 @@
           (:fill-in))
   (:properties (manual-section api-checks)))
 
-(def-documentation (compiler-macro def-style-class)
+(def-documentation (macro def-style-class)
   (:intro "The "
           (:lisp compiler-macro def-style-class)
           " macro --- "
           (:fill-in))
   (:properties (manual-section styles)))
 
-(def-documentation (compiler-macro def-standard-style-class)
+(def-documentation (macro def-standard-style-class)
   (:intro "The "
           (:lisp compiler-macro def-standard-style-class)
           " macro --- "
           (:fill-in))
   (:properties (manual-section styles)))
 
-(def-documentation (compiler-macro def-latex-style-class)
+(def-documentation (macro def-latex-style-class)
   (:intro "The "
           (:lisp compiler-macro def-latex-style-class)
           " macro --- "
           (:fill-in))
   (:properties (manual-section latex)))
 
-(def-documentation (compiler-macro docspec-list-latex-style)
+(def-documentation (macro docspec-list-latex-style)
   (:intro "The "
           (:lisp type docspec-list-latex-style)
           " style mixin class --- "
