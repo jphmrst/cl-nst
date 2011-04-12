@@ -1,6 +1,8 @@
 
 * 3.0.3 - in Subversion HEAD
-
+ - Ticket 237: Added a separate documentation target for macros, as
+   opposed to compiler macros, and updated DefDoc and NST
+   documentation to use that target.
 * 3.0.2 - public release, March 23, 2010
  - Defdoc now provides a system asdf-defdoc, which defines a base ASDF
    system for more conveniently associating a system with the
