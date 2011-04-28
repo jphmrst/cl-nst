@@ -69,13 +69,13 @@ that should be tested while testing SYSTEM.")
   (:method ((sym symbol))
      (let ((system (asdf:find-system sym)))
        (cond
-        (system (get-test-artifacts system))
+        (system (all-nst-testers system))
         (t (error "NST subsystem ~a not found" sym)))))
 
   (:method ((s nst-test-runner))
      (loop for subsystem in (nst-systems s)
            for (this-packages this-groups this-tests)
-             = (multiple-value-list (get-test-artifacts subsystem))
+             = (multiple-value-list (all-nst-testers subsystem))
            append this-packages into packages
            append this-groups into groups
            append this-tests into tests
