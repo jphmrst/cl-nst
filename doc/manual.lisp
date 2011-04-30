@@ -201,7 +201,8 @@ of subcriteria in Section "
         (:style 'manual-itemize-style)
       (collect-symbols :nst (#:make-success-report #:make-failure-report
                              #:make-warning-report #:make-error-report
-                             #:add-error #:add-failure #:add-info)))
+                             #:add-error #:add-failure #:add-info
+                             #:wrap-thrown-lisp-warning)))
     (collect-output (criteria-forms-report-section
                      :title "Processing subcriteria"
                      :leader (:seq "The criterion itself can contain "

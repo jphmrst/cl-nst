@@ -502,24 +502,15 @@ for the test application class.")
 ;;;                                (list ,@forms))
                              )))))))
           (end-time (get-internal-real-time)))
-      (setf (result-stats-elapsed-time result)
-        (- end-time start-time)
-        (gethash (check-group-name test) +results-record+)
-        result)
+      (setf (result-stats-elapsed-time result) (- end-time start-time)
+            (gethash (check-group-name test) +results-record+) result)
       (when caught-warnings
         (setf (check-result-warnings result)
-          (nconc (check-result-warnings result)
-                 (loop for w in caught-warnings
-                     collect (make-check-note
-                              :context *nst-context*
-                              :stack *nst-stack*
-                              :format "Lisp warning: ~
-                                               ~:@_~/nst::format-for-warning/"
-                              :args (list w))))))
+              (nconc (check-result-warnings result)
+                     (mapcar #'wrap-thrown-lisp-warning caught-warnings))))
       (format-at-verbosity 1 "   ~s~%" result)
       (when (and *debug-on-fail* (or (check-result-errors result)
                                      (check-result-failures result)))
-        (format-at-verbosity 4
-            "Detected failure; triggering debug via error~%")
+        (format-at-verbosity 4 "Detected failure; triggering debug via error~%")
         (cerror "Cleanup and proceed." 'debug-for-fail))
       result)))
