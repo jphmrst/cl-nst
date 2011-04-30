@@ -55,7 +55,8 @@
            #:check-criterion-on-value #:check-criterion-on-form
            #:make-failure-report #:make-error-report
            #:make-warning-report #:make-success-report
-           #:add-failure #:add-error #:add-info #:wrap-thrown-lisp-warning
+           #:add-failure #:add-error #:add-info #:add-warning
+           #:wrap-thrown-lisp-warning
            ;; Deprecated:
            #:emit-failure #:emit-warning #:emit-success
            #:def-form-criterion #:def-values-criterion
