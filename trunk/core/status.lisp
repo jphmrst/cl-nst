@@ -299,6 +299,16 @@ structure, permitting the use of apply."))
                      ) result
       (or warnings failures errors))))
 
+(defun wrap-thrown-lisp-warning (w)
+  (make-check-note :context *nst-context* :stack *nst-stack*
+                   :format "Lisp warning: ~:@_~/nst::format-for-warning/"
+                   :args (list w)))
+(def-documentation (function wrap-thrown-lisp-warning)
+  (:properties (api-summary criteria))
+  (:intro "The helper function " (:lisp function wrap-thrown-lisp-warning)
+          " creates an NST " (:lisp type check-note)
+          " object from a standard Lisp " (:lisp type warning) "."))
+
 (defun calibrate-check-result (r)
   (with-accessors ((passing-count result-stats-passing)
                    (erring-count result-stats-erring)
