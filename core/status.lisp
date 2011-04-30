@@ -309,6 +309,19 @@ structure, permitting the use of apply."))
           " creates an NST " (:lisp type check-note)
           " object from a standard Lisp " (:lisp type warning) "."))
 
+(defgeneric add-warning (result w &rest args)
+  (:method (result (w warning) &rest args)
+    (declare (ignore args))
+    (add-warning result (wrap-thrown-lisp-warning w))))
+(def-documentation (function add-warning)
+  (:tags criteria)
+  (:properties (api-summary criteria))
+    (:blurb (:latex "For use within user-defined NST criteria: add a warning to a result."))
+    (:intro (:latex
+             "The \\texttt{add-warning} function adds an warning to a result record.  The item can be any of a Lisp warning, an NST check-note or a format string; in the first two cases, no additional arguments should be provided."))
+    (:callspec (result-report &key
+                              (format item) (args argument-list))))
+
 (defun calibrate-check-result (r)
   (with-accessors ((passing-count result-stats-passing)
                    (erring-count result-stats-erring)
@@ -460,6 +473,13 @@ structure, permitting the use of apply."))
                 function values (or other types allowed as a formatter since
                 the time when this docstring was written)."
   context stack format args)
+
+(defmethod add-warning (result (w check-note) &rest args)
+  (push w (check-result-warnings result)))
+(defmethod add-warning (result (format-string string) &rest args)
+  (declare (special *nst-context* *nst-stack* *nst-check-name*))
+  (add-warning result (make-check-note :context *nst-context* :stack *nst-stack*
+                                       :format format-string :args args)))
 
 (defgeneric check-note-type-string (type context)
   (:method (type context)

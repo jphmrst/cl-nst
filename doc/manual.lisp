@@ -202,6 +202,7 @@ of subcriteria in Section "
       (collect-symbols :nst (#:make-success-report #:make-failure-report
                              #:make-warning-report #:make-error-report
                              #:add-error #:add-failure #:add-info
+                             #:add-warning
                              #:wrap-thrown-lisp-warning)))
     (collect-output (criteria-forms-report-section
                      :title "Processing subcriteria"
