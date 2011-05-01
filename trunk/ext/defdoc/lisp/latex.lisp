@@ -191,6 +191,31 @@
           (format stream "\\~a ~a~%"
             (get-latex-length-generic-macroname fname) value))))))
 
+(defgeneric format-latex-docspec-header-commands (style item stream)
+  (:method (style item stream)
+    (declare (ignore style item))
+;;;    (format stream "~&\\newcommand{\\docspecHeader}[3]{
+;;;\\begin{trivlist}
+;;;\\bfseries\\itshape\\mbox{#1 #2}\\hspace*{\\fill}\\mbox{#3}
+;;;\\end{trivlist}
+;;;\\vspace*{-1\\parskip}
+;;;}~&")
+
+    (princ "%" stream)
+    (terpri stream)
+    (princ "\\makeatletter" stream)
+    (terpri stream)
+    (princ "\\newcommand{\\docspecHeader}[3]{%" stream)
+    (terpri stream)
+    (princ "  \\@startsection{paragraph}{4}{0pt}{0pt}{0.01em}{\\bfseries\\itshape}%" stream)
+    (terpri stream)
+    (princ "{\\mbox{#1 #2}\\hspace*{\\fill}\\mbox{#3}}%" stream)
+    (terpri stream)
+    (princ "\\vskip -3.5ex\\hrulefill\\\\}" stream)
+    (terpri stream)
+    (princ "\\makeatother" stream)
+    (terpri stream)))
+
 (defgeneric format-latex-local-length-commands (style context item stream)
   (:method (style context item stream)
     (loop for fname being the hash-keys of *latex-length-commands* do
@@ -303,7 +328,8 @@
       (when contents
         (format-latex-local-length-commands style :toc out stream)
         (format stream "\\tableofcontents~%"))
-      (format-latex-global-length-commands style out stream))))
+      (format-latex-global-length-commands style out stream)
+      (format-latex-docspec-header-commands style out stream))))
 
 (defgeneric format-latex-precontents (style item stream)
   (:method (style out stream)
@@ -868,12 +894,29 @@
   (let ((self (docspec-self spec)))
     (multiple-value-bind (home-package exported-p)
         (locate-package-home style target-type spec self)
-      (princ "\\vspace{1ex}\\noindent\\begin{tabular}{@{}l@{}}\\begin{minipage}{\\textwidth}\\bfseries\\itshape\\mbox{" stream)
+
+      (format stream "%~&\\docspecHeader{")
       (format-fancy-header-target-type style target-type spec self stream)
-      (format stream " ~a}\\hspace*{\\fill} \\hspace*{\\fill}\\mbox{~a :~a}\\end{minipage}\\\\\\hline\\end{tabular}\\\\"
-              (symbol-name self)
-              (if exported-p "Package" "Internal to")
-              (package-name home-package)))))
+      (format stream "}{~a}{~a}~&"
+        (symbol-name self)
+        (format nil (if exported-p "Package :~a" "Internal to :~a")
+          (package-name home-package)))
+
+;;;      (format stream "%~&\\begin{trivlist}%~&  {\\bfseries\\itshape\\mbox{")
+;;;      (format-fancy-header-target-type style target-type spec self stream)
+;;;      (format stream " ~a}\\hspace*{\\fill}\\mbox{~a :~a}}%~&\\end{trivlist}%~&\\vspace*{-1\\parskip}%~&"
+;;;              (symbol-name self)
+;;;              (if exported-p "Package" "Internal to")
+;;;              (package-name home-package))
+
+;;;      (format stream "%~&\\@startsection{paragraph}{4}{0pt}{0pt}{0.05em}{")
+;;;      (format-fancy-header-target-type style target-type spec self stream)
+;;;      (format stream " ~a\\hspace*{\\fill}\\mbox{~a :~a}}%~&"
+;;;              (symbol-name self)
+;;;              (if exported-p "Package" "Internal to")
+;;;              (package-name home-package))
+
+      )))
 
 (defmethod format-standard-docspec-details-sep ((s latex-style) type spec stream
                                                 &key &allow-other-keys)
