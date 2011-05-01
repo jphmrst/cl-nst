@@ -99,6 +99,7 @@ as errors arising from within the ."
     (:callspec (criterion form)))
 
 (defun build-continue-check-expr (criterion form)
+  (when (symbolp criterion) (setf criterion (list criterion)))
   `(apply-criterion ',(car criterion) ',(cdr criterion) ',form))
 
 (defun decompose-arg-values-lambda-list (args-formals)

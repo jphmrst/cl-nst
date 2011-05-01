@@ -111,6 +111,11 @@
                                   :depends-on ("errors" "interrupt"
                                                "permuter" "check" "status"))
 
+                           ;; Process criteria declarations.
+                           (:file "process"
+                                  :depends-on ("errors" "interrupt"
+                                                        "check" "status"))
+
                            ;; Interaction with NST via the REPL.
                            (:file "command" :depends-on ("globals" "status"))
 

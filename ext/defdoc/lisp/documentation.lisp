@@ -45,7 +45,8 @@
 ;;; Standard documentation elements
 
 (def-target-type target-type
-    (:symbol-definition-checker (lambda (tt) (get-target-type tt t))))
+    (:capitalized "Target type"
+     :symbol-definition-checker (lambda (tt) (get-target-type tt t))))
 
 (def-documentation (target-type function)
   (:intro (:latex "Target type function --- \\fbox{FILL IN}")))
@@ -80,7 +81,9 @@
 ;;; -----------------------------------------------------------------
 ;;; Standard documentation elements
 
-(def-target-type doc-element (:symbol-definition-checker element-type-p))
+(def-target-type doc-element
+    (:capitalized "Element"
+     :symbol-definition-checker element-type-p))
 
 (def-documentation (doc-element :plain)
   (:intro "A "
@@ -147,7 +150,9 @@
 ;;; -----------------------------------------------------------------
 ;;; Special callspec list headers
 
-(def-target-type callspec-special (:symbol-definition-nocheck t))
+(def-target-type callspec-special
+    (:capitalized "Callspec form"
+     :symbol-definition-nocheck t))
 
 (def-documentation (callspec-special :seq)
   (:intro "The " (:lisp callspec-special :seq)
@@ -605,7 +610,11 @@
 (def-documentation (macro def-target-type)
   (:intro "The " (:lisp macro def-target-type)
           " macro defines a new documentation target type.")
-  (:callspec (name (&key (class class-name))
+  (:callspec (name (&key (class class-name)
+                         (capitalized capitalized-string)
+                         (lower-case lower-case-string)
+                         (symbol-definition-nocheck flag)
+                         (symbol-definition-checker flag))
                    &body (:key-head docstring-installer (target-name target-spec) (:seq form))))
   (:details "Separate target types are useful, for example, when documenting uses of literal symbols in S-expressions.  Such documentation can be aggregated into output sets using " (:lisp function collect-target-type) ", and as a documentation element using " (:lisp doc-element :output-set) ".")
   (:params (name "Symbolic name of the new target type.")
@@ -616,7 +625,11 @@
                        " initarg and "
                        (:lisp function docstring-installer)
                        " accessor.")
-           (docstring-installer "Function which installs a standard Lisp document string for targets of this type."))
+           (docstring-installer "Function which installs a standard Lisp document string for targets of this type.")
+           (capitalized "\\fbox{FILL IN}")
+           (lower-case "\\fbox{FILL IN}")
+           (symbol-definition-nocheck "\\fbox{FILL IN}")
+           (symbol-definition-checker "\\fbox{FILL IN}"))
   (:properties (manual-section newtargetdef)))
 
 

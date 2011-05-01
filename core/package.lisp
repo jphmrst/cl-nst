@@ -63,6 +63,8 @@
 
            #:with-fixtures
 
+           #:assert-eq
+
            #:nst-results
            #:def-test-generic
            #:def-test-method

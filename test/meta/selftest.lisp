@@ -266,3 +266,42 @@
         (---error-records (:apply length (:eql 1)))
         (---warning-records (:apply length (:eql 0)))
         (---info-records (:apply length (:eql 0))))))
+
+(def-test-group eval-selftests ()
+  (:documentation "These tests validate the :eval criterion"))
+(def-test (eval-selftest-1 :group eval-selftests)
+    (--nst-group mnst-src::eval-tests
+      (---on-test mnst-src::eval-tests mnst-src::eval-1
+        (---fail-records (:apply length (:eql 0)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))))
+(def-test (eval-selftest-2 :group eval-selftests)
+    (--nst-group mnst-src::eval-tests
+      (---on-test mnst-src::eval-tests mnst-src::eval-2
+        (---fail-records (:apply length (:eql 2)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))))
+(def-test (eval-selftest-3 :group eval-selftests)
+    (--nst-group mnst-src::eval-tests
+      (---on-test mnst-src::eval-tests mnst-src::eval-3
+        (---fail-records (:apply length (:eql 1)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))))
+(def-test (eval-selftest-4 :group eval-selftests)
+    (--nst-group mnst-src::eval-tests
+      (---on-test mnst-src::eval-tests mnst-src::eval-4
+        (---fail-records (:apply length (:eql 1)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))))
+(def-test (eval-selftest-5 :group eval-selftests)
+    (--nst-group mnst-src::eval-tests
+      (---on-test mnst-src::eval-tests mnst-src::eval-5
+        (---fail-records (:apply length (:eql 1)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))))
+

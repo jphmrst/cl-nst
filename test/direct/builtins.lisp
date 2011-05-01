@@ -191,6 +191,9 @@
                 (:check (:true-form (eql zzz 1)))
                 (:eval (incf zzz))
                 (:check (:true-form (eql zzz 2)))))
+  (def-test eval-1 :eval
+    (let ((zzz 'z))
+      (assert-eq 'z zzz)))
   (def-test criterion-head-1 (:applying-common-criterion :eq
                                (('a) ('a))
                                (('b) ('b))))

@@ -157,6 +157,27 @@
                 (:eval (incf zzz))
                 (:check (:true-form (eql zzz 3))))))
 
+(def-test-group eval-tests ()
+  (def-test eval-1 :eval
+    (let ((zzz 'z))
+      (assert-eq 'z zzz)
+      (assert-eq 'z zzz)))
+  (def-test eval-2 :eval
+    (let ((zzz 'z))
+      (assert-eq 'x zzz)
+      (assert-eq 'y zzz)))
+  (def-test eval-3 (:eval :attempt-continue nil)
+    (let ((zzz 'z))
+      (assert-eq 'x zzz)
+      (assert-eq 'y zzz)))
+  (def-test eval-4 :eval
+    (let ((zzz 'z))
+      (assert-eq 'x zzz)
+      (assert-eq 'z zzz)))
+  (def-test eval-5 :eval
+    (let ((zzz 'z))
+      (assert-eq 'x zzz))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Testing export of names.
 
