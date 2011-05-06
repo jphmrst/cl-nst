@@ -64,9 +64,9 @@
                                     package spec (list string))))
 
 (defmacro def-bare-string-element-tag (tag &key (package nil package-supp-p)
-                                                (spec-type nil spec-supp-p))
+                                       (spec-type nil spec-supp-p))
   (let ((p (gensym)) (spec (gensym)) (string (gensym)))
-    `(eval-when (:compile-toplevel :load-toplevel :execute)
+    `(eval-when (:load-toplevel :execute)
        (defmethod string-implicit-symbol-head
            (,(cond
               (package-supp-p
