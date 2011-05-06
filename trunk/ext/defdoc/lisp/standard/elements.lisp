@@ -219,7 +219,8 @@
 (set-pprint-dispatch 'standard-fillin-place
   (named-function pprint-standard-fillin-place
     (lambda (stream spec)
-      (format stream "[ placeholder fill-in ]" (type-of spec)))))
+      (declare (ignore spec))
+      (format stream "[ placeholder fill-in ]" #| (type-of spec) |# ))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

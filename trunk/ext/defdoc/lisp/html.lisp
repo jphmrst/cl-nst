@@ -409,7 +409,7 @@
 (defmethod format-docspec-element ((style html-style) target-type
                                    (spec standard-lisp-name) stream
                                    &key &allow-other-keys)
-  (declare (ignore target-type width))
+  (declare (ignore target-type))
   (format stream "<tt>~a</tt>" (lisp-name spec)))
 
 (defmethod format-docspec-element ((style html-style) target-type
@@ -451,7 +451,7 @@
 
 (defmethod format-docspec-element ((style html-style) target-type
                                    (doc standard-reference) stream
-                                   &rest keyvals)
+                                   &key &allow-other-keys)
   (declare (ignore target-type stream))
   (warn "Generating nothing for reference ~s" doc))
 

@@ -91,3 +91,19 @@
                                 &body class-forms)
   `(defclass ,name ,superclasses ,fields ,@class-forms))
 
+
+
+(defgeneric format-docspec (stream style spec type &key &allow-other-keys)
+  (:method (stream (style symbol) spec type &rest keyargs)
+    (apply #'format-docspec stream (make-instance style) spec type keyargs)))
+
+(defgeneric title (name))
+;; (defgeneric  (name))
+;; (defgeneric  (name))
+;; (defgeneric  (name))
+;; (defgeneric  (name))
+;; (defgeneric  (name))
+;; (defgeneric  (name))
+;; (defgeneric  (name))
+;; (defgeneric  (name))
+;; (defgeneric  (name))

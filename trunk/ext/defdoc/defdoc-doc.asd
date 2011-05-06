@@ -29,7 +29,10 @@
   :class defdoc-asdf
   :depends-on ( :defdoc :asdf-defdoc )
   :documents-system :defdoc
-  :components ((:module "doc" :components
+  :components ((:module "lisp" :components
+                        ;; Documentation of def-doc in def-doc.
+                        (:file "documentation" :depends-on ("interfaces")))
+               (:module "doc" :depends-on ("lisp") :components
                         (;; The NST package, plus internal packages
                          ;; and documentation generation.
                          (:file "package")

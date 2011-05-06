@@ -79,10 +79,10 @@
                          (:file "labels")
 
                          ;; General model of a document spec.
-                         (:file "spec")
+                         (:file "spec" :depends-on ("globals"))
 
                          ;; Scheme for defining document elements.
-                         (:file "elementdef")
+                         (:file "elementdef" :depends-on ("globals"))
 
                          ;; First cut at a tagging scheme.  Will be replaced
                          ;; by the labels/values scheme below.
@@ -146,5 +146,9 @@
                                                  "core"
                                                  "plaintext" "latex" "html"))
 
-               ;; Documentation of def-doc in def-doc.
-               (:file "documentation" :depends-on ("interfaces"))))))
+;;; Temporarily commenting this out --- load from defdoc-doc only.
+;;; SBCL doesn't like this.
+
+;;;               ;; Documentation of def-doc in def-doc.
+;;;               (:file "documentation" :depends-on ("interfaces"))
+               ))))
