@@ -63,7 +63,17 @@
 
            #:with-fixtures
 
-           #:assert-eq
+           #:assert-null #:assert-zero #:assert-non-nil
+           #:assert-eq #:assert-eql #:assert-equal #:assert-equalp
+           #:assert-not-eq #:assert-not-eql #:assert-not-equal
+           #:assert-not-equalp
+
+           #:*assert-null-format-string* #:*assert-zero-format-string*
+           #:*assert-nonnil-format-string* #:*assert-eq-format-string*
+           #:*assert-eql-format-string* #:*assert-equal-format-string*
+           #:*assert-equalp-format-string* #:*assert-not-eq-format-string*
+           #:*assert-not-eql-format-string* #:*assert-not-equal-format-string*
+           #:*assert-not-equalp-format-string*
 
            #:nst-results
            #:def-test-generic

@@ -21,6 +21,9 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
+;;; Documentation generator for process-testing predicates
+(defdoc:def-target-type process-predicate (:symbol-definition-nocheck t))
+
 (define-condition nst-assertion-failure (condition)
     ((fatal :initarg :fatal :reader assertion-failure-fatal)
      (formatter :initarg :formatter :reader assertion-failure-formatter)
@@ -48,22 +51,146 @@
   `(assert-criterion-fn ',criterion-expr (list ,@value-exprs)
                         ,@key-args))
 
-(defun assert-via-simple-predicate (pred target tested default-message &key
-                                    (format nil format-supp-p)
-                                    (format-args nil format-args-supp-p)
-                                    (fatal nil))
-  (unless format-supp-p (setf format default-message))
-  (unless format-args-supp-p (setf format-args (list target tested)))
-  (with-simple-restart (nst-assertion
-                        (apply #'format nil format format-args))
-    (unless (funcall pred target tested)
-      (error 'nst-assertion-failure
-             :fatal fatal :args format-args :formatter format))))
+;;;(defun assert-via-unary-predicate (pred tested default-message &key
+;;;                                   (format nil format-supp-p)
+;;;                                   (format-args nil format-args-supp-p)
+;;;                                   (fatal nil))
+;;;  (unless format-supp-p (setf format default-message))
+;;;  (unless format-args-supp-p (setf format-args (list tested)))
+;;;  (with-simple-restart (nst-assertion
+;;;                        (apply #'format nil format format-args))
+;;;    (unless (funcall pred tested)
+;;;      (error 'nst-assertion-failure
+;;;             :fatal fatal :args format-args :formatter format))))
 
-(defvar *assert-eq-format-string* "~@<Expected eq to ~s, ~_got ~s~:>")
-(defun assert-eq (target tested &rest keyargs &key &allow-other-keys)
-  (apply #'assert-via-simple-predicate
-         #'eq target tested *assert-eq-format-string* keyargs))
+(defmacro def-unary-predicate-assert (assert-fn predicate default-message &key
+                                      (message-defvar nil defvar-supp-p)
+                                      (doc-state-flag t)
+                                      (pred-name predicate) &allow-other-keys)
+  (let* ((tested (gensym))
+         (keyargs (gensym))
+         (format-supp-p (gensym))
+         (format-args-supp-p (gensym))
+         (the-defuns
+          `((defun ,assert-fn (,tested &rest ,keyargs &key
+                               (format nil ,format-supp-p)
+                               (format-args nil ,format-args-supp-p)
+                               (fatal nil) &allow-other-keys)
+              (unless ,format-supp-p (setf format ,default-message))
+              (unless ,format-args-supp-p (setf format-args (list ,tested)))
+              (with-simple-restart (nst-assertion
+                                    (apply #'format nil format format-args))
+                (unless (funcall #',predicate ,tested)
+                  (error 'nst-assertion-failure
+                         :fatal fatal :args format-args :formatter format))))
+            (defdoc:def-documentation (function ,assert-fn)
+              (:properties (nst-manual process-predicate))
+              (:callspec (TESTED-VALUE))
+              (:intro (:seq "The " (:lisp function ,assert-fn)
+                            " function is a unary predicate for use within the forms evaluated for an "
+                            (:lisp criterion :eval)
+                            " criterion.  It succeeds whenever the "
+                            (:lisp function ,pred-name)
+                            " function returns "
+                            ,(if doc-state-flag "non-nil." "nil.")))))))
+    (cond
+      (defvar-supp-p
+          `(progn (defvar ,message-defvar ,default-message)
+                  ,@the-defuns))
+      (t `(progn ,@the-defuns)))))
+
+(defmacro def-unary-negated-predicate-assert (assert-fn predicate
+                                              default-message
+                                              &rest keyargs &key message-defvar)
+  (declare (ignore message-defvar))
+  `(def-unary-predicate-assert ,assert-fn
+       (lambda (x) (not (funcall #',predicate x)))
+     ,default-message :doc-state-flag nil :pred-name ,predicate ,@keyargs))
+
+(defmacro def-binary-predicate-assert (assert-fn predicate default-message &key
+                                       (message-defvar nil defvar-supp-p)
+                                       (doc-state-flag t) (pred-name predicate))
+  (let* ((target (gensym))
+         (tested (gensym))
+         (keyargs (gensym))
+         (format-supp-p (gensym))
+         (format-args-supp-p (gensym))
+         (the-defuns
+          `((defun ,assert-fn (,target ,tested &rest ,keyargs &key
+                               (format nil ,format-supp-p)
+                               (format-args nil ,format-args-supp-p)
+                               (fatal nil) &allow-other-keys)
+              (unless ,format-supp-p (setf format ,default-message))
+              (unless ,format-args-supp-p (setf format-args
+                                                (list ,target ,tested)))
+              (with-simple-restart (nst-assertion
+                                    (apply #'format nil format format-args))
+                (unless (funcall #',predicate ,target ,tested)
+                  (error 'nst-assertion-failure
+                         :fatal fatal :args format-args :formatter format))))
+            (defdoc:def-documentation (function ,assert-fn)
+              (:properties (nst-manual process-predicate))
+              (:callspec (EXPECTED-VALUE TESTED-VALUE))
+              (:intro (:seq "The " (:lisp function ,assert-fn)
+                            " function is a binary predicate for use within the forms evaluated for an "
+                            (:lisp criterion :eval)
+                            " criterion.  It compares the expected and tested values using "
+                            (:lisp function ,pred-name)
+                            ", and succeeds whenever that call returns "
+                            ,(if doc-state-flag "non-nil." "nil.")))))))
+    (cond
+      (defvar-supp-p
+          `(progn (defvar ,message-defvar ,default-message)
+                  ,@the-defuns))
+      (t `(progn ,@the-defuns)))))
+
+(defmacro def-binary-negated-predicate-assert (assert-fn predicate
+                                               default-message &rest keyargs
+                                               &key message-defvar)
+  (declare (ignore message-defvar))
+  `(def-binary-predicate-assert ,assert-fn
+       (lambda (x y) (not (funcall #',predicate x y)))
+     ,default-message :doc-state-flag nil :pred-name ,predicate ,@keyargs))
+
+(def-unary-predicate-assert assert-null null  "~@<Expected null, ~_got ~s~:>"
+                            :message-defvar *assert-null-format-string*)
+(def-unary-predicate-assert assert-zero zerop "~@<Expected zero, ~_got ~s~:>"
+                            :message-defvar *assert-zero-format-string*)
+(def-unary-negated-predicate-assert assert-non-nil null
+  "~@<Expected non-nil, ~_got ~s~:>"
+  :message-defvar *assert-nonnil-format-string*)
+
+(def-binary-predicate-assert assert-eq eq
+  "~@<Expected eq to ~s, ~_got ~s~:>"
+  :message-defvar *assert-eq-format-string*)
+
+(def-binary-predicate-assert assert-eql eql
+  "~@<Expected eql to ~s, ~_got ~s~:>"
+  :message-defvar *assert-eql-format-string*)
+
+(def-binary-predicate-assert assert-equal equal
+  "~@<Expected equal to ~s, ~_got ~s~:>"
+  :message-defvar *assert-equal-format-string*)
+
+(def-binary-predicate-assert assert-equalp equalp
+  "~@<Expected equalp to ~s, ~_got ~s~:>"
+  :message-defvar *assert-equalp-format-string*)
+
+(def-binary-negated-predicate-assert assert-not-eq eq
+  "~@<Expected non-eq to ~s, ~_got ~s~:>"
+  :message-defvar *assert-not-eq-format-string*)
+
+(def-binary-negated-predicate-assert assert-not-eql eql
+  "~@<Expected non-eql to ~s, ~_got ~s~:>"
+  :message-defvar *assert-not-eql-format-string*)
+
+(def-binary-negated-predicate-assert assert-not-equal equal
+  "~@<Expected non-equal to ~s, ~_got ~s~:>"
+  :message-defvar *assert-not-equal-format-string*)
+
+(def-binary-negated-predicate-assert assert-not-equalp equalp
+  "~@<Expected non-equalp to ~s, ~_got ~s~:>"
+  :message-defvar *assert-not-equalp-format-string*)
 
 (def-criterion (:eval (:forms &key (check-warnings t) (muffle-warnings t)
                               (attempt-continue t) force-continue)
@@ -109,6 +236,12 @@
                                       (muffle-warning)))))
           (eval `(progn ,@forms-list)))))
     (calibrate-check-result result)))
+(defdoc:def-documentation (criterion :eval)
+  (:properties (nst-manual process))
+  (:callspec (&key (check-warnings FLAG) (muffle-warnings FLAG)
+                   (attempt-continue FLAG) (force-continue FLAG)))
+  (:intro (:seq "The " (:lisp criterion :eval) " criterion executes its forms, expecting calls to various assertion functions to check intermediate states of an arbitrarily-long process." (:latex " \\fbox{FILL IN}")))
+  )
 
 (def-criterion (:process (:forms &rest forms) :ignore)
     (let ((result (make-success-report)))
@@ -140,7 +273,7 @@
                                        (check-criterion-on-form form nil)))))))
       (calibrate-check-result result)))
 (defdoc:def-documentation (criterion :process)
-  (:properties (nst-manual processes-criteria))
+  (:properties (nst-manual process))
   (:callspec ((:seq form)))
   (:intro (:seq "The " (:lisp criterion :process) " criterion allows simple interleaving of Lisp function calls and NST checks, to allow checking of intermediate states of an arbitrarily-long process."))
   (:details (:latex "This criterion takes as its body a list of forms.  The first element of each form should be a symbol:")
