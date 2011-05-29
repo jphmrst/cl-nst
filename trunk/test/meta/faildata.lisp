@@ -176,7 +176,52 @@
       (assert-eq 'z zzz)))
   (def-test eval-5 :eval
     (let ((zzz 'z))
-      (assert-eq 'x zzz))))
+      (assert-eq 'x zzz)))
+  (def-test eval-6 :eval
+    (let ((zzz (eval '(+ 1 1))))
+      (assert-eq 2 zzz)))
+  (def-test eval-eql-1 :eval
+    (let ((zzz 1))
+      (assert-eql 1 zzz)))
+  (def-test eval-eql-2 :eval
+    (let ((zzz 1))
+      (assert-eql 2 zzz)
+      (assert-eql 3 zzz)))
+  (def-test eval-eql-3 :eval
+    (let ((zzz 1))
+      (assert-eql 1 zzz)
+      (assert-eql 2 zzz)
+      (assert-eql 3 zzz)))
+  (def-test eval-eql-4 (:eval :attempt-continue nil)
+    (let ((zzz 1))
+      (assert-eql 1 zzz)
+      (assert-eql 2 zzz)
+      (assert-eql 3 zzz)))
+  (def-test eval-not-eql-1 :eval
+    (let ((zzz 1))
+      (assert-not-eql 2 zzz)))
+  (def-test eval-not-eql-2 :eval
+    (let ((zzz 1))
+      (assert-not-eql 2 zzz)
+      (assert-not-eql 3 zzz)))
+  (def-test eval-not-eql-3 :eval
+    (let ((zzz 1))
+      (assert-not-eql 1 zzz)
+      (assert-not-eql 2 zzz)
+      (assert-not-eql 3 zzz)
+      (assert-not-eql 1 zzz)))
+  (def-test eval-not-eql-4 (:eval :attempt-continue nil)
+    (let ((zzz 1))
+      (assert-not-eql 1 zzz)
+      (assert-not-eql 2 zzz)
+      (assert-not-eql 3 zzz)
+      (assert-not-eql 1 zzz)))
+  (def-test eval-not-eql-5 (:eval :attempt-continue nil)
+    (let ((zzz 1))
+      (assert-not-eql 2 zzz)
+      (assert-not-eql 1 zzz)
+      (assert-not-eql 3 zzz)
+      (assert-not-eql 1 zzz))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Testing export of names.
