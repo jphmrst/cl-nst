@@ -304,4 +304,74 @@
         (---error-records (:apply length (:eql 0)))
         (---warning-records (:apply length (:eql 0)))
         (---info-records (:apply length (:eql 0))))))
+;;;(def-test (eval-selftest-6 :group eval-selftests)
+;;;    (--nst-group mnst-src::eval-tests
+;;;      (---on-test mnst-src::eval-tests mnst-src::eval-6
+;;;        (---fail-records (:apply length (:eql 1)))
+;;;        (---error-records (:apply length (:eql 0)))
+;;;        (---warning-records (:apply length (:eql 0)))
+;;;        (---info-records (:apply length (:eql 0))))))
+(def-test (eval-selftest-eql-1 :group eval-selftests)
+    (--nst-group mnst-src::eval-tests
+      (---on-test mnst-src::eval-tests mnst-src::eval-eql-1
+        (---fail-records (:apply length (:eql 0)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))))
+(def-test (eval-selftest-eql-2 :group eval-selftests)
+    (--nst-group mnst-src::eval-tests
+      (---on-test mnst-src::eval-tests mnst-src::eval-eql-2
+        (---fail-records (:apply length (:eql 2)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))))
+(def-test (eval-selftest-eql-3 :group eval-selftests)
+    (--nst-group mnst-src::eval-tests
+      (---on-test mnst-src::eval-tests mnst-src::eval-eql-3
+        (---fail-records (:apply length (:eql 2)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))))
+(def-test (eval-selftest-eql-4 :group eval-selftests)
+    (--nst-group mnst-src::eval-tests
+      (---on-test mnst-src::eval-tests mnst-src::eval-eql-4
+        (---fail-records (:apply length (:eql 1)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))))
+(def-test (eval-selftest-not-eql-1 :group eval-selftests)
+    (--nst-group mnst-src::eval-tests
+      (---on-test mnst-src::eval-tests mnst-src::eval-not-eql-1
+        (---fail-records (:apply length (:eql 0)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))))
+(def-test (eval-selftest-not-eql-2 :group eval-selftests)
+    (--nst-group mnst-src::eval-tests
+      (---on-test mnst-src::eval-tests mnst-src::eval-not-eql-2
+        (---fail-records (:apply length (:eql 0)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))))
+(def-test (eval-selftest-not-eql-3 :group eval-selftests)
+    (--nst-group mnst-src::eval-tests
+      (---on-test mnst-src::eval-tests mnst-src::eval-not-eql-3
+        (---fail-records (:apply length (:eql 2)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))))
+(def-test (eval-selftest-not-eql-4 :group eval-selftests)
+    (--nst-group mnst-src::eval-tests
+      (---on-test mnst-src::eval-tests mnst-src::eval-not-eql-4
+        (---fail-records (:apply length (:eql 1)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))))
+(def-test (eval-selftest-not-eql-5 :group eval-selftests)
+    (--nst-group mnst-src::eval-tests
+      (---on-test mnst-src::eval-tests mnst-src::eval-not-eql-5
+        (---fail-records (:apply length (:eql 1)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))))
 
