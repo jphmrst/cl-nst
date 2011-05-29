@@ -108,9 +108,9 @@
 
 
 (defdoc:def-output-class (the-manual :class nst-output-toplevel
-                                     :title "NST 3.0 User Manual"
-                                     :leader (:latex "This document is the manual and users' guide to the 3.0.$x$
-series of the NST test framework, last updated for 3.0.1.  NST is a
+                                     :title "NST 4.0 User Manual"
+                                     :leader (:latex "This document is the manual and users' guide to the 4.0.$x$
+series of the NST test framework, last updated for 4.0.0.  NST is a
 unit test system for Common Lisp which provides support for test
 fixture data, stateful setup and cleanup of tests, grouping of tests,
 and (we think!) a useful runtime interface.  Suggestions and comments
@@ -130,8 +130,9 @@ available via the link on NST's CLiki page, \\textsl{cliki.net/NST}\\enspace."))
                                                   :order (def-fixtures with-fixtures))
                                    (nst::groups :title "Test groups"))
                          :package :nst)
-      (defdoc:collect-exported-symbols :nst))
-  (collect-output (:title "Tests and test criteria" :short-title "Tests") ()
+        (defdoc:collect-exported-symbols :nst))
+
+  (collect-output (:title "Testing values" :short-title "Tests") ()
     (defdoc:collect-groups-by-label (nst::nst-manual :groups '(nst::tests))
       (defdoc:collect-exported-symbols :nst))
     (defdoc:collect-groups-by-label
@@ -155,69 +156,18 @@ available via the link on NST's CLiki page, \\textsl{cliki.net/NST}\\enspace."))
                                    (nst::class-criteria
                                     :title "Criteria for classes"
                                     :order ())
-                                   (nst::processes-criteria
-                                    :title "Criteria for processes"
-                                    :order ())
                                    (nst::misc-criteria :title
                                     "Programmatic and debugging criteria"
                                     :order ()))
                          :package :nst)
       (defdoc:collect-target-type 'nst::criterion))
     )
-  (collect-output (:title "Defining test criteria" :short-title "Tests"
-                          :leader (:seq "
-The criteria used in test forms decide whether, when and how to use
-the forms under test and the forms and subcriteria provided to each
-test criterion.  Criteria receive their arguments as forms, and may
-examine them with or without evaluation, as the particular criterion
-requires.  NST provides two mechanisms for defining new criteria, and
-a number of support functions for use within these definitions.  The
-simpler, but more limited, way to define a new criterion is by
-specifying how it should be rewritten to another criterion.  The "
-                                        (:lisp compiler-macro
-                                               def-criterion-alias)
-                                        " macro provides this mechanism, which we discuss in Section "
-                                        (:ref def-criterion-alias-section)
-                                        ".  The "
-                                        (:lisp compiler-macro def-criterion)
-                                        " macro provides the more general mechanism for
-criteria definition, where Lisp code produces a result report from the
-forms under test and criterion's forms and subcriteria.  We discuss "
-                                        (:lisp compiler-macro def-criterion)
-                                        " in Section "
-                                        (:ref def-criterion-section)
-                                        ".  We discuss
-the NST API for creating these result reports in Section "
-                                        (:ref criteria-forms-report-section)
-                                        ", and for recursive processing
-of subcriteria in Section "
-                                        (:ref subcriteria-section)
-                                        ".")) ()
-    (collect-output (def-criterion-alias-section
-                        :title "Aliases over criteria") ()
-      (collect-symbols :nst #:def-criterion-alias))
-    (collect-output (def-criterion-section :title "Reporting forms"
-                      :leader "NST provides functions both for building test reports, and for adding information to a report.")
-        (:style 'manual-itemize-style)
-      (collect-symbols :nst (#:make-success-report #:make-failure-report
-                             #:make-warning-report #:make-error-report
-                             #:add-error #:add-failure #:add-info
-                             #:add-warning
-                             #:wrap-thrown-lisp-warning)))
-    (collect-output (criteria-forms-report-section
-                     :title "Processing subcriteria"
-                     :leader (:seq "The criterion itself can contain "
-                                   (:emph "subcriteria")
-                                   " which can be
-incorporated into the main criterion's assessment.  NST provides two
-functions which trigger testing by a subcriterion, each returning the
-check's result report.")) ()
-(collect-symbols :nst (#:check-criterion-on-value
-                       #:check-criterion-on-form)))
-    (collect-output (subcriteria-section
-                     :title "General criteria definitions") ()
-(collect-symbols :nst #:def-criterion)))
-  (collect-output (:title "Verifying invariants against sampled data"
+  (collect-output (:title "Testing processes" :short-title "Process tests") ()
+    (defdoc:collect-groups-by-label (nst::nst-manual
+                                     :groups '(nst::process nst::process-predicate))
+      (defdoc:collect-exported-symbols :nst)
+      (defdoc:collect-target-type 'nst::criterion)))
+  (collect-output (:title "Testing invariants against sampled data"
                           :short-title "Invariants"
                           :leader (:seq "The " (:lisp criterion :sample) (:latex " criterion provides random
 generation of data for validating program properties.  Our approach is
@@ -396,6 +346,60 @@ be generated, and specifying the test itself."))) ()
                              #:def-arbitrary-instance-type)))
     (collect-output (:title "Invariants as tests") ()
       (collect-symbols :keyword (#:sample))))
+
+  (collect-output (:title "Defining test criteria" :short-title "Tests"
+                          :leader (:seq "
+The criteria used in test forms decide whether, when and how to use
+the forms under test and the forms and subcriteria provided to each
+test criterion.  Criteria receive their arguments as forms, and may
+examine them with or without evaluation, as the particular criterion
+requires.  NST provides two mechanisms for defining new criteria, and
+a number of support functions for use within these definitions.  The
+simpler, but more limited, way to define a new criterion is by
+specifying how it should be rewritten to another criterion.  The "
+                                        (:lisp compiler-macro
+                                               def-criterion-alias)
+                                        " macro provides this mechanism, which we discuss in Section "
+                                        (:ref def-criterion-alias-section)
+                                        ".  The "
+                                        (:lisp compiler-macro def-criterion)
+                                        " macro provides the more general mechanism for
+criteria definition, where Lisp code produces a result report from the
+forms under test and criterion's forms and subcriteria.  We discuss "
+                                        (:lisp compiler-macro def-criterion)
+                                        " in Section "
+                                        (:ref def-criterion-section)
+                                        ".  We discuss
+the NST API for creating these result reports in Section "
+                                        (:ref criteria-forms-report-section)
+                                        ", and for recursive processing
+of subcriteria in Section "
+                                        (:ref subcriteria-section)
+                                        ".")) ()
+    (collect-output (def-criterion-alias-section
+                        :title "Aliases over criteria") ()
+      (collect-symbols :nst #:def-criterion-alias))
+    (collect-output (def-criterion-section :title "Reporting forms"
+                      :leader "NST provides functions both for building test reports, and for adding information to a report.")
+        (:style 'manual-itemize-style)
+      (collect-symbols :nst (#:make-success-report #:make-failure-report
+                             #:make-warning-report #:make-error-report
+                             #:add-error #:add-failure #:add-info
+                             #:add-warning
+                             #:wrap-thrown-lisp-warning)))
+    (collect-output (criteria-forms-report-section
+                     :title "Processing subcriteria"
+                     :leader (:seq "The criterion itself can contain "
+                                   (:emph "subcriteria")
+                                   " which can be
+incorporated into the main criterion's assessment.  NST provides two
+functions which trigger testing by a subcriterion, each returning the
+check's result report.")) ()
+(collect-symbols :nst (#:check-criterion-on-value
+                       #:check-criterion-on-form)))
+    (collect-output (subcriteria-section
+                     :title "General criteria definitions") ()
+(collect-symbols :nst #:def-criterion)))
 
   (collect-output (:title "The runtime system"
                           :short-title "Runtime"
