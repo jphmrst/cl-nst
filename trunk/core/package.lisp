@@ -63,6 +63,10 @@
 
            #:with-fixtures
 
+           #:assert-criterion
+           #:def-unary-predicate-assert #:def-unary-negated-predicate-assert
+           #:def-binary-predicate-assert #:def-binary-negated-predicate-assert
+
            #:assert-null #:assert-zero #:assert-non-nil
            #:assert-eq #:assert-eql #:assert-equal #:assert-equalp
            #:assert-not-eq #:assert-not-eql #:assert-not-equal

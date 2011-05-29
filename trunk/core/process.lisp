@@ -50,18 +50,10 @@
 (defmacro assert-criterion (key-args criterion-expr &rest value-exprs)
   `(assert-criterion-fn ',criterion-expr (list ,@value-exprs)
                         ,@key-args))
-
-;;;(defun assert-via-unary-predicate (pred tested default-message &key
-;;;                                   (format nil format-supp-p)
-;;;                                   (format-args nil format-args-supp-p)
-;;;                                   (fatal nil))
-;;;  (unless format-supp-p (setf format default-message))
-;;;  (unless format-args-supp-p (setf format-args (list tested)))
-;;;  (with-simple-restart (nst-assertion
-;;;                        (apply #'format nil format format-args))
-;;;    (unless (funcall pred tested)
-;;;      (error 'nst-assertion-failure
-;;;             :fatal fatal :args format-args :formatter format))))
+(defdoc:def-documentation (macro assert-criterion)
+  (:properties (nst-manual process-predicate))
+  (:intro (:seq "Macro " (:lisp macro assert-criterion)
+                (:latex "\\fbox{FILL IN}"))))
 
 (defmacro def-unary-predicate-assert (assert-fn predicate default-message &key
                                       (message-defvar nil defvar-supp-p)
@@ -98,6 +90,10 @@
           `(progn (defvar ,message-defvar ,default-message)
                   ,@the-defuns))
       (t `(progn ,@the-defuns)))))
+(defdoc:def-documentation (macro def-unary-predicate-assert)
+  (:properties (nst-manual process-pred-maker))
+  (:intro (:seq "Macro " (:lisp macro def-unary-predicate-assert)
+                (:latex "\\fbox{FILL IN}"))))
 
 (defmacro def-unary-negated-predicate-assert (assert-fn predicate
                                               default-message
@@ -106,6 +102,10 @@
   `(def-unary-predicate-assert ,assert-fn
        (lambda (x) (not (funcall #',predicate x)))
      ,default-message :doc-state-flag nil :pred-name ,predicate ,@keyargs))
+(defdoc:def-documentation (macro def-unary-negated-predicate-assert)
+  (:properties (nst-manual process-pred-maker))
+  (:intro (:seq "Macro " (:lisp macro def-unary-negated-predicate-assert)
+                (:latex "\\fbox{FILL IN}"))))
 
 (defmacro def-binary-predicate-assert (assert-fn predicate default-message &key
                                        (message-defvar nil defvar-supp-p)
@@ -143,6 +143,10 @@
           `(progn (defvar ,message-defvar ,default-message)
                   ,@the-defuns))
       (t `(progn ,@the-defuns)))))
+(defdoc:def-documentation (macro def-binary-predicate-assert)
+  (:properties (nst-manual process-pred-maker))
+  (:intro (:seq "Macro " (:lisp macro def-binary-predicate-assert)
+                (:latex "\\fbox{FILL IN}"))))
 
 (defmacro def-binary-negated-predicate-assert (assert-fn predicate
                                                default-message &rest keyargs
@@ -151,6 +155,10 @@
   `(def-binary-predicate-assert ,assert-fn
        (lambda (x y) (not (funcall #',predicate x y)))
      ,default-message :doc-state-flag nil :pred-name ,predicate ,@keyargs))
+(defdoc:def-documentation (macro def-binary-negated-predicate-assert)
+  (:properties (nst-manual process-pred-maker))
+  (:intro (:seq "Macro " (:lisp macro def-binary-negated-predicate-assert)
+                (:latex "\\fbox{FILL IN}"))))
 
 (def-unary-predicate-assert assert-null null  "~@<Expected null, ~_got ~s~:>"
                             :message-defvar *assert-null-format-string*)
@@ -240,8 +248,11 @@
   (:properties (nst-manual process))
   (:callspec (&key (check-warnings FLAG) (muffle-warnings FLAG)
                    (attempt-continue FLAG) (force-continue FLAG)))
-  (:intro (:seq "The " (:lisp criterion :eval) " criterion executes its forms, expecting calls to various assertion functions to check intermediate states of an arbitrarily-long process." (:latex " \\fbox{FILL IN}")))
-  )
+  (:intro (:seq "The " (:lisp criterion :eval) " criterion executes its forms, expecting calls to various assertion functions to check intermediate states of an arbitrarily-long process."))
+  (:params (check-warnings "If non-nil, will add warnings thrown when evaluating the forms under test as NST warnings.  The default is " (:inline "t") ".")
+           (muffle-warnings "If non-nil, will muffle warnings thrown when evaluating the forms under test, so that they are reported only as NST result warnings and if the " (:inline ":check-warnings") " flag is set.  The default is " (:inline "t") ".")
+           (attempt-continue "If non-nil, will continue evaluation after failed assertions, so long as the failure is not deemed " (:inline "fatal") ". The default is " (:inline "t") ".")
+           (force-continue "If non-nil, will continue evaluation after failed assertions even if the failure is not deemed " (:inline "fatal") ". The default is " (:inline "nil") ".")))
 
 (def-criterion (:process (:forms &rest forms) :ignore)
     (let ((result (make-success-report)))
@@ -273,7 +284,7 @@
                                        (check-criterion-on-form form nil)))))))
       (calibrate-check-result result)))
 (defdoc:def-documentation (criterion :process)
-  (:properties (nst-manual process))
+  (:properties (nst-manual process-dep))
   (:callspec ((:seq form)))
   (:intro (:seq "The " (:lisp criterion :process) " criterion allows simple interleaving of Lisp function calls and NST checks, to allow checking of intermediate states of an arbitrarily-long process."))
   (:details (:latex "This criterion takes as its body a list of forms.  The first element of each form should be a symbol:")
