@@ -40,6 +40,7 @@
   (declare (ignore stream spec))
   (let ((*primary-tocdepth* 1)
         (*aftermatter-tocdepth* 1))
+    (declare (special *primary-tocdepth* *aftermatter-tocdepth*))
     (call-next-method)))
 (defmethod defdoc-control-api:get-latex-output-file-name ((style manual-style-mixin)
                                               usage name)
@@ -162,11 +163,32 @@ available via the link on NST's CLiki page, \\textsl{cliki.net/NST}\\enspace."))
                          :package :nst)
       (defdoc:collect-target-type 'nst::criterion))
     )
-  (collect-output (:title "Testing processes" :short-title "Process tests") ()
-    (defdoc:collect-groups-by-label (nst::nst-manual
-                                     :groups '(nst::process nst::process-predicate))
-      (defdoc:collect-exported-symbols :nst)
-      (defdoc:collect-target-type 'nst::criterion)))
+  (collect-output (:title "Testing processes"
+                   :short-title "Process tests"
+                   :leader (:seq "
+The test criteria of the previous section all examined the result
+of evaluating the forms under test.  This section presents NST's
+criteria for validating the " (:emph "process") " of a computation,
+specifying assertions which should hold at the initial, intermediate
+and final points of the process."))
+      ()
+    (defdoc:collect-groups-by-label
+        (nst::nst-manual :groups '(nst::process nst::process-predicate))
+      (defdoc:collect-target-type 'nst::criterion))
+    (collect-output (:title "Placing assertions") ()
+      (defdoc:collect-groups-by-label
+       (nst::nst-manual :groups '(nst::process nst::process-predicate)
+                        :order '(nst:assert-criterion))
+        (defdoc:collect-exported-symbols :nst)))
+    (collect-output (:title "Defining new assertion functions"
+                     :short-title "New asserters") ()
+      (defdoc:collect-groups-by-label (nst::nst-manual
+                                       :groups '(nst::process-pred-maker))
+        (defdoc:collect-exported-symbols :nst)))
+    (collect-output (:title "A simpler process checker") ()
+      (defdoc:collect-groups-by-label (nst::nst-manual
+                                       :groups '(nst::process-dep))
+        (defdoc:collect-target-type 'nst::criterion))))
   (collect-output (:title "Testing invariants against sampled data"
                           :short-title "Invariants"
                           :leader (:seq "The " (:lisp criterion :sample) (:latex " criterion provides random
@@ -534,4 +556,4 @@ be discovered and run."
 (defmethod format-output-leader-material ((style manual-style-mixin)
                                           stream (output nst-output-toplevel)
                                           &key &allow-other-keys)
-  (declare (ignore stream output)))
+  (declare (ignore stream)))
