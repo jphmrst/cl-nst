@@ -39,20 +39,37 @@
 (def-test-group g1a1 ()
   (def-test (fix1 :fixtures (f1)) :true (boundp 'c)))
 
+(def-fixtures f2 (:uses (f1))
+  (d 4) (e 'asdfg) (f c))
+
 (def-fixtures f2a (:special (:fixture f1))
   (d 4) (e 'asdfg) (f c))
 
 (def-fixtures fxy ()
   (x 1000) (y 200))
 
+(def-fixtures capture-x-y-fixtures (:assumes (x y))
+  (z (+ x y)) (w 10))
+
 (def-fixtures capture-x-y-fixtures-a (:special (x y))
   (z (+ x y)) (w 10))
+
+(def-test-group caps-xy (fxy capture-x-y-fixtures)
+  (def-test ex-x (:eql 1000) x)
+  (def-test ex-y (:eql  200) y)
+  (def-test ex-z (:eql 1200) z)
+  (def-test ex-w (:eql   10) w))
 
 (def-test-group caps-xy-a (fxy capture-x-y-fixtures-a)
   (def-test exa-x (:eql 1000) x)
   (def-test exa-y (:eql  200) y)
   (def-test exa-z (:eql 1200) z)
   (def-test exa-w (:eql   10) w))
+
+(def-test-group f2-usage (f1 f2)
+  (def-test ex-d (:eql 4) d)
+  (def-test ex-e (:eq 'asdfg) e)
+  (def-test ex-f (:eql 3) f))
 
 (def-test-group f2a-usage (f1 f2a)
   (def-test exa-d (:eql 4) d)
@@ -173,7 +190,27 @@
                 (:eval (incf zzz))
                 (:check (:true-form (eql zzz 1)))
                 (:eval (incf zzz))
-                (:check (:true-form (eql zzz 2))))))
+                (:check (:true-form (eql zzz 2)))))
+  (def-test eval-1 :eval
+    (let ((zzz 'z))
+      (assert-eq 'z zzz)))
+  (def-test criterion-head-1 (:applying-common-criterion :eq
+                               (('a) ('a))
+                               (('b) ('b))))
+  (def-test criterion-head-2 (:applying-common-criterion :seq
+                               (((:eql 'a) (:eql 'b)) ('(a b)))
+                               (((:eql 'c) (:eql 'd)) ('(c d)))))
+  (def-test criterion-head-3 (:applying-common-criterion :permute
+                               (((:seq (:eql 'a) (:eql 'b))) ('(b a)))
+                               (((:seq (:eql 'c) (:eql 'd))) ('(c d)))))
+  (def-test data-sets-1 (:with-common-criterion (:eq 'a)
+                          ('a) ('a)))
+  (def-test data-sets-2 (:with-common-criterion (:seq (:eql 'a) (:eql 'b))
+                          ('(a b))
+                          ((reverse '(b a)))))
+  (def-test data-sets-3 (:with-common-criterion (:permute (:seq (:eql 'a)
+                                                                (:eql 'b)))
+                          ('(b a)) ('(a b)))))
 
 (defparameter for-setup 0
   "This variable will be set by the setup-cleanup tests")
