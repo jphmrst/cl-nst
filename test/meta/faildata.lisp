@@ -221,7 +221,17 @@
       (assert-not-eql 2 zzz)
       (assert-not-eql 1 zzz)
       (assert-not-eql 3 zzz)
-      (assert-not-eql 1 zzz))))
+      (assert-not-eql 1 zzz)))
+
+  (def-test eval-criterion-pass :eval
+    (let ((zzz 'z))
+      (assert-criterion () (:eq 'z) zzz)))
+  (def-test eval-criterion-fail :eval
+    (let ((zzz 'z))
+      (assert-criterion () (:eq 'zz) zzz)))
+  (def-test eval-criterion-error :eval
+    (let ((zzz 'z))
+      (assert-criterion () (:eq 'z) (error "XXX")))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Testing export of names.
@@ -244,5 +254,7 @@
   (fix3a :true)
   (fix3b :false))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; NB --- search for in-package --- the end of this file is NOT in
 ;; :mnst-src.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

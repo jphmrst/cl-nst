@@ -194,6 +194,9 @@
   (def-test eval-1 :eval
     (let ((zzz 'z))
       (assert-eq 'z zzz)))
+  (def-test eval-2 :eval
+    (let ((zzz 'z))
+      (assert-criterion () (:eq 'z) zzz)))
   (def-test criterion-head-1 (:applying-common-criterion :eq
                                (('a) ('a))
                                (('b) ('b))))

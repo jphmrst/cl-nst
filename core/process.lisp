@@ -24,36 +24,35 @@
 ;;; Documentation generator for process-testing predicates
 (defdoc:def-target-type process-predicate (:symbol-definition-nocheck t))
 
-(define-condition nst-assertion-failure (condition)
-    ((fatal :initarg :fatal :reader assertion-failure-fatal)
-     (formatter :initarg :formatter :reader assertion-failure-formatter)
+(define-condition nst-assertion-condition (condition)
+    ((fatal :initarg :fatal :reader assertion-failure-fatal)))
+
+(define-condition nst-assertion-failure (nst-assertion-condition)
+    ((formatter :initarg :formatter :reader assertion-failure-formatter)
      (args :initarg :args :reader assertion-failure-args)))
 
-(define-condition nst-assertion-result-check (condition)
-    ((fatal :initarg :fatal :reader assertion-result-fatal)
-     (result :initarg :result :reader assertion-result-result)
-     (formatter :initarg :formatter :reader assertion-result-formatter)
-     (args :initarg :args :reader assertion-result-args)))
+(define-condition nst-assertion-result-check (nst-assertion-condition)
+    ((result :initarg :result :reader nst-assertion-result)))
 
 (defun assert-criterion-fn (criterion-expr values-form
-                            &key formatter format-args fatal)
-  (with-simple-restart (nst-assertion
-                        (apply #'format nil formatter format-args))
+                            &key msg-format msg-args fatal fail-on-warning)
+  (with-simple-restart (nst-assertion (apply #'format nil msg-format msg-args))
     (unless (listp criterion-expr)
       (setf criterion-expr (list criterion-expr)))
     (let ((result (apply-criterion (car criterion-expr) (cdr criterion-expr)
                                    values-form)))
-      ;; FILL IN
-      (error 'nst-assertion-result-check :fatal fatal :result result
-             :formatter formatter :args format-args))))
+      (when (or (check-result-errors result)
+                (check-result-failures result)
+                (and fail-on-warning (check-result-warnings result)))
+        (error 'nst-assertion-result-check :fatal fatal :result result)))))
 
 (defmacro assert-criterion (key-args criterion-expr &rest value-exprs)
-  `(assert-criterion-fn ',criterion-expr (list ,@value-exprs)
+  `(assert-criterion-fn ',criterion-expr '(list ,@value-exprs)
                         ,@key-args))
 (defdoc:def-documentation (macro assert-criterion)
   (:properties (nst-manual process-predicate))
   (:intro (:seq "Macro " (:lisp macro assert-criterion)
-                (:latex "\\fbox{FILL IN}"))))
+                (:latex " --- \\fbox{FILL IN}"))))
 
 (defmacro def-unary-predicate-assert (assert-fn predicate default-message &key
                                       (message-defvar nil defvar-supp-p)
@@ -93,7 +92,7 @@
 (defdoc:def-documentation (macro def-unary-predicate-assert)
   (:properties (nst-manual process-pred-maker))
   (:intro (:seq "Macro " (:lisp macro def-unary-predicate-assert)
-                (:latex "\\fbox{FILL IN}"))))
+                (:latex " --- \\fbox{FILL IN}"))))
 
 (defmacro def-unary-negated-predicate-assert (assert-fn predicate
                                               default-message
@@ -105,7 +104,7 @@
 (defdoc:def-documentation (macro def-unary-negated-predicate-assert)
   (:properties (nst-manual process-pred-maker))
   (:intro (:seq "Macro " (:lisp macro def-unary-negated-predicate-assert)
-                (:latex "\\fbox{FILL IN}"))))
+                (:latex " --- \\fbox{FILL IN}"))))
 
 (defmacro def-binary-predicate-assert (assert-fn predicate default-message &key
                                        (message-defvar nil defvar-supp-p)
@@ -146,7 +145,7 @@
 (defdoc:def-documentation (macro def-binary-predicate-assert)
   (:properties (nst-manual process-pred-maker))
   (:intro (:seq "Macro " (:lisp macro def-binary-predicate-assert)
-                (:latex "\\fbox{FILL IN}"))))
+                (:latex " --- \\fbox{FILL IN}"))))
 
 (defmacro def-binary-negated-predicate-assert (assert-fn predicate
                                                default-message &rest keyargs
@@ -158,7 +157,7 @@
 (defdoc:def-documentation (macro def-binary-negated-predicate-assert)
   (:properties (nst-manual process-pred-maker))
   (:intro (:seq "Macro " (:lisp macro def-binary-negated-predicate-assert)
-                (:latex "\\fbox{FILL IN}"))))
+                (:latex " --- \\fbox{FILL IN}"))))
 
 (def-unary-predicate-assert assert-null null  "~@<Expected null, ~_got ~s~:>"
                             :message-defvar *assert-null-format-string*)
@@ -230,8 +229,8 @@
                        (nst-assertion-result-check
                         #'(lambda (e)
                             (add-failure result
-                              :format (assertion-failure-formatter e)
-                              :args (assertion-failure-args e))
+                              :format "~w"
+                              :args (list (nst-assertion-result e)))
                             (nst-assertion-restart e)))
                        (error #'(lambda (e)
                                   (add-error result
