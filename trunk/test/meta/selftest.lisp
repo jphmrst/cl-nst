@@ -375,3 +375,25 @@
         (---warning-records (:apply length (:eql 0)))
         (---info-records (:apply length (:eql 0))))))
 
+(def-test (eval-selftest-pass :group eval-selftests)
+    (--nst-group mnst-src::eval-tests
+      (---on-test mnst-src::eval-tests mnst-src::eval-criterion-pass
+        (---fail-records (:apply length (:eql 0)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))))
+(def-test (eval-selftest-fail :group eval-selftests)
+    (--nst-group mnst-src::eval-tests
+      (---on-test mnst-src::eval-tests mnst-src::eval-criterion-fail
+        (---fail-records (:apply length (:eql 1)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))))
+(def-test (eval-selftest-error :group eval-selftests)
+    (--nst-group mnst-src::eval-tests
+      (---on-test mnst-src::eval-tests mnst-src::eval-criterion-error
+        (---fail-records (:apply length (:eql 1)))
+        (---error-records (:apply length (:eql 0)))
+        (---warning-records (:apply length (:eql 0)))
+        (---info-records (:apply length (:eql 0))))))
+
