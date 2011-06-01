@@ -51,8 +51,15 @@
                         ,@key-args))
 (defdoc:def-documentation (macro assert-criterion)
   (:properties (nst-manual process-predicate))
-  (:intro (:seq "Macro " (:lisp macro assert-criterion)
-                (:latex " --- \\fbox{FILL IN}"))))
+  (:intro (:seq "The " (:lisp macro assert-criterion)
+                " macro asserts that an NST criterion should pass."))
+  (:callspec ((&key (msg-format format-string) (msg-args format-arguments)
+                    (fatal flag) (fail-on-warning flag))
+              criterion (:seq form)))
+  (:params (msg-format "Format string used to build the label of the restart point.")
+           (msg-args "Format arguments used to build the label of the restart point.")
+           (fatal "If non-nil, a failure of this assertion indicates that execution of the test forms should be aborted.")
+           (fail-on-warning "If non-nil, then an NST result which includes a warning indicates failure of this assertion.")))
 
 (defmacro def-unary-predicate-assert (assert-fn predicate default-message &key
                                       (message-defvar nil defvar-supp-p)
@@ -92,7 +99,19 @@
 (defdoc:def-documentation (macro def-unary-predicate-assert)
   (:properties (nst-manual process-pred-maker))
   (:intro (:seq "Macro " (:lisp macro def-unary-predicate-assert)
-                (:latex " --- \\fbox{FILL IN}"))))
+                " creates an assertion function using the result of a call to a unary predicate.  A non-nil result from the predicate corresponds to a successful assertion."))
+  (:callspec (assert-fn predicate default-message &key
+                        (message-defvar name)
+                        (pred-name name)
+                        (doc-state-flag bool)))
+  (:params (assert-fn (:seq "The name of the assertion function being defined."))
+           (predicate (:seq "The predicate used to define the assertion function.  It should take a single argument."))
+           (default-message (:seq "Format string used by default for reporting failures of this assertion.  It should expect to be used in a call to "
+                                  (:lisp function format)
+                                  " with one additional argument, the value being tested."))
+           (message-defvar (:seq "The name of a global variable into which the default message will be stored.  If this argument is omitted, the result of a call to "
+                                 (:lisp function gensym) " is used."))
+           (pred-name (:seq "This argument is used only for documenting the underlying predicate in the assertion function's docstring.  By default, it is the same as the predicate."))))
 
 (defmacro def-unary-negated-predicate-assert (assert-fn predicate
                                               default-message
@@ -104,7 +123,8 @@
 (defdoc:def-documentation (macro def-unary-negated-predicate-assert)
   (:properties (nst-manual process-pred-maker))
   (:intro (:seq "Macro " (:lisp macro def-unary-negated-predicate-assert)
-                (:latex " --- \\fbox{FILL IN}"))))
+                " uses the negated result of a unary predicate as the basis of an assertion function.  This macro's arguments are just as for "
+                (:lisp macro def-unary-predicate-assert) ".")))
 
 (defmacro def-binary-predicate-assert (assert-fn predicate default-message &key
                                        (message-defvar nil defvar-supp-p)
@@ -145,7 +165,10 @@
 (defdoc:def-documentation (macro def-binary-predicate-assert)
   (:properties (nst-manual process-pred-maker))
   (:intro (:seq "Macro " (:lisp macro def-binary-predicate-assert)
-                (:latex " --- \\fbox{FILL IN}"))))
+                " uses a binary predicate as the basis for an assertion function just as "
+                (:lisp macro def-unary-predicate-assert)
+                " uses a unary predicate.  This macro's arguments are just as for "
+                (:lisp macro def-unary-predicate-assert) ".")))
 
 (defmacro def-binary-negated-predicate-assert (assert-fn predicate
                                                default-message &rest keyargs
@@ -157,7 +180,10 @@
 (defdoc:def-documentation (macro def-binary-negated-predicate-assert)
   (:properties (nst-manual process-pred-maker))
   (:intro (:seq "Macro " (:lisp macro def-binary-negated-predicate-assert)
-                (:latex " --- \\fbox{FILL IN}"))))
+                " uses the negated result of a binary predicate as the basis for an assertion function just as "
+                (:lisp macro def-unary-negated-predicate-assert)
+                " uses the negated result of a unary predicate.  This macro's arguments are just as for "
+                (:lisp macro def-unary-predicate-assert) ".")))
 
 (def-unary-predicate-assert assert-null null  "~@<Expected null, ~_got ~s~:>"
                             :message-defvar *assert-null-format-string*)
@@ -252,6 +278,40 @@
            (muffle-warnings "If non-nil, will muffle warnings thrown when evaluating the forms under test, so that they are reported only as NST result warnings and if the " (:inline ":check-warnings") " flag is set.  The default is " (:inline "t") ".")
            (attempt-continue "If non-nil, will continue evaluation after failed assertions, so long as the failure is not deemed " (:inline "fatal") ". The default is " (:inline "t") ".")
            (force-continue "If non-nil, will continue evaluation after failed assertions even if the failure is not deemed " (:inline "fatal") ". The default is " (:inline "nil") ".")))
+
+(defmacro def-eval-test (name-or-name-and-args &rest forms)
+  (let (name test-args eval-args)
+    (cond
+      ((symbolp name-or-name-and-args)
+       (setf name name-or-name-and-args))
+      (t (setf name (pop name-or-name-and-args))
+         (loop while name-or-name-and-args do
+           (let ((key (pop name-or-name-and-args))
+                 (val (pop name-or-name-and-args)))
+             (case key
+               ((:check-warnings :muffle-warnings
+                 :attempt-continue :force-continue)
+                (setf test-args `(,@test-args ,key ,val)))
+               (otherwise
+                (setf test-args `(,@test-args ,key ,val))))))))
+    `(def-test (,name ,@test-args) (:eval ,@eval-args) ,@forms)))
+(defdoc:def-documentation (macro def-eval-test)
+  (:properties (nst-manual process))
+  (:callspec ((NAME &key (group GROUP-NAME)
+                    (setup FORM)
+                    (cleanup FORM)
+                    (startup FORM)
+                    (finish FORM)
+                    (fixtures ((:seq FIXTURE)))
+                    (documentation STRING)
+                    (check-warnings FLAG) (muffle-warnings FLAG)
+                    (attempt-continue FLAG) (force-continue FLAG))
+              &body (:seq FORM))
+             (NAME &body (:seq FORM)))
+  (:intro "The " (:lisp macro def-eval-test) " macro abbreviates a call to "
+          (:lisp macro def-test) " with a single " (:lisp criterion :eval)
+          " criterion.  Its arguments are just as for " (:lisp macro def-test)
+          " and " (:lisp criterion :eval) "."))
 
 (def-criterion (:process (:forms &rest forms) :ignore)
     (let ((result (make-success-report)))

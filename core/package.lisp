@@ -63,7 +63,7 @@
 
            #:with-fixtures
 
-           #:assert-criterion
+           #:def-eval-test #:assert-criterion
            #:def-unary-predicate-assert #:def-unary-negated-predicate-assert
            #:def-binary-predicate-assert #:def-binary-negated-predicate-assert
 
