@@ -172,13 +172,14 @@ criteria for validating the " (:emph "process") " of a computation,
 specifying assertions which should hold at the initial, intermediate
 and final points of the process."))
       ()
-    (defdoc:collect-groups-by-label
-        (nst::nst-manual :groups '(nst::process nst::process-predicate))
+    (defdoc:collect-groups-by-label (nst::nst-manual :groups '(nst::process))
       (defdoc:collect-target-type 'nst::criterion))
-    (collect-output (:title "Placing assertions") ()
+    (defdoc:collect-groups-by-label (nst::nst-manual :groups '(nst::process))
+      (defdoc:collect-exported-symbols :nst))
+    (collect-output (:title "Asserting properties") ()
       (defdoc:collect-groups-by-label
-       (nst::nst-manual :groups '(nst::process nst::process-predicate)
-                        :order '(nst:assert-criterion))
+          (nst::nst-manual :groups '((nst::process-predicate
+                                      :order '(assert-criterion))))
         (defdoc:collect-exported-symbols :nst)))
     (collect-output (:title "Defining new assertion functions"
                      :short-title "New asserters") ()
