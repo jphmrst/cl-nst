@@ -4,7 +4,7 @@
   various points, as opposed to values at the end of their
   computation.  This release also "blesses" certain criteria added
   tentatively in the preceeding minor releases.
-** 4.0.0 - in Subversion HEAD
+** 4.0.0 - public release, May 31, 2011
   - Added an :eval criterion for process checking, def-eval-test macro
     and related functions assert-criterion, assert-eq, assert-eql,
     etc.  This criterion and test form are a more general approach to
