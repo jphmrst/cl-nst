@@ -1,12 +1,14 @@
 * 4.0 releases
-  NST 4.0 releases introduce :eval criterion and related functions for
-  checking a computational process at various points, as opposed to
-  values at the end of their computation.  This release also "blesses"
-  certain criteria added tentatively in the preceeding minor releases.
+  NST 4.0 releases introduce the :eval criterion, def-eval-test macro,
+  and related functions for checking a computational process at
+  various points, as opposed to values at the end of their
+  computation.  This release also "blesses" certain criteria added
+  tentatively in the preceeding minor releases.
 ** 4.0.0 - in Subversion HEAD
-  - Added an :eval criterion for process checking, and related
-    functions assert-criterion, assert-eq, assert-eql, etc.  This
-    criterion is a more general approach to the :process criterion.
+  - Added an :eval criterion for process checking, def-eval-test macro
+    and related functions assert-criterion, assert-eq, assert-eql,
+    etc.  This criterion and test form are a more general approach to
+    the :process criterion.
   - Ticket 237: Added a separate documentation target for macros, as
     opposed to compiler macros, and updated DefDoc and NST
     documentation to use that target.
