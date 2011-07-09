@@ -28,7 +28,7 @@ first element is that symbol and whose remaining elements are options."
 
   (cond
    ((symbolp name-or-name-and-args)
-    (values name-or-name-and-args nil nil nil nil nil nil nil nil))
+    (values name-or-name-and-args nil nil nil nil nil nil nil nil nil nil))
    ((listp name-or-name-and-args)
     (destructuring-bind (name &key (setup nil setup-supp-p)
                                    (cleanup nil cleanup-supp-p)
@@ -36,6 +36,7 @@ first element is that symbol and whose remaining elements are options."
                                    (finish nil finish-supp-p)
                                    (fixtures nil fixtures-supp-p)
                                    (group nil group-supp-p)
+                                   (aspirational nil aspirational-supp-p)
                                    (documentation nil documentation-supp-p))
         name-or-name-and-args
       (when (and fixtures (symbolp fixtures))
@@ -44,7 +45,7 @@ first element is that symbol and whose remaining elements are options."
                 setup setup-supp-p cleanup cleanup-supp-p
                 startup startup-supp-p finish finish-supp-p
                 fixtures fixtures-supp-p
-                group group-supp-p
+                group group-supp-p aspirational aspirational-supp-p
                 documentation documentation-supp-p)))
    (t
     (error "~@<Expected symbol or list for def-test argument~_ ~s~:>"
@@ -57,6 +58,7 @@ first element is that symbol and whose remaining elements are options."
       (%test-name-lookup :reader test-name-lookup)
       (%check-group-name :reader check-group-name)
       (%test-forms :reader test-forms)
+      (%aspirational :reader test-aspirational-flag)
       (%special-fixture-names :reader special-fixture-names)
       (%criterion :reader test-criterion)
       (%setup-form   :reader test-setup-form)
@@ -98,9 +100,10 @@ first element is that symbol and whose remaining elements are options."
                           setup setup-supp-p cleanup cleanup-supp-p
                           startup startup-supp-p finish finish-supp-p
                           fixtures fixtures-supp-p group group-supp-p
+                          aspirational aspirational-supp-p
                           docstring docstring-supp-p)
         (decode-defcheck-name-and-args name-or-name-and-args)
-      (declare (ignore fixtures-supp-p))
+      (declare (ignore fixtures-supp-p aspirational-supp-p))
       (when (and group-supp-p
                  (boundp '*group-class-name*)
                  (not (eq group (symbol-value '*group-class-name*))))
@@ -157,8 +160,7 @@ first element is that symbol and whose remaining elements are options."
 
         ;; Get rid of any previous records.  For ticket:118, this would
         ;; become setting up initial records.
-        (loop for id in purge-ids do
-              (remhash id +results-record+))
+        (loop for id in purge-ids do (remhash id +results-record+))
 
         ;; If we aren't reusing a name, make up a new one.
         (unless name
@@ -167,8 +169,8 @@ first element is that symbol and whose remaining elements are options."
 
         ;; Expand the fixtures into the definitions we'll actually
         ;; use.
-        (multiple-value-bind (fixture-class-names anon-fixture-forms
-                              fixture-names)
+        (multiple-value-bind
+            (fixture-class-names anon-fixture-forms fixture-names)
             (process-fixture-list fixtures)
           (declare (ignorable fixture-names))
 
@@ -224,6 +226,7 @@ first element is that symbol and whose remaining elements are options."
                    (set-slot '%test-name-lookup ',test-name)
                    (set-slot '%check-group-name ',name)
                    (set-slot '%test-forms ',forms)
+                   (set-slot '%aspirational ',aspirational)
                    (set-slot '%special-fixture-names ',fixture-names-special)
                    (set-slot '%criterion ',criterion)
                    (set-slot '%setup-form
@@ -324,3 +327,9 @@ dynamic variables normally provided by def-test-group."
          (*group-class-name* '<<GROUP-CLASS-NAME>>))
      (declare (special *group-class-name* *group-fixture-classes*))
      (pprint (macroexpand ',defcheck))))
+
+(defun test-is-aspirational (ts)
+  (when (symbolp ts)
+    (setf ts (make-instance ts)))
+  (or (test-aspirational-flag ts)
+      (group-aspirational-flag (make-instance (group-name ts)))))
