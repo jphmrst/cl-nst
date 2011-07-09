@@ -24,6 +24,18 @@
 
 (defvar *debug-within-metatested* nil)
 
+(def-criterion-alias (---aspirational)
+  `(:predicate nst::test-is-aspirational))
+
+(def-criterion (--with-group (group-name &rest subcriteria) ())
+  (let ((group (make-instance group-name)))
+    (check-criterion-on-value `(:all ,@subcriteria) group)))
+
+(def-criterion (--with-test (group-name test-name &rest subcriteria) ())
+  (let* ((group-obj (make-instance group-name))
+         (test-obj (gethash test-name (nst::test-name-lookup group-obj))))
+    (check-criterion-on-value `(:all ,@subcriteria) test-obj)))
+
 (def-criterion (--nst-group-has-test (group-name test-name) ())
     (cond
       ((and (member test-name (nst::test-list (make-instance group-name)))

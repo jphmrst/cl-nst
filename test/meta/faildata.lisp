@@ -233,6 +233,24 @@
     (let ((zzz 'z))
       (assert-criterion () (:eq 'z) (error "XXX")))))
 
+(def-test-group asp-group-0 ()
+  (:aspirational t)
+  (def-test ag0-t1 (:eq 'a) 'a)
+  (def-test ag0-t2 (:eq 'a) 'b))
+
+(def-test-group asp-group-1 ()
+  (:aspirational t)
+  (def-test (ag1-t1 :aspirational t) (:eq 'a) 'a)
+  (def-test (ag1-t2 :aspirational t) (:eq 'a) 'b))
+
+(def-test-group asp-group-2 ()
+  (def-test (ag2-t1 :aspirational t) (:eq 'a) 'a)
+  (def-test (ag2-t2 :aspirational t) (:eq 'a) 'b))
+
+(def-test-group asp-group-3 ()
+  (def-test ag3-t1 (:eq 'a) 'a)
+  (def-test (ag3-t2 :aspirational t) (:eq 'a) 'b))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Testing export of names.
 

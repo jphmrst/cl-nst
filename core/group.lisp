@@ -39,6 +39,7 @@
         (each-setup nil) (each-setup-supp-p nil)
         (each-cleanup nil) (each-cleanup-supp-p nil)
         (docstring nil) (docstring-supp-p nil)
+        (aspirational nil) (aspirational-supp-p nil)
         (include-groups nil))
     (loop for form in forms do
       (case (car form)
@@ -58,12 +59,14 @@
         (:each-setup   (setf each-setup (cdr form)   each-setup-supp-p t))
         (:each-cleanup (setf each-cleanup (cdr form) each-cleanup-supp-p t))
         (:documentation (setf docstring (cadr form) docstring-supp-p t))
+        (:aspirational (setf aspirational (cadr form) aspirational-supp-p t))
         (otherwise (push form checks))))
     (values (nreverse checks)
             setup setup-supp-p      cleanup cleanup-supp-p
             startup startup-supp-p  finish finish-supp-p
             each-setup each-setup-supp-p each-cleanup each-cleanup-supp-p
             docstring docstring-supp-p
+            aspirational aspirational-supp-p
             include-groups)))
 
 (defgeneric anon-fixture-forms (group-record)
@@ -76,6 +79,7 @@
    (anon-fixture-forms :reader anon-fixture-forms)
    (test-list :accessor test-list)
    (test-name-lookup :reader test-name-lookup)
+   (%aspirational :reader group-aspirational-flag)
    (%given-fixtures :reader group-given-fixtures)
    (%fixture-classes :reader group-fixture-class-names)
    (%fixtures-setup-thunk :reader group-fixtures-setup-thunk)
@@ -133,8 +137,10 @@
                                       each-setup each-setup-supp-p
                                       each-cleanup each-cleanup-supp-p
                                       docstring docstring-supp-p
+                                      aspirational aspirational-supp-p
                                       include-groups)
         (separate-group-subforms forms)
+      (declare (ignore aspirational-supp-p))
 
       ;; Get the package where the public group name symbol lives.
       (let ((group-orig-pkg (symbol-package group-name))
@@ -210,6 +216,7 @@
                      (set-slot 'anon-fixture-forms ',anon-fixture-forms)
                      (set-slot 'test-list nil)
                      (set-slot 'test-name-lookup (make-hash-table :test 'eq))
+                     (set-slot '%aspirational ',aspirational)
                      (set-slot '%given-fixtures ',given-fixtures)
                      (set-slot '%fixture-classes ',fixture-class-names)
                      (set-slot '%fixtures-setup-thunk
@@ -301,6 +308,7 @@ form\\index{group}\\index{test group|see{group}} defines a group of the
 given name, providing one instantiation of the bindings of the given fixtures
 to each test.  Groups can be associated with fixture sets, stateful initiatization, and stateful cleanup.\\index{def-test-group@\\texttt{def-test-group}}"))
   (:callspec (NAME ((:seq FIXTURE)) &body
+                   (:key-head :aspirational FLAG)
                    (:key-head :setup (:seq FORM))
                    (:key-head :cleanup (:seq FORM))
                    (:key-head :startup (:seq FORM))
@@ -312,6 +320,7 @@ to each test.  Groups can be associated with fixture sets, stateful initiatizati
                    (:seq TEST)))
   (:params (group-name "Name of the test group being defined")
            (given-fixtures "List of the names of fixtures and anonymous fixtures to be used with the tests in this group.")
+           (aspirational "An aspirational test is one which verifies some part of an API or code contract which may not yet be implemented.  Failures and errors of tests in aspirational groups may be treated differently than for other groups. When a group is marked aspirational, all tests within the group are taken to be aspirational as well.")
            (forms "Zero or more test forms, given by def-check.")
            (setup (:latex "These forms are run once, before any of the individual tests, but after the fixture names are bound.\\index{setup@\\texttt{:setup}}"))
            (cleanup (:latex "These forms are run once, after all of the individual tests, but while the fixture names are still bound.\\index{cleanup@\\texttt{:cleanup}}"))
