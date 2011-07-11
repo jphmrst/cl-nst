@@ -59,6 +59,7 @@ first element is that symbol and whose remaining elements are options."
       (%check-group-name :reader check-group-name)
       (%test-forms :reader test-forms)
       (%aspirational :reader test-aspirational-flag)
+      (%aspirational-supp :reader test-aspirational-flag-supp)
       (%special-fixture-names :reader special-fixture-names)
       (%criterion :reader test-criterion)
       (%setup-form   :reader test-setup-form)
@@ -227,6 +228,7 @@ first element is that symbol and whose remaining elements are options."
                    (set-slot '%check-group-name ',name)
                    (set-slot '%test-forms ',forms)
                    (set-slot '%aspirational ',aspirational)
+                   (set-slot '%aspirational-supp ',aspirational-supp-p)
                    (set-slot '%special-fixture-names ',fixture-names-special)
                    (set-slot '%criterion ',criterion)
                    (set-slot '%setup-form
@@ -331,5 +333,6 @@ dynamic variables normally provided by def-test-group."
 (defun test-is-aspirational (ts)
   (when (symbolp ts)
     (setf ts (make-instance ts)))
-  (or (test-aspirational-flag ts)
-      (group-aspirational-flag (make-instance (group-name ts)))))
+  (cond
+    ((test-aspirational-flag-supp ts) (test-aspirational-flag ts))
+    (t (group-aspirational-flag (make-instance (group-name ts))))))

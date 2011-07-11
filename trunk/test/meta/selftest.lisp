@@ -407,10 +407,17 @@
       (--with-test mnst-src::asp-group-1 mnst-src::ag1-t1 (---aspirational)))
   (def-test asp1b
       (--with-test mnst-src::asp-group-1 mnst-src::ag1-t2 (---aspirational)))
+  (def-test asp1c
+      (--with-test mnst-src::asp-group-1 mnst-src::ag1-t3
+                   (:not ---aspirational)))
   (def-test asp2a
       (--with-test mnst-src::asp-group-2 mnst-src::ag2-t1 (---aspirational)))
   (def-test asp2b
-      (--with-test mnst-src::asp-group-2 mnst-src::ag2-t2 (---aspirational)))
+      (--with-test mnst-src::asp-group-2 mnst-src::ag2-t2
+                   (:not ---aspirational)))
+  (def-test asp2c
+      (--with-test mnst-src::asp-group-2 mnst-src::ag2-t3
+                   (:not ---aspirational)))
   (def-test asp3a
       (--with-test mnst-src::asp-group-3 mnst-src::ag3-t1
                    (:not ---aspirational)))
