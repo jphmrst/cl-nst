@@ -104,7 +104,7 @@ first element is that symbol and whose remaining elements are options."
                           aspirational aspirational-supp-p
                           docstring docstring-supp-p)
         (decode-defcheck-name-and-args name-or-name-and-args)
-      (declare (ignore fixtures-supp-p aspirational-supp-p))
+      (declare (ignore fixtures-supp-p))
       (when (and group-supp-p
                  (boundp '*group-class-name*)
                  (not (eq group (symbol-value '*group-class-name*))))
