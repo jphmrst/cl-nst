@@ -25,6 +25,15 @@
 (defpackage :nst-asd (:use :common-lisp :asdf))
 (in-package :nst-asd)
 
+(let ((*root-dir* (make-pathname
+                   :directory (pathname-directory *load-truename*))))
+  (unless (find-system :defdoc nil)
+    (push (merge-pathnames "ext/defdoc/" *root-dir*)
+          *central-registry*))
+  (unless (find-system :defcontract nil)
+    (push (merge-pathnames "ext/defcontract/" *root-dir*)
+          *central-registry*)))
+
 (defsystem :nst
     :description "The NST unit/regression testing system"
                                         ; In the svn repository, the
