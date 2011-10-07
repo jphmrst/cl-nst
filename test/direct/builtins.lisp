@@ -171,12 +171,12 @@
       (:sample :sample-size 10
                :domains ((x (list :elem symbol)))
                :verify (equal x (reverse (reverse x)))))
-  (def-test sample-2
-      (:sample :domains ((x real))
-               :where (> x 1)
-               :verify (< (sqrt x) x)
-               :sample-size 10
-               :max-tries 12))
+  ;;(def-test sample-2
+  ;;    (:sample :domains ((x real))
+  ;;             :where (> x 1)
+  ;;             :verify (< (sqrt x) x)
+  ;;             :sample-size 10
+  ;;             :max-tries 12))
   (def-test sample-3
       (:sample :domains ((x integer) (y integer))
                :where (> x 0)
