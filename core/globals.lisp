@@ -25,37 +25,37 @@
 
 ;;; ----------------------------------------------------------------------
 
+;;;;;;
+;;;;;;  Singleton classes.
+;;;;;;
+;;;;;; Adapted from Tim Bradshaw's example singleton-class.lisp.
 ;;;
-;;;  Singleton classes.
 ;;;
-;;; Adapted from Tim Bradshaw's example singleton-class.lisp.
-
-
-(defclass singleton-class (standard-class)
-  ((singleton :accessor singleton :initform nil)))
-
-(defmethod validate-superclass ((class singleton-class)
-                                (superclass standard-class))
-  ;; it's OK for a standard class to be a superclass of a singleton
-  ;; class
-  t)
-
-(defmethod validate-superclass ((class singleton-class)
-                                (superclass singleton-class))
-  ;; it's OK for a singleton class to be a subclass of a singleton class
-  t)
-
-(defmethod validate-superclass ((class standard-class)
-                                (superclass singleton-class))
-  ;; but it is not OK for a standard class which is not a singleton class
-  ;; to be a subclass of a singleton class
-  nil)
-
-(defmethod make-instance ((class singleton-class) &key)
-  (with-accessors ((singleton singleton)) class
-    (unless singleton
-      (setf singleton (call-next-method)))
-    singleton))
+;;;(defclass singleton-class (standard-class)
+;;;  ((singleton :accessor singleton :initform nil)))
+;;;
+;;;(defmethod validate-superclass ((class singleton-class)
+;;;                                (superclass standard-class))
+;;;  ;; it's OK for a standard class to be a superclass of a singleton
+;;;  ;; class
+;;;  t)
+;;;
+;;;(defmethod validate-superclass ((class singleton-class)
+;;;                                (superclass singleton-class))
+;;;  ;; it's OK for a singleton class to be a subclass of a singleton class
+;;;  t)
+;;;
+;;;(defmethod validate-superclass ((class standard-class)
+;;;                                (superclass singleton-class))
+;;;  ;; but it is not OK for a standard class which is not a singleton class
+;;;  ;; to be a subclass of a singleton class
+;;;  nil)
+;;;
+;;;(defmethod make-instance ((class singleton-class) &key)
+;;;  (with-accessors ((singleton singleton)) class
+;;;    (unless singleton
+;;;      (setf singleton (call-next-method)))
+;;;    singleton))
 
 ;;;
 ;;;  User-controlled options.

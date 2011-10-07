@@ -26,8 +26,9 @@
 ;;;
 (defmacro add-class-name-static-method (fn)
   `(progn
-     (defmethod ,fn ((g symbol)) (,fn (class-prototype (find-class g))))
-     (defmethod ,fn ((g standard-class)) (,fn (class-prototype g)))))
+     (defmethod ,fn ((g symbol)) (,fn (make-instance g)))
+     ;; (defmethod ,fn ((g standard-class)) (,fn (make-instance g)))
+     ))
 
 (defmacro add-class-name-instantiator-method (fn)
   `(defmethod ,fn ((g symbol)) (,fn (make-instance g))))
@@ -72,33 +73,7 @@
        (let ((rounder (sig-place digits n1)))
          (eql (round n1 rounder) (round n2 rounder)))))
 
-;; Operations on lambda lists, for processing test specs.
-
-(defun lambda-list-names (lambda-list supp-p)
-  "Pick out the names from a lambda-list, omitting the ampersand-prefixed
-delimiters."
-  (let ((generic-list (extract-lambda-list lambda-list))
-        (result))
-    (labels ((descend (list)
-                (unless (null list)
-                  (let ((item (car list)))
-                    (cond
-                      ((listp item)
-                       (cond
-                         (supp-p (descend item))
-                         (t (push (car item) result)
-                            (when (caddr item)
-                              (push (caddr item) result)))))
-                     ((symbolp item)
-                      (unless (member item
-                                      #+allegro '(&allow-other-keys &aux
-                                                  &body &environment &key
-                                                  &optional &rest &whole)
-                                      #-allegro lambda-list-keywords)
-                        (push item result))))
-                    (descend (cdr list))))))
-      (descend generic-list)
-      (nreverse result))))
+;; Define this macro on platforms which do not provide it.
 
 #-allegro
 (defmacro named-function (name lambda-expression)

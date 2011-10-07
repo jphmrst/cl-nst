@@ -456,9 +456,10 @@ The last form shows all interesting results."
     (cond
       (test-supp-p
        (let* ((group-obj (make-instance group))
-              (test-obj (gethash test (test-name-lookup group-obj))))
-         (setf (test-list group-obj)
-               (delete (check-group-name test-obj) (test-list group-obj)))
+              (test-obj (make-instance (gethash test
+                                                (test-name-lookup group-obj)))))
+         (remove-group-testclassname (group-name group-obj)
+                                     (check-group-name test-obj))
          (remhash test (test-name-lookup group-obj))))
 
       (t (let ((package-hash (gethash (symbol-package group) +package-groups+)))

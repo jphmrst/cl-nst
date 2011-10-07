@@ -87,7 +87,7 @@ first element is that symbol and whose remaining elements are options."
 ;;; -----------------------------------------------------------------
 
 (defmacro def-test (name-or-name-and-args criterion &rest forms)
-  (declare (special *group-object-variable*))
+  ;; (declare (special *group-object-variable*))
 
   (handler-bind (#+sbcl (style-warning
                          (named-function def-test-style-warning-handler
@@ -138,12 +138,7 @@ first element is that symbol and whose remaining elements are options."
                 (package-name (symbol-package *group-class-name*))
                 "-" (symbol-name *group-class-name*)
                 "--" (package-name (symbol-package test-name))
-                "-" (symbol-name test-name)))
-
-             (group-obj-supp-p (boundp '*group-object-variable*))
-             (gproto (if group-obj-supp-p
-                         *group-object-variable*
-                         (gensym "gproto"))))
+                "-" (symbol-name test-name))))
         (declare (special *group-class-name* *group-fixture-classes*))
 
         ;; Find any records of running previous versions of this test.
@@ -190,37 +185,14 @@ first element is that symbol and whose remaining elements are options."
                ,@anon-fixture-forms
 
                (defclass ,name (,@fixture-class-names nst-test-record)
-                    ()
-                 (:metaclass singleton-class)
-                 ;; (:metaclass nst-test-record-meta)
+                 ()
                  ,@(when docstring-supp-p `((:documentation ,docstring))))
                #-sbcl
                ,@(when docstring-supp-p
                    `((setf (documentation ',test-name :nst-test) ,docstring)))
 
-               (finalize-inheritance (find-class ',name))
-
-               ;; Clear any previous stored results, since we've just
-               ;; (re-)defined this check.
-               #|(when (boundp '+results-record+)
-                 (remhash ',suite-class-name
-                          (symbol-value '+results-record+)))|#
-
-               ;; Pretty printer.
-               (set-pprint-dispatch ',name
-                 (named-function ,(format nil "pprint-test--~a" name)
-                   (lambda (stream object)
-                     (declare (ignorable object))
-                     (format stream
-                         ,(format nil "Test ~s of group ~s"
-                            test-name
-                            *group-class-name*)))))
-
-               ;; (defmethod test-name-lookup ((ts ,name)) ',test-name)
-
-               (let (,@(unless group-obj-supp-p
-                         `((,gproto (make-instance ',*group-class-name*))))
-                     (tproto (make-instance ',name)))
+               (defmethod initialize-instance :after ((tproto ,name)
+                                                      &key &allow-other-keys)
                  (flet ((set-slot (slot value)
                           (setf (slot-value tproto slot) value)))
                    (set-slot '%group-name ',*group-class-name*)
@@ -262,20 +234,26 @@ first element is that symbol and whose remaining elements are options."
                                      ,(format nil "test-~a-finish-thunk"
                                         name)
                                    (lambda () ,finish)))
-                                (t '#'no-effect))))
+                                (t '#'no-effect)))))
 
-                 ;; Store information about this test in its group.
-                 (setf (test-list ,gproto) (nconc (test-list ,gproto)
-                                                 (list ',name)))
-                 (setf (gethash ',test-name (test-name-lookup ,gproto))
-                       tproto)
+               ;; Pretty printer.
+               (set-pprint-dispatch ',name
+                 (named-function ,(format nil "pprint-test--~a" name)
+                   (lambda (stream object)
+                     (declare (ignorable object))
+                     (format stream
+                         ,(format nil "Test ~s of group ~s"
+                            test-name
+                            *group-class-name*)))))
 
-                 ;; Record the use of these names.
-                 (record-name-use :test ',test-name tproto)
+               ;; (defmethod test-name-lookup ((ts ,name)) ',test-name)
 
-                 ;; Store the new artifact against the uses of its
-                 ;; name in NST.
-                 (note-executable ',test-name tproto)))))))))
+               (group-add-testclassname ',*group-class-name* ',name)
+               (add-group-test-name-and-class ',*group-class-name* ',test-name ',name)
+
+               ;; Record the use of these names.
+               (record-name-use :test ',test-name ',name))))))))
+
 (def-documentation (macro def-test)
     (:properties (nst-manual tests) (nst-control-api primary))
     (:tags primary)
