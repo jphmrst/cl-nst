@@ -38,7 +38,8 @@ function --- certain behaviors provided by e.g. the ASDF extension or
 REPL macros require the dynamic configuration provided by those wrappers."
   (let* ((user-package (find-package package-or-name))
          (group-names (package-groups user-package)))
-    (note-artifact-choice (package-name user-package) user-package)
+    (note-name-use-invocation (package-name user-package) :package)
+    ;; (note-artifact-choice (package-name user-package) user-package)
 
     ;; Print a message at the appropriate level of verbosity.
     (with-output-for-verbosity (0 verb)
@@ -77,10 +78,12 @@ or REPL macros require the dynamic configuration provided by those wrappers."
          (group-name group-inst))))
   (let ((test-lookups (test-name-lookup group-inst)))
     (unless *implicit-group-choice*
-      (note-artifact-choice (group-name group-inst) group-inst))
+      ;; (note-artifact-choice (group-name group-inst) group-inst)
+      (note-name-use-invocation (group-name group-inst) :group))
     (run-group-tests group-inst
                      (loop for test-name in (test-names group-inst)
-                         collect (gethash test-name test-lookups))))
+                           collect (make-instance (gethash test-name
+                                                           test-lookups)))))
   (let ((*implicit-group-choice* t))
     (declare (special *implicit-group-choice*))
     (loop for included-group in (group-include-groups group-inst) do
@@ -88,8 +91,10 @@ or REPL macros require the dynamic configuration provided by those wrappers."
 
 (defun run-test-inst (test-inst)
   (format-at-verbosity 4 "Called (run-test-inst ~s)~%" test-inst)
-  (let ((group-inst (make-instance (group-name test-inst))))
-    (note-artifact-choice (test-name-lookup test-inst) test-inst)
+  (let* ((group-name (group-name test-inst))
+         (group-inst (make-instance group-name)))
+    ;; (note-artifact-choice (test-name-lookup test-inst) test-inst)
+    (note-name-use-invocation (test-name-lookup test-inst) :test group-name)
     (run-group-tests group-inst (list test-inst))))
 
 (defun run-test (group test)
@@ -104,7 +109,9 @@ configuration provided by those wrappers."
       (let* ((test-lookups (test-name-lookup group-inst))
              (test-inst (gethash test test-lookups)))
         (unless test-inst (error 'no-such-nst-test :group group :test test))
-        (note-artifact-choice (test-name-lookup test-inst) test-inst)
+        (setf test-inst (make-instance test-inst))
+        ;; (note-artifact-choice (test-name-lookup test-inst) test-inst)
+        (note-name-use-invocation (test-name-lookup test-inst) :test group)
 
         ;; Print a message at the appropriate level of verbosity.
         (format-at-verbosity 0 "Running test ~s (group ~s)~%" test group)

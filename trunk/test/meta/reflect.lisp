@@ -33,7 +33,7 @@
 
 (def-criterion (--with-test (group-name test-name &rest subcriteria) ())
   (let* ((group-obj (make-instance group-name))
-         (test-obj (gethash test-name (nst::test-name-lookup group-obj))))
+         (test-obj (make-instance (gethash test-name (nst::test-name-lookup group-obj)))))
     (check-criterion-on-value `(:all ,@subcriteria) test-obj)))
 
 (def-criterion (--nst-group-has-test (group-name test-name) ())

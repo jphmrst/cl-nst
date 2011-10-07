@@ -24,6 +24,14 @@
 (defclass standard-fixture () ()
   (:documentation "Common superclass of all fixtures."))
 
+(defvar +fixture-bound-names+ (make-hash-table :test 'eq))
+(defmethod bound-names ((fx standard-fixture))
+  (gethash (type-of fx) +fixture-bound-names+))
+(defmethod bound-names ((name symbol))
+  (gethash name +fixture-bound-names+))
+(defun set-bound-names (fixture-name bound-names)
+  (setf (gethash fixture-name +fixture-bound-names+) bound-names))
+
 #+allegro (excl::define-simple-parser def-fixtures second :nst-fixture-set)
 (defmacro def-fixtures (name
                         (&key (uses nil uses-supp-p)
@@ -113,14 +121,12 @@
                              (return-from ,block ,form)))))
                    (cond
                     (cache-this
-                     `(let ((the-cache (cached-values (make-instance ',name))))
-                        (multiple-value-bind (cached found)
-                            (gethash ',var-name the-cache)
-                          (cond
-                           (found cached)
-                           (t (let ((res ,calc))
-                                (setf (gethash ',var-name the-cache) res)
-                                res))))))
+                     `(multiple-value-bind (cached found)
+                          (get-fixture-value-cache ',name ',var-name)
+                        (cond
+                          (found cached)
+                          (t (let ((res ,calc))
+                               (set-fixture-value-cache ',name ',var-name res))))))
                     (t calc)))))
           into bindings-with-tracking
 
@@ -155,27 +161,18 @@
 
                    (eval-when (:compile-toplevel :load-toplevel :execute)
                      (defclass ,name (standard-fixture)
-                       ((bound-names :reader bound-names :allocation :class)
-                        ,@(when cache-any
-                            `((cached-values :initform (make-hash-table
-                                                        :test 'eq)
-                                             :accessor cached-values))))
-                       (:metaclass singleton-class)
+                       ((bound-names :reader bound-names :allocation :class))
                        ,@(when documentation
                            `((:documentation ,documentation))))
 
-                     (finalize-inheritance (find-class ',name))
-                     (setf (slot-value (make-instance ',name) 'bound-names)
-                       ',bound-names)
+                     (set-bound-names ',name ',bound-names))
 
-                     ,@(when cache-any
-                         `((clrhash (cached-values (make-instance ',name))))))
-
-                   (record-name-use :fixture ',name (make-instance ',name))
+                   (record-name-use :fixture ',name ',name)
 
                    ,(when cache-any
                       `(defmethod flush-fixture-cache ((f ,name))
-                         (clrhash (cached-values f))))
+                         ;; (clrhash (cached-values f))
+                         (clear-fixture-value-cache ',name)))
 
                    (defmethod do-group-fixture-assignment
                        :around ((,g-param ,name) ,t-param)
@@ -393,3 +390,26 @@ setting may vary for individual fixtures.")
     (:intro (:latex "The \\texttt{with-fixtures} macro faciliates debugging and other non-NST uses of fixtures sets:"))
   (:callspec (((:seq FIXTURE)) &body (:seq FORM)))
   (:details (:latex "This macro evaluates the forms in a namespace expanded with the bindings provided by the fixtures.")))
+
+;; -----------------------------------------------------------------
+
+(defvar +fixture-cache+ (make-hash-table :test 'eq)
+  "Global, internal hash table for storing cached fixture values.")
+
+(defun clear-fixture-value-cache (fixture-name)
+  (let ((cache (gethash fixture-name +fixture-cache+)))
+    (when cache
+      (clrhash cache))))
+
+(defun get-fixture-value-cache (fixture-name id)
+  (let ((cache (gethash fixture-name +fixture-cache+)))
+    (when cache
+      (gethash id cache))))
+
+(defun set-fixture-value-cache (fixture-name id val)
+  (let ((cache (gethash fixture-name +fixture-cache+)))
+    (unless cache
+      (setf cache (make-hash-table :test 'eq)
+            (gethash fixture-name +fixture-cache+) cache))
+    (setf (gethash id cache) val)
+    val))

@@ -77,8 +77,8 @@
 (defclass nst-group-record ()
   ((%group-name :reader group-name :initarg :group-name)
    (anon-fixture-forms :reader anon-fixture-forms)
-   (test-list :accessor test-list)
-   (test-name-lookup :reader test-name-lookup)
+   ;; (test-list :accessor test-list)
+   ;; (test-name-lookup :reader test-name-lookup)
    (%aspirational :reader group-aspirational-flag)
    (%given-fixtures :reader group-given-fixtures)
    (%fixture-classes :reader group-fixture-class-names)
@@ -113,6 +113,38 @@
 
 (defun no-effect () nil)
 
+;;; -----------------------------------------------------------------
+
+(defvar +groupname-testname-to-classname+ (make-hash-table :test 'eq))
+(defvar +groupname-testlist+ (make-hash-table :test 'eq))
+
+(defun group-name-redef (group-name)
+  (setf (gethash group-name +groupname-testlist+) nil)
+  (let ((h (gethash group-name +groupname-testname-to-classname+)))
+    (when h
+      (clrhash h))))
+
+(defmethod test-list ((group nst-group-record))
+  (gethash (group-name group) +groupname-testlist+))
+(defun group-add-testclassname (group-name testclass-name)
+  (setf (gethash group-name +groupname-testlist+)
+        (nconc (gethash group-name +groupname-testlist+)
+               (list testclass-name))))
+(defun remove-group-testclassname (group-name testclass-name)
+  (setf (gethash group-name +groupname-testlist+)
+        (delete testclass-name (gethash group-name +groupname-testlist+))))
+
+(defmethod test-name-lookup ((group nst-group-record))
+  (gethash (group-name group) +groupname-testname-to-classname+))
+(defun add-group-test-name-and-class (group-name test-name test-class-name)
+  (let ((name-to-class (gethash group-name +groupname-testname-to-classname+)))
+    (unless name-to-class
+      (setf name-to-class (make-hash-table :test 'eq)
+            (gethash group-name +groupname-testname-to-classname+) name-to-class))
+    (setf (gethash test-name name-to-class) test-class-name)))
+
+;;; -----------------------------------------------------------------
+
 (defmacro def-test-group (group-name given-fixtures &body forms)
 
   (handler-bind (#+sbcl (style-warning
@@ -143,9 +175,7 @@
       (declare (ignore aspirational-supp-p))
 
       ;; Get the package where the public group name symbol lives.
-      (let ((group-orig-pkg (symbol-package group-name))
-            (*group-object-variable* (gensym "group-object")))
-        (declare (special *group-object-variable*))
+      (let ((group-orig-pkg (symbol-package group-name)))
 
         ;; Go through the fixtures, extracting names, and preparing
         ;; anonymous fixture set instances.
@@ -184,9 +214,9 @@
                                       +package-groups+) package-hash))
                      (setf (gethash ',group-name package-hash) t)))
 
+                 (group-name-redef ',group-name)
                  (defclass ,group-name (,@fixture-class-names nst-group-record)
                       ()
-                   (:metaclass singleton-class)
                    ,@(when docstring-supp-p `((:documentation ,docstring))))
                  #-sbcl
                  ,@(when docstring-supp-p
@@ -194,8 +224,6 @@
                        (setf (documentation ',group-name :nst-test-group)
                              ,docstring)))
 
-                 ;; Complete the group class setup
-                 (finalize-inheritance (find-class ',group-name))
                  (set-pprint-dispatch ',group-name
                    (named-function ,(intern (format nil "pprint-test-group-~a"
                                               group-name))
@@ -203,19 +231,13 @@
                        (declare (ignorable object))
                        (format stream ,(format nil "Group ~s" group-name)))))
 
-                 ;; Copnfiguration of the actual group object
-                 ;; instance.
-                 (let ((,*group-object-variable* (make-instance ',group-name)))
-
-                   ;; Fill in the object's slot values for the given
-                   ;; group definition.
+                 (defmethod initialize-instance :after ((g ,group-name)
+                                                        &key &allow-other-keys)
                    (flet ((set-slot (slot value)
-                            (setf (slot-value ,*group-object-variable* slot)
-                                  value)))
+                            (setf (slot-value g slot)
+                              value)))
                      (set-slot '%group-name ',group-name)
                      (set-slot 'anon-fixture-forms ',anon-fixture-forms)
-                     (set-slot 'test-list nil)
-                     (set-slot 'test-name-lookup (make-hash-table :test 'eq))
                      (set-slot '%aspirational ',aspirational)
                      (set-slot '%given-fixtures ',given-fixtures)
                      (set-slot '%fixture-classes ',fixture-class-names)
@@ -281,25 +303,25 @@
                                         (declare (special ,@fixture-names))
                                         ,@each-cleanup)))
                                   (t `#'no-effect)))
-                     (set-slot '%include-groups ',include-groups))
+                     (set-slot '%include-groups ',include-groups)))
+                 ;; end of defmethod initialize-instance
 
-                   ;; Record name usage.
-                   (record-name-use :group ',group-name
-                                    ,*group-object-variable*)
+                 ;; Record name usage.
+                 (record-name-use :group ',group-name ',group-name)
 
-                   ;; Fixture processing.
-                   ,@anon-fixture-forms
+                 ;; Fixture processing.
+                 ,@anon-fixture-forms
 
-                   ;; Clear the list of tests when redefining the group.
-                   (clrhash (test-name-lookup ,*group-object-variable*))
+                 ;; Clear the list of tests when redefining the group.
+                 (let ((test-name-hash
+                        (gethash ',group-name +groupname-testname-to-classname+)))
+                   (when test-name-hash (clrhash test-name-hash)))
 
-                   ,@expanded-check-forms
-
-                   ;; Store the new artifact against the uses of its
-                   ;; name in NST.
-                   (note-executable ',group-name ,*group-object-variable*)))
+                 ;; Expansion of test macros.
+                 ,@expanded-check-forms)
 
                ',group-name))))))))
+
 (def-documentation (macro def-test-group)
   (:tags primary)
   (:properties (nst-manual groups) (api-summary primary))

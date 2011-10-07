@@ -239,4 +239,3 @@ Following ASDF we give NST version releases three-number codes:
  - The ''minor release'' number rolls for significant internal
    changes, or for tentative or experimental additions to the NST API.
  - The ''patch level'' number reflect other changes and bug fixes.
-

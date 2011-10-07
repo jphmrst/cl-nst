@@ -24,17 +24,8 @@
 (defpackage :sift.nst
   (:documentation "Unit and regression testing for Common Lisp")
   (:nicknames :nst)
-  (:use :closer-common-lisp :defdoc)
+  (:use :common-lisp :defdoc)
   #+allegro (:import-from excl #:named-function)
-  #+(or sbcl allegro)
-  (:import-from #+sbcl sb-mop #-sbcl mop
-                #:generic-function-methods #:method-specializers
-                #:eql-specializer-object)
-  #+(or openmcl clozure)
-  (:import-from ccl
-                #:extract-lambda-list
-                #:generic-function-methods #:method-specializers
-                #:eql-specializer-object)
 
   (:export #:def-fixtures #:def-test-group #:def-test
            #:nst-cmd

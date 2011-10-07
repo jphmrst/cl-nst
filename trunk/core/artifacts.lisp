@@ -129,7 +129,7 @@ of names of fixtures that are used by TEST-GROUP."))
     ((symbolp test)
      (cond
       ((find-class test nil) (make-instance test))
-      (t (gethash test (test-name-lookup (ensure-group-instance group))))))
+      (t (make-instance (gethash test (test-name-lookup (ensure-group-instance group)))))))
     (t test)))
 
 ;; Fixture properties and operations.
@@ -137,7 +137,7 @@ of names of fixtures that are used by TEST-GROUP."))
 (defgeneric bound-names (fixture-or-group)
   (:documentation "The names defined by each fixture.  Will be given
 a methods by the macro which expands fixtures."))
-(add-class-name-static-method bound-names)
+;; (add-class-name-static-method bound-names)
 
 (defgeneric open-fixture (fixture-name &optional package)
   (:documentation
@@ -174,13 +174,17 @@ default the current package."))
 (defvar +name-packages+ (make-hash-table :test 'eq)
   "Known occurances of names in different packages.")
 
-(defun get-name-use (name)
-  (let ((all-names (gethash (intern (symbol-name name)
-                                    (find-package :nst-name-use-in-packages))
-                            +name-packages+)))
+
+(defun package-lookup (name)
+  (intern (symbol-name name) (find-package :nst-name-use-in-packages)))
+
+(defun get-all-named-symbols (name)
+  (let ((all-names (gethash (package-lookup name) +name-packages+)))
     (when all-names
-      (loop for name being the hash-keys of all-names
-            collect (gethash name +name-use+)))))
+      (loop for name being the hash-keys of all-names collect name))))
+
+(defun get-name-use (name)
+  (loop for n in (get-all-named-symbols name) collect (gethash n +name-use+)))
 
 (defstruct name-use
   "Record for tracking the artifacts which NST associates with a name."
@@ -194,13 +198,14 @@ you want to use to read +name-use+."
       (setf this-name-use (make-name-use)
             (gethash name +name-use+) this-name-use))
     this-name-use))
+
 (defgeneric record-name-use (category name item)
+  (:documentation "As of Oct. 2011, all callers pass a symbol for the item.")
   (:method :around (category name item)
      (declare (ignorable category item))
      (eval-when (:load-toplevel :execute)
        (call-next-method)
-       (let* ((package-finder (intern (symbol-name name)
-                                      (find-package :nst-name-use-in-packages)))
+       (let* ((package-finder (package-lookup name))
               (this-name-package-use (gethash package-finder +name-packages+)))
          (unless this-name-package-use
            (setf this-name-package-use (make-hash-table :test 'eq)
@@ -216,7 +221,41 @@ you want to use to read +name-use+."
   (:method ((category (eql :test)) name item)
      (let ((this-name-use (get-name-use-record name)))
        (let ((tests-by-group (name-use-tests this-name-use)))
-         (setf (gethash (group-name item) tests-by-group) item)))))
+         (setf (gethash (group-name (make-instance item)) tests-by-group) item)))))
+
+(defvar +last-name-use-sort+ (make-hash-table :test 'eq))
+(defvar +last-test-group+ (make-hash-table :test 'eq))
+(defun note-name-use-invocation (name sort &optional group)
+  (setf (gethash name +last-name-use-sort+) sort)
+  (when (and (eq sort :test) group)
+    (setf (gethash name +last-test-group+) group)))
+
+(defun lookup-artifact (name)
+  (loop for pname in (get-all-named-symbols name)
+      append
+      (let ((use (gethash pname +name-use+))
+            (last-use-sort (gethash pname +last-name-use-sort+)))
+          (when use
+            (with-slots (fixture group tests) use
+              (case last-use-sort
+                ((:package)
+                 (list (find-package pname)))
+                ((:fixture)
+                 (when fixture (list (make-instance fixture))))
+                ((:group)
+                 (when group (list (make-instance group))))
+                ((:test)
+                 (let ((test-group (gethash pname +last-test-group+)))
+                   (cond
+                     ((and test-group (gethash test-group tests))
+                      (list (make-instance (gethash test-group tests))))
+                     (t (loop for tst being the hash-values of tests
+                            collect (make-instance tst))))))
+                (otherwise `(,@(when fixture (list (make-instance fixture)))
+                               ,@(when group (list (make-instance group)))
+                               ,@(when tests (loop for tst being the hash-values
+                                                 of tests
+                                                 collect (make-instance tst)))))))))))
 
 (set-pprint-dispatch 'name-use
   (named-function name-use-pprint-dispatch
@@ -227,13 +266,14 @@ you want to use to read +name-use+."
         (let ((tests-p (> (hash-table-count tests) 0)))
           (cond
             ((and fixture (not group) (not tests-p))
-             (let ((the-names (loop for name in (bound-names fixture)
+             (let* ((fixture-inst (make-instance fixture))
+                    (the-names (loop for name in (bound-names fixture-inst)
                                   if (symbol-package name)
                                   collect name)))
                (pprint-logical-block (stream '(1 2))
                  (format stream "~a (package ~a) is a fixture"
-                   (type-of fixture)
-                   (package-name (symbol-package (type-of fixture))))
+                   fixture
+                   (package-name (symbol-package fixture)))
                  (pprint-newline :mandatory stream)
                  (princ " - " stream)
                  (pprint-logical-block (stream '(1 2))
@@ -253,14 +293,14 @@ you want to use to read +name-use+."
             ((and group (not fixture) (not tests-p))
              (pprint-logical-block (stream '(1 2))
                (format stream "~a (package ~a) is a test group"
-                 (type-of group)
-                 (package-name (symbol-package (type-of group))))
+                 group
+                 (package-name (symbol-package group)))
                (pprint-newline :mandatory stream)
                (princ " - " stream)
-               (let ((test-names (test-names group)))
+               (let ((test-names (test-names (make-instance group))))
                  (pprint-logical-block (stream test-names)
                    (princ "Contains test" stream)
-                   (unless (eql 1 (length (test-names group)))
+                   (unless (eql 1 (length test-names))
                      (princ "s" stream))
                    (loop for name = (pprint-pop) while name do
                          (format stream " ~a" name)
@@ -273,15 +313,15 @@ you want to use to read +name-use+."
                (1
                 (loop for tst being the hash-values of tests do
                       (format stream "~a (package ~a) is a test in group ~a"
-                        (test-name-lookup tst)
-                        (package-name (symbol-package (test-name-lookup tst)))
-                        (group-name tst))))
+                        tst
+                        (package-name (symbol-package tst))
+                        (group-name (make-instance tst)))))
                (otherwise
                 (loop for tst being the hash-values of tests do
                       (format stream "~a (package ~a) is a test in group ~a~%"
-                        (test-name-lookup tst)
-                        (package-name (symbol-package (test-name-lookup tst)))
-                        (group-name tst))))))
+                        tst
+                        (package-name (symbol-package tst))
+                        (group-name (make-instance tst)))))))
 
             (t
              (format stream "MULTI"))))))))

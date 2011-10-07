@@ -27,14 +27,4 @@
   (:documentation "Unit and regression testing for Common Lisp")
   (:nicknames :defdoc-doc)
   (:use :common-lisp :defdoc :defdoc-control-api :defdoc-docsyms :asdf-defdoc)
-  #+(or sbcl allegro)
-  (:import-from #+sbcl sb-mop #-sbcl mop
-                #:generic-function-methods #:method-specializers
-                #:eql-specializer-object)
-  #+(or openmcl clozure)
-  (:import-from ccl
-    #:extract-lambda-list
-    #:generic-function-methods #:method-specializers
-    #:eql-specializer-object)
-
   (:export #:build-defdoc-docs))

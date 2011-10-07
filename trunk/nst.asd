@@ -75,9 +75,6 @@
                            (:file "artifacts"  :depends-on ("globals"))
 
                            ;;
-                           (:file "pick"  :depends-on ("artifacts"))
-
-                           ;;
                            (:file "interrupt"  :depends-on ("package"))
 
                            ;; Main control flow of test and group
@@ -87,7 +84,7 @@
                                                          "status"))
 
                            ;; The def-group macro.
-                           (:file "group" :depends-on ("pick"))
+                           (:file "group" :depends-on ("artifacts"))
 
                            ;; Definition and expansion of check
                            ;; criteria.
@@ -95,8 +92,9 @@
 
                            ;; Definition and expansion of check
                            ;; criteria.
-                           (:file "check" :depends-on ("pick" "context"
-                                                              "interrupt"))
+                           (:file "check" :depends-on ("artifacts"
+                                                       "context"
+                                                       "interrupt"))
 
                            ;; The def-check macro.
                            (:file "test-def"
