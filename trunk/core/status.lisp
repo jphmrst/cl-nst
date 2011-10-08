@@ -714,6 +714,8 @@ six-value summary of the results:
     (setf groups nil)
     (loop while group-source do
       (let ((g (pop group-source)))
+        (when (consp g)
+          (setf g (intern (symbol-name (cdr g)) (find-package (car g)))))
         (push g groups)
         (loop for add in (group-include-groups g) do
           (push (make-instance add) group-source)))))
