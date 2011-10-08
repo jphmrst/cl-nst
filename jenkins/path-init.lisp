@@ -8,8 +8,13 @@
 (push (merge-pathnames #p"test/manual/" +NST-DIRECTORY+) asdf:*central-registry*)
 (push (merge-pathnames #p"test/meta/" +NST-DIRECTORY+) asdf:*central-registry*)
 (push (merge-pathnames #p"test/util/" +NST-DIRECTORY+) asdf:*central-registry*)
-#+clozure-common-lisp (setf *debugger-hook* #'(lambda (cnd prev) (quit 1)))
-#+sbcl (setf *debugger-hook* #'(lambda (cnd prev) (exit :unix-status 1)))
+#+clozure-common-lisp (setf *debugger-hook*
+                            #'(lambda (cnd prev)
+                                (declare (ignore cnd prev))
+                                (quit 1)))
+#+sbcl (setf *debugger-hook* #'(lambda (cnd prev)
+                                 (declare (ignore cnd prev))
+                                 (exit :unix-status 1)))
 
 (asdf:oos 'asdf:load-op :nst)
 (asdf:oos 'asdf:load-op :asdf-nst)
