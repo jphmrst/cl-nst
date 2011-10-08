@@ -178,7 +178,6 @@
 (defpackage :defdoc-standard-model
   (:documentation "DefDoc internal organizational package - standard models")
   (:use :defdoc-docsyms :common-lisp :defdoc-core
-        #-clozure-common-lisp
         #+(or allegro sbcl openmcl clisp) :defcontract)
   #+allegro (:import-from excl #:named-function)
   (:export ;; standard.lisp
