@@ -54,7 +54,11 @@
     :license "LGPL 2.latest"
     :in-order-to ((test-op (test-op :nst-test))
                   (cl-user::doc-op (load-op :nst)))
-    :depends-on ( :closer-mop ;; (:version :closer-mop "0.55")
+
+    ;; The features allowing _closer-mop should only ever include
+    ;; platforms which support Closer-to-MOP, and should always be a
+    ;; superset of the features allowing file method below.
+    :depends-on ( #+(or allegro sbcl clozure openmcl clisp) :closer-mop
                   :defdoc )
 
     :components ((:module "core" :components
@@ -135,8 +139,11 @@
                            ;; Sample-testing predicates.
                            (:file "sampling" :depends-on ("check"))
 
-                           ;; Object-oriented test methods.
-                           #-lispworks
+                           ;; Object-oriented test methods.  The
+                           ;; features allowing this file should
+                           ;; always be a subset of the features
+                           ;; allowing :closer-mop above.
+                           #+(or allegro sbcl clozure openmcl clisp)
                            (:file "method" :depends-on ("status" "check"))
 
                            ;; Other packaged APIs.
