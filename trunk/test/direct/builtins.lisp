@@ -31,7 +31,8 @@
       (s2 :initarg :s2) (s3 :initarg :s3)))
 
 (def-test-group g1 ()
-  (def-test triv :pass))
+  (def-test triv :pass)
+  (def-test triv2 (:eql 1) 0))
 
 (def-test-group g1a ()
   (def-test (fix0 :fixtures (f1)) :true (boundp 'c)))
