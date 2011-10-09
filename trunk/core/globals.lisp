@@ -60,7 +60,7 @@
 ;;;
 ;;;  User-controlled options.
 ;;;
-(defvar *nst-verbosity* 1
+(defvar *nst-verbosity* 0
   "User variable determining how verbose NST's output to the REPL should be.  Internally, this variable takes an integer value: 0 and below are silent, 1 is the default, 2 and 3 are more verbose, and 4 is for full tracing.  The command-line interpreter assigns keywords to these values, from most terse to most verbose: :silent, nil, :quiet, :default, t, :verbose, :vverbose (:quiet and :default are the same, and are the initial setting).")
 
 (defvar *debug-on-error* nil)

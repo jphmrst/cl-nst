@@ -36,6 +36,15 @@
                 "NST initialization steps.  Should a list of lists, each of
                  which gives arguments to run-nst-command/the REPL alias.")
 
+      (nst-config :initarg :nst-config
+                  :initform nil
+                  :reader nst-config
+                  :documentation
+                  "An association list mapping NST configuration global
+                   variables to settings to apply during a test run of this
+                   system. Variables which may be set through this mechanism
+                   are: *nst-verbosity*")
+
       (nst-debug-config :initarg :nst-debug-config
                         :initform '(symbol-value (intern (symbol-name '*default-debug-config*)
                                                   :nst))
@@ -146,7 +155,6 @@ other contributors to the to-do list, so we include those tasks via
     ;; Check whether we're running this system on behalf of another
     ;; system.
     (unless *intermediate-system*
-
       ;; If not, report all the results from both this system, and
       ;; subordinated systems.
       (multiple-value-bind (package-set group-set test-set) (all-nst-tested c)
@@ -158,3 +166,31 @@ other contributors to the to-do list, so we include those tasks via
                     append (loop for ts being the hash-keys of hash
                                collect (cons g ts)))
                 :system c)))))
+
+(defmacro collect-nst-values (runner &rest body)
+  "This macro allows NST configuration variables to be shadowed during an NST test-op, without requiring the NST system to be loaded when the project system is loaded."
+  (loop for var in '(*nst-verbosity*)
+        for nst-sym = `(intern (symbol-name ',var) (find-package :nst))
+        for nst-sym-name = (gensym (format nil "~a-sym-" (symbol-name var)))
+        for nst-ref = `(symbol-value ,nst-sym-name)
+        for local-ref = (gensym (format nil "~a-val-" (symbol-name var)))
+        collect `(,nst-sym-name ,nst-sym) into symbol-names
+        collect `(,local-ref ,nst-ref) into savers
+        append `(,nst-ref (let ((spec (assoc ,nst-sym-name alist)))
+                            (cond
+                              ((or *intermediate-system* (not spec)) ,nst-ref)
+                              (t (cdr spec))))) into shadowers
+        append `(,nst-ref ,local-ref) into restorers
+        finally (return-from collect-nst-values
+                  `(let ((alist (loop for (name . value) in (nst-config ,runner)
+                                      collect (cons (intern (symbol-name name)
+                                                            (find-package :nst))
+                                                    value))))
+                     (let* (,@symbol-names ,@savers)
+                       (unwind-protect (progn
+                                         (setf ,@shadowers)
+                                         ,@body)
+                         (setf ,@restorers)))))))
+
+(defmethod perform :around ((o asdf:test-op) (c nst-test-runner))
+  (collect-nst-values c (call-next-method)))
