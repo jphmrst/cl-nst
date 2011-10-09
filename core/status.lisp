@@ -168,23 +168,26 @@
             (slot-value system 'asdf::name)))
         (let ((reports
                (nconc (loop for report in packages
-                          collect (let ((*nst-report-driver* (case *nst-report-driver*
-                                                               (:details :details)
-                                                               (t :package))))
+                            collect (let ((*nst-report-driver*
+                                           (case *nst-report-driver*
+                                             (:details :details)
+                                             (t :package))))
                                     (declare (special *nst-report-driver*))
                                     (format s "~w~%" report)
                                     report))
                       (loop for report in groups
-                          collect (let ((*nst-report-driver* (case *nst-report-driver*
-                                                               (:details :details)
-                                                               (t :group))))
+                            collect (let ((*nst-report-driver*
+                                           (case *nst-report-driver*
+                                             (:details :details)
+                                             (t :group))))
                                     (declare (special *nst-report-driver*))
                                     (format s "~w~%" report)
                                     report))
                       (loop for report in tests
-                          collect (let ((*nst-report-driver* (case *nst-report-driver*
-                                                               (:details :details)
-                                                               (t :test))))
+                            collect (let ((*nst-report-driver*
+                                           (case *nst-report-driver*
+                                             (:details :details)
+                                             (t :test))))
                                     (declare (special *nst-report-driver*))
                                     (format s "~w~%" report)
                                     report)))))

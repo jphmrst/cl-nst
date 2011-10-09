@@ -44,13 +44,16 @@ REPL macros require the dynamic configuration provided by those wrappers."
     ;; Print a message at the appropriate level of verbosity.
     (with-output-for-verbosity (0 verb)
       (pprint-logical-block (verb '(1 2))
-        (format verb "Running package ~s (groups " (package-name user-package))
-        (loop for (group-name . others) on group-names do
-          (format verb "~s" group-name)
-          (when others
-            (princ " " verb)
-            (pprint-newline :mandatory verb)))
-        (format verb ")"))
+        (format verb "Running package ~s" (package-name user-package))
+        (with-output-for-verbosity (2 verb)
+          (format verb " (groups ")
+          (pprint-logical-block (verb group-names)
+            (loop for (group-name . others) on group-names do
+                  (format verb "~s" group-name)
+                  (when others
+                    (princ " " verb)
+                    (pprint-newline :mandatory verb))))
+          (format verb ")")))
       (format verb "~%"))
 
     (cond
