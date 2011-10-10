@@ -24,7 +24,7 @@
 ;;; Style for the manual.
 
 (def-latex-style-class manual-style-mixin () ()
-                       (:usepackage '(array (hyperref pdftex))
+                       (:usepackage '(|array| (|hyperref| |pdftex|))
                         :primary-tocdepth 1
                         :parskip "0.6em"
                         :contextualized-parskip ((:toc "-0.7em"))
