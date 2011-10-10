@@ -35,7 +35,8 @@
                            (:file "quickref" :depends-on ("doc")))))
 
     :documentation-package :nst-doc
-    :build-output ((#:the-manual :rel-directory "doc/"
+    :build-output (#-sbcl
+                   (#:the-manual :rel-directory "doc/"
                                  :filename-root "html"
                                  :style #:html-style
                                  :index t :table-of-contents t)
