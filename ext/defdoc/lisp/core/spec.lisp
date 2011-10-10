@@ -29,7 +29,7 @@
 (defclass doc-spec (labeled)
   ((self :initarg :self :reader docspec-self)
    (target-type :initarg :target-type :reader docspec-target-type)
-   (tags :initarg :tags :accessor docspec-tags)))
+   (tags :initarg :tags :initform nil :accessor docspec-tags)))
 
 (defmethod format-doc (stream style (spec doc-spec) &rest keyargs)
   (apply #'format-docspec
