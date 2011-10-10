@@ -939,51 +939,46 @@
 ;;; -----------------------------------------------------------------
 
 (defun process-latex-document (directory-path bare-name &key bibtex index)
-  (flet ((set-dir ()
-           #+allegro (excl:chdir directory-path)
-           #+sbcl (sb-posix:chdir directory-path)
-           #+clozure (setf (ccl:current-directory) directory-path)
-           #+clisp (ext:cd directory-path)
-           #+lispworks (hcl:change-directory directory-path)
-           #-(or allegro sbcl clozure
-                 clisp lispworks) (error "Not implemented on this system."))
-         (run-latex ()
-           #+allegro (excl:run-shell-command
-                      (format nil "pdflatex -interaction=batchmode ~a.tex"
-                        bare-name))
-           #+sbcl (sb-ext:run-program "pdflatex" (list "-interaction=batchmode"
-                                                       (format nil "~a.tex"
-                                                         bare-name))
-                                      :wait t :search t :output nil :error t)
-;;;           #+clozure (run-program "pdflatex" (list (format nil "~a.tex"
-;;;                                                     bare-name))
+  (labels ((set-dir ()
+             #+allegro (excl:chdir directory-path)
+             #+sbcl (sb-posix:chdir directory-path)
+             #+clozure (setf (ccl:current-directory) directory-path)
+             #+clisp (ext:cd directory-path)
+             #+lispworks (hcl:change-directory directory-path)
+             #-(or allegro sbcl clozure
+                   clisp lispworks) (error "Not implemented on this system."))
+           (run-command (executable &rest args)
+             #+allegro (unless (eql 0 (excl:run-shell-command
+                                       (format nil "~a~{ ~a~}"
+                                         executable args)))
+                         (error "excl:run-shell-command failed: ~a~{ ~a~}"
+                                executable args))
+             #+sbcl (let (exit-code)
+                      (let ((output
+                             (with-output-to-string (str)
+                               (setf exit-code
+                                 (sb-ext:process-exit-code
+                                  (sb-ext:run-program executable args
+                                                      :wait t
+                                                      :search t
+                                                      :output str
+                                                      :error str))))))
+                        (unless (eql exit-code 0)
+                          (error "excl:run-shell-command failed: ~a~{ ~a~}~%~a"
+                                 executable args output))))
+;;;           #+clozure (run-program executable args
 ;;;                                  :wait t :search t :output nil :error t)
-;;;           #+clisp (ext:shell (format nil "pdflatex ~a.tex" bare-name))
+;;;           #+clisp (ext:shell (format nil (format nil "~a~{ ~a~}"
+;;;                                            executable args) bare-name))
 ;;;           #+lispworks (system:call-system
-;;;                        (format nil "pdflatex ~a.tex" bare-name))
-           #-(or allegro sbcl) (error "Not implemented on this system."))
-         (run-bibtex ()
-           #+allegro (excl:run-shell-command
-                      (format nil "bibtex -terse ~a" bare-name))
-           #+sbcl (sb-ext:run-program "bibtex" (list "-terse" bare-name)
-                                      :wait t :search t :output nil :error t)
-;;;           #+clozure (run-program "bibtex" (list bare-name)
-;;;                                  :wait t :search t :output nil :error t)
-;;;           #+clisp (ext:shell (format nil "bibtex ~a" bare-name))
-;;;           #+lispworks (system:call-system
-;;;                        (format nil "bibtex ~a" bare-name))
-           #-(or allegro sbcl) (error "Not implemented on this system."))
-         (run-makeindex ()
-           #+allegro (excl:run-shell-command
-                      (format nil "makeindex ~a" bare-name))
-           #+sbcl (sb-ext:run-program "makeindex" (list bare-name)
-                                      :wait t :search t :output nil :error t)
-;;;           #+clozure (run-program "makeindex" (list bare-name)
-;;;                                  :wait t :search t :output nil :error t)
-;;;           #+clisp (ext:shell (format nil "makeindex ~a" bare-name))
-;;;           #+lispworks (system:call-system
-;;;                        (format nil "makeindex ~a" bare-name))
-           #-(or allegro sbcl) (error "Not implemented on this system.")))
+;;;                        (format nil (format nil "~a~{ ~a~}"
+;;;                                      executable args) bare-name))
+             #-(or allegro sbcl) (error "Not implemented on this system."))
+           (run-latex ()
+             (run-command "pdflatex" "-interaction=batchmode"
+                          (format nil "~a.tex" bare-name)))
+           (run-bibtex ()     (run-command "bibtex" "-terse" bare-name))
+           (run-makeindex ()  (run-command "makeindex" "-terse" bare-name)))
 
     (set-dir)
     (run-latex)
