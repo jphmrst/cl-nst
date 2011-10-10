@@ -109,13 +109,13 @@
                        (format-docspec-element style nil top-title stream)))
           (t (with-span-wrapper (stream 'b)
                (format stream "~a" (type-of top)))))))
-    (pprint-newline :mandatory top))
+    (pprint-newline :mandatory stream))
   (with-span-wrapper (stream (format nil "h~d" (+ 1 *output-nesting-depth*)))
     (let ((this-title (get-output-unit-title output)))
       (cond
         (this-title   (format-docspec-element style nil this-title stream))
         (t   (format stream "~a" (type-of output))))))
-  (pprint-newline :mandatory top))
+  (pprint-newline :mandatory stream))
 
 (defgeneric format-html-output-index-page-headers (style output out top
                                                    base-link
@@ -267,8 +267,9 @@
 
 (defgeneric format-content-link (stream style output base-link)
   (:method (stream (style html-style) output base-link)
-    (format stream "~a"
-      (merge-pathnames (get-content-link-filename output) base-link))))
+    (let ((fname (get-content-link-filename output)))
+      (when fname
+        (format stream "~a" (merge-pathnames fname base-link))))))
 
 (defgeneric get-content-link-filename (item)
   (:method ((spec standard-doc-spec))
@@ -294,7 +295,10 @@
                  (princ ".html" s))
           (t (format s "___~a__~a.html"
                (doc-label-name (get-grouped-output-labeldef output))
-               (get-grouped-output-group output))))))))
+               (get-grouped-output-group output)))))))
+  (:method (misc)
+    (declare (ignore misc))
+    nil))
 
 (defgeneric format-content-anchor (stream style output base-link)
   (:method (stream (style html-style) output base-link)
