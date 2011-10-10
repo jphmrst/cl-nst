@@ -436,7 +436,7 @@
 (defdoc:def-documentation (criterion :values)
   (:properties (nst-manual multiple-values-criteria))
   (:callspec ((:seq subcriterion)))
-  (:intro ":seq " (:lisp criterion :values) " criterion (The is) checks each of the forms under test according to the respective subordinate criterion."))
+  (:intro (:seq "The " (:lisp criterion :values) " criterion checks each of the forms under test according to the respective subordinate criterion.")))
 
 (def-criterion (:each (:forms criterion) (:values l))
   (block each
