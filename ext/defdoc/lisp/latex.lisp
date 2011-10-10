@@ -978,7 +978,7 @@
              (run-command "pdflatex" "-interaction=batchmode"
                           (format nil "~a.tex" bare-name)))
            (run-bibtex ()     (run-command "bibtex" "-terse" bare-name))
-           (run-makeindex ()  (run-command "makeindex" "-terse" bare-name)))
+           (run-makeindex ()  (run-command "makeindex" "-q" bare-name)))
 
     (set-dir)
     (run-latex)
