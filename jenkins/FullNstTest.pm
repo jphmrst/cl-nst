@@ -52,13 +52,17 @@ sub initialize {
   $self->name('NST multiplatform tests');
   $self->tag('nst');
   $self->add_testrun($forcecompile, $noforcecompile);
+
+  ## Run one of each kind of platfrom first.
   $self->add_platform(NSTjenkins::Allegro::instance());
-  $self->add_platform(NSTjenkins::Allegro::instance()->mixedcase(1));
   $self->add_platform(NSTjenkins::CCL::instance()->arch64(1));
-  $self->add_platform(NSTjenkins::CCL::instance());
-  $self->add_platform(NSTjenkins::CLISP::instance());
   $self->add_platform(NSTjenkins::CLISP::instance()->mixedcase(1));
   $self->add_platform(NSTjenkins::SBCL::instance());
+
+  ## Run their other versions.
+  $self->add_platform(NSTjenkins::CLISP::instance());
+  $self->add_platform(NSTjenkins::CCL::instance());
+  $self->add_platform(NSTjenkins::Allegro::instance()->mixedcase(1));
   $self->add_platform(NSTjenkins::Allegro::instance()->eightbitmode(1));
   $self->add_platform
       (NSTjenkins::Allegro::instance()->mixedcase(1)->eightbitmode(1));
