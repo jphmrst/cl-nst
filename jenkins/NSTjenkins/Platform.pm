@@ -38,7 +38,7 @@ sub get_full_executable {
   my $self = shift;
   my $result = $self->executable_name();
   my $path = $self->path();
-  $path = get_global_path() unless defined $path;
+  $path = $self->get_global_path() unless defined $path;
   if (defined $path) {
     if ($path ne '') {
       $path .= '/' unless $path =~ m|/$|;
@@ -83,6 +83,7 @@ sub execute_testrun {
 
   my $commandLine = $self->get_command_line();
   my $logdir = sprintf($log_formatstring, $self->tag, $testrun->tag);
+  my $result;
 
   pipe(READ,WRITE);
   my $pid = fork();
@@ -95,14 +96,18 @@ sub execute_testrun {
     close STDERR;
     open STDERR, ">&STDOUT";
     exec @$commandLine;
+    print "----------\nFailed to run:\n", join(" ",@$commandLine), "\n";
+  } elsif ($pid>0) {
+    close READ;
+    $self->generate_testrun_input($testrun, \*WRITE, $logdir);
+    close WRITE;
+    waitpid($pid, 0);
+    $result = $?;
+    print "   FAILED\n" unless $result==0;
+  } else {
+    print "   FAILE to fork\n";
+    my $result = -2;
   }
-
-  close READ;
-  $self->generate_testrun_input($testrun, \*WRITE, $logdir);
-  close WRITE;
-  waitpid($pid, 0);
-  my $result = $?;
-  print "   FAILED\n" unless $result==0;
   return $result;
 }
 
