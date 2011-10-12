@@ -9,16 +9,16 @@ our $gensym=0;
 sub initialize {
   my $self = shift;
   $self->SUPER::initialize(@_);
-  $self->add_asdf_path('../');
-  $self->add_asdf_path('../ext/defdoc/');
-  $self->add_asdf_path('../ext/defcontract/');
-  $self->add_asdf_path('../test/');
-  $self->add_asdf_path('../test/asdf/');
-  $self->add_asdf_path('../test/direct/');
-  $self->add_asdf_path('../test/manual/');
-  $self->add_asdf_path('../test/meta/');
-  $self->add_asdf_path('../test/util/');
-  $self->add_asdf_path('../../../../Lib/Lisp/SIFT/closer-mop/');
+  $self->add_asdf_path($ENV{NST_DIR});
+  $self->add_asdf_path($ENV{NST_DIR}.'ext/defdoc/');
+  $self->add_asdf_path($ENV{NST_DIR}.'ext/defcontract/');
+  $self->add_asdf_path($ENV{NST_DIR}.'test/');
+  $self->add_asdf_path($ENV{NST_DIR}.'test/asdf/');
+  $self->add_asdf_path($ENV{NST_DIR}.'test/direct/');
+  $self->add_asdf_path($ENV{NST_DIR}.'test/manual/');
+  $self->add_asdf_path($ENV{NST_DIR}.'test/meta/');
+  $self->add_asdf_path($ENV{NST_DIR}.'test/util/');
+  $self->add_asdf_path($ENV{CLOSER_MOP_DIR}.'/closer-mop/');
 }
 
 1;
