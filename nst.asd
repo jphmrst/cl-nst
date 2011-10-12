@@ -128,6 +128,7 @@
                                                         "check" "status"))
 
                            ;; Interaction with NST via the REPL.
+                           #-abcl
                            (:file "command" :depends-on ("globals" "status"))
 
                            ;; Generating JUnit-friendly XML.

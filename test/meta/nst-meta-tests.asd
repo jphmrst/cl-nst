@@ -45,7 +45,7 @@
 
                  ;; Classes and test methods for meta-tests of the
                  ;; :methods criterion.
-                 #-lispworks
+                 #+(or allegro sbcl clozure openmcl clisp)
                  (:file "methods")
 
                  ;; NST tests on NST runs.

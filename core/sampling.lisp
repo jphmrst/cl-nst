@@ -194,10 +194,10 @@
            (t (+ 1 raw))))))
 
 (def-arbitrary-instance-type (short-float :scalar t)
-    (coin-flip (random #-(or allegro sbcl) most-positive-short-float
-                       #+(or allegro sbcl) most-positive-single-float)
-               (- (random (- #-(or allegro sbcl) most-negative-short-float
-                             #+(or allegro sbcl) most-negative-single-float)))))
+    (coin-flip (random #-(or allegro sbcl abcl) most-positive-short-float
+                       #+(or allegro sbcl abcl) most-positive-single-float)
+               (- (random (- #-(or allegro sbcl abcl) most-negative-short-float
+                             #+(or allegro sbcl abcl) most-negative-single-float)))))
 
 (def-arbitrary-instance-type (single-float :scalar t)
      (coin-flip (random most-positive-single-float)
@@ -386,8 +386,8 @@
   (:method ((n (eql (find-class 'ratio))))   n)
 
   (:method ((n (eql (find-class 'float))))
-     (coin-flip #-(or sbcl allegro cmu clisp ecl scl) (find-class 'short-float)
-                #+(or clisp ecl scl) 'short-float
+     (coin-flip #-(or sbcl allegro cmu clisp ecl scl abcl) (find-class 'short-float)
+                #+(or sbcl allegro cmu clisp ecl scl abcl) 'short-float
 
                 #-(or clisp ecl) (find-class 'single-float)
                 #+(or clisp ecl) 'single-float
@@ -399,8 +399,8 @@
                 #+(or clisp ecl) 'long-float))
 
   #-(or allegro sbcl cmu)
-  (:method ((n (eql #-(or clisp ecl scl) (find-class 'short-float)
-                    #+(or clisp ecl scl) 'short-float)))
+  (:method ((n (eql #-(or clisp ecl scl abcl) (find-class 'short-float)
+                    #+(or clisp ecl scl abcl) 'short-float)))
      n)
 
   (:method ((n (eql #-(or clisp ecl) (find-class 'single-float)
@@ -411,8 +411,8 @@
      n)
 
   #-(or allegro sbcl cmu lispworks)
-  (:method ((n (eql #-(or clisp ecl) (find-class 'long-float)
-                    #+(or clisp ecl) 'long-float)))
+  (:method ((n (eql #-(or clisp ecl abcl) (find-class 'long-float)
+                    #+(or clisp ecl abcl) 'long-float)))
      n)
 
   (:method ((n (eql (find-class 'complex)))) n))
