@@ -4,7 +4,7 @@ use Carp;
 
 use FindBin;
 print "*** $FindBin::Bin ***\n";
-use lib ( $FindBin::Bin, $FindBin::Bin/NSTjenkins );  # The absolute directory where this file
+use lib ( $FindBin::Bin, "$FindBin::Bin/NSTjenkins" );  # The absolute directory where this file
 
 use FullNstTest;
 
