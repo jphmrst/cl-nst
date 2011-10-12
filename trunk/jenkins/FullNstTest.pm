@@ -57,7 +57,7 @@ sub initialize {
   $self->add_platform(NSTjenkins::Allegro::instance());
   $self->add_platform(NSTjenkins::CCL::instance()->arch64(1));
   $self->add_platform(NSTjenkins::CLISP::instance()->mixedcase(1));
-#  $self->add_platform(NSTjenkins::SBCL::instance());
+  $self->add_platform(NSTjenkins::SBCL::instance());
 
   ## Run their other versions.
   $self->add_platform(NSTjenkins::CLISP::instance());
