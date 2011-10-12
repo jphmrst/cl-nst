@@ -53,8 +53,8 @@
     ;; The features here should only even include platforms which
     ;; support Closer-to-MOP, and should be a superset of the features
     ;; guarding the inclusion of defcontract in lisp/package.lisp .
-    #+(or allegro sbcl openmcl clisp) :depends-on
-    #+(or allegro sbcl openmcl clisp) ( :defcontract )
+    #+(or allegro sbcl clisp) :depends-on
+    #+(or allegro sbcl clisp) ( :defcontract )
 
     :components
     ((:module "lisp" :components

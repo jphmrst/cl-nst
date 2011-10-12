@@ -54,8 +54,8 @@ sub initialize {
   $self->add_testrun($forcecompile, $noforcecompile);
 
   ## Run one of each kind of platfrom first.
-  $self->add_platform(NSTjenkins::Allegro::instance());
   $self->add_platform(NSTjenkins::CCL::instance()->arch64(1));
+  $self->add_platform(NSTjenkins::Allegro::instance());
   $self->add_platform(NSTjenkins::CLISP::instance()->mixedcase(1));
   $self->add_platform(NSTjenkins::SBCL::instance());
 

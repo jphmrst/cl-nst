@@ -20,7 +20,8 @@
 ;;; <http://www.gnu.org/licenses/>.
 (defpackage :defdoc-interfaces
   (:documentation "DefDoc internal organizational package - external packages")
-  (:use :common-lisp #-clozure-common-lisp :defcontract
+  (:use :common-lisp #-clozure-common-lisp
+        #+(or allegro sbcl clisp) :defcontract
         :defdoc-core :defdoc-collectors :defdoc-standard-model
         :defdoc-plaintext :defdoc-latex :defdoc-html)
   #+allegro (:import-from excl #:named-function)
@@ -28,7 +29,7 @@
 
 (in-package :defdoc-interfaces)
 
-#-clozure-common-lisp
+#+(or allegro sbcl clisp)
 (def-contract (style-coverage (style type))
     (:entail ((plaintext-methods-coverage)
               (standard-elements-style-coverage :style style))) ;; options
@@ -36,7 +37,7 @@
   (has-method (format-docspec-element (style t latex-name-element t) t))
   (has-method (format-docspec-element (style t bibtex-name-element t) t)))
 
-#-clozure-common-lisp
+#+(or allegro sbcl clisp)
 (def-contract (all-styles-coverage)
     (:entail ((plaintext-methods-coverage)
               (style-coverage :style 'plaintext-style)
@@ -271,5 +272,5 @@
   (:defdoc-interfaces
       (:defdoc-control-api #:style-coverage)))
 
-#-clozure-common-lisp
+#+(or allegro sbcl clisp)
 (apply-contract all-styles-coverage)

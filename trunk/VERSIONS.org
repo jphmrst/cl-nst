@@ -9,6 +9,7 @@
   will be suppressed on platforms which do not have a MOP (or rather,
   they will only be enabled on platforms which do have a MOP), so we
   should be able to port NST to more platforms soon.
+- NST now loads on Armed Bear CL. Most, but not all, self-tests pass.
 ** 4.0.0 - public release, May 31, 2011
   - Added an :eval criterion for process checking, def-eval-test macro
     and related functions assert-criterion, assert-eq, assert-eql,
