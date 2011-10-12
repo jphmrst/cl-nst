@@ -18,7 +18,7 @@ sub initialize {
   $self->SUPER::initialize(@_);
   $self->declare_scalar_variable('name', $name);
   $self->declare_scalar_variable('tag', $tag);
-  $self->declare_scalar_variable('logsdir', 'logs');
+  $self->declare_scalar_variable('logsdir', 'log');
   $self->declare_scalar_variable('description',
                                  'Top-level control of an NSTjenkins run');
   $self->declare_list_accumulator('testrun');
