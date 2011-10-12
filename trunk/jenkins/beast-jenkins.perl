@@ -6,7 +6,10 @@ print "+++ Workspace ", $ENV{WORKSPACE}, "\n";
 print "+++ NST ", $ENV{NST_DIR}, "\n";
 print "+++ Closer ", $ENV{CLOSER_MOP_DIR}, "\n";
 print "*** $FindBin::Bin ***\n";
-use lib ( $FindBin::Bin, "$FindBin::Bin/NSTjenkins" );  # The absolute directory where this file
+
+use FindBin;
+use lib $FindBin::Bin;
+use lib "$FindBin::Bin/NSTjenkins";  # The absolute directory where this file
 
 use FullNstTest;
 use NSTjenkins::CCL;
