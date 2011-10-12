@@ -97,6 +97,10 @@ sub execute_testrun {
     open STDERR, ">&STDOUT";
     exec @$commandLine;
     print "----------\nFailed to run:\n", join(" ",@$commandLine), "\n";
+    close STDIN;
+    close STDOUT;
+    close STDERR;
+    exit 0;
   } elsif ($pid>0) {
     close READ;
     $self->generate_testrun_input($testrun, \*WRITE, $logdir);
@@ -105,8 +109,8 @@ sub execute_testrun {
     $result = $?;
     print "   FAILED\n" unless $result==0;
   } else {
-    print "   FAILE to fork\n";
-    my $result = -2;
+    print "   FAILED to fork\n";
+    $result = -2;
   }
   return $result;
 }
