@@ -9,6 +9,7 @@ use NSTjenkins::Platform;
 use NSTjenkins::platforms::CCL_1;
 our $CLASS = "NSTjenkins::CCL";
 our @ISA = ("NSTjenkins::Platform");
+our $PATH;
 
 sub initialize {
   my $self = shift;
@@ -33,6 +34,10 @@ sub instance {
   }
 }
 
+sub get_global_path {
+  return $PATH;
+}
+
 sub fullname {
   my $self = shift;
   my $name = $self->name();
@@ -55,3 +60,5 @@ sub tag {
   my $arch64 = $self->arch64();
   return $self->SUPER::tag() . ($arch64 ? "64" : "");
 }
+
+1;

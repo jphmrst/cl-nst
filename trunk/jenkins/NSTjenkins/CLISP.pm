@@ -9,6 +9,7 @@ use NSTjenkins::Platform;
 use NSTjenkins::platforms::CLISP_2;
 our $CLASS = "NSTjenkins::CLISP";
 our @ISA = ("NSTjenkins::Platform");
+our $PATH;
 
 sub initialize {
   my $self = shift;
@@ -31,6 +32,10 @@ sub instance {
   } else {
     return new NSTjenkins::platforms::CLISP_2(@_);
   }
+}
+
+sub get_global_path {
+  return $PATH;
 }
 
 sub fullname {
@@ -56,3 +61,5 @@ sub tag {
   my $mixedcase = $self->mixedcase();
   return $self->SUPER::tag() . ($mixedcase ? "m" : "");
 }
+
+1;

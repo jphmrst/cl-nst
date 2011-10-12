@@ -9,6 +9,7 @@ use NSTjenkins::Platform;
 use NSTjenkins::platforms::SBCL_1_0;
 our $CLASS = "NSTjenkins::SBCL";
 our @ISA = ("NSTjenkins::Platform");
+our $PATH;
 
 sub initialize {
   my $self = shift;
@@ -22,6 +23,10 @@ sub initialize {
   $self->declare_scalar_variable('version', 'general');
 }
 
+sub get_global_path {
+  return $PATH;
+}
+
 sub instance {
   my $version = shift;
 
@@ -31,3 +36,5 @@ sub instance {
     return new NSTjenkins::platforms::SBCL_1_0(@_);
   }
 }
+
+1;
