@@ -9,6 +9,7 @@ use NSTjenkins::Platform;
 use NSTjenkins::platforms::Allegro_8_2;
 our $CLASS = "NSTjenkins::Allegro";
 our @ISA = ("NSTjenkins::Platform");
+our $PATH;
 
 sub initialize {
   my $self = shift;
@@ -39,6 +40,10 @@ sub instance {
   } else {
     return new NSTjenkins::platforms::Allegro_8_2(@_);
   }
+}
+
+sub get_global_path {
+  return $PATH;
 }
 
 sub fullname {
@@ -77,3 +82,5 @@ sub shutdown {
   my $stream = shift;
   print {$stream} "(exit 0)\n";
 }
+
+1;

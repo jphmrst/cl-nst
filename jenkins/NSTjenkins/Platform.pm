@@ -38,6 +38,7 @@ sub get_full_executable {
   my $self = shift;
   my $result = $self->executable_name();
   my $path = $self->path();
+  $path = get_global_path() unless defined $path;
   if (defined $path) {
     if ($path ne '') {
       $path .= '/' unless $path =~ m|/$|;
@@ -45,6 +46,10 @@ sub get_full_executable {
     $result = $path . $result;
   }
   return $result;
+}
+
+sub get_global_path {
+  return undef;
 }
 
 sub get_command_arguments {
