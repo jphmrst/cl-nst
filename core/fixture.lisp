@@ -381,9 +381,13 @@ setting may vary for individual fixtures.")
                 (values fixture-set-names nil fixture-names))))
 
 (defmacro with-fixtures ((&rest fixtures) &body forms)
-  `(let ,(loop for fixture in fixtures
-               append (get-fixture-bindings fixture))
-     ,@forms))
+  (let* ((bindings-list (loop for fixture in fixtures
+                              append (get-fixture-bindings fixture)))
+         (all-names (loop for binding in bindings-list
+                          collect (car binding))))
+  `(let* ,bindings-list
+     (declare (ignorable ,@all-names))
+     ,@forms)))
 (def-documentation (macro with-fixtures)
   (:tags &rest)
   (:properties (nst-manual fixtures) (api-summary &rest))
