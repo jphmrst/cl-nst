@@ -163,34 +163,30 @@ convenient and harmless."
 ;;;                (asdf:test-op ,@the-test-steps)
 ;;;                ,@other-ops))))))
 
-(defgeneric get-test-specs (system)
-  (:method (s) (declare (ignore s)) (values nil nil nil))
-  (:method ((s symbol))
-    (get-test-specs (asdf:find-system s)))
-  (:method ((s nst-test-holder))
-    (with-accessors ((single-package nst-package)
-                     (single-group nst-group)
-                     (single-test nst-test)
+(defmethod get-test-specs ((s nst-test-holder))
+  (with-accessors ((single-package nst-package)
+                   (single-group nst-group)
+                   (single-test nst-test)
 
-                     (packages-here nst-packages)
-                     (groups-here nst-groups)
-                     (tests-here nst-tests)
+                   (packages-here nst-packages)
+                   (groups-here nst-groups)
+                   (tests-here nst-tests)
 
-                     (nst-systems nst-systems)) s
-      (loop for sys in nst-systems
-            for (ps gs ts) = (multiple-value-list (get-test-specs sys))
-            append ps into packages
-            append gs into groups
-            append ts into tests
-            finally
-         (setf packages (nconc packages packages-here)
-               groups (nconc groups groups-here)
-               tests (nconc tests tests-here))
-         (when single-package (push single-package packages))
-         (when single-group (push single-group groups))
-         (when single-test (push single-test tests))
-         (return-from get-test-specs
-           (values packages groups tests))))))
+                   (nst-systems nst-systems)) s
+    (loop for sys in nst-systems
+        for (ps gs ts) = (multiple-value-list (get-test-specs sys))
+        append ps into packages
+        append gs into groups
+        append ts into tests
+        finally
+          (setf packages (nconc packages packages-here)
+                groups (nconc groups groups-here)
+                tests (nconc tests tests-here))
+          (when single-package (push single-package packages))
+          (when single-group (push single-group groups))
+          (when single-test (push single-test tests))
+          (return-from get-test-specs
+            (values packages groups tests)))))
 
 (defmethod all-nst-tested ((nst-test-holder nst-test-holder)
                            &optional
