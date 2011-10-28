@@ -65,7 +65,18 @@
                              :documentation
                              "If non-null, then when this system is loaded
                               its :nst-debug and :nst-debug-protect settings
-                              will be used as NST's defaults."))
+                              will be used as NST's defaults.")
+
+      (error-when-nst :initarg :error-when-nst
+                      :reader error-when-nst
+                      :initform nil
+                      :documentation
+                      "Indicates whether NST should throw an error when tests fail.")
+      (action-on-error :initarg :action-on-error
+                       :reader action-on-error
+                       :initform '(error 'requested-error-on-test-failure)
+                       :documentation
+                       "Describes the error action taken by NST on behalf of error-when-nst."))
 
   (:documentation "Class of ASDF systems that use NST for their test-op."))
 
@@ -207,4 +218,31 @@ other contributors to the to-do list, so we include those tasks via
                          (setf ,@restorers)))))))
 
 (defmethod perform :around ((o asdf:test-op) (c nst-test-runner))
-  (collect-nst-values c (call-next-method)))
+  (prog1 (collect-nst-values c (call-next-method))
+
+    ;; Do we want to throw an error if tests pass?
+    (macrolet ((nst-fn (fn &rest args)
+                 `(funcall (symbol-function (intern (symbol-name ',fn) :nst))
+                           ,@args)))
+      (let ((requested-error (error-when-nst c))
+            (error-action (action-on-error c)))
+        (when requested-error
+          (multiple-value-bind (package-specs group-specs test-specs)
+              (get-test-specs c)
+            (let ((results (nst-fn multiple-report
+                                   package-specs group-specs test-specs)))
+              (case requested-error
+                ((t :fail)
+                 (when (or (> (nst-fn result-stats-erring results) 0)
+                           (> (nst-fn result-stats-failing results) 0))
+                   (eval error-action)))
+                ((:warn)
+                 (when (or (> (nst-fn result-stats-erring results) 0)
+                           (> (nst-fn result-stats-failing results) 0)
+                           (> (nst-fn result-stats-warning results) 0))
+                   (eval error-action)))
+                ((:err)
+                 (when (> (nst-fn result-stats-erring results) 0)
+                   (eval error-action)))))))))))
+
+(define-condition requested-error-on-test-failure (error) ())

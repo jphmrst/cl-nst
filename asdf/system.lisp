@@ -59,19 +59,7 @@
                  :documentation
                  "A list of NST tests, each given as a three-element list
                   of a package name, the test's group name, and the test
-                  name.")
-
-      (error-when-nst :initarg :error-when-nst
-                      :reader error-when-nst
-                      :initform nil
-                      :documentation
-                      "Indicates whether NST should throw an error when tests fail.")
-
-      (action-on-error :initarg :action-on-error
-                       :reader action-on-error
-                       :initform '(error 'requested-error-on-test-failure)
-                       :documentation
-                       "Describes the error action taken by NST on behalf of error-when-nst."))
+                  name."))
 
   (:documentation "Class of ASDF systems that use NST for their test-op."))
 
@@ -290,29 +278,7 @@ the system\'s results."
           (nst-fn restore-protected-option-values protected-values)))
 
       ;; Then, do whatever else.
-      (call-next-method)
-
-      ;; Do we want to throw an error if tests pass?
-      (let ((requested-error (error-when-nst c))
-            (error-action (action-on-error c)))
-        (when requested-error
-          (multiple-value-bind (package-specs group-specs test-specs)
-              (get-test-specs c)
-            (let ((results (nst-fn multiple-report
-                                   package-specs group-specs test-specs)))
-              (case requested-error
-                ((t :fail)
-                 (when (or (> (nst-fn result-stats-erring results) 0)
-                           (> (nst-fn result-stats-failing results) 0))
-                   (eval error-action)))
-                ((:warn)
-                 (when (or (> (nst-fn result-stats-erring results) 0)
-                           (> (nst-fn result-stats-failing results) 0)
-                           (> (nst-fn result-stats-warning results) 0))
-                   (eval error-action)))
-                ((:err)
-                 (when (> (nst-fn result-stats-erring results) 0)
-                   (eval error-action)))))))))))
+      (call-next-method))))
 
 (defun group-spec-symbol (spec)
   (destructuring-bind (pk . gr) spec
@@ -322,5 +288,3 @@ the system\'s results."
   (destructuring-bind (pk gr ts) spec
     (values (intern (symbol-name gr) (find-package pk))
             (intern (symbol-name ts) (find-package pk)))))
-
-(define-condition requested-error-on-test-failure (error) ())
