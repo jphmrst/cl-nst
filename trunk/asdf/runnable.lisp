@@ -69,6 +69,20 @@
 
   (:documentation "Class of ASDF systems that use NST for their test-op."))
 
+(defgeneric get-test-specs (system)
+  (:method (s) (declare (ignore s)) (values nil nil nil))
+  (:method ((s symbol)) (get-test-specs (asdf:find-system s)))
+  (:method ((s nst-test-runner))
+    (with-accessors ((nst-systems nst-systems)) s
+      (loop for sys in nst-systems
+            for (ps gs ts) = (multiple-value-list (get-test-specs sys))
+            append ps into packages
+            append gs into groups
+            append ts into tests
+            finally
+         (return-from get-test-specs
+           (values packages groups tests))))))
+
 (defgeneric all-nst-testers (system)
   (:documentation "Returns three values:
 1.  A set of PACKAGES,
