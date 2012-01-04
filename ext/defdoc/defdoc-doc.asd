@@ -31,7 +31,7 @@
   :documents-system :defdoc
   :components ((:module "lisp" :components
                         ;; Documentation of def-doc in def-doc.
-                        (:file "documentation" :depends-on ("interfaces")))
+                        ((:file "documentation")))
                (:module "doc" :depends-on ("lisp") :components
                         (;; The NST package, plus internal packages
                          ;; and documentation generation.
