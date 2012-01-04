@@ -1212,7 +1212,7 @@
 
 (def-documentation (type docspec-list-latex-style)
   (:intro "The " (:lisp type docspec-list-latex-style)
-          " style mixin is a superclass for styles which place their contents inside of a list-making environment, each under its own " (:inline "\\item") ".")
+          " style mixin is a superclass for styles which place their contents inside of a list-making environment, each under its own " (:inline "item") ".")
   (:properties (manual-section styles)))
 
 (def-documentation (type docspec-itemize-latex-style)
