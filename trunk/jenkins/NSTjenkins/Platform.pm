@@ -20,6 +20,7 @@ sub initialize {
   $self->declare_scalar_variable('executable_name', undef);
   $self->declare_list_accumulator('testrun');
   $self->declare_list_accumulator('version');
+  $self->declare_list_accumulator('lead_argument');
   $self->declare_list_accumulator('additional_argument');
 }
 
@@ -61,13 +62,16 @@ sub get_command_arguments {
 sub get_command_line {
   my $self = shift;
   my @result = ( $self->get_full_executable() );
+  foreach my $arg (@{$self->lead_arguments()}) {
+    push @result, $arg;
+  }
   foreach my $arg (@{$self->get_command_arguments()}) {
     push @result, $arg;
   }
   foreach my $arg (@{$self->additional_arguments()}) {
     push @result, $arg;
   }
-  # print "**********  ", join(" ", @result), "  ***********\n";
+  print "**********  ", join(" ", @result), "  ***********\n";
   return \@result;
 }
 
