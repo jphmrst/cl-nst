@@ -78,7 +78,7 @@ sub AUTOLOAD {
     }
   }
 
-  die(ref($self) . qq(: no such method $AUTOLOAD));
+  die(ref($self) . qq(: no such method $name));
 }
 
 1;

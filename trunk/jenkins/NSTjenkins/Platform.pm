@@ -20,6 +20,7 @@ sub initialize {
   $self->declare_scalar_variable('executable_name', undef);
   $self->declare_list_accumulator('testrun');
   $self->declare_list_accumulator('version');
+  $self->declare_list_accumulator('additional_argument');
 }
 
 sub launch {
@@ -63,6 +64,10 @@ sub get_command_line {
   foreach my $arg (@{$self->get_command_arguments()}) {
     push @result, $arg;
   }
+  foreach my $arg (@{$self->additional_arguments()}) {
+    push @result, $arg;
+  }
+  # print "**********  ", join(" ", @result), "  ***********\n";
   return \@result;
 }
 
