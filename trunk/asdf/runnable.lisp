@@ -21,7 +21,6 @@
 (in-package :sift.asdf-nst)
 
 
-
 (defclass nst-test-runner (system)
      ((nst-systems :initarg :nst-systems
                    :reader nst-systems
@@ -74,7 +73,10 @@
                       "Indicates whether NST should throw an error when tests fail.")
       (action-on-error :initarg :action-on-error
                        :reader action-on-error
-                       :initform '(error 'requested-error-on-test-failure)
+                       :initform #+sbcl '(quit :unix-status 1)
+                                 #+closure-common-lisp '(quit 1)
+                                 #-(or sbcl closure-common-lisp)
+                                 '(error 'requested-error-on-test-failure)
                        :documentation
                        "Describes the error action taken by NST on behalf of error-when-nst."))
 
