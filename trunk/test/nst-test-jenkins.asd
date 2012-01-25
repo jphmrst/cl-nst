@@ -28,7 +28,8 @@
     :description "Test NST, and raise an error if tests do not pass."
     :nst-systems (:nst-test) :depends-on (:nst :nst-test)
     :error-when-nst :fail
-
+    #+sbcl :action-on-error
+    #+sbcl (quit :unix-status 1)
     #+closure-common-lisp :action-on-error
     #+closure-common-lisp (quit 1)
     )
