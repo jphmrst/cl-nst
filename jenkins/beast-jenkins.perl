@@ -1,9 +1,8 @@
 #!/usr/bin/env perl
-use strict;
 use Carp;
 
 use FindBin;
-use lib $FindBin::Bin;
+use lib "$FindBin::Bin";
 use lib "$FindBin::Bin/NSTjenkins";
 
 use FullNstTest;
