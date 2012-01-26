@@ -1,0 +1,47 @@
+;;; File package.lisp
+;;;
+;;; This file is part of the NST unit/regression testing system.
+;;;
+;;; Copyright (c) 2006-2012 Smart Information Flow Technologies.
+;;; Written by John Maraist.
+;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
+;;;
+;;; NST is free software: you can redistribute it and/or modify it
+;;; under the terms of the GNU Lesser General Public License as
+;;; published by the Free Software Foundation, either version 3 of the
+;;; License, or (at your option) any later version.
+;;;
+;;; NST is distributed in the hope that it will be useful, but WITHOUT
+;;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+;;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General
+;;; Public License for more details.
+;;;
+;;; You should have received a copy of the GNU Lesser General Public
+;;; License along with NST.  If not, see
+;;; <http://www.gnu.org/licenses/>.
+(in-package :common-lisp-user)
+
+(defpackage :nst-mop-utils
+  (:documentation "MOP-based utilities for NST")
+  (:nicknames :nstmop)
+  (:use :common-lisp :defdoc :nst)
+  (:import-from :closer-mop #:compute-slots
+                #:slot-definition-name #:slot-definition-initargs)
+  (:export #:def-derived-criterion))
+
+(defdoc:def-documentation (package :nst-mop-utils)
+    (:blurb "MOP-based utilities for NST")
+  (:descriptive "NST MOP Utilities"))
+
+(defdoc:def-doc-tag nst::primary (:package :nst-mop)
+  :sort 0
+  :formatter (lambda (sy pk tg sr)
+               (declare (ignore sy pk tg))
+               (format sr "MOP utilities")))
+
+(defun nst-mop-utils::make-package-documentation ()
+  "Write documentation for this package, using system package-doc."
+  (asdf:oos 'asdf:load-op 'package-doc)
+  (funcall (symbol-function (intern (symbol-name 'package-doc)
+                                    (find-package :package-doc)))
+           (find-package :nst)))
