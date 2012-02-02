@@ -27,6 +27,7 @@
 
 (let ((*root-dir* (make-pathname
                    :directory (pathname-directory *load-truename*))))
+  (declare (special *root-dir*))
   (unless (find-system :defdoc nil)
     (push (merge-pathnames "ext/defdoc/" *root-dir*)
           *central-registry*))
