@@ -259,9 +259,10 @@
                               :args (list (nst-assertion-result e)))
                             (nst-assertion-restart e)))
                        (error #'(lambda (e)
-                                  (add-error result
-                                    :format "~w" :args (list e))
-                                  (return-from process)))
+                                  (unless *debug-on-error*
+                                    (add-error result
+                                      :format "~w" :args (list e))
+                                    (return-from process))))
                        (warning #'(lambda (w)
                                     (when check-warnings
                                       (add-warning result w))
@@ -324,8 +325,9 @@
                 ((:eval) (block eval-forms
                            (handler-bind ((error
                                            #'(lambda (e)
-                                               (add-thrown-error result e)
-                                               (return-from eval-forms))))
+                                               (unless *debug-on-error*
+                                                 (add-thrown-error result e)
+                                                 (return-from eval-forms)))))
                              (eval `(progn ,@(cdr form))))))
                 ((:check)
                  (setf result
