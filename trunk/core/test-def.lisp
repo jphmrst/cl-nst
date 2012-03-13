@@ -193,6 +193,8 @@ first element is that symbol and whose remaining elements are options."
 
                (defmethod initialize-instance :after ((tproto ,name)
                                                       &key &allow-other-keys)
+                 ,@(when fixture-names-special
+                     `((declare ,fixture-names-special)))
                  (flet ((set-slot (slot value)
                           (setf (slot-value tproto slot) value)))
                    (set-slot '%group-name ',*group-class-name*)
