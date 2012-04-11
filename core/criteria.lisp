@@ -423,9 +423,9 @@
 
 (def-criterion (:proj (:forms indices criterion) (:values &rest values))
   (block nil
-    (unless (listp criterion)
+    (unless (listp indices)
       (return (make-failure-report :format "~s not a list"
-                                   :args (list criterion))))
+                                   :args (list indices))))
     (check-criterion-on-form criterion
                              `(list ,@(loop for idx in indices
                                             collect `',(nth idx values))))))
