@@ -79,13 +79,7 @@
 (defdoc:def-documentation (criterion :true)
     (:properties (nst-manual basic-criteria))
   (:callspec ())
-  (:intro (:seq "The " (:lisp criterion :true) (:latex " criterion expects one form, which is evaluated at testing time; the criterion requires the result to be non-nil.")))
-;;;  (:details (:seq
-;;;          (:plain "Example:")
-;;;          (:code "")
-;;;          (:plain "A example of a test which fails:")
-;;;          (:code "")))
-  )
+  (:intro (:seq "The " (:lisp criterion :true) (:latex " criterion expects one form, which is evaluated at testing time; the criterion requires the result to be non-nil."))))
 
 (def-criterion (:eq (:forms target) (:values actual))
   (if (eq (eval target) actual)
@@ -194,9 +188,13 @@
   (:intro (:seq "The " (:lisp criterion :drop-values) " criterion checks the primary value according to the subordinate criterion, ignoring any additional returned values from the evaluation of the form under test.")))
 
 (def-criterion (:dump-forms (:forms blurb) (:values &rest forms))
-  (format t "~%~a~%" blurb)
-  (loop for form in forms do (format t "~s~%" form))
-  (make-failure-report :format "Arguments dumped" :args nil))
+  (block nil
+    (format t "~%~a~%" blurb)
+    (unless (listp forms)
+      (return (make-failure-report :format "~s not a list"
+                                   :args (list forms))))
+    (loop for form in forms do (format t "~s~%" form))
+    (make-failure-report :format "Arguments dumped" :args nil)))
 (defdoc:def-documentation (criterion :dump-forms)
   (:properties (nst-manual misc-criteria))
   (:callspec (blurb))
@@ -378,23 +376,28 @@
              (:code "(def-test applycheck (:apply cadr (:eql 10)) '(0 10 20))"))))
 
 (def-criterion (:check-err (:forms criterion) (:form forms))
-  (let ((result (check-criterion-on-form criterion forms)))
-    (cond
-     ((check-result-errors result)
-      (make-success-report))
-     (t (make-failure-report
-         :format (named-function check-err-failure-handler
-                   (lambda (s criterion forms)
-                     (pprint-logical-block (s forms)
-                       (format s "No expected error for check ~s on:" criterion)
-                       (loop for form in forms do
-                             (pprint-newline :linear s)
-                             (format s " ~s" form)))))
-         :args (list criterion
-                     (cond ((and (listp forms)
-                                 (eq 'list (car forms)))
-                            (cdr forms))
-                           (t (list forms)))))))))
+  (block nil
+    (let ((result (check-criterion-on-form criterion forms)))
+      (cond
+        ((check-result-errors result)
+         (make-success-report))
+        (t (unless (listp forms)
+             (return (make-failure-report :format "~s not a list"
+                                          :args (list forms))))
+           (make-failure-report
+            :format (named-function check-err-failure-handler
+                      (lambda (s criterion forms)
+                        (pprint-logical-block (s forms)
+                          (format s "No expected error for check ~s on:"
+                            criterion)
+                          (loop for form in forms do
+                                (pprint-newline :linear s)
+                                (format s " ~s" form)))))
+            :args (list criterion
+                        (cond ((and (listp forms)
+                                    (eq 'list (car forms)))
+                               (cdr forms))
+                              (t (list forms))))))))))
 (defdoc:def-documentation (criterion :check-err)
   (:properties (nst-manual compound-criteria))
   (:callspec (criterion))
@@ -419,8 +422,13 @@
              (:code "(def-test form1 (:progn (setf zz 3) (:eql 3)) zz)"))))
 
 (def-criterion (:proj (:forms indices criterion) (:values &rest values))
-  (check-criterion-on-form criterion
-                           `(list ,@(loop for idx in indices collect `',(nth idx values)))))
+  (block nil
+    (unless (listp criterion)
+      (return (make-failure-report :format "~s not a list"
+                                   :args (list criterion))))
+    (check-criterion-on-form criterion
+                             `(list ,@(loop for idx in indices
+                                            collect `',(nth idx values))))))
 (defdoc:def-documentation (criterion :proj)
   (:properties (nst-manual compound-criteria))
   (:callspec (indices criterion))
@@ -441,6 +449,9 @@
 (def-criterion (:each (:forms criterion) (:values l))
   (block each
     (let ((info nil) (warnings nil))
+      (unless (listp l)
+        (return-from each (make-failure-report :format "~s not a list"
+                                               :args (list l))))
       (loop for value in l do
         (let ((result (check-criterion-on-form criterion `(list ',value))))
           (cond
