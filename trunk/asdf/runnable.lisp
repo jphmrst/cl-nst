@@ -179,6 +179,13 @@ other contributors to the to-do list, so we include those tasks via
                `(funcall (symbol-function (intern (symbol-name ',fn) :nst))
                          ,@args)))
 
+    (cond
+      ((and (boundp 'common-lisp-user::details-after-nst-testop)
+            (symbol-value 'common-lisp-user::details-after-nst-testop))
+       (funcall (symbol-function (intern (symbol-name '#:report-details)
+                                         (find-package :nst)))
+                nil nil nil nil)))
+
     ;; Check whether we're running this system on behalf of another
     ;; system.
     (unless *intermediate-system*
