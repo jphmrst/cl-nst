@@ -67,11 +67,11 @@ as errors arising from within the ."
 (defun extract-parameters (x)
   (loop for item in x
         append (cond
-                 ((listp x) (extract-parameters x))
-                 ((and (symbolp x)
-                       (eql (symbol-package x) (find-package :common-lisp)))
+                 ((listp item) (extract-parameters item))
+                 ((and (symbolp item)
+                       (eql (symbol-package item) (find-package :common-lisp)))
                   nil)
-                 (t (list x)))))
+                 (t (list item)))))
 
 (defun continue-check #|continue-check-actual|# (criterion form)
   (unless (listp criterion)

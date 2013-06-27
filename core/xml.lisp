@@ -240,5 +240,5 @@
             (with-pprint-cdata (s)
               (pprint-logical-block (s context)
                 (loop for ct in context do
-                      (format s "~a~%" context)))))))))
+                      (format s "~a~%" ct)))))))))
   1 *default-xml-pprint-dispatch*)

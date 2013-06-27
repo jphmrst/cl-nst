@@ -107,7 +107,7 @@
   (declare (special *nst-context* *nst-stack*))
   (cond
    (format-args (setf format (car format) args (cdr args)))
-   (t (setf format "~w" args (list e))))
+   (t (setf format "~:w" args (list e))))
   (let ((other-args nil))
     #+(and allegro (not macosx))
     (setf other-args (list* :zoom (make-backtrace-lines) other-args))
@@ -142,7 +142,7 @@
          (format stream "Error binding ~a for fixture ~s"
            variable-name fixture-name)
          (pprint-newline :fill stream)
-         (format stream " ~w" e))))
+         (format stream " ~:w" e))))
    error))
 
 ;;;
@@ -173,7 +173,7 @@
                                              (:details :details)
                                              (t :package))))
                                     (declare (special *nst-report-driver*))
-                                    (format s "~w~%" report)
+                                    (format s "~:w~%" report)
                                     report))
                       (loop for report in groups
                             collect (let ((*nst-report-driver*
@@ -181,7 +181,7 @@
                                              (:details :details)
                                              (t :group))))
                                     (declare (special *nst-report-driver*))
-                                    (format s "~w~%" report)
+                                    (format s "~:w~%" report)
                                     report))
                       (loop for report in tests
                             collect (let ((*nst-report-driver*
@@ -189,7 +189,7 @@
                                              (:details :details)
                                              (t :test))))
                                     (declare (special *nst-report-driver*))
-                                    (format s "~w~%" report)
+                                    (format s "~:w~%" report)
                                     report)))))
           (multiple-value-bind (code total passed erred failed warned)
               (result-summary (cond
@@ -220,7 +220,7 @@
               (loop while (not (pprint-exit-if-list-exhausted)) do
                     (pprint-newline :mandatory s)
                     (let ((name (pprint-pop)))
-                      (format s " - ~@<~w~:>" (gethash name checks)))))))))))
+                      (format s " - ~@<~:w~:>" (gethash name checks)))))))))))
 
 
 (defstruct (group-result (:include result-stats))
@@ -252,7 +252,7 @@
                          (unless (or (eq :clear (result-summary cr))
                                      (eq :info (result-summary cr)))
                            (pprint-newline :mandatory s)
-                           (format s " - ~w" cr)))))))))))))
+                           (format s " - ~:w" cr)))))))))))))
 
 
 (defstruct (check-result (:include result-stats (tests 1))
@@ -550,7 +550,7 @@ structure, permitting the use of apply."))
                        (pprint-newline :mandatory s))))
               (t (princ "at top level" s)))
             (pprint-newline :mandatory s)
-            (format s "~:[nil values~;~:*values: ~w~]" stack)
+            (format s "~:[nil values~;~:*values: ~:w~]" stack)
             #+allegro (when show-zoom
                         (pprint-newline :mandatory s)
                         (princ "at " s)
@@ -825,7 +825,7 @@ six-value summary of the results:
         (*print-pretty* t)
         (*print-readably* nil))
     (declare (special *nst-report-driver*))
-    (format stream "~w" (package-report package))
+    (format stream "~:w" (package-report package))
     nil))
 
 (defun report-group (group
@@ -838,7 +838,7 @@ six-value summary of the results:
         (*print-pretty* t)
         (*print-readably* nil))
     (declare (special *nst-report-driver*))
-    (format stream "~w" (group-report group))
+    (format stream "~:w" (group-report group))
     nil))
 
 (defun report-test (group
@@ -851,7 +851,7 @@ six-value summary of the results:
         (*print-pretty* t)
         (*print-readably* nil))
     (declare (special *nst-report-driver*))
-    (format stream "~w" (test-report group test))
+    (format stream "~:w" (test-report group test))
     nil))
 
 (defun report-multiple (packages groups tests &key
@@ -869,7 +869,7 @@ six-value summary of the results:
                          (system-supp-p `(:system ,system))
                          (t nil)))))
     (declare (special *nst-verbosity* *nst-report-driver*))
-    (format stream "~w" report)
+    (format stream "~:w" report)
     nil))
 
 
@@ -944,7 +944,7 @@ six-value summary of the results:
     (format stream " - *nst-info-shows-expected*: ~s~%"
       *nst-info-shows-expected*)
     (format stream "Stored test results:~%")
-    (format stream "  ~w" report)))
+    (format stream "  ~:w" report)))
 
 ;;;
 ;;; Generating status data within checks.
