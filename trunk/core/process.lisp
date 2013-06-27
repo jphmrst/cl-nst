@@ -74,6 +74,7 @@
                                (format nil ,format-supp-p)
                                (format-args nil ,format-args-supp-p)
                                (fatal nil) &allow-other-keys)
+              (declare (ignorable ,keyargs))
               (unless ,format-supp-p (setf format ,default-message))
               (unless ,format-args-supp-p (setf format-args (list ,tested)))
               (with-simple-restart (nst-assertion
@@ -139,6 +140,7 @@
                                (format nil ,format-supp-p)
                                (format-args nil ,format-args-supp-p)
                                (fatal nil) &allow-other-keys)
+              (declare (ignorable ,keyargs))
               (unless ,format-supp-p (setf format ,default-message))
               (unless ,format-args-supp-p (setf format-args
                                                 (list ,target ,tested)))
