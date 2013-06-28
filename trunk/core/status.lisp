@@ -478,6 +478,7 @@ structure, permitting the use of apply."))
   context stack format args)
 
 (defmethod add-warning (result (w check-note) &rest args)
+  (declare (ignore args))
   (push w (check-result-warnings result)))
 (defmethod add-warning (result (format-string string) &rest args)
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
