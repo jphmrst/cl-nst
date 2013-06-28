@@ -4,7 +4,9 @@
   various points, as opposed to values at the end of their
   computation.  This release also "blesses" certain criteria added
   tentatively in the preceeding minor releases.
-** 4.0.1 - in Subversion HEAD
+** 4.0.1 - public release, June 27, 2013
+- Several small bug fixes, and adding =#+allegro= prefixes on
+  documentation matching prefixes on the functions themselves.
 - Relaxes the depends-on for closer-mop. Features requiring closer-mop
   will be suppressed on platforms which do not have a MOP (or rather,
   they will only be enabled on platforms which do have a MOP), so we
