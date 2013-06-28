@@ -416,7 +416,7 @@ defining one criterion to rewrite as another using
   (warn 'nst-soft-deprecation
         :old-name 'def-value-check :replacement 'def-criterion)
   `(def-values-criterion ,@args))
-(def-documentation (macro def-values-check)
+#+allegro (def-documentation (macro def-values-check)
   (:tags deprecated)
   (:properties (api-summary deprecated))
   (:deprecated t)
@@ -427,7 +427,7 @@ defining one criterion to rewrite as another using
   (warn 'nst-soft-deprecation
         :old-name 'def-control-check :replacement 'def-criterion)
   `(def-form-criterion ,@args))
-(def-documentation (macro def-control-check)
+#+allegro (def-documentation (macro def-control-check)
   (:tags deprecated)
   (:properties (api-summary deprecated))
   (:deprecated t)
@@ -438,7 +438,7 @@ defining one criterion to rewrite as another using
   (warn 'nst-soft-deprecation
         :old-name 'def-check-alias :replacement 'def-criterion-alias)
   `(def-criterion-alias ,@args))
-(def-documentation (macro def-check-alias)
+#+allegro (def-documentation (macro def-check-alias)
   (:tags deprecated)
   (:properties (api-summary deprecated))
   (:deprecated t)
