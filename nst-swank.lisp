@@ -1,18 +1,25 @@
-;;;---------------------------------------------------------------------------
-;;; Copyright Smart Information Flow Technologies, d/b/a SIFT, LLC
-;;; All rights reserved.
+;;; File nst-swank.lisp
 ;;;
-;;; SIFT PROPRIETARY
-;;;---------------------------------------------------------------------------
-;;; File Description:
+;;;    CL side of the NST SLIME interface.
 ;;;
-;;;    CL side of the NST SLIME interface...
+;;; Copyright (c) 2012 Robert Goldman
 ;;;
-;;; History/Bugs/Notes:
+;;; NST is free software: you can redistribute it and/or modify it
+;;; under the terms of the GNU Lisp Lesser General Public License,
+;;; which consists of the preamble published by Franz Incorporated,
+;;; plus the LGPL published by the Free Software Foundation, either
+;;; version 3 of the License, or (at your option) any later version.
 ;;;
-;;;   [2011/02/21:rpg] Created.  FIXME: license and copyright should be fixed.
+;;; NST is distributed in the hope that it will be useful, but WITHOUT
+;;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+;;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lisp Lesser
+;;; General Public License for more details.
 ;;;
-;;;---------------------------------------------------------------------------
+;;; You should have received a copy of the Preamble to the Gnu Lesser
+;;; General Public License and the GNU Lesser General Public License
+;;; along with NST.  If not, see respectively
+;;; <http://opensource.franz.com/preamble.html> and
+;;; <http://www.gnu.org/licenses/>.
 
 (in-package :swank)
 

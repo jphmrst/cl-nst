@@ -1,0 +1,8 @@
+NST unit/regression testing system
+
+NST is licensed under the terms of the Lisp Lesser GNU Public License
+(http://opensource.franz.com/preamble.html), known as the LLGPL.  The
+LLGPL consists of a preamble (see above URL, or the file
+LICENSE-LLGPL-preamble.txt) and the LGPL (in file LICENSE-LGPL.txt).
+Where these conflict, the preamble takes precedence.  NST is
+referenced in the preamble as the "LIBRARY."
