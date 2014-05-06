@@ -1,6 +1,26 @@
-
-
-
+;;; File interactive.lisp
+;;;
+;;; This file is part of the NST unit/regression testing system.
+;;;
+;;; Copyright (c) 2010-2014 Smart Information Flow Technologies.
+;;; Written by John Maraist and other contributors.
+;;;
+;;; NST is free software: you can redistribute it and/or modify it
+;;; under the terms of the GNU Lisp Lesser General Public License,
+;;; which consists of the preamble published by Franz Incorporated,
+;;; plus the LGPL published by the Free Software Foundation, either
+;;; version 3 of the License, or (at your option) any later version.
+;;;
+;;; NST is distributed in the hope that it will be useful, but WITHOUT
+;;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+;;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lisp Lesser
+;;; General Public License for more details.
+;;;
+;;; You should have received a copy of the Preamble to the Gnu Lesser
+;;; General Public License and the GNU Lesser General Public License
+;;; along with NST.  If not, see respectively
+;;; <http://opensource.franz.com/preamble.html> and
+;;; <http://www.gnu.org/licenses/>.
 
 ;;; Options for breaking at failed and erroneous tests in the
 ;;; interactive system.
@@ -100,7 +120,7 @@ is stored against group-name and test-name."
   (let ((group-hash (gensym "group-hash-")))
     `(let ((,group-hash (gethash ,group-name ,storage)))
        (when ,group-hash
-	 (gethash ,test-name ,group-hash)))))
+         (gethash ,test-name ,group-hash)))))
 
 (defmacro clear-test (storage group-name test-name)
   "Remove anything stored against group-name and test-name in the given
@@ -108,17 +128,17 @@ double-hash table."
   (let ((group-hash (gensym "group-hash-")))
     `(let ((,group-hash (gethash ,group-name ,storage)))
        (when ,group-hash
-	 (remhash ,test-name ,group-hash)))))
+         (remhash ,test-name ,group-hash)))))
 
 (defmacro add-test (test-record-hash test-record &optional (value t))
   (let ((group-hash (gensym "group-hash")))
     `(with-slots (group test-name) ,test-record
        (with-slots (group-name) group
-	 (let ((,group-hash (gethash group-name ,test-record-hash)))
-	   (unless ,group-hash
-	     (setf ,group-hash (make-hash-table)
-		   (gethash group-name ,test-record-hash) ,group-hash))
-	   (setf (gethash test-name ,group-hash) ,value))))))
+         (let ((,group-hash (gethash group-name ,test-record-hash)))
+           (unless ,group-hash
+             (setf ,group-hash (make-hash-table)
+                   (gethash group-name ,test-record-hash) ,group-hash))
+           (setf (gethash test-name ,group-hash) ,value))))))
 
 (defmacro have-erred-tests ()
   "Poll the above variables to check for erred tests."
