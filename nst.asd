@@ -54,7 +54,7 @@
                                         ; after a version is shipped.
     :version "4.0.2"
     :author "John Maraist <lisper@maraist.org>"
-    :license "LGPL 2.latest"
+    :license "LLGPL 3.latest"
     :in-order-to ((test-op (test-op :nst-test))
                   (cl-user::doc-op (load-op :nst)))
 
