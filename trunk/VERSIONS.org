@@ -4,6 +4,7 @@
   various points, as opposed to values at the end of their
   computation.  This release also "blesses" certain criteria added
   tentatively in the preceeding minor releases.
+** 4.0.3 - in SVN HEAD
 ** 4.0.2 - public release, May 8, 2014
 - Now released under the LLGPL.
 ** 4.0.1 - public release, June 27, 2013
