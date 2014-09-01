@@ -1,0 +1,5 @@
+#summary One-sentence summary of this page.
+
+= Various old versions =
+ * [wiki:version0-2 Wiki text from version 0.2].
+ * The last appearance of the very old {{{fwrapper}}}-based code was in changeset:109; it was deleted in changeset:110.
