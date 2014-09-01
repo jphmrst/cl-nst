@@ -15,7 +15,6 @@ Welcome to the trac/svn site for the NST unit test framework for Common Lisp.  N
  * [CompatibilityTable Compatibility details].  NST releases are tested on Allegro, SBCL, Clozure, CLisp and Lispworks on linux, and sometimes on Allegro and SBCL on MacOS.
  * [VersionHistory Recent changes].
  * [CodingConventions Coding conventions].
- * [ArchivalNotes Archival notes on very old versions].
 
 == Authors ==
 
