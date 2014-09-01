@@ -6,9 +6,7 @@ Welcome to the trac/svn site for the NST unit test framework for Common Lisp.  N
 
 == Distribution ==
  * NST is [http://www.cliki.net/ASDF-Install ASDF-installable] via its [http://www.cliki.net/NST CLiki page].
- * The [source:trunk] can be checked out from [https://svn.sift.info:3333/svn/nst/trunk].
- * [source:Tags] can be checked out from [https://svn.sift.info:3333/svn/nst/tags].
- * A [http://nst.maraist.org/download/nst-4.0.0.tar.gz gzipped tarball] is also available.
+\ * A [http://nst.maraist.org/download/nst-4.0.0.tar.gz gzipped tarball] is also available.
 
 ==  Documentation ==
  * [http://nst.maraist.org/download/manual-4.0.0.pdf NST manual] and [http://nst.maraist.org/download/quickref-4.0.0.pdf quick reference sheet].  Much of the content is auto-generated; load the `nst-doc` system to generate these parts.
@@ -19,14 +17,6 @@ Welcome to the trac/svn site for the NST unit test framework for Common Lisp.  N
  * [wiki:CodingConventions Coding conventions].
  * [wiki:ArchivalNotes Archival notes on very old versions].
 
-== Future features and bugs ==
-
-The trac is open to the public.  Here are a few searches we use on tickets:
- * [https://svn.sift.info:3333/trac/nst/query?status=assigned&status=new&status=reopened&group=milestone&col=id&col=summary&col=priority&col=component&col=blockedby&col=reporter&order=priority Ordered] or [https://svn.sift.info:3333/trac/nst/query?status=assigned&status=new&status=reopened&group=priority&blockedby=&order=priority&col=id&col=summary&col=priority&col=component&col=reporter grouped] by priority.
- * [https://svn.sift.info:3333/trac/nst/query?status=assigned&status=new&status=reopened&group=component&col=id&col=summary&col=priority&col=component&col=blockedby&col=reporter&order=priority Grouped by component].
-
-This trac currently accepts new tickets only from registered user accounts.  If you are not a registered user, please email any new issues to '''nst-bugs''' at '''maraist''' dot '''org'''.  If you are a registered user, there is a separate page documenting our [wiki:TicketProtocol protocol for ticket fields].
-
 == Authors ==
 
-NST was written by John Maraist, with numerous contributions and suggestions by Robert Goldman.  Additional contributions and bug reports by Michael Atighetchi, Michael Pelican, Steve Harp and Jon Schewe.
+NST was written by John Maraist, with numerous contributions and suggestions by Robert Goldman.  Additional contributions and bug reports by Michael Atighetchi, Michael Pelican, Patrick Stein, Steve Harp and Jon Schewe.
