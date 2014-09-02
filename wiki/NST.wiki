@@ -1,4 +1,4 @@
-#summary NST unit test framework
+#summary NST unit test framework - top-level wiki page
 
 = NST unit test framework =
 
