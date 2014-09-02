@@ -1,4 +1,4 @@
-#summary One-sentence summary of this page.
+#summary A human-written (and thus sometimes unupdated) list of changes
 
 = Recent changes =
 The tarball contains a top-level file `VERSIONS.txt` which may offer more details of a version. 
