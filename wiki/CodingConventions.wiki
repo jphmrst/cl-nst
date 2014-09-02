@@ -1,4 +1,4 @@
-#summary One-sentence summary of this page.
+#summary What few coding conventions we follow
 
 = Coding conventions =
 
