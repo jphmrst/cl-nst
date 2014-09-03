@@ -82,6 +82,8 @@ as errors arising from within the ."
   `(apply-criterion ',(car criterion) ',(cdr criterion) ',form))
 
 (defun check-criterion-on-value (criterion val)
+  "The =check-criterion-on-value= function can be called from within a criterion
+body to verify that a value adheres to a criterion."
   (check-criterion-on-form criterion `(list ',val)))
 (def-documentation (function check-criterion-on-value)
   (:tags criteria)
@@ -90,6 +92,8 @@ as errors arising from within the ."
     (:blurb "This function verifies that the value adheres to the criterion.")
     (:callspec (criterion value)))
 (defun check-criterion-on-form (criterion form)
+  "This function verifies that the values return by evaluating the form adheres
+to the criterion."
   (unless (listp criterion)
     (setf criterion (list criterion)))
   (apply-criterion (car criterion) (cdr criterion) form))
@@ -160,6 +164,42 @@ as errors arising from within the ."
                     (values form-deconstructor values-binder)))))))
 
 (defmacro def-criterion ((name args-formals values-formals) &body forms)
+  "The =def-criterion= macro defines a new criterion for use in NST tests.
+These criteria definitions are like generic function method definitions with two
+sets of formal parameters: the forms provided as the actual parameters of the
+criterion itself, and the values arising from the evaluation of the forms under
+test.
+#+begin_example
+\(def-criterion (name criterion-lambda-list values-lambda-list)
+  [ doc-string )
+  form
+  form
+  ...
+  form)
+#+end_example
+
+- name :: Name of the criterion.
+- criterion-lambda-list :: Lambda list for the arguments to the criterion.  Optionally, the first element of the list is a symbol specifying the parameter-passing semantics for the criterion arguments: =:values= for call-by-value, or =:forms for call-by-name (the default).  The list may include the keywords =&key=, =&optional=, =&body= and =&rest= but may not use =&whole= or =&environment=.  Apart from this restriction, in the former case the list may be any ordinary lambda list as for =defun=, and in the latter case the list may be any macro lambda list as for =defmacro=.
+- values-lambda-list :: Lambda list for the forms under test.  Optionally, the first element of the list is a symbol specifying the parameter-passing semantics for the criterion arguments: :values for call-by-value (the default), or :form for call-by-name.  In the former case, the list may include the keywords =&key=, =&optional=, =&body= and =&rest=, but not =&whole= or =&environment=; apart from that restriction, list may be any ordinary lambda list as for =defun=.  In the latter case, the remainder of the list must contain exactly one symbol, to which a form which would evaluate to the values under test will be bound.
+                        If the criterion ignores the values, then instead of a lambda list, this argument may be the symbol =:ignore=.  On many platforms, listing a dummy parameter which is then =declare=d =ignore= or =ignorable= will produce a style warning: the body of a =def-criterion= should not be assumed to correspond directly to the body of a =defmethod=; in general there will be surrounding =destructuring-bind=s.
+- documentation :: An optional documentation string for the criterion.
+- form :: The body of the criterion definition should return a test result report contructed with the =make-success-report=, etc. functions.
+Examples:
+#+begin_example
+\(def-criterion (:true () (bool))
+  \(if bool
+      \(make-success-report)
+      \(make-failure-report :format \"Expected non-null, got: ~s\"
+                    :args \(list bool))))
+
+\(def-criterion (:eql \(target) \(actual))
+  \(if (eql \(eval target) actual)
+      \(make-success-report)
+      \(make-failure-report :format \"Not eql to value of ~s\"
+                    :args \(list target))))
+#+end_example
+"
+
   (let* ((fp)
          (ap (gensym "args"))
          (method-declares nil)
@@ -282,6 +322,21 @@ as errors arising from within the ."
 (defmacro def-criterion-unevaluated ((name args-formals forms-formal &key
                                            (ignore-forms nil))
                                      &body forms)
+  "The =def-criterion-unevaluated= macro is deprecated as of NST 2.1.2.  It was
+consolidated into the =def-criterion= macro.
+
+Replace:
+#+begin_example
+(def-criterion-unevaluated name (pattern ... pattern) name
+  BODY)
+#+end_example
+with:
+#+begin_example
+(def-criterion name (:forms pattern ... pattern)
+                    (:form name)
+                    BODY)
+#+end_example
+"
   (warn 'nst-soft-deprecation :old-name 'def-criterion-unevaluated
         :replacement 'def-criterion)
   (let ((ap (gensym "args"))
@@ -346,6 +401,9 @@ as errors arising from within the ."
 (defmacro def-values-criterion ((name args-formals forms-formals &key
                                       (declare nil decl-supp-p))
                                 &body forms)
+  "The =def-values-criterion= macro was deprecated as of NST 1.3.0. For new
+criteria, use =def-criterion= instead.  In the short term, code using
+=def-values-criterion= should continue to work as before."
   (warn 'nst-soft-deprecation :old-name 'def-values-criterion
         :replacement 'def-criterion)
   (let ((ap (gensym "args")) (fp (gensym "form")) (vs (gensym "values")))
@@ -374,9 +432,11 @@ as errors arising from within the ."
     (:deprecated t)
     (:blurb (:latex "The \\texttt{def-values-criterion} macro was deprecated as of NST 1.3.0. For new criteria, use \\texttt{def-criterion} instead.  In the short term, code using \\texttt{def-values-criterion} should continue to work as before.")))
 
-
 #+allegro (excl::define-simple-parser def-form-criterion caadr :nst-criterion)
 (defmacro def-form-criterion ((name args-formals form-formal) &rest forms)
+  "The =def-form-criterion= macro was deprecated as of NST 1.3.0. /Code using
+=def-form-criterion= in any but the simplest ways is very likely to fail./ Use
+=def-criterion= instead."
   (warn
    "def-form-criterion is deprecated from 1.3.0, AND PROBABLY WILL NOT WORK.")
   (let ((ap (gensym "args")))
@@ -391,6 +451,21 @@ as errors arising from within the ."
 
 (defmacro def-criterion-alias ((name . args-formals) docstring-or-form
                                &optional (form nil form-supp-p))
+  "The simplest mechanism for defining a new criterion involves simply
+defining one criterion to rewrite as another using =def-criterion-alias=.
+#+begin_example
+(def-criterion-alias (name (:seq arg))
+  [ doc-string ]
+  expansion)
+#+end_example
+The body of the expansion should be a Lisp form which, when evaluated, returns
+an S-expression quoting the new criterion which the rewrite should produce.  The
+=arg= are passed as for Lisp macros: they are not evaluated and are most
+typically comma-inserted into a backquoted result.  For example:
+#+begin_example
+(def-criterion-alias (:forms-eq) `(:predicate eq))
+(def-criterion-alias (:symbol name) `(:eq ',name))
+#+end_example"
   (unless form-supp-p (setf form docstring-or-form docstring-or-form nil))
   (let* ((vsf (gensym "form"))
          (redef `(def-criterion (,name (:forms ,@args-formals) (:form ,vsf))
@@ -416,6 +491,7 @@ defining one criterion to rewrite as another using
 
 #+allegro (excl::define-simple-parser def-values-check caadr :nst-criterion)
 (defmacro def-value-check (&rest args)
+  "Deprecated: use def-criterion instead"
   (warn 'nst-soft-deprecation
         :old-name 'def-value-check :replacement 'def-criterion)
   `(def-values-criterion ,@args))
@@ -427,6 +503,7 @@ defining one criterion to rewrite as another using
 
 #+allegro (excl::define-simple-parser def-control-check caadr :nst-criterion)
 (defmacro def-control-check (&rest args)
+  "Deprecated: use def-criterion instead"
   (warn 'nst-soft-deprecation
         :old-name 'def-control-check :replacement 'def-criterion)
   `(def-form-criterion ,@args))
@@ -438,6 +515,7 @@ defining one criterion to rewrite as another using
 
 #+allegro (excl::define-simple-parser def-check-alias caadr :nst-criterion)
 (defmacro def-check-alias (&rest args)
+  "Deprecated: use def-criterion-alias instead"
   (warn 'nst-soft-deprecation
         :old-name 'def-check-alias :replacement 'def-criterion-alias)
   `(def-criterion-alias ,@args))
