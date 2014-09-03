@@ -29,7 +29,7 @@
 (defsystem :nst-doc
     :class defdoc-asdf
     :description "Documentation builder for NST"
-    :depends-on ( :nst :asdf-defdoc )
+    :depends-on (:nst :asdf-defdoc :org-sampler)
     :documents-system :nst
     :components ((:module "doc" :components
                           ((:file "package")

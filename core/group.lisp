@@ -149,6 +149,38 @@
 ;;; -----------------------------------------------------------------
 
 (defmacro def-test-group (group-name given-fixtures &body forms)
+  "The =def-test-group= form defines a group of the
+given name, providing one instantiation of the bindings of the given fixtures
+to each test.  Groups can be associated with fixture sets, stateful
+initiatization, and stateful cleanup.
+#+begin_example
+\(def-test-group NAME (FIXTURE FIXTURE ...)
+  (:aspirational FLAG)
+  (:setup FORM FORM ... FORM)
+  (:cleanup FORM FORM ... FORM)
+  (:startup FORM FORM ... FORM)
+  (:finish FORM FORM ... FORM)
+  (:each-setup FORM FORM ... FORM)
+  (:each-cleanup FORM FORM ... FORM)
+  (:include-groups GROUP GROUP ... GROUP)
+  (:documentation STRING)
+  TEST
+  ...
+  TEST)
+#+end_example
+Arguments:
+ - group-name :: Name of the test group being defined
+ - given-fixtures :: List of the names of fixtures and anonymous fixtures to be used with the tests in this group.
+ - aspirational :: An aspirational test is one which verifies some part of an API or code contract which may not yet be implemented.  Failures and errors of tests in aspirational groups may be treated differently than for other groups. When a group is marked aspirational, all tests within the group are taken to be aspirational as well.
+ - forms :: Zero or more test forms, given by =def-check=.
+ - setup :: These forms are run once, before any of the individual tests, but after the fixture names are bound.
+ - cleanup :: These forms are run once, after all of the individual tests, but while the fixture names are still bound.
+ - startup :: These forms are run once, before any of the individual tests and before the fixture names are bound.
+ - finish :: These forms are run once, after all of the individual tests, and after the scope of the bindings to fixture names.
+ - each-setup :: These forms are run before each individual test.
+ - each-cleanup :: These forms are run after each individual test.
+ - include-group :: The test groups named in this form will be run (respectively reported) anytime this group is run (reported).
+ - documentation :: Docstring for the class."
 
   (handler-bind (#+sbcl (style-warning
                          (named-function def-test-group-style-warning-muffler

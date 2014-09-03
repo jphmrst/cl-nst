@@ -90,6 +90,41 @@ first element is that symbol and whose remaining elements are options."
 ;;; -----------------------------------------------------------------
 
 (defmacro def-test (name-or-name-and-args criterion &rest forms)
+  "Individual unit tests are encoded with the \\texttt{def-test} form:
+#+begin_example
+\(def-test NAME &key (group GROUP-NAME)
+                    (setup FORM)
+                    (cleanup FORM)
+                    (startup FORM)
+                    (finish FORM)
+                    (fixtures ((:seq FIXTURE)))
+                    (documentation STRING))
+  criterion &body (:seq FORM))
+
+(def-test NAME criterion &body (:seq FORM))
+#+end_example
+The =SETUP=, =CLEANUP=, =STARTUP=, =FINISH= and =FIXTURES= are just as for
+fixtures and test groups, but apply only to the one test.  The =CRITERION=
+is a list or symbol specifying the properties which should hold for
+the =FORM=s.
+
+When a test is not enclosed within a group body, a group name must be
+provided by the =GROUP= option.  When a test is enclosed within
+a group body, the =GROUP= option is not required, but if
+provided it must agree with the group name.
+
+When there are no =SETUP=, =CLEANUP=, =STARTUP=, =FINISH= or =FIXTURES=
+arguments, the =NAME= may be given without parentheses.  Likewise, any
+criterion consisting of a single symbol, e.g. =(:pass)=, may be abbreviated
+as just the symbol without the parentheses, e.g. =:pass=.
+
+The =:documentation= form provides a documentation string in
+the standard Lisp sense.  Since documentation strings are stored
+against names, and since the same name can be used for several tests
+(so long as they are all in different packages), documentation strings
+on tests may not be particularly useful.
+
+The =def-check= form is a deprecated synonym for =def-test=."
   ;; (declare (special *group-object-variable*))
 
   (handler-bind (#+sbcl (style-warning
