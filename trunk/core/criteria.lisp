@@ -85,10 +85,11 @@
   (:intro (:seq "The " (:lisp criterion :true) (:latex " criterion expects one form, which is evaluated at testing time; the criterion requires the result to be non-nil."))))
 
 (def-criterion (:eq (:forms target) (:values actual))
-  (if (eq (eval target) actual)
-      (make-success-report)
+  (let ((targ-value (eval target)))
+    (if (eq targ-value actual)
+        (make-success-report)
       (make-failure-report :format "Value ~s not eq to value of ~s"
-                           :args `(,actual 'target))))
+                           :args (list actual targ-value)))))
 (defdoc:def-documentation (criterion :eq)
     (:properties (nst-manual basic-criteria))
   (:callspec (target))
