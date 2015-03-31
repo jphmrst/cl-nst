@@ -976,6 +976,7 @@
 ;;;           #+lispworks (system:call-system
 ;;;                        (format nil (format nil "~a~{ ~a~}"
 ;;;                                      executable args) bare-name))
+             #-(or allegro sbcl) (declare (ignore executable args))
              #-(or allegro sbcl) (error "Not implemented on this system."))
            (run-latex ()
              (run-command "pdflatex" "-interaction=batchmode"
