@@ -509,6 +509,28 @@
     (:seq (:predicate symbolp) (:eql 1) (:symbol d))
   '(a 1 d))"))))
 
+(def-criterion (:alist* (:forms key-test-fn value-test-fn &rest specs)
+                        (:values alist))
+  (block checker
+    (loop for (key val) in specs
+        do (let ((pair (assoc key alist :test key-test-fn)))
+             (cond
+               ((null pair)
+                (return-from checker
+                  (make-failure-report :format "~s not found in association list"
+                                       :args (list key))))
+               (t (unless (funcall (eval `(function ,value-test-fn))
+                                   (cdr pair) val)
+                    (return-from checker
+                      (make-failure-report
+                       :format "For ~a value ~s does not match ~s"
+                       :args (list key (cdr pair) val))))))))
+    (make-success-report)))
+
+(def-criterion-alias (:alist key-test-fn value-test-fn &rest specs)
+  `(:all (:alist* ,key-test-fn ,value-test-fn ,@specs)
+         (:drop-values (:apply length (:eql ,(length specs))))))
+
 (def-criterion (:permute (:forms criterion) (:values l))
   (block permute-block
     (let ((perms (make-instance 'permuter :src l)))
