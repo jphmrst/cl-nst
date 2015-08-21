@@ -4,6 +4,8 @@
   various points, as opposed to values at the end of their
   computation.  This release also "blesses" certain criteria added
   tentatively in the preceeding minor releases.
+** 4.0.4 -
+- Added two criteria for association lists.
 ** 4.0.3 - public release, March 30, 2015
 - I'd like to get rid of DefDoc, and to that end have started
   converting documentation written in DefDoc into traditional

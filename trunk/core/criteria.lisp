@@ -526,10 +526,22 @@
                        :format "For ~a value ~s does not match ~s"
                        :args (list key (cdr pair) val))))))))
     (make-success-report)))
+(defdoc:def-documentation (criterion ::alist)
+  (:properties (nst-manual list-criteria))
+  (:callspec (key-test-fn value-test-fn (:seq (key value))))
+  (:intro (:seq "The " (:lisp criterion :alist) (:latex " criterion evaluates the form under test, expecting to find an association list as a result.  Using the two given function specs to test the keys (during retrieval, via ") (:lisp function assoc) (:latex ") and the values, the criterion enforces that the association lists contains exactly equivalent keys, mapping to respective equivalent values."))))
+(defdoc:def-documentation (criterion ::alist)
+  (:properties (nst-manual list-criteria))
+  (:callspec (key-test-fn value-test-fn (:seq (key value))))
+  (:intro (:seq "The " (:lisp criterion :alist*) " criterion evaluates the form under test, expecting to find an association list as a result.  Using the two given function specs to test the keys (during retrieval, via " (:lisp function assoc) ") and the values, the criterion enforces that the lists contains equivalent keys, mapping to respective equivalent values.  Note that the list may contain additional key/value pairs; see also " (:lisp criterion :alist) ".")))
 
 (def-criterion-alias (:alist key-test-fn value-test-fn &rest specs)
   `(:all (:alist* ,key-test-fn ,value-test-fn ,@specs)
          (:drop-values (:apply length (:eql ,(length specs))))))
+(defdoc:def-documentation (criterion ::alist)
+  (:properties (nst-manual list-criteria))
+  (:callspec (key-test-fn value-test-fn (:seq (key value))))
+  (:intro (:seq "The " (:lisp criterion :alist) " criterion evaluates the form under test, expecting to find an association list as a result.  Using the two given function specs to test the keys (during retrieval, via " (:lisp function assoc) ") and the values, the criterion enforces that the association lists contains exactly equivalent keys, mapping to respective equivalent values.  Implemented using " (:lisp criterion :alist*) " plus a check of the list " (:lisp function length) ", which could be incorrect if the criterion lists duplicate keys.")))
 
 (def-criterion (:permute (:forms criterion) (:values l))
   (block permute-block
