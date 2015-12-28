@@ -1,0 +1,24 @@
+> # NST Compatibility #
+
+> ## Actively supported platforms ##
+We have a large regression test suite (written in NST, of course) which we run on several platforms before releasing versions of NST:
+|'''NST version'''|'''Architecture'''|'''Allegro'''|'''SBCL'''|'''Clozure'''|'''CLisp'''|'''Lispworks'''|
+|:----------------|:-----------------|:------------|:---------|:------------|:----------|:--------------|
+|2.0.3-2.1.1      |AMD64 kubuntu     |8.2          |1.0.29.11 debian|1.4-![r13119](https://code.google.com/p/cl-nst/source/detail?r=13119)|2.44.1     |5.1.1 Personal |
+|2.0.3            |MacOS64           |8.2          |1.0.36.13 |-            |-          |-              |
+|1.3.1-2.0.2      |AMD64 kubuntu     |8.2          |1.0.29.11 debian|1.4-![r13119](https://code.google.com/p/cl-nst/source/detail?r=13119)|2.44.1     |-              |
+|1.2.8-1.3.0      |AMD64 kubuntu     |8.1          |1.0.29.11 debian|1.4-![r13119](https://code.google.com/p/cl-nst/source/detail?r=13119)|2.44.1     |-              |
+|1.2.7            |AMD64 kubuntu     |8.1          |1.0.29.11 debian|-            |-          |-              |
+|1.2.6 and prior  |x86 kubuntu       |Various      |Various   |-            |-          |-              |
+
+> ## Other platforms ##
+We'd love to hear of your experience with NST on any other platforms. Out of the box, NST requires the closer-mop package, but should be adaptable to any platform with an implementation of the MOP.
+
+'''Scieneer'''.  I've made some preliminary progress on getting NST to work on Scieneer, but it trips over the code in the expansion of a test macro which relates a test to its group. I don't think this is an NST bug, since it works as-is on the above platforms. But I also haven't had success in reproducing the error in a smaller bit of code not tied to the whole of NST that I could send as a good bug report example to Scieneer, and I'm not handy with the Scieneer debugger to tell what's going on there.
+
+'''CMU CL'''.  At one point, NST compiled and loaded without error or warning, but loading NST's self-tests failed completely: "primitive halt called; the party is over." Unfortunately, CMU CL is not available for Ubuntu Karmic for AMD64 (my current work machine), so I haven't had an opportunity to debug this more deeply.
+
+'''More platforms with MOP implementations'''.  Courtesy of [this survey](http://common-lisp.net/~dlw/LispSurvey.html), I'm looking at including these other platforms with a MOP implementation in the regular test suite. If you have a particular need for NST compatibility for any of these (or others), please do email.
+  * [Corman CL](http://www.cormanlisp.com/)
+  * [Embedded CL](http://ecls.sourceforge.net/)
+  * [GCL](http://www.gnu.org/software/gcl/)

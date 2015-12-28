@@ -1,0 +1,7 @@
+# Coding conventions #
+
+I like the [Google Lisp styleguide](https://google-styleguide.googlecode.com/svn/trunk/lispguide.xml), and have even sort-of started to follow it.  And this short list:
+
+_Avoid controls in `format` strings._  The more complicated structures in `format`'s strings are hard to read, difficult to maintain, and not consistent from implementation to implementation.  We do not use `~<`, `~[`, `~^`, `~*` (nor any variation of these with prefix arguments), or any but the very simplest uses of `~{`.  Use the corresponding pretty-printer macros and functions.
+
+_Use named closures instead of `function` or `#'`._ On platforms where they are supported, named closures are useful for debugging.  NST either imports an implementation's `named-macro` into package `:nst`, defines a macro to reference an implementation's differently-named facility, or defines a trivial macro for platforms which do not support named closures.

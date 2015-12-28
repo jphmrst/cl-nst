@@ -1,0 +1,109 @@
+# Recent changes #
+The tarball contains a top-level file `VERSIONS.txt` which may offer more details of a version.
+
+In 4.0.0 (uploaded May 31, 2011)
+  * Added an `:eval` criterion for process checking, `def-eval-test` macro and related functions `assert-criterion`, `assert-eq`, `assert-eql`, etc.  This criterion and test form are a more general approach to the :process criterion.
+  * [Ticket 237](https://svn.sift.info:3333/trac/nst/ticket/237): Added a separate documentation target for macros, as opposed to compiler macros, and updated DefDoc and NST documentation to use that target.
+
+In 3.0.2 (uploaded March 23, 2011)
+  * DefDoc now provides a system `asdf-defdoc`, which defines a base ASDF system for more conveniently associating a system with the documents to be generated when loading it.  This system should be considered an alpha release and subject to significant change; see the trac tickets under the "Documentation" component for an indication of how we see this feature evolving.
+  * [Ticket 197](https://svn.sift.info:3333/trac/nst/ticket/197) started an HTML backend for DefDoc.  Doesn't really work well at this point.
+  * Added three criterion.  All three should be considered in alpha testing: feedback is welcome; when we commit to a final form for these criteria, we'll roll up the minor version number.
+    * A `:process` criterion for simple interleaving of Lisp function calls and NST checks, to allow checking of intermediate states of an arbitrarily-long process.  Not yet fully debugged; certain errors will about the criterion check, but should be caught and counted.
+    * Added criteria `:applying-common-criterion` and `:with-common-criterion,` both of which allow multiple applications of one criterion to several data sets to be expressed within one single test.
+  * [Ticket 226](https://svn.sift.info:3333/trac/nst/ticket/226): Added a crude workaround to CLisp's stack overflow issue - but not sure how this hack will react in all cases where a dispatched test fails.
+  * [Tickets 185](https://svn.sift.info:3333/trac/nst/ticket/185) and [186](https://svn.sift.info:3333/trac/nst/ticket/186): A longstanding code quality issue - I'd like to get rid of uses of `~{`, `~[`, `~<` and `~*` (with or without uses of prefix arguments) in calls to `format`.  They're convenient, but just too hard to read in long-term code.  Ticket 185 removes all but the simplest uses of the formatters, or their uses in `simple-errors`. [ticket:186 Ticket 186] allows a particular internal structure which previously stored a `format` string can now also accept a function on the arguments to be formatted.
+  * [Ticket 215](https://svn.sift.info:3333/trac/nst/ticket/215): Small change to this test.
+  * Moved from using `#'` to `named-function`, which is useful for debugging on some platforms, and which NST macro-alises to `(function ...)` on others.
+  * Reworked the internal organization of the XUnit output generator.
+  * This document is now in Emacs Org-mode format.
+  * We now check for compatibility across (most of) the platforms we try to support using Jenkins instead of the previous home-grown script.
+  * Considerable streamlining of documentation.
+
+In 3.0.1 (uploaded December 29, 2010):
+  * Execution of one group can now be triggered by another group, as a (directed) hierarchy of groups.
+  * [Ticket 220](https://svn.sift.info:3333/trac/nst/ticket/220): The new setup etc. hooks on fixtures were working only for attachment to groups, not to tests.
+  * [Ticket 223](https://svn.sift.info:3333/trac/nst/ticket/223): Spurious warnings from :sample criterion, and a facility for adding declaration for a `:sample`'s `:where` form.
+  * The `def-criterion` values lambda list argument can now be the simple symbol `:ignore`, which indicates that criterion will accept, but ignore, forms in the values-under-test position.  This setting quashes warnings arising from criteria definitions.
+  * Several SBCL style warnings cleared, a number of which arose from malformed format strings.
+  * Documentation and defdoc improvements.
+
+In 3.0.0 (uploaded October 11):
+  * This release was planned as 2.1.2, but contains enough extensions to the API macros to justify bumping the major release, to allow the new API to be required e.g. by ASDF.
+  * Improved some of the test output.
+  * [Ticket 212](https://svn.sift.info:3333/trac/nst/ticket/212): Correct some duplicate execution of tests.
+  * [Ticket 189](https://svn.sift.info:3333/trac/nst/ticket/189): Allow packages to be omitted from `:report` and `:detail`.
+  * Documentation tickets: [#192](https://svn.sift.info:3333/trac/nst/ticket/192), [#193](https://svn.sift.info:3333/trac/nst/ticket/193), [#210](https://svn.sift.info:3333/trac/nst/ticket/210).
+  * Consolidated the `:uses` and `:assumes` options to `def-fixtures` into the single, clearer option `:special`.  Old options still allowed for now but deprecated.
+  * [Ticket 187](https://svn.sift.info:3333/trac/nst/ticket/187): Removed some deprecated internal names.
+  * Added a new documentation system for generating common text of the docstrings, manual and reference card: [#161](https://svn.sift.info:3333/trac/nst/ticket/161), [#194](https://svn.sift.info:3333/trac/nst/ticket/194), [#195](https://svn.sift.info:3333/trac/nst/ticket/195).
+
+In 2.1.1 (uploaded August 31):
+  * Fixed a bug in the implementation of fixture sets exporting names into their packages, and added tests to verify exporting ([163](https://svn.sift.info:3333/trac/nst/ticket/163)).
+  * Added startup/finish hooks for tests, all hooks for fixtures.
+  * Verified fix for [ticket 129](https://svn.sift.info:3333/trac/nst/ticket/129).
+  * Many small code-cleaning patches, and some additional unit tests.
+  * Updates to the manual and quick-reference sheet.
+
+In 2.1.0 (uploaded July 1):
+  * A fairly significant change to the translation of groups and tests. Note that version will require re-compiling code built against macros from earlier NST versions. The changes mean that tests should expand to considerably fewer method definitions, and should also clear most of the warnings previously generated under SBCL.
+  * Added an interactive method to remove groups and tests.
+  * Fixed a bug in the parsing when the `:export-names` and related options in fixtures are used.
+  * Now explicitly depends on `sb-aclrepl` in SBCL; thanks to Stelian Ionescu for pointing out the implicit dependency in the earlier versions.
+  * Correct the format string used for printing Lisp warnings in NST results output; thanks to Steve Harp for pointing out the problem.
+  * Added `make-success-report,` `make-failure-report` and `make-warning-report` as eventual replacements for `emit-success` et al., per a suggestion of Robert Goldman - these functions do not have any side-effect, so the `make-*` names more accurately evoke their functionality. We'll eventually deprecate, and then remove, the `emit-*` definitions.
+
+In 2.0.3 (uploaded April 6):
+  * Renamed the 1.3.x series to 2.0.x for better operation with ASDF's `:version` selection.
+  * LispWorks compatibility.
+  * `nil` can now be used as a fixture name.
+
+In 2.0.2 (was 1.3.2, uploaded March 16):
+  * The `def-test` and `def-test-group` macros now accept docstrings.
+  * Improved the `:whatis` REPL command, and restored the `:debug-on-fail` mode.
+  * Various improvements/debugging to error reporting, and fixed a bug in JUnit XML output.
+
+In 2.0.1 (was 1.3.1, uploaded February 22):
+  * ACL 8.2 compatibility - fixed an issue with earlier versions that the new Allegro release didn't like.
+  * Fixed a minor bug in the JUnit XML output.
+
+In 2.0.0 (was 1.3.0, uploaded February 2):
+  * The major fix in this release. The implementation of criteria has been completely rewritten to use method dispatch rather than macro expansion. The `def-form-criterion` macro is invalidated; the `def-values-criterion` is deprecated.
+  * Added the ability to cache fixtures, so that they will be evaluated once.
+  * Allow group setup/cleanup operations both within and without group fixture bindings.
+  * Runtime Lisp warnings are now incorporated as NST warnings.
+  * Added runtime system commands and debugging macros, improved docstring handling.
+  * Under SBCL, keyboard interrupts are no longer "swallowed" by NST as test errors, but instead stops testing and enters the debugger.
+
+In 1.2.8 (uploaded January 27):
+  * 1.2.8 clears out a couple of bug fixes in the 1.2 trunk. We've now merged the 1.3 branch into the trunk.
+  * The package argument to `:nst :run-package` is now optional, with `*package*` as default.
+  * Bug fix for Mac OSX: suppress backtrace collection.
+
+In 1.2.7 (uploaded November 15, 2009):
+  * Greater compatibility: Clozure CL, clisp.
+  * Fixed a bug affecting execution of test cleanup.
+  * Fixed a bug affecting re-definition of fixture sets.
+
+In 1.2.6 (uploaded November 11):
+  * Reorganized "meta" tests to better examine and regression-test NST's performance in detail.
+  * Allow tests to be defined separately from their group.
+  * Replaced `check-result` with `emit-success`.
+  * Improved deprecation warnings.
+  * Add restarts for use in interactive operation.
+  * (Start to) capture fixture names when errors arise in fixture application.
+  * Better failure checking of cleanup operations.
+  * Additional packaging options.
+  * Various bug fixes.
+
+In 1.2.0 (uploaded July 22):
+  * New criterion for quickcheck-style sampling of generated data.
+  * New do-what-I-mean interactive command :nst :run.
+  * Code improvements for compile/load-time improvements.
+  * Deactivated Allegro backtrace harvesting on Mac OS X due to a bug (reported) in Allegro Lisp for Macs.
+  * Added deprecation warnings on several disused macros.
+  * Clarified error output message for `:eq`/`:eql`/`:equal`/`:equalp`.
+  * Added an ASDF-customizable meaning for `:nst :debug`.
+  * Fixed Makefile for documentation.
+  * Re-activated links in generated PDF.
+  * Change to use of `import` for `:nst :open`.
