@@ -24,8 +24,9 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
-(defvar *fixture-functions* (make-hash-table :test 'eq)
-  "Map from a fixture name to the associated fixture function.")
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar *fixture-functions* (make-hash-table :test 'eq)
+    "Map from a fixture name to the associated fixture function."))
 
 (defun fixture-function (name)
   "Return the fixture function associated with the given name."
@@ -36,11 +37,12 @@
 setting, and does not change e.g. *fixture-function-bindings*."
   (setf (gethash name *fixture-functions*) new-fixture-function))
 
-;;; ------------------------------------------------------------------
+  ;; ------------------------------------------------------------------
 
-(defvar *fixture-bindings* (make-hash-table :test 'eq)
-  "Map from fixture name to the list of local variable names bound that
-fixture.")
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar *fixture-bindings* (make-hash-table :test 'eq)
+    "Map from fixture name to the list of local variable names bound that
+fixture."))
 
 (defun fixture-bindings (name)
   "Return the names bound by the fixture associated with the given name."
@@ -271,23 +273,24 @@ documentation such as form =:whatis=, any =nil=s are omitted."
   ;; Discourage deprecated forms
   (when uses-supp-p
     (warn 'nst-soft-keyarg-deprecation
-      :old-name :uses :replacement :special))
+          :old-name :uses :replacement :special))
   (when assumes-supp-p
     (warn 'nst-soft-keyarg-deprecation
           :old-name :assumes :replacement :special))
 
-  ;; Decode the syntax for the fixture function and the list of bound
-  ;; names.
-  (multiple-value-bind (fixture-function fixture-bindings)
-      (decode-fixture-syntax bindings inner outer setup cleanup startup finish
-                             cache)
+    ;; Decode the syntax for the fixture function and the list of bound
+    ;; names.
+  `(eval-when (:compile-toplevel :load-toplevel :execute)
+     (multiple-value-bind (fixture-function fixture-bindings)
+         (decode-fixture-syntax ',bindings ',inner ',outer ',setup
+                                ',cleanup ',startup ',finish ',cache)
 
-    ;; Save the compiled artifacts,
-    (setf (fixture-function name) fixture-function)
-    (setf (fixture-bindings name) fixture-bindings)
+       ;; Save the compiled artifacts,
+       (setf (fixture-function ',name) fixture-function)
+       (setf (fixture-bindings ',name) fixture-bindings)
 
-    ;; Return the name of the fixture.
-    name))
+       ;; Return the name of the fixture.
+       ',name)))
 
 (defmacro with-fixtures ((&rest fixtures) &body forms)
   "The =with-fixtures= macro faciliates debugging and other non-NST uses of
