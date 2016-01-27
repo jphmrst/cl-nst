@@ -1,3 +1,5 @@
+;;; CURRENTLY EXCLUDED
+
 ;;; File check.lisp
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
