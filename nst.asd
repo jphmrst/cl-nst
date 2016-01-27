@@ -69,88 +69,90 @@
                            ;; and documentation generation.
                            (:file "package")
 
-                           ;; Helper functions.
-                           (:file "utils"  :depends-on ("package"))
+;;;                           ;; Helper functions.
+;;;                           (:file "utils"  :depends-on ("package"))
 
                            ;; Error declarations.
                            (:file "errors"  :depends-on ("package"))
 
-                           ;; Flags and generic function declarations.
-                           (:file "globals"  :depends-on ("errors" "utils"))
+;;;                           ;; Flags and generic function declarations.
+;;;                           (:file "globals"  :depends-on ("errors" "utils"))
+;;;
+;;;                           ;;
+;;;                           (:file "artifacts"  :depends-on ("globals"))
+;;;
+;;;                           ;;
+;;;                           (:file "interrupt"  :depends-on ("package"))
+;;;
+;;;                           ;; Main control flow of test and group
+;;;                           ;; execution.
+;;;                           (:file "runner"  :depends-on ("interrupt"
+;;;                                                         "artifacts"
+;;;                                                         "status"))
+;;;
+;;;                           ;; The def-group macro.
+;;;                           (:file "group" :depends-on ("artifacts"))
+;;;
+;;;                           ;; Definition and expansion of check
+;;;                           ;; criteria.
+;;;                           (:file "context" :depends-on ("package"))
+;;;
+;;;                           ;; Definition and expansion of check
+;;;                           ;; criteria.
+;;;                           (:file "check" :depends-on ("artifacts"
+;;;                                                       "context"
+;;;                                                       "interrupt"))
+;;;
+;;;                           ;; The def-check macro.
+;;;                           (:file "test-def"
+;;;                                  :depends-on ("check" "group" "runner"))
 
-                           ;;
-                           (:file "artifacts"  :depends-on ("globals"))
+                           ;; The def-fixture macro and supporting
+                           ;; functions and globals.
+                           (:file "fixture"  :depends-on ("errors"))
 
-                           ;;
-                           (:file "interrupt"  :depends-on ("package"))
+;;;                           ;; Helper functions for permuting lists.
+;;;                           (:file "permuter" :depends-on ("package"))
+;;;
+;;;                           ;; Receiving and bookkeeping the results of
+;;;                           ;; tests.
+;;;                           (:file "status" :depends-on ("globals"
+;;;                                                        ;; "context"
+;;;                                                        "check"))
+;;;
+;;;                           ;; Standard criteria declarations.
+;;;                           (:file "criteria"
+;;;                                  :depends-on ("errors" "interrupt"
+;;;                                               "permuter" "check" "status"))
+;;;
+;;;                           ;; Process criteria declarations.
+;;;                           (:file "process"
+;;;                                  :depends-on ("errors" "interrupt"
+;;;                                                        "check" "status"))
+;;;
+;;;                           ;; Interaction with NST via the REPL.
+;;;                           #-abcl
+;;;                           (:file "command" :depends-on ("globals" "status"))
+;;;
+;;;                           ;; Generating JUnit-friendly XML.
+;;;                           (:file "xml" :depends-on ("status"))
+;;;
+;;;                           ;; Interfacing with JUnit
+;;;                           (:file "junit" :depends-on ("xml"))
+;;;
+;;;                           ;; Sample-testing predicates.
+;;;                           (:file "sampling" :depends-on ("check"))
+;;;
+;;;                           ;; Object-oriented test methods.  The
+;;;                           ;; features allowing this file should
+;;;                           ;; always be a subset of the features
+;;;                           ;; allowing :closer-mop above.
+;;;                           #+(or allegro sbcl clozure openmcl clisp)
+;;;                           (:file "method" :depends-on ("status" "check"))
+;;;
+;;;                           ;; Other packaged APIs.
+;;;                           (:file "interfaces"
+;;;                                  :depends-on ("check" "runner" "status"))
 
-                           ;; Main control flow of test and group
-                           ;; execution.
-                           (:file "runner"  :depends-on ("interrupt"
-                                                         "artifacts"
-                                                         "status"))
-
-                           ;; The def-group macro.
-                           (:file "group" :depends-on ("artifacts"))
-
-                           ;; Definition and expansion of check
-                           ;; criteria.
-                           (:file "context" :depends-on ("package"))
-
-                           ;; Definition and expansion of check
-                           ;; criteria.
-                           (:file "check" :depends-on ("artifacts"
-                                                       "context"
-                                                       "interrupt"))
-
-                           ;; The def-check macro.
-                           (:file "test-def"
-                                  :depends-on ("check" "group" "runner"))
-
-                           ;; The def-fixture macro, and processing
-                           ;; anonymous fixture declarations.
-                           (:file "fixture"  :depends-on ("runner" "artifacts"))
-
-                           ;; Helper functions for permuting lists.
-                           (:file "permuter" :depends-on ("package"))
-
-                           ;; Receiving and bookkeeping the results of
-                           ;; tests.
-                           (:file "status" :depends-on ("globals"
-                                                        ;; "context"
-                                                        "check"))
-
-                           ;; Standard criteria declarations.
-                           (:file "criteria"
-                                  :depends-on ("errors" "interrupt"
-                                               "permuter" "check" "status"))
-
-                           ;; Process criteria declarations.
-                           (:file "process"
-                                  :depends-on ("errors" "interrupt"
-                                                        "check" "status"))
-
-                           ;; Interaction with NST via the REPL.
-                           #-abcl
-                           (:file "command" :depends-on ("globals" "status"))
-
-                           ;; Generating JUnit-friendly XML.
-                           (:file "xml" :depends-on ("status"))
-
-                           ;; Interfacing with JUnit
-                           (:file "junit" :depends-on ("xml"))
-
-                           ;; Sample-testing predicates.
-                           (:file "sampling" :depends-on ("check"))
-
-                           ;; Object-oriented test methods.  The
-                           ;; features allowing this file should
-                           ;; always be a subset of the features
-                           ;; allowing :closer-mop above.
-                           #+(or allegro sbcl clozure openmcl clisp)
-                           (:file "method" :depends-on ("status" "check"))
-
-                           ;; Other packaged APIs.
-                           (:file "interfaces"
-                                  :depends-on ("check" "runner" "status"))))))
+                           ))))
 
