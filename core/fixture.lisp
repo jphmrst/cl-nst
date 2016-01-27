@@ -24,399 +24,290 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
-(defclass standard-fixture () ()
-  (:documentation "Common superclass of all fixtures."))
+(defvar *fixture-functions* (make-hash-table :test 'eq)
+  "Map from a fixture name to the associated fixture function.")
 
-(defvar +fixture-bound-names+ (make-hash-table :test 'eq))
-(defmethod bound-names ((fx standard-fixture))
-  (gethash (type-of fx) +fixture-bound-names+))
-(defmethod bound-names ((name symbol))
-  (gethash name +fixture-bound-names+))
-(defun set-bound-names (fixture-name bound-names)
-  (setf (gethash fixture-name +fixture-bound-names+) bound-names))
+(defun fixture-function (name)
+  "Return the fixture function associated with the given name."
+  (gethash name *fixture-functions*))
+
+(defun (setf fixture-function) (new-fixture-function name)
+  "Associate a function with the given fixture name.  This is a low-level
+setting, and does not change e.g. *fixture-function-bindings*."
+  (setf (gethash name *fixture-functions*) new-fixture-function))
+
+;;; ------------------------------------------------------------------
+
+(defvar *fixture-bindings* (make-hash-table :test 'eq)
+  "Map from fixture name to the list of local variable names bound that
+fixture.")
+
+(defun fixture-bindings (name)
+  "Return the names bound by the fixture associated with the given name."
+  (gethash name *fixture-bindings*))
+
+(defun (setf fixture-bindings) (new-fixture-bindings name)
+  "Associate a list of names as bound by fixtures with the given name."
+  (setf (gethash name *fixture-bindings*) new-fixture-bindings))
+
+;;; ------------------------------------------------------------------
+
+(defun decode-fixture-syntax (binding-specs &optional decls outer-decls
+                                              setup cleanup startup finish
+                                              cache)
+  "Assemble syntactic elements of a fixture into the fixture function and
+the list of names defined by the fixture."
+
+  ;; First go through the list of the given bindings specifications to
+  ;; find any with by-binding options declared.
+  (multiple-value-bind (cache-defs bindings)
+      (decode-caching-decls binding-specs cache)
+
+    ;; Pull the list of names from the bindings.
+    (let* ((names (loop for binding in bindings collect (car binding)))
+
+           ;; Start assembling the fixture function body.  At this
+           ;; point we can make the binding to fixtures, with setup
+           ;; and cleanup wrapping the call to other fixtures and the
+           ;; core thunk.
+           (core-exprs (cond
+
+                         ;; If there are any bindings at all, then we
+                         ;; abstract them here.
+                         (names
+                          `((let ,bindings
+                              (declare (special ,@names) ,@decls)
+                              ,@(when setup `(,setup))
+                              (cond
+                                (fs (funcall (car fs) (cdr fs) thunk))
+                                (t (funcall thunk)))
+                              ,@(when cleanup `(,cleanup)))))
+
+                         ;; No bindings at all.
+                         (names
+                          `(,@(when setup `(,setup))
+                            (cond
+                              (fs (funcall (car fs) (cdr fs) thunk))
+                              (t (funcall thunk)))
+                            ,@(when cleanup `(,cleanup)))))))
+
+      ;; If we're caching any results at all, then wrap the core
+      ;; expressions inside bindings for variables to manage that
+      ;; cache.
+      (when cache-defs
+        (setf core-exprs `((let ,cache-defs ,@core-exprs))))
+
+      ;; Finally put together the fixture function, and also return
+      ;; the list of defined names.
+      (values (eval `(lambda (fs thunk)
+                       ,@(when (or outer-decls (and decls (not names)))
+                           `((declare ,@outer-decls
+                                      ,@(unless names decls))))
+                       ,@(when startup `(,startup))
+                       ,@core-exprs
+                       ,@(when finish `(,finish))))
+              names))))
+
+(defun decode-caching-decls (binding-specs all-cache)
+  "Process a list of binding specifications to extract both the bindings, and
+the local variables needed for caching."
+
+  ;; Process each binding in turn.
+  (loop for spec in binding-specs
+
+        ;; In a standard Common Lisp binding, the first item is the
+        ;; local name (or the whole thing is just the local name).  In
+        ;; an NST fixture, the first item in the binding spec could be
+        ;; a list of options.  So we first separate the list of
+        ;; options from the list making up a standard Common Lisp
+        ;; binding.
+        for (options binding) = (cond
+                                  ((symbolp spec) (list nil (list spec)))
+                                  ;; Some kind of error
+                                  ((not (listp spec)) (list nil nil))
+                                  ((symbolp (car spec)) (list nil spec))
+                                  (t (list (car spec) (cdr spec))))
+
+        ;; If the options specify that we need to cache this binding,
+        ;; then create some additional local variables for it, and
+        ;; wrap the binding's form to do the caching.
+        for cache-name = (gensym)
+        for cache-full-name = (gensym)
+        if (destructuring-bind (&key (cache nil cache-supp-p)) options
+             (if cache-supp-p cache all-cache))
+          append `((,cache-name nil) (,cache-full-name nil)) into cache-defs
+          and do (setf (cadr binding)
+                       `(cond
+                          (,cache-full-name ,cache-name)
+                          (t (let ((,cache-name ,(cadr binding)))
+                               (setf ,cache-full-name t)
+                               ,cache-name))))
+        end
+
+        ;; Collect the binding in the list of all bindings.
+        collect binding into bindings
+
+        ;; We're finished and can return the list of bindings, and the
+        ;; list of cache helper variables to which the bindings refer.
+        finally (return-from decode-caching-decls
+                  (values cache-defs bindings))))
+
+;;; ------------------------------------------------------------------
+;;; The big macro
 
 #+allegro (excl::define-simple-parser def-fixtures second :nst-fixture-set)
-(defmacro def-fixtures (name
-                        (&key (uses nil uses-supp-p)
-                              (assumes nil assumes-supp-p)
-                              special outer inner documentation cache
-                              (setup nil setup-supp-p)
-                              (cleanup nil cleanup-supp-p)
-                              (startup nil startup-supp-p)
-                              (finish nil finish-supp-p)
-                              export-names
-                              (export-bound-names nil export-bound-names-supp-p)
-                              (export-fixture-name nil
-                               export-fixture-name-supp-p))
+(defmacro def-fixtures (name (&key uses assumes special outer inner
+                                   documentation cache setup cleanup
+                                   startup finish export-names
+                                   export-bound-names export-fixture-name)
                         &body bindings)
-  (declare (ignorable assumes outer inner))
 
-  ;; Some arguments can be either a singleton or a list; correct the
-  ;; latter into the former so that internally it's all uniform.
-  (unless (listp uses) (setf uses (list uses)))
-  (unless (listp assumes) (setf assumes (list assumes)))
-  (when (or (not (listp special))
-            (and (listp special) (eq :fixture (car special))))
-    (setf special (list special)))
+  "Fixtures are data structures and values which may be referred to by name
+during testing.  NST provides the ability to use fixtures across multiple tests
+and test groups, and to inject fixtures into the runtime namespace for
+debugging.  A set of fixtures is defined using the =def-fixtures= macro:
+#+begin_example
+ (def-fixtures fixture-name ( [ :outer FORM ]
+                              [ :inner FORM ]
+                              [ :setup FORM ]
+                              [ :cleanup FORM ]
+                              [ :startup FORM ]
+                              [ :finish FORM ]
+                              [ :documentation STRING ]
+                              [ :cache FLAG ]
+                              [ :export-names FLAG ]
+                              [ :export-fixture-name FLAG ]
+                              [ :export-bound-names FLAG ] )
+   ( [ ( [ :cache FLAG ] ) ] NAME [ FORM ] )
+   ...
+   ( [ ( [ :cache FLAG ] ) ] NAME [ FORM ] ) )
+#+end_example
+- fixture-name :: The name to be associated with this set of fixtures.
+- inner :: List of declarations to be made inside the let-binding of
+     names of any use of this fixture.  Do not include the \"declare\"
+     keyword here; NST adds these declarations to others, including a
+     special declaration of all bound names.
+- outer :: List of declarations to be made outside the let-binding of
+     names of any use of this fixture.
+- documentation :: TODO A documentation string for the fixture set.
+- special :: TODO Specifies a list of names which should be declared
+     =special= in the scope within which this set's fixtures are
+     evaluated.  The individual names are taken to be single variable
+     names.  Each =(:fixture NAME)= specifies all of the names of the given
+     fixture set.  This declaration is generally optional under most
+     platforms, but can help supress spurious warnings.  Note that
+     multiple =NAMEs= may be listed, and these lists and the bare
+     names may be intermixed.  If only one name or fixture is
+     specified, it need not be placed in a list
+- export-fixture-name :: TODO When non-nil, the fixture name will be added
+     to the list of symbols exported by the current package.
+- export-bound-names :: TODO When non-nil, the names bound by this fixture
+     will be added to the list of symbols exported by the current
+     package.
+- export-names :: TODO When non-nil, sets the default value to t for the
+     two options above.
+- cache :: TODO If specified with the group options, when non-nil, the
+     fixture values are cached at their first use, and re-applied at
+     subsequent fixture application rather than being recalculated.
+
+When a fixture is attached to a test or test group, each =NAME=
+defined in that fixture becomes available in the body of that test or
+group as if =let*= bound to the corresponding =FORM=.  A fixture in
+one set may refer back to other fixtures in the same set (again as
+=let*=) but forward references are not allowed.
+
+The four arguments =startup=, =finish=, =setup= and =cleanup= specify
+forms which are run everytime the fixture is applied to a group or
+test.  The =startup= (respectively =finish=) form is run before
+fixtures are bound (after their bindings are released).  These forms
+are useful, for example, to initialize a database connection from
+which the fixture values are drawn.  The =setup= form is run after
+inclusion of names from fixture sets, but before any tests from the
+group.  The =cleanup= form is normally run after the test completes,
+but while the fixtures are still in scope.  Normally, the =cleanup=
+form will not be run if the =setup= form raises an error, and the
+=finish= form will not be run if the =startup= form raises an error;
+although the user is able to select (perhaps unwisely) a restart which
+disregards the error.
+
+The names of a fixture and the names it binds can be exported from the
+package where the fixture is defined using the =export-bound-names=
+and =export-fixture-name= arguments.  The default value of both is the
+value of =export-names=, whose default value is =nil=.
+
+The =cache= option, if non-nil, directs NST to evaluate a fixture's
+form one single time, and re-use the resulting value on subsequent
+applications of the fixture.  Note that if this value is mutated by
+the test cases, test behavior may become unpredictable!  However this
+option can considerably improve performance when constant-valued
+fixtures are applied repeatedly.  Caching may be set on or off (the
+default is off) for the entire fixture set, and the setting may vary
+for individual fixtures.
+
+Examples of fixture definitions:
+#+begin_example
+(def-fixtures f1 ()
+  (c 3)
+  (d 'asdfg))
+(def-fixtures f2 (:special (:fixture f1))
+  (d 4)
+  (e 'asdfg)
+  (f c))
+(def-fixtures f3 ()
+  ((:cache t)   g (ackermann 1 2))
+  ((:cache nil) h (factorial 5)))
+#+end_example
+
+TODO To cause a side-effect among the evaluation of a fixture's name
+definitions, =nil= can be provided as a fixture name.  In uses of the
+fixture, NST will replace =nil= with a non-interned symbol; in
+documentation such as form =:whatis=, any =nil=s are omitted."
+
+  ;; Unimplemented or now-disregarded options.
+  (declare (ignore assumes special export-names export-bound-names
+                   export-fixture-name uses documentation))
 
   ;; Discourage deprecated forms
   (when uses-supp-p
-    (warn 'nst-soft-keyarg-deprecation :old-name :uses :replacement :special))
+    (warn 'nst-soft-keyarg-deprecation
+      :old-name :uses :replacement :special))
   (when assumes-supp-p
     (warn 'nst-soft-keyarg-deprecation
           :old-name :assumes :replacement :special))
 
-  (when export-names
-    (unless export-bound-names-supp-p
-      (setf export-bound-names t))
-    (unless export-fixture-name-supp-p
-      (setf export-fixture-name t)))
+  ;; Decode the syntax for the fixture function and the list of bound
+  ;; names.
+  (multiple-value-bind (fixture-function fixture-bindings)
+      (decode-fixture-syntax bindings inner outer setup cleanup startup finish
+                             cache)
 
-  (let ((g-param (gensym)) (t-param (gensym)) (cache-default cache))
+    ;; Save the compiled artifacts,
+    (setf (fixture-function name) fixture-function)
+    (setf (fixture-bindings name) fixture-bindings)
 
-    (macrolet ((binding-options-check (binding with-opts without-opts)
-                 `(cond
-                   ((symbolp (car ,binding)) (funcall #',without-opts ,binding))
-                   ((listp (car ,binding)) (funcall #',with-opts ,binding))
-                   (t (error "Ill-formed fixture binding ~s" ,binding))))
-               (decode-option (options keyword default)
-                 `(destructuring-bind (&key (,keyword ,default)
-                                            &allow-other-keys)
-                      ,options
-                    ,keyword)))
-
-      ;; Iterate through the bindings, building various lists.
-      (loop for binding in bindings
-
-          ;; Pull out the components of this binding.
-          for var-name = (let ((given (binding-options-check binding
-                                                             second first)))
-                           (cond ((null given) (gensym))
-                                 (t            given)))
-
-          for form = (binding-options-check binding third second)
-          for options = (binding-options-check binding first
-                                               (lambda (x)
-                                                 (declare (ignore x)) nil))
-
-            ;; Decode options for this binding.
-          for cache-this = (decode-option options cache cache-default)
-
-            ;; Full tuples
-          collect (list var-name form options) into full-tuples
-
-            ;; First thing to collect is just the bound names
-            ;; themselves.  We'll use these in e.g. declarations.
-          collect var-name into bound-names
-
-            ;; Next thing is the tuples we can stick into a let-block
-            ;; or setf to calculate the actual binding value.
-          collect
-            (let ((block (gensym "block")))
-              `(,var-name
-                ,(let ((calc
-                        `(block ,block
-                           (setf *binding-variable* ',var-name)
-                           (with-retry
-                               (,(format nil
-                                     "Try binding ~s for fixture ~s again."
-                                   var-name name))
-                             (return-from ,block ,form)))))
-                   (cond
-                    (cache-this
-                     `(multiple-value-bind (cached found)
-                          (get-fixture-value-cache ',name ',var-name)
-                        (cond
-                          (found cached)
-                          (t (let ((res ,calc))
-                               (set-fixture-value-cache ',name ',var-name res))))))
-                    (t calc)))))
-          into bindings-with-tracking
-
-            ;; Finally check whether any of the individual bindings .
-          collect cache-this into cache-any
-
-          finally
-            (setf cache-any (block make-cache-any
-                              (loop for b in cache-any do
-                                (when b
-                                  (return-from make-cache-any t)))
-                              nil))
-            (let* ((external-special `(,@(loop for used-fixture in uses
-                                             append (bound-names used-fixture))
-                                       ,@assumes
-                                       ,@(loop for sp in special
-                                             append
-                                               (cond
-                                                ((and (listp sp)
-                                                      (eq :fixture (car sp)))
-                                                 (loop for fx in (cdr sp)
-                                                     append (bound-names fx)))
-                                                ((symbolp sp)
-                                                 (list sp)))))))
-              (return-from def-fixtures
-                `(progn
-                   #+allegro
-                   (excl:record-source-file ',name :type :nst-fixture-set)
-                   #+allegro
-                   (loop for name in ',bound-names do
-                         (excl:record-source-file name :type :nst-fixture))
-
-                   (eval-when (:compile-toplevel :load-toplevel :execute)
-                     (defclass ,name (standard-fixture)
-                       ((bound-names :reader bound-names :allocation :class))
-                       ,@(when documentation
-                           `((:documentation ,documentation))))
-
-                     (set-bound-names ',name ',bound-names))
-
-                   (record-name-use :fixture ',name ',name)
-
-                   ,(when cache-any
-                      `(defmethod flush-fixture-cache ((f ,name))
-                         ;; (clrhash (cached-values f))
-                         (clear-fixture-value-cache ',name)))
-
-                   (defmethod do-group-fixture-assignment
-                       :around ((,g-param ,name) ,t-param)
-                     (declare (ignorable ,t-param)
-                              ,@(when external-special
-                                  `((special ,@external-special))))
-                     (format-at-verbosity 4
-                         "Called do-group-fixture-assignment :around ~s~%" ',name)
-                     ,@(when startup-supp-p (list startup))
-                     (prog1
-                         (let* ,bindings-with-tracking
-                           ,@(when bound-names
-                               `((declare (special ,@bound-names))))
-                           (setf *binding-variable* nil)
-                           ,@(when setup-supp-p (list setup))
-                           (prog1
-                               (call-next-method)
-                             ,@(when cleanup-supp-p (list cleanup))))
-                       ,@(when finish-supp-p (list finish))))
-
-                   (defmethod get-fixture-bindings ((f ,name))
-                     ',bindings)
-
-                   (defmethod do-test-fixture-assignment
-                       :around ((,t-param ,name))
-                     ,@(when external-special
-                         `((declare (special ,@external-special))))
-                     (format-at-verbosity 4
-                         "Called do-test-fixture-assignment :around ~s~%" ',name)
-                     ,@(when startup-supp-p (list startup))
-                     (prog1
-                         (let* ,bindings-with-tracking
-                           ,@(when bound-names
-                               `((declare (special ,@bound-names))))
-                           (setf *binding-variable* nil)
-                           ,@(when setup-supp-p (list setup))
-                           (prog1
-                               (call-next-method)
-                             ,@(when cleanup-supp-p (list cleanup))))
-                       ,@(when finish-supp-p (list finish))))
-
-                   ;; Function for expanding names into the current namespace.
-                   (defmethod open-fixture ((f ,name)
-                                            &optional (in-package *package*))
-                     ,@(when documentation `(,documentation))
-                     (declare (special ,@external-special ,@bound-names
-                                       *open-via-repl*))
-                     (unless (packagep in-package)
-                       (setf in-package (find-package in-package)))
-
-                     ,@(loop for (var form) in bindings-with-tracking
-                           append
-                             `((format-at-verbosity 3
-                                   ,(format nil " - Calculating ~a ~a~~%"
-                                      var options))
-                               (setf ,(cond
-                                       (var `(symbol-value ',var))
-                                       (t (gensym)))
-                                 ,form)))
-
-                     ;;(import ',bound-names in-package)
-
-                     ',name)
-
-                   (defmethod trace-fixture ((f ,name))
-                     (format t "Fixture ~s~% - Bindings:~%" ',name)
-                     ,@(loop for (var form options) in full-tuples
-                           collect
-                             (cond
-                              (options
-                               `(format t "   (~s ~s ~s)~%"
-                                  ',options ',var ',form))
-                              (t `(format t "   (~s ~s)~%" ',var ',form))))
-                     (flet ((format-list (title list)
-                              (format t " - ~a: " title)
-                              (pprint-logical-block (t list)
-                                (loop for item = (pprint-pop) while item do
-                                  (format t "~s " item)
-                                  (pprint-exit-if-list-exhausted)
-                                  (format t " ")
-                                  (pprint-newline :linear t)))))
-                       (format-list "Other fixtures" ',uses)
-                       (format-list "Names expected" ',assumes)
-                       (format-list "Outer bindings" ',outer)
-                       (format-list "Inner bindings" ',inner))
-                     (format t " - Documentation string: ~s~%" ,documentation)
-
-                     ',name)
-
-                   ,@(when (or export-bound-names export-fixture-name)
-                       `((eval-when (:compile-toplevel :load-toplevel :execute)
-                           ,@(when export-bound-names
-                               (loop for tuple in full-tuples
-                                   collect
-                                     (let* ((tuple-first  (first tuple))
-                                            (tuple-second (second tuple))
-                                            (id (cond
-                                                 ((symbolp tuple-first)
-                                                  tuple-first)
-                                                 (t tuple-second))))
-                                       `(export
-                                         ',id
-                                         ,(intern (package-name
-                                                   (symbol-package id))
-                                                  (find-package :keyword))))))
-                           ,@(when export-fixture-name
-                               `((export
-                                  ',name
-                                  ,(intern (package-name (symbol-package name))
-                                           (find-package :keyword))))))))
-
-                   ',name)))))))
-(def-documentation (macro def-fixtures)
-  (:tags primary)
-  (:properties (nst-manual fixtures) (api-summary primary))
-  (:intro (:latex "Fixtures\\index{fixtures} are data structures and values which may be
-referred to by name during testing.  NST provides the ability to use
-fixtures across multiple tests and test groups, and to inject fixtures
-into the runtime namespace for debugging.
-A set of fixtures is defined using the \\texttt{def-fixtures}
-macro:\\index{def-fixtures@\\texttt{def-fixtures}}")
-            )
-  (:callspec (fixture-name (&key (special ((:seq NAME)
-                                           (:key-head fixture (:seq NAME))))
-                                 (outer FORM)
-                                 (inner FORM)
-                                 (setup FORM)
-                                 (cleanup FORM)
-                                 (startup FORM)
-                                 (finish FORM)
-                                 (documentation STRING)
-                                 (cache FLAG)
-                                 (export-names FLAG)
-                                 (export-fixture-name FLAG)
-                                 (export-bound-names FLAG))
-                           &body
-                           (:seq ( (:opt (&key (cache FLAG))) NAME FORM))))
-  (:params (fixture-name "The name to be associated with this set of fixtures.")
-           (inner (:plain "List of declarations to be made inside the let-binding of names of any use of this fixture.  Do not include the \"declare\" keyword here; NST adds these declarations to others, including a special declaration of all bound names."))
-           (outer (:plain "List of declarations to be made outside the let-binding of names of any use of this fixture."))
-           (documentation (:plain "A documentation string for the fixture set."))
-           (special (:latex "Specifies a list of names which should be declared \\texttt{special} in the scope within which this set's fixtures are evaluated.  The individual names are taken to be single variable names.  Each \\texttt{(:fixture NAME)} specifies all of the names of the given fixture set.  This declaration is generally optional under most platforms, but can help supress spurious warnings.  Note that multiple \\texttt{(:fixture NAME)}s may be listed, and these lists and the bare names may be intermixed.  If only one name or fixture is specified, it need not be placed in a list"))
-           (export-fixture-name (:plain "When non-nil, the fixture name will be added to the list of symbols exported by the current package."))
-           (export-bound-names (:plain "When non-nil, the names bound by this fixture will be added to the list of symbols exported by the current package."))
-           (export-names (:plain "When non-nil, sets the default value to t for the two options above."))
-           (cache (:plain "If specified with the group options, when non-nil, the fixture values are cached at their first use, and re-applied at subsequent fixture application rather than being recalculated.")))
-  (:details (:latex "When a fixture is attached to a test or test group, each \\texttt{NAME} defined in that fixture becomes available in the body of that test or group as if \\texttt{let*}-bound to the corresponding \\texttt{FORM}.  A fixture in one set may refer back to other fixtures in the same set (again \\emph{\\`a la} \\texttt{let*}) but forward references are not allowed.")
-         (:latex "The four arguments \\texttt{:startup}\\index{startup@\\texttt{:startup}}, \\texttt{:finish}\\index{finish@\\texttt{:finish}}, \\texttt{:setup}\\index{setup@\\texttt{:setup}} and \\texttt{:cleanup}\\index{cleanup@\\texttt{:cleanup}} specify forms which are run everytime the fixture is applied to a group or test.  The \\texttt{:startup} (respectively \\texttt{:finish}) form is run before fixtures are bound (after their bindings are released).  These forms are useful, for example, to initialize a database connection from which the fixture values are drawn.  The \\texttt{:setup} form is run after inclusion of names from fixture sets, but before any tests from the group.  The \\texttt{:cleanup} form is normally run after the test completes, but while the fixtures are still in scope.  Normally, the \\texttt{:cleanup} form will not be run if the \\texttt{:setup} form raises an error, and the \\texttt{:finish} form will not be run if the \\texttt{:startup} form raises an error; although the user is able to select (perhaps unwisely) a restart which disregards the error.")
-         (:latex "The names of a fixture and the names it binds can be exported from the
-package where the fixture is defined using the
-\\texttt{export-bound-names} and \\texttt{export-fixture-name}
-arguments.  The default value of both is the value of \\texttt{export-names},
-whose default value is \\texttt{nil}.")
-         (:latex "The \\texttt{cache} option, if non-nil, directs NST to evaluate a
-fixture's form one single time, and re-use the resulting value on
-subsequent applications of the fixture.  Note that if this value is
-mutated by the test cases, test behavior may become unpredictable!
-However this option can considerably improve performance when
-constant-valued fixtures are applied repeatedly.  Caching may be set
-on or off (the default is off) for the entire fixture set, and the
-setting may vary for individual fixtures.")
-         (:seq
-          (:latex "Examples of fixture definitions:")
-          (:code "  (def-fixtures f1 ()
-    (c 3)
-    (d 'asdfg))
-  (def-fixtures f2 (:special ((:fixture f1)))
-    (d 4)
-    (e 'asdfg)
-    (f c))
-  (def-fixtures f3 ()
-    ((:cache t)   g (ackermann 1 2))
-    ((:cache nil) h (factorial 5)))"))
-         (:latex "To cause a side-effect among the evaluation of a fixture's name definitions, \\texttt{nil} can be provided as a fixture name.  In uses of the fixture, NST will replace \\texttt{nil} with a non-interned symbol; in documentation such as form \\texttt{:whatis}, any \\texttt{nil}s are omitted.")))
-
-(defgeneric get-fixture-bindings (fixture)
-  (:documentation "Internal function: pull the symbolic fixture bindings")
-  (:method ((f symbol)) (get-fixture-bindings (make-instance f))))
-
-(defgeneric flush-fixture-cache (f)
-  (:method ((f symbol)) (flush-fixture-cache (make-instance f)))
-  (:method ((f standard-fixture)) nil))
-
-(defun process-fixture-list (fixture-set-list)
-  "Trivial, for now, because anonymous fixtures are offline."
-  (loop for f in fixture-set-list
-      for this-fixture-set-name
-        = (cond
-           ((symbolp f) f)              ; A named fixture
-           ((not (listp f))             ; Miscellaneous garbage 1
-            (error "Expected a fixture name or anonymous fixture; found ~s"
-                   f))
-           ((eq (car f) :fixture)       ; Anonymous fixture
-            (error "Have not yet re-implemented anonymous fixtures."))
-           (t                           ; Miscellaneous garbage 2
-            (error "Expected a fixture name or anonymous fixture; found ~s"
-                   f)))
-      for this-fixture-names
-        = (cond
-           ((symbolp f) (bound-names f))               ; A named fixture
-           (t ; (and (listp f) (eq (car f) :fixture))  ; Anonymous fixture
-            (error "Have not yet re-implemented anonymous fixtures.")))
-      collect this-fixture-set-name into fixture-set-names
-      append this-fixture-names into fixture-names
-      finally (return-from process-fixture-list
-                (values fixture-set-names nil fixture-names))))
+    ;; Return the name of the fixture.
+    name))
 
 (defmacro with-fixtures ((&rest fixtures) &body forms)
-  (let* ((bindings-list (loop for fixture in fixtures
-                              append (get-fixture-bindings fixture)))
-         (all-names (loop for binding in bindings-list
-                          collect (car binding))))
-  `(let* ,bindings-list
-     (declare (ignorable ,@all-names))
-     ,@forms)))
-(def-documentation (macro with-fixtures)
-  (:tags &rest)
-  (:properties (nst-manual fixtures) (api-summary &rest))
-    (:intro (:latex "The \\texttt{with-fixtures} macro faciliates debugging and other non-NST uses of fixtures sets:"))
-  (:callspec (((:seq FIXTURE)) &body (:seq FORM)))
-  (:details (:latex "This macro evaluates the forms in a namespace expanded with the bindings provided by the fixtures.")))
-
-;; -----------------------------------------------------------------
-
-(defvar +fixture-cache+ (make-hash-table :test 'eq)
-  "Global, internal hash table for storing cached fixture values.")
-
-(defun clear-fixture-value-cache (fixture-name)
-  (let ((cache (gethash fixture-name +fixture-cache+)))
-    (when cache
-      (clrhash cache))))
-
-(defun get-fixture-value-cache (fixture-name id)
-  (let ((cache (gethash fixture-name +fixture-cache+)))
-    (when cache
-      (gethash id cache))))
-
-(defun set-fixture-value-cache (fixture-name id val)
-  (let ((cache (gethash fixture-name +fixture-cache+)))
-    (unless cache
-      (setf cache (make-hash-table :test 'eq)
-            (gethash fixture-name +fixture-cache+) cache))
-    (setf (gethash id cache) val)
-    val))
+  "The =with-fixtures= macro faciliates debugging and other non-NST uses of
+fixtures sets:
+#+begin_example
+(with-fixtures (FIXTURE FIXTURE ... FIXTURE)
+  FORM
+  FORM
+  ...
+  FORM)
+#+end_example
+This macro evaluates the forms in a namespace expanded with the bindings
+provided by the fixtures.
+"
+  (loop for fixture in fixtures
+        append (fixture-bindings fixture) into fixture-bindings
+        collect (fixture-function fixture) into fixture-functions
+        finally (cond
+                  ((null fixture-functions) `(progn ,@forms))
+                  (t `(funcall ,(car fixture-bindings)
+                               ,(cdr fixture-bindings)
+                               #'(lambda ()
+                                   (declare (special ,@fixture-bindings))
+                                   ,@forms))))))
