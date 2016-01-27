@@ -156,9 +156,10 @@ the local variables needed for caching."
 ;;; The big macro
 
 #+allegro (excl::define-simple-parser def-fixtures second :nst-fixture-set)
-(defmacro def-fixtures (name (&key uses assumes special outer inner
-                                   documentation cache setup cleanup
-                                   startup finish export-names
+(defmacro def-fixtures (name (&key (uses nil uses-supp-p)
+                                   (assumes nil assumes-supp-p)
+                                   special outer inner documentation cache
+                                   setup cleanup startup finish export-names
                                    export-bound-names export-fixture-name)
                         &body bindings)
 
@@ -167,7 +168,7 @@ during testing.  NST provides the ability to use fixtures across multiple tests
 and test groups, and to inject fixtures into the runtime namespace for
 debugging.  A set of fixtures is defined using the =def-fixtures= macro:
 #+begin_example
- (def-fixtures fixture-name ( [ :outer FORM ]
+ \(def-fixtures fixture-name ( [ :outer FORM ]
                               [ :inner FORM ]
                               [ :setup FORM ]
                               [ :cleanup FORM ]
@@ -178,9 +179,9 @@ debugging.  A set of fixtures is defined using the =def-fixtures= macro:
                               [ :export-names FLAG ]
                               [ :export-fixture-name FLAG ]
                               [ :export-bound-names FLAG ] )
-   ( [ ( [ :cache FLAG ] ) ] NAME [ FORM ] )
+   \( [ ( [ :cache FLAG ] ) ] NAME [ FORM ] )
    ...
-   ( [ ( [ :cache FLAG ] ) ] NAME [ FORM ] ) )
+   \( [ ( [ :cache FLAG ] ) ] NAME [ FORM ] ) )
 #+end_example
 - fixture-name :: The name to be associated with this set of fixtures.
 - inner :: List of declarations to be made inside the let-binding of
@@ -246,16 +247,16 @@ for individual fixtures.
 
 Examples of fixture definitions:
 #+begin_example
-(def-fixtures f1 ()
-  (c 3)
-  (d 'asdfg))
-(def-fixtures f2 (:special (:fixture f1))
-  (d 4)
-  (e 'asdfg)
-  (f c))
-(def-fixtures f3 ()
-  ((:cache t)   g (ackermann 1 2))
-  ((:cache nil) h (factorial 5)))
+\(def-fixtures f1 ()
+  \(c 3)
+  \(d 'asdfg))
+\(def-fixtures f2 (:special (:fixture f1))
+  \(d 4)
+  \(e 'asdfg)
+  \(f c))
+\(def-fixtures f3 ()
+  \((:cache t)   g (ackermann 1 2))
+  \((:cache nil) h (factorial 5)))
 #+end_example
 
 TODO To cause a side-effect among the evaluation of a fixture's name
@@ -292,7 +293,7 @@ documentation such as form =:whatis=, any =nil=s are omitted."
   "The =with-fixtures= macro faciliates debugging and other non-NST uses of
 fixtures sets:
 #+begin_example
-(with-fixtures (FIXTURE FIXTURE ... FIXTURE)
+\(with-fixtures (FIXTURE FIXTURE ... FIXTURE)
   FORM
   FORM
   ...
@@ -304,10 +305,11 @@ provided by the fixtures.
   (loop for fixture in fixtures
         append (fixture-bindings fixture) into fixture-bindings
         collect (fixture-function fixture) into fixture-functions
-        finally (cond
-                  ((null fixture-functions) `(progn ,@forms))
-                  (t `(funcall ,(car fixture-bindings)
-                               ,(cdr fixture-bindings)
-                               #'(lambda ()
-                                   (declare (special ,@fixture-bindings))
-                                   ,@forms))))))
+        finally (return-from with-fixtures
+                  (cond
+                    ((null fixture-functions) `(progn ,@forms))
+                    (t `(funcall ,(car fixture-functions)
+                                 ,(cdr fixture-functions)
+                                 #'(lambda ()
+                                     (declare (special ,@fixture-bindings))
+                                     ,@forms)))))))
