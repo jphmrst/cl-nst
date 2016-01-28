@@ -3,6 +3,7 @@
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
 ;;; Copyright (c) 2006-2011 Smart Information Flow Technologies.
+;;; Copyright (c) 2015, 2016 John Maraist
 ;;; Written by John Maraist.
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
@@ -37,7 +38,7 @@
 setting, and does not change e.g. *fixture-function-bindings*."
   (setf (gethash name *fixture-functions*) new-fixture-function))
 
-  ;; ------------------------------------------------------------------
+;;; ------------------------------------------------------------------
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defvar *fixture-bindings* (make-hash-table :test 'eq)

@@ -132,11 +132,13 @@
   (:intro (:latex "Function \\texttt{make-error-report} produces a report of an error during test execution."))
   (:callspec (&key (format format-string) (args arg-form-list))))
 
+#|
 (defun make-config-error (error test-obj msg)
   (let ((*nst-group-name* (group-name test-obj))
         (*nst-check-user-name* (test-name-lookup test-obj)))
     (declare (special *nst-group-name* *nst-check-user-name*))
     (make-error-report error :format (format nil msg))))
+|#
 
 (defun fixture-binding-error-note (fixture-name variable-name error)
   (make-error-report
@@ -233,6 +235,7 @@
   group-name
   (check-results (make-hash-table :test 'eq)))
 
+#|
 (set-pprint-dispatch 'group-result
   (named-function pprint-group-result
     (lambda (s gr)
@@ -258,6 +261,7 @@
                                      (eq :info (result-summary cr)))
                            (pprint-newline :mandatory s)
                            (format s " - ~:w" cr)))))))))))))
+|#
 
 
 (defstruct (check-result (:include result-stats (tests 1))
@@ -308,6 +312,7 @@ structure, permitting the use of apply."))
       (or warnings failures errors))))
 
 (defun wrap-thrown-lisp-warning (w)
+  (declare (special *nst-context* *nst-stack*))
   (make-check-note :context *nst-context* :stack *nst-stack*
                    :format "Lisp warning: ~:@_~/nst::format-for-warning/"
                    :args (list w)))
@@ -652,6 +657,7 @@ six-value summary of the results:
   (let ((b (gensym)))
     `(loop for ,b in ,bools sum (if ,b 1 0))))
 
+#|
 ;;;
 ;;; Build reports after test runs.
 ;;;
@@ -930,8 +936,6 @@ six-value summary of the results:
     (write report :stream *nst-output-stream* :pretty t)
     nil))
 
-
-
 (defun nst-dump (&key (stream *nst-output-stream*)
                       (verbosity *default-report-verbosity*))
   "Spit out the full NST state."
@@ -947,10 +951,9 @@ six-value summary of the results:
     (format stream " - *nst-output-stream*: ~s~%" *nst-output-stream*)
     (format stream " - *debug-on-error*: ~s~%" *debug-on-error*)
     (format stream " - *debug-on-fail*: ~s~%" *debug-on-fail*)
-    (format stream " - *nst-info-shows-expected*: ~s~%"
-      *nst-info-shows-expected*)
     (format stream "Stored test results:~%")
     (format stream "  ~:w" report)))
+|#
 
 ;;;
 ;;; Generating status data within checks.
@@ -1057,15 +1060,17 @@ six-value summary of the results:
     (:callspec (result-report &key
                               (format format-string) (args argument-list))))
 
+#|
 (defun add-test-config-error (test-obj format &rest args)
   (let ((*nst-group-name* (group-name test-obj))
         (*nst-check-user-name* (test-name-lookup test-obj))
         (report (gethash (check-group-name test-obj) +results-record+)))
     (declare (special *nst-group-name* *nst-check-user-name*))
     (add-error report :format format :args args)))
+|#
 
 (defun add-info (result item)
-  (declare (special *nst-context* *nst-stack* *nst-check-name*))
+  (declare (special *nst-context* *nst-check-name*))
   (push item (check-result-info result)))
 (def-documentation (function add-info)
   (:tags criteria)

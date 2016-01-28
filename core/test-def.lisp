@@ -1,10 +1,9 @@
-;;; CURRENTLY EXCLUDED
-
 ;;; File test-def.lisp
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
 ;;; Copyright (c) 2006-2011 Smart Information Flow Technologies.
+;;; Copyright (c) 2016 John Maraist
 ;;; Written by John Maraist.
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
@@ -52,58 +51,44 @@ first element is that symbol and whose remaining elements are options."
                 fixtures fixtures-supp-p
                 group group-supp-p aspirational aspirational-supp-p
                 documentation documentation-supp-p)))
-   (t
-    (error "~@<Expected symbol or list for def-test argument~_ ~s~:>"
-           name-or-name-and-args))))
+   (t (error "~@<Expected symbol or list for def-test argument~_ ~s~:>"
+             name-or-name-and-args))))
 
 ;;; -----------------------------------------------------------------
 
-(defclass nst-test-record ()
-     ((%group-name :reader group-name)
-      (%test-name-lookup :reader test-name-lookup)
-      (%check-group-name :reader check-group-name)
-      (%test-forms :reader test-forms)
-      (%aspirational :reader test-aspirational-flag)
-      (%aspirational-supp :reader test-aspirational-flag-supp)
-      (%special-fixture-names :reader special-fixture-names)
-      (%criterion :reader test-criterion)
-      (%setup-form   :reader test-setup-form)
-      (%cleanup-form :reader test-cleanup-form)
-      (%startup-form :reader test-startup-form)
-      (%finish-form  :reader test-finish-form))
-  (:documentation "Common superclass of NST test records."))
+(defstruct test-record
+  "Structure storing parsed NST test records."
+  group fixtures criterion forms special-fixture-names
+  setup cleanup startup finish results)
 
 ;; Provide debugging information about this test.
-(defmethod trace-test ((gr nst-group-record) (ts nst-test-record))
+(defmethod trace-test ((gr group-record) (ts test-record))
+  "Return non-nil if an item is a group record."
   (format t "Test ~s (group ~s)~%" gr ts)
-  ;; (format t " - Given name and args: ~s~%" (test-forms ts))
-  (format t " - Given criterion: ~s~%" (test-criterion ts))
+  (format t " - Given criterion: ~s~%" (test-record-criterion ts))
   (format t " - Given forms: ")
-  (pprint-logical-block (*standard-output* (test-forms ts))
+  (pprint-logical-block (*standard-output* (test-record-forms ts))
     (loop for form = (pprint-pop) while form do
-      (format t "~s" (test-forms ts))
+      (format t "~s" form)
       (pprint-exit-if-list-exhausted)
       (pprint-newline :fill)))
   (format t "~%"))
 
-(defmethod test-record-p ((r nst-test-record))
-  t)
-
 ;;; -----------------------------------------------------------------
 
 (defmacro def-test (name-or-name-and-args criterion &rest forms)
-  "Individual unit tests are encoded with the \\texttt{def-test} form:
+  "Individual unit tests are encoded with the =def-test= form:
 #+begin_example
 \(def-test NAME &key (group GROUP-NAME)
-                    (setup FORM)
-                    (cleanup FORM)
-                    (startup FORM)
-                    (finish FORM)
-                    (fixtures ((:seq FIXTURE)))
-                    (documentation STRING))
+                    \(setup FORM)
+                    \(cleanup FORM)
+                    \(startup FORM)
+                    \(finish FORM)
+                    \(fixtures ((:seq FIXTURE)))
+                    \(documentation STRING))
   criterion &body (:seq FORM))
 
-(def-test NAME criterion &body (:seq FORM))
+\(def-test NAME criterion &body (:seq FORM))
 #+end_example
 The =SETUP=, =CLEANUP=, =STARTUP=, =FINISH= and =FIXTURES= are just as for
 fixtures and test groups, but apply only to the one test.  The =CRITERION=
@@ -123,16 +108,16 @@ as just the symbol without the parentheses, e.g. =:pass=.
 The =:documentation= form provides a documentation string in
 the standard Lisp sense.  Since documentation strings are stored
 against names, and since the same name can be used for several tests
-(so long as they are all in different packages), documentation strings
+\(so long as they are all in different packages), documentation strings
 on tests may not be particularly useful.
 
 The =def-check= form is a deprecated synonym for =def-test=."
+
   ;; (declare (special *group-object-variable*))
 
   (handler-bind (#+sbcl (style-warning
                          (named-function def-test-style-warning-handler
                            (lambda (c)
-                             ;; (format t ">>>>>>>>>>>>>>>>>>>>>>>>>~%")
                              (muffle-warning c)))))
 
     ;; Decode the name-or-name-and-args, pulling out the individual
@@ -144,215 +129,173 @@ The =def-check= form is a deprecated synonym for =def-test=."
                           aspirational aspirational-supp-p
                           docstring docstring-supp-p)
         (decode-defcheck-name-and-args name-or-name-and-args)
-      (declare (ignore fixtures-supp-p))
-      (when (and group-supp-p
-                 (boundp '*group-class-name*)
-                 (not (eq group (symbol-value '*group-class-name*))))
-        (error "Test :group option value ~s differs from enclosing group ~s"
-               group (symbol-value '*group-class-name*)))
-      (unless (or group-supp-p (boundp '*group-class-name*))
-        (error
-         "Must specify either :group option value or enclose test in group"))
+      (declare (ignore fixtures-supp-p docstring-supp-p docstring
+                       aspirational aspirational-supp-p))
 
-      (let* ((*group-class-name*
-              (cond
-               ((boundp '*group-class-name*) (symbol-value '*group-class-name*))
-               (t group)))
-             (*group-fixture-classes*
-              (cond
-               ((boundp '*group-fixture-classes*)
-                (symbol-value '*group-fixture-classes*))
-               (t (group-fixture-class-names
-                   (make-instance *group-class-name*)))))
+      `(progn
+         ,@(when group-supp-p
+             `((when (and (boundp '*group-name*)
+                          (not (eq ',group (symbol-value '*group-name*))))
+                 (error "Test :group option value ~s differs from enclosing ~s"
+                        ',group (symbol-value '*group-name*)))))
 
-             ;; The internal symbol used to track the results of this
-             ;; test.
-             (name nil)
+         ;; The actual group name and record.
+         (let* ((the-group-name (cond
+                                  ((boundp '*group-name*)
+                                   (symbol-value '*group-name*))
+                                  (t ',group)))
+                (the-group-record (cond
+                                    ((boundp '*group-record*)
+                                     (symbol-value '*group-record*))
+                                    (t (group-record ',group))))
 
-             ;; IDs of previous record of running this test.
-             (purge-ids nil)
+                ;; The internal symbol used to track the results of
+                ;; this test.
+                (results-name nil)
 
-             ;; A string we'll use as the basis for generated symbols.
-             (base-name-string
-              (concatenate 'string
-                (package-name (symbol-package *group-class-name*))
-                "-" (symbol-name *group-class-name*)
-                "--" (package-name (symbol-package test-name))
-                "-" (symbol-name test-name))))
-        (declare (special *group-class-name* *group-fixture-classes*))
+                ;; A string we'll use as the basis for generated symbols.
+                (base-name-string
+                 (concatenate 'string
+                   (package-name (symbol-package the-group-name))
+                   "-" (symbol-name the-group-name)
+                   "--" (package-name (symbol-package ',test-name))
+                   "-" (symbol-name ',test-name))))
 
-        ;; Find any records of running previous versions of this test.
-        (loop for report being the hash-values of +results-record+
-            using (hash-key id)
-            do
-              (when (and (eq test-name (check-result-check-name report))
-                         (eq *group-class-name*
-                             (check-result-group-name report)))
-                (push id purge-ids)))
+           (unless the-group-name
+             (error "Must specify either :group option value or enclose test in def-test-group"))
+           (unless the-group-record
+             (error "No record for group ~s" the-group-name))
 
-        ;; If we find one, reuse the symbol.
-        (when (eql 1 (length purge-ids))
-          (setf name (car purge-ids)))
+           ;; If we have a previous record for this test, re-use the
+           ;; symbol for storing results, and erase the old results.
+           (multiple-value-bind (old-record old-record-p)
+               (test-record the-group-name ',test-name)
+             (when old-record-p
+               (setf results-name (test-record-results old-record))
+               ;; TODO Erase results
+               ))
 
-        ;; Get rid of any previous records.  For ticket:118, this would
-        ;; become setting up initial records.
-        (loop for id in purge-ids do (remhash id +results-record+))
+           ;; If we aren't reusing a name, make up a new one.
+           (unless results-name
+             (setf results-name (gensym base-name-string)))
 
-        ;; If we aren't reusing a name, make up a new one.
-        (unless name
-          (setf name (gentemp base-name-string
-                              :nst-test-class-package)))
+           (setf (test-record the-group-name ',test-name)
+                 (make-test-record :group the-group-name
+                                   :criterion ',criterion
+                                   :forms ',forms
+                                   :fixtures ',fixtures
+                                   ;; :special-fixture-names ???????????
+                                   ,@(when setup-supp-p
+                                       `(:setup #'(lambda () ,setup)))
+                                   ,@(when cleanup-supp-p
+                                       `(:cleanup #'(lambda () ,cleanup)))
+                                   ,@(when startup-supp-p
+                                       `(:startup #'(lambda () ,startup)))
+                                   ,@(when finish-supp-p
+                                       `(:finish #'(lambda () ,finish)))
+                                   :results results-name)))))))
 
-        ;; Expand the fixtures into the definitions we'll actually
-        ;; use.
-        (multiple-value-bind
-            (fixture-class-names anon-fixture-forms fixture-names)
-            (process-fixture-list fixtures)
-          (declare (ignorable fixture-names))
-
-          (let* ((*nst-context* nil)
-                 (fixture-names-special
-                  `(special ,@(loop for fx in fixture-class-names
-                                  append (bound-names fx))
-                            ,@(loop for fx in *group-fixture-classes*
-                                  append (bound-names fx)))))
-                                        ; The expansion of the actual
-                                        ; test form.
-            (declare (special *nst-context*))
-
-            `(block ,test-name
-               #+allegro (excl:record-source-file ',test-name :type :nst-test)
-               ,@anon-fixture-forms
-
-               (defclass ,name (,@fixture-class-names nst-test-record)
-                 ()
-                 ,@(when docstring-supp-p `((:documentation ,docstring))))
-               #-sbcl
-               ,@(when docstring-supp-p
-                   `((setf (documentation ',test-name :nst-test) ,docstring)))
-
-               (defmethod initialize-instance :after ((tproto ,name)
-                                                      &key &allow-other-keys)
-                 ,@(when fixture-names-special
-                     `((declare ,fixture-names-special)))
-                 (flet ((set-slot (slot value)
-                          (setf (slot-value tproto slot) value)))
-                   (set-slot '%group-name ',*group-class-name*)
-                   (set-slot '%test-name-lookup ',test-name)
-                   (set-slot '%check-group-name ',name)
-                   (set-slot '%test-forms ',forms)
-                   (set-slot '%aspirational ',aspirational)
-                   (set-slot '%aspirational-supp ',aspirational-supp-p)
-                   (set-slot '%special-fixture-names ',fixture-names-special)
-                   (set-slot '%criterion ',criterion)
-                   (set-slot '%setup-form
-                             ,(cond
-                                (setup-supp-p
-                                 `(named-function ,(format nil
-                                                       "test-~a-setup-thunk"
-                                                     name)
-                                   (lambda () ,setup)))
-                                (t '#'no-effect)))
-                   (set-slot '%cleanup-form
-                             ,(cond
-                               (cleanup-supp-p
-                                `(named-function
-                                     ,(format nil "test-~a-cleanup-thunk"
-                                        name)
-                                   (lambda () ,cleanup)))
-                                (t '#'no-effect)))
-                   (set-slot '%startup-form
-                             ,(cond
-                               (startup-supp-p
-                                `(named-function
-                                     ,(format nil "test-~a-startup-thunk"
-                                        name)
-                                                  (lambda () ,startup)))
-                                (t '#'no-effect)))
-                   (set-slot '%finish-form
-                             ,(cond
-                               (finish-supp-p
-                                `(named-function
-                                     ,(format nil "test-~a-finish-thunk"
-                                        name)
-                                   (lambda () ,finish)))
-                                (t '#'no-effect)))))
-
-               ;; Pretty printer.
-               (set-pprint-dispatch ',name
-                 (named-function ,(format nil "pprint-test--~a" name)
-                   (lambda (stream object)
-                     (declare (ignorable object))
-                     (format stream
-                         ,(format nil "Test ~s of group ~s"
-                            test-name
-                            *group-class-name*)))))
-
-               ;; (defmethod test-name-lookup ((ts ,name)) ',test-name)
-
-               (group-add-testclassname ',*group-class-name* ',name)
-               (add-group-test-name-and-class ',*group-class-name* ',test-name ',name)
-
-               ;; Record the use of these names.
-               (record-name-use :test ',test-name ',name))))))))
-
-(def-documentation (macro def-test)
-    (:properties (nst-manual tests) (nst-control-api primary))
-    (:tags primary)
-    (:intro (:latex "Individual unit tests are encoded with the \\texttt{def-test} form:"))
-  (:callspec ((NAME &key (group GROUP-NAME)
-                    (setup FORM)
-                    (cleanup FORM)
-                    (startup FORM)
-                    (finish FORM)
-                    (fixtures ((:seq FIXTURE)))
-                    (documentation STRING) )
-              criterion &body (:seq FORM))
-             (NAME criterion &body (:seq FORM)))
-  (:details (:latex "The \\texttt{SETUP}, \\texttt{CLEANUP}, \\texttt{STARTUP},
-\\texttt{FINISH} and \\texttt{FIXTURES} are just as for fixtures and
-test groups, but apply only to the one test.  The \\texttt{CRITERION}
-is a list or symbol specifying the properties which should hold for
-the \\texttt{FORM}s.")
-
-         (:latex "When a test is not enclosed within a group body, a group name must be
-provided by the \\texttt{GROUP} option.  When a test is enclosed within
-a group body, the \\texttt{GROUP} option is not required, but if
-provided it must agree with the group name.")
-
-         (:latex "When there are no \\texttt{SETUP}, \\texttt{CLEANUP}, \\texttt{STARTUP},
-\\texttt{FINISH} or \\texttt{FIXTURES} arguments, the \\texttt{NAME} may
-be given without parentheses.  Likewise, any criterion consisting of a
-single symbol, e.g.\\ \\texttt{(:pass)}, may be abbreviated as just the
-symbol without the parentheses, e.g.\\ \\texttt{:pass}.")
-
-         (:latex "The \\texttt{:documentation} form provides a documentation string in
-the standard Lisp sense.  Since documentation strings are stored
-against names, and since the same name can be used for several tests
-(so long as they are all in different packages), documentation strings
-on tests may not be particularly useful.")
-
-         (:latex "The \\texttt{def-check} form is a deprecated synonym for
-\\texttt{def-test}.")))
-
-(defpackage nst-test-class-package
-    (:documentation "Internal package for NST tests' class names."))
+;;;        ;; Expand the fixtures into the definitions we'll actually
+;;;        ;; use.
+;;;        (multiple-value-bind
+;;;            (fixture-class-names group-anon-fixture-forms fixture-names)
+;;;            (process-fixture-list fixtures)
+;;;          (declare (ignorable fixture-names))
+;;;
+;;;          (let* ((*nst-context* nil)
+;;;                 (fixture-names-special
+;;;                  `(special ,@(loop for fx in fixture-class-names
+;;;                                  append (bound-names fx))
+;;;                            ,@(loop for fx in *group-fixture-classes*
+;;;                                  append (bound-names fx)))))
+;;;                                        ; The expansion of the actual
+;;;                                        ; test form.
+;;;            (declare (special *nst-context*))
+;;;
+;;;            `(block ,test-name
+;;;               #+allegro (excl:record-source-file ',test-name :type :nst-test)
+;;;               ,@group-anon-fixture-forms
+;;;
+;;;               (defclass ,name (,@fixture-class-names test-record)
+;;;                 ()
+;;;                 ,@(when docstring-supp-p `((:documentation ,docstring))))
+;;;               #-sbcl
+;;;               ,@(when docstring-supp-p
+;;;                   `((setf (documentation ',test-name :nst-test) ,docstring)))
+;;;
+;;;               (defmethod initialize-instance :after ((tproto ,name)
+;;;                                                      &key &allow-other-keys)
+;;;                 ,@(when fixture-names-special
+;;;                     `((declare ,fixture-names-special)))
+;;;                 (flet ((set-slot (slot value)
+;;;                          (setf (slot-value tproto slot) value)))
+;;;                   (set-slot '%group-name ',*group-class-name*)
+;;;                   (set-slot '%test-name-lookup ',test-name)
+;;;                   (set-slot '%check-group-name ',name)
+;;;                   (set-slot '%test-forms ',forms)
+;;;                   (set-slot '%aspirational ',aspirational)
+;;;                   (set-slot '%aspirational-supp ',aspirational-supp-p)
+;;;                   (set-slot '%special-fixture-names ',fixture-names-special)
+;;;                   (set-slot '%criterion ',criterion)
+;;;                   (set-slot '%setup-form
+;;;                             ,(cond
+;;;                                (setup-supp-p
+;;;                                 `(named-function ,(format nil
+;;;                                                       "test-~a-setup-thunk"
+;;;                                                     name)
+;;;                                   (lambda () ,setup)))
+;;;                                (t '#'no-effect)))
+;;;                   (set-slot '%cleanup-form
+;;;                             ,(cond
+;;;                               (cleanup-supp-p
+;;;                                `(named-function
+;;;                                     ,(format nil "test-~a-cleanup-thunk"
+;;;                                        name)
+;;;                                   (lambda () ,cleanup)))
+;;;                                (t '#'no-effect)))
+;;;                   (set-slot '%startup-form
+;;;                             ,(cond
+;;;                               (startup-supp-p
+;;;                                `(named-function
+;;;                                     ,(format nil "test-~a-startup-thunk"
+;;;                                        name)
+;;;                                                  (lambda () ,startup)))
+;;;                                (t '#'no-effect)))
+;;;                   (set-slot '%finish-form
+;;;                             ,(cond
+;;;                               (finish-supp-p
+;;;                                `(named-function
+;;;                                     ,(format nil "test-~a-finish-thunk"
+;;;                                        name)
+;;;                                   (lambda () ,finish)))
+;;;                                (t '#'no-effect)))))
+;;;
+;;;               ;; Pretty printer.
+;;;               (set-pprint-dispatch ',name
+;;;                 (named-function ,(format nil "pprint-test--~a" name)
+;;;                   (lambda (stream object)
+;;;                     (declare (ignorable object))
+;;;                     (format stream
+;;;                         ,(format nil "Test ~s of group ~s"
+;;;                            test-name
+;;;                            *group-class-name*)))))
+;;;
+;;;               ;; (defmethod test-name-lookup ((ts ,name)) ',test-name)
+;;;
+;;;               (group-add-testclassname ',*group-class-name* ',name)
+;;;               (add-group-test-name-and-class ',*group-class-name* ',test-name ',name)
+;;;
+;;;               ;; Record the use of these names.
+;;;               (record-name-use :test ',test-name ',name))))
 
 (defmacro def-check (&rest args)
   (warn 'nst-soft-deprecation :old-name 'def-check :replacement 'def-test)
   `(def-test ,@args))
 
-(defmacro debug-check (defcheck)
-  "Debugging aid for def-check forms.  Provides all-caps dummy values for
-dynamic variables normally provided by def-test-group."
-  `(let ((*group-fixture-classes* '(<<GROUP-FIXTURE-CLASSES>>))
-         (*group-class-name* '<<GROUP-CLASS-NAME>>))
-     (declare (special *group-class-name* *group-fixture-classes*))
-     (pprint (macroexpand ',defcheck))))
-
-(defun test-is-aspirational (ts)
-  (when (symbolp ts)
-    (setf ts (make-instance ts)))
-  (cond
-    ((test-aspirational-flag-supp ts) (test-aspirational-flag ts))
-    (t (group-aspirational-flag (make-instance (group-name ts))))))
+;;;(defmacro debug-check (defcheck)
+;;;  "Debugging aid for def-check forms.  Provides all-caps dummy values for
+;;;dynamic variables normally provided by def-test-group."
+;;;  `(let ((*group-fixture-classes* '(<<GROUP-FIXTURE-CLASSES>>))
+;;;         (*group-class-name* '<<GROUP-CLASS-NAME>>))
+;;;     (declare (special *group-class-name* *group-fixture-classes*))
+;;;     (pprint (macroexpand ',defcheck))))

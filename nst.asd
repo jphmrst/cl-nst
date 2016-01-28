@@ -3,6 +3,7 @@
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
 ;;; Copyright (c) 2010-2014 Smart Information Flow Technologies.
+;;; Copyright (c) 2015, 2016 John Maraist
 ;;; Written by John Maraist and other contributors.
 ;;;
 ;;; NST is free software: you can redistribute it and/or modify it
@@ -52,7 +53,7 @@
                                         ; number) should be
                                         ; incremented immediately
                                         ; after a version is shipped.
-    :version "4.0.4"
+    :version "5.0.0"
     :author "John Maraist <lisper@maraist.org>"
     :license "LLGPL 3.latest"
     :in-order-to ((test-op (test-op :nst-test))
@@ -69,67 +70,65 @@
                            ;; and documentation generation.
                            (:file "package")
 
-;;;                           ;; Helper functions.
-;;;                           (:file "utils"  :depends-on ("package"))
+                           ;; Helper functions.
+                           (:file "utils"  :depends-on ("package"))
 
                            ;; Error declarations.
                            (:file "errors"  :depends-on ("package"))
 
-;;;                           ;; Flags and generic function declarations.
-;;;                           (:file "globals"  :depends-on ("errors" "utils"))
-;;;
-;;;                           ;;
-;;;                           (:file "artifacts"  :depends-on ("globals"))
-;;;
-;;;                           ;;
-;;;                           (:file "interrupt"  :depends-on ("package"))
-;;;
+                           ;; Flags and generic function declarations.
+                           (:file "globals"  :depends-on ("errors" "utils"))
+
+                           ;;
+                           (:file "artifacts"  :depends-on ("globals"))
+
+                           ;; Macro combining handler-bind and
+                           ;; interrupt detection.
+                           (:file "interrupt"  :depends-on ("package"))
+
 ;;;                           ;; Main control flow of test and group
 ;;;                           ;; execution.
 ;;;                           (:file "runner"  :depends-on ("interrupt"
 ;;;                                                         "artifacts"
 ;;;                                                         "status"))
-;;;
-;;;                           ;; The def-group macro.
-;;;                           (:file "group" :depends-on ("artifacts"))
-;;;
-;;;                           ;; Definition and expansion of check
-;;;                           ;; criteria.
-;;;                           (:file "context" :depends-on ("package"))
-;;;
-;;;                           ;; Definition and expansion of check
-;;;                           ;; criteria.
-;;;                           (:file "check" :depends-on ("artifacts"
-;;;                                                       "context"
-;;;                                                       "interrupt"))
-;;;
-;;;                           ;; The def-check macro.
-;;;                           (:file "test-def"
-;;;                                  :depends-on ("check" "group" "runner"))
+
+                           ;; The def-group macro.
+                           (:file "group" #| :depends-on ("artifacts") |#)
+
+                           ;; Definition and expansion of check
+                           ;; criteria.
+                           (:file "context" :depends-on ("package"))
+
+                           ;; Definition and expansion of check
+                           ;; criteria.
+                           (:file "check" :depends-on ("context"
+                                                       "interrupt"))
 
                            ;; The def-fixture macro and supporting
-                           ;; functions and globals.
-                           (:file "fixture"  :depends-on ("errors"))
+                           ;; functions.
+                           (:file "fixture" :depends-on ("errors" "globals"))
+
+                           ;; The def-check macro.
+                           (:file "test-def" :depends-on ("errors" "globals"))
 
 ;;;                           ;; Helper functions for permuting lists.
 ;;;                           (:file "permuter" :depends-on ("package"))
-;;;
-;;;                           ;; Receiving and bookkeeping the results of
-;;;                           ;; tests.
-;;;                           (:file "status" :depends-on ("globals"
-;;;                                                        ;; "context"
-;;;                                                        "check"))
-;;;
+
+                           ;; Receiving and bookkeeping the results of
+                           ;; tests.
+                           (:file "status" :depends-on
+                                  ("globals" "artifacts" "check"))
+
 ;;;                           ;; Standard criteria declarations.
 ;;;                           (:file "criteria"
 ;;;                                  :depends-on ("errors" "interrupt"
 ;;;                                               "permuter" "check" "status"))
-;;;
-;;;                           ;; Process criteria declarations.
-;;;                           (:file "process"
-;;;                                  :depends-on ("errors" "interrupt"
-;;;                                                        "check" "status"))
-;;;
+
+                           ;; Process criteria declarations.
+                           (:file "process"
+                                  :depends-on ("errors" "interrupt"
+                                                        "check" "status"))
+
 ;;;                           ;; Interaction with NST via the REPL.
 ;;;                           #-abcl
 ;;;                           (:file "command" :depends-on ("globals" "status"))

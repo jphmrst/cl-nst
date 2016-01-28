@@ -24,17 +24,17 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :sift.nst)
 
+;;;;;;
+;;;;;; Generic functions whose methods are defined by the various macros.
+;;;;;;
+;;;(defmacro add-class-name-static-method (fn)
+;;;  `(progn
+;;;     (defmethod ,fn ((g symbol)) (,fn (make-instance g)))
+;;;     ;; (defmethod ,fn ((g standard-class)) (,fn (make-instance g)))
+;;;     ))
 ;;;
-;;; Generic functions whose methods are defined by the various macros.
-;;;
-(defmacro add-class-name-static-method (fn)
-  `(progn
-     (defmethod ,fn ((g symbol)) (,fn (make-instance g)))
-     ;; (defmethod ,fn ((g standard-class)) (,fn (make-instance g)))
-     ))
-
-(defmacro add-class-name-instantiator-method (fn)
-  `(defmethod ,fn ((g symbol)) (,fn (make-instance g))))
+;;;(defmacro add-class-name-instantiator-method (fn)
+;;;  `(defmethod ,fn ((g symbol)) (,fn (make-instance g))))
 
 
 ;;;
@@ -82,3 +82,5 @@
 (defmacro named-function (name lambda-expression)
   (declare (ignore name))
   `(function ,lambda-expression))
+
+(defun no-effect () nil)
