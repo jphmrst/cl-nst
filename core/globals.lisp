@@ -142,38 +142,38 @@ context-layer instances.")
 (defparameter *nst-group-shown* nil
   "Dynamic-scoped variable tracking whether the name of a group has been printed, so that tests need not repeat it.")
 
-;;;(defun assemble-protected-option-values (other-vars)
-;;;  (let ((result (make-hash-table :test 'eq)))
-;;;    (flet ((save-symbol-value (sym)
-;;;             (setf (gethash sym result) (symbol-value sym))))
-;;;      (cond
-;;;       (*nst-debug*
-;;;          (loop for (var-name . package-name) in other-vars do
-;;;            (let ((the-sym (intern (symbol-name var-name)
-;;;                                   (find-package package-name))))
-;;;              (when (boundp the-sym)
-;;;                (save-symbol-value the-sym))))
-;;;          (loop for the-sym in '(*nst-verbosity* *default-report-verbosity*
-;;;                                 *debug-on-error* *debug-on-fail*
-;;;                                 *nst-info-shows-expected* *nst-output-stream*)
-;;;                do
-;;;             (when (boundp the-sym)  (save-symbol-value the-sym))))
-;;;       (t nil)))
-;;;    result))
-;;;
+(defun assemble-protected-option-values (other-vars)
+  (let ((result (make-hash-table :test 'eq)))
+    (flet ((save-symbol-value (sym)
+             (setf (gethash sym result) (symbol-value sym))))
+      (cond
+       (*nst-debug*
+          (loop for (var-name . package-name) in other-vars do
+            (let ((the-sym (intern (symbol-name var-name)
+                                   (find-package package-name))))
+              (when (boundp the-sym)
+                (save-symbol-value the-sym))))
+          (loop for the-sym in '(*nst-verbosity* *default-report-verbosity*
+                                 *debug-on-error* *debug-on-fail*
+                                 *nst-info-shows-expected* *nst-output-stream*)
+                do
+             (when (boundp the-sym)  (save-symbol-value the-sym))))
+       (t nil)))
+    result))
+
 ;;;(defun restore-protected-option-values (stored-values)
 ;;;  (loop for symbol being the hash-keys of stored-values
 ;;;        using (hash-value val)
 ;;;        do (setf (symbol-value symbol) val))
 ;;;  nil)
-;;;
-;;;(defun run-debug-options (options-form)
-;;;  (when *nst-debug*
-;;;    (destructuring-bind (&key nst-set progn) options-form
-;;;      (loop for (name val) in nst-set do (run-nst-command :set name val))
-;;;      (loop for form in progn do (eval form))))
-;;;  nil)
-;;;
+
+(defun run-debug-options (options-form)
+  (when *nst-debug*
+    (destructuring-bind (&key nst-set progn) options-form
+      (loop for (name val) in nst-set do (run-nst-command :set name val))
+      (loop for form in progn do (eval form))))
+  nil)
+
 ;;;(defmacro apply-debug-options (forms-spec protect-vars &body forms)
 ;;;  (let ((protects (gensym)))
 ;;;    `(let ((*debug-on-error* (or *debug-on-error* *nst-debug*))

@@ -129,10 +129,10 @@
                                   :depends-on ("errors" "interrupt"
                                                         "check" "status"))
 
-;;;                           ;; Interaction with NST via the REPL.
-;;;                           #-abcl
-;;;                           (:file "command" :depends-on ("globals" "status"))
-;;;
+                           ;; Interaction with NST via the REPL.
+                           #-abcl
+                           (:file "command" :depends-on ("globals" "status"))
+
 ;;;                           ;; Generating JUnit-friendly XML.
 ;;;                           (:file "xml" :depends-on ("status"))
 ;;;
@@ -141,17 +141,14 @@
 ;;;
 ;;;                           ;; Sample-testing predicates.
 ;;;                           (:file "sampling" :depends-on ("check"))
-;;;
-;;;                           ;; Object-oriented test methods.  The
-;;;                           ;; features allowing this file should
-;;;                           ;; always be a subset of the features
-;;;                           ;; allowing :closer-mop above.
-;;;                           #+(or allegro sbcl clozure openmcl clisp)
-;;;                           (:file "method" :depends-on ("status" "check"))
-;;;
-;;;                           ;; Other packaged APIs.
-;;;                           (:file "interfaces"
-;;;                                  :depends-on ("check" "runner" "status"))
 
-                           ))))
+                           ;; Object-oriented test methods.  The
+                           ;; features allowing this file should
+                           ;; always be a subset of the features
+                           ;; allowing :closer-mop above.
+                           #+(or allegro sbcl clozure openmcl clisp)
+                           (:file "method" :depends-on ("status" "check"))
 
+                           ;; Other packaged APIs.
+                           (:file "interfaces"
+                                  :depends-on ("check" #|"runner"|# "status"))))))
