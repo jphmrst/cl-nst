@@ -174,7 +174,7 @@ configuration provided by those wrappers."
                               (format-at-verbosity 4 "Failure ~s~a~a~a"
                                                  location group test tests)))))
                     ,@(when tests
-                        ;; If group setup fails, record the failure
+                        ;; If the body fails, record the failure
                         ;; against each test being run.
                         `((loop for test-record in ,tests do
                                 (setf (gethash (test-record-results test-record)
@@ -236,22 +236,24 @@ configuration provided by those wrappers."
                          group-name (mapcar #'test-record-name test-records))
 
     ;; Run group pre-fixture setup.
-    (with-nst-control-handlers
-        ((e flag
-            :cerror-label (format nil
-                              "~@<Exit from attempting tests in this group ~
-                              ~_(~s), and continue with tests from other ~
-                              groups.~:>"
-                            group-name)
-            :with-retry "Try performing group setup again."
-            :handler-return-to run-group-tests
-            :group group-record :tests test-records
-            :fail-test-msg "Error in pre-fixture setup"
-            :log-location ("in setup handler" :group group-record
-                                              :tests test-records)))
+    (let ((thunk (group-record-fixtures-setup-thunk group-record)))
+      (when thunk
+        (with-nst-control-handlers
+            ((e flag
+                :cerror-label (format nil
+                                  "~@<Exit from attempting tests in this group ~
+                                    ~_(~s), and continue with tests from other ~
+                                 groups.~:>"
+                                group-name)
+                :with-retry "Try performing group setup again."
+                :handler-return-to run-group-tests
+                :group group-record :tests test-records
+                :fail-test-msg "Error in pre-fixture setup"
+                :log-location ("in setup handler" :group group-record
+                                                  :tests test-records)))
 
-      ;; The pre-fixture setup call wrapped by the above handlers.
-      (funcall (group-record-fixtures-setup-thunk group-record)))
+          ;; The pre-fixture setup call wrapped by the above handlers.
+          (funcall thunk))))
     (format-at-verbosity 4 "Passed setup in (run-group-tests ~s ~s)~%"
                          group-record test-records)
 
@@ -263,37 +265,41 @@ configuration provided by those wrappers."
       group-record test-records)
 
     ;; Run group post-fixture cleanup.
-    (with-nst-control-handlers
-        ((e flag
-            :cerror-label "Continue with tests from other groups."
-            :with-retry "Try performing group cleanup again."
-            :handler-return-to run-group-tests
-            :log-location ("in post-fixture cleanup"
+    (let ((thunk (group-record-fixtures-cleanup-thunk group-record)))
+      (when thunk
+        (with-nst-control-handlers
+            ((e flag
+                :cerror-label "Continue with tests from other groups."
+                :with-retry "Try performing group cleanup again."
+                :handler-return-to run-group-tests
+                :log-location ("in post-fixture cleanup"
                                :group group-record :tests test-records)
-            :group group-record :tests test-records
-            :fail-test-msg "Error in post-fixture cleanup"))
-      (funcall (group-record-fixtures-cleanup-thunk group-record)))))
+                :group group-record :tests test-records
+                :fail-test-msg "Error in post-fixture cleanup"))
+          (funcall thunk))))))
 
 (defun run-group-tests-fixtures-thunk (group-record test-records)
   #'(lambda ()
       (block group-withfix
         ;; Run group post-fixture setup.
-        (with-nst-control-handlers
-            ((e flag
-                :cerror-label (format nil
-                                  "~@<Exit from attempting tests in this ~
+        (let ((thunk (group-record-withfixtures-setup-thunk group-record)))
+          (when thunk
+            (with-nst-control-handlers
+                ((e flag
+                    :cerror-label (format nil
+                                      "~@<Exit from attempting tests in this ~
                                         group ~_(~s), and continue with tests ~
                                         from other groups.~:>"
-                                (group-record-name group-record))
-                :with-retry "Try performing post-fixture group setup again."
-                :handler-return-to group-withfix
-                :log-location ("in post-fixture setup"
+                                    (group-record-name group-record))
+                    :with-retry "Try performing post-fixture group setup again."
+                    :handler-return-to group-withfix
+                    :log-location ("in post-fixture setup"
                                    :group group-record :tests test-records)
-                :group group-record :tests test-records
-                :fail-test-msg "Error in post-fixture setup"))
+                    :group group-record :tests test-records
+                    :fail-test-msg "Error in post-fixture setup"))
 
-          ;; The pre-fixture setup call wrapped by the above handlers.
-          (funcall (group-record-withfixtures-setup-thunk group-record)))
+              ;; The pre-fixture setup call wrapped by the above handlers.
+              (funcall thunk))))
         (format-at-verbosity 4
             "Passed post-fixture setup in (run-group-tests ~s ~s)~%"
           group-record test-records)
@@ -310,32 +316,37 @@ configuration provided by those wrappers."
 
           ;; Run group post-fixture cleanup, in the protected block of
           ;; the unwind-protect above.
-          (with-nst-control-handlers
-              ((e flag
-                  :cerror-label "Continue with tests from other groups."
-                  :with-retry "Try performing group with-fixtures cleanup again."
-                  :handler-return-to group-withfix
-                  :log-location ("in group fixtures cleanup"
+          (let ((thunk (group-record-withfixtures-cleanup-thunk group-record)))
+            (when thunk
+              (with-nst-control-handlers
+                  ((e flag
+                      :cerror-label "Continue with tests from other groups."
+                      :with-retry "Try performing group with-fixtures ~
+                                 cleanup again."
+                      :handler-return-to group-withfix
+                      :log-location ("in group fixtures cleanup"
                                      :group group-record :tests test-records)
-                  :group group-record :tests test-records
-                  :fail-test-msg "Error in group fixtures cleanup"))
-            (funcall (group-record-withfixtures-cleanup-thunk group-record)))))))
+                      :group group-record :tests test-records
+                      :fail-test-msg "Error in group fixtures cleanup"))
+                (funcall thunk))))))))
 
 (defun run-group-test (group-record test-record)
   ;; Run group each-test setup.
-  (with-nst-control-handlers
-      ((e flag
-          :cerror-label (format nil
-                            "~@<Exit from this test, and continue with other ~
-                                tests in this group.~:>"
-                          (group-record-name group-record))
-          :with-retry "Try performing each-test setup again."
-          :handler-return-to run-group-test
-          :log-location ("in each-test setup"
-                         :group group-record :test test-record)
-          :group group-record :tests (list test-record)
-          :fail-test-msg "Error in each-test setup"))
-    (funcall (group-record-eachtest-setup-thunk group-record)))
+  (let ((thunk (group-record-eachtest-setup-thunk group-record)))
+    (when thunk
+      (with-nst-control-handlers
+          ((e flag
+              :cerror-label (format nil
+                                "~@<Exit from this test, and continue with other ~
+                                  tests in this group.~:>"
+                              (group-record-name group-record))
+              :with-retry "Try performing each-test setup again."
+              :handler-return-to run-group-test
+              :log-location ("in each-test setup"
+                             :group group-record :test test-record)
+              :group group-record :tests (list test-record)
+              :fail-test-msg "Error in each-test setup"))
+        (funcall thunk))))
   (format-at-verbosity 4 "Passed each-test setup for group ~a, test ~a~%"
                        (group-record-name group-record)
                        (test-record-name test-record))
@@ -344,16 +355,18 @@ configuration provided by those wrappers."
   (unwind-protect
       (progn
 
-        (with-nst-control-handlers
-            ((e flag
-                :cerror-label "Retry test startup."
-                :with-retry "Retry test startup."
-                :handler-return-to run-group-test
-                :log-location ("in test startup"
+        (let ((thunk (test-record-startup test-record)))
+          (when thunk
+            (with-nst-control-handlers
+                ((e flag
+                    :cerror-label "Retry test startup."
+                    :with-retry "Retry test startup."
+                    :handler-return-to run-group-test
+                    :log-location ("in test startup"
                                    :group group-record :test test-record)
-                :group group-record :tests (list test-record)
-                :fail-test-msg "Error in test startup"))
-          (funcall (test-record-startup test-record)))
+                    :group group-record :tests (list test-record)
+                    :fail-test-msg "Error in test startup"))
+              (funcall thunk))))
         (format-at-verbosity 4 "Passed test startup for group ~a, test ~a~%"
                              (group-record-name group-record)
                              (test-record-name test-record))
@@ -363,48 +376,54 @@ configuration provided by those wrappers."
             (apply-fixtures (test-record-fixtures test-record)
                             (run-test-fixtures-thunk group-record test-record))
 
-          (with-nst-control-handlers
-              ((e flag
-                  :cerror-label "~@<Exit from this test, and continue with ~
-                                    other tests in this group.~:>"
-                  :with-retry "Try performing test finish again."
-                  :handler-return-to run-group-test
-                  :log-location ("in test finish"
+          (let ((thunk (test-record-finish test-record)))
+            (when thunk
+              (with-nst-control-handlers
+                  ((e flag
+                      :cerror-label "~@<Exit from this test, and continue with ~
+                                      other tests in this group.~:>"
+                      :with-retry "Try performing test finish again."
+                      :handler-return-to run-group-test
+                      :log-location ("in test finish"
                                      :group group-record :test test-record)
-                  :group group-record :tests (list test-record)
-                  :fail-test-msg "Error in test finish"))
-            (funcall (test-record-finish test-record)))))
+                      :group group-record :tests (list test-record)
+                      :fail-test-msg "Error in test finish"))
+                (funcall thunk))))))
 
-    (with-nst-control-handlers
-        ((e flag
-            :cerror-label (format nil
-                              "~@<Exit from this test, and continue with ~
-                                  other tests in this group.~:>"
-                            (group-record-name group-record))
-            :with-retry "Try performing each-test cleanup again."
-            :handler-return-to run-group-test
-            :log-location ("in each-test cleanup"
-                               :group group-record :test test-record)
-            :group group-record :tests (list test-record)
-            :fail-test-msg "Error in each-test cleanup"))
-      (funcall (group-record-eachtest-cleanup-thunk group-record)))))
-
-(defun run-test-fixtures-thunk (group-record test-record)
-  #'(lambda ()
-      (block run-test-fixtures-thunk
+    (let ((thunk (group-record-eachtest-cleanup-thunk group-record)))
+      (when thunk
         (with-nst-control-handlers
             ((e flag
                 :cerror-label (format nil
                                   "~@<Exit from this test, and continue with ~
                                     other tests in this group.~:>"
                                 (group-record-name group-record))
-                :with-retry "Try performing test setup again."
-                :handler-return-to run-test-fixtures-thunk
-                :log-location ("in test setup"
+                :with-retry "Try performing each-test cleanup again."
+                :handler-return-to run-group-test
+                :log-location ("in each-test cleanup"
                                :group group-record :test test-record)
                 :group group-record :tests (list test-record)
-                :fail-test-msg "Error in test setup"))
-          (funcall (test-record-setup test-record)))
+                :fail-test-msg "Error in each-test cleanup"))
+          (funcall thunk))))))
+
+(defun run-test-fixtures-thunk (group-record test-record)
+  #'(lambda ()
+      (block run-test-fixtures-thunk
+        (let ((thunk (test-record-setup test-record)))
+          (when thunk
+            (with-nst-control-handlers
+                ((e flag
+                    :cerror-label (format nil
+                                      "~@<Exit from this test, and continue with ~
+                                    other tests in this group.~:>"
+                                    (group-record-name group-record))
+                    :with-retry "Try performing test setup again."
+                    :handler-return-to run-test-fixtures-thunk
+                    :log-location ("in test setup"
+                                   :group group-record :test test-record)
+                    :group group-record :tests (list test-record)
+                    :fail-test-msg "Error in test setup"))
+              (funcall thunk))))
         (format-at-verbosity 4 "Passed test setup for group ~a, test ~a~%"
                              (group-record-name group-record)
                              (test-record-name test-record))
@@ -412,19 +431,21 @@ configuration provided by those wrappers."
         (unwind-protect
             (core-run-test test-record) ;; ACTUALLY RUNNING TEST HERE
 
-          (with-nst-control-handlers
-              ((e flag
-                  :cerror-label (format nil
-                                    "~@<Exit from this test, and continue with ~
-                                      other tests in this group.~:>"
-                                  (group-record-name group-record))
-                  :with-retry "Try performing test cleanup again."
-                  :handler-return-to run-test-fixtures-thunk
-                  :log-location ("in test cleanup"
-                                 :group group-record :test test-record)
-                  :group group-record :tests (list test-record)
-                  :fail-test-msg "Error in test cleanup"))
-            (funcall (test-record-cleanup test-record)))))))
+          (let ((thunk (test-record-cleanup test-record)))
+            (when thunk
+              (with-nst-control-handlers
+                  ((e flag
+                      :cerror-label (format nil
+                                        "~@<Exit from this test, and continue ~
+                                          with other tests in this group.~:>"
+                                      (group-record-name group-record))
+                      :with-retry "Try performing test cleanup again."
+                      :handler-return-to run-test-fixtures-thunk
+                      :log-location ("in test cleanup"
+                                     :group group-record :test test-record)
+                      :group group-record :tests (list test-record)
+                      :fail-test-msg "Error in test cleanup"))
+                (funcall thunk))))))))
 
 ;;; =================================================================
 ;;; OLD STUFF BELOW

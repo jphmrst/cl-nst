@@ -128,14 +128,16 @@
                            #-abcl
                            (:file "command" :depends-on ("globals" "status"))
 
+;;; TODO Put JUnit back in
+;;;
 ;;;                           ;; Generating JUnit-friendly XML.
 ;;;                           (:file "xml" :depends-on ("status"))
 ;;;
 ;;;                           ;; Interfacing with JUnit
 ;;;                           (:file "junit" :depends-on ("xml"))
-;;;
-;;;                           ;; Sample-testing predicates.
-;;;                           (:file "sampling" :depends-on ("check"))
+
+                           ;; Sample-testing predicates.
+                           (:file "sampling" :depends-on ("check"))
 
                            ;; Object-oriented test methods.  The
                            ;; features allowing this file should
