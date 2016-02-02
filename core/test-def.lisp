@@ -57,8 +57,10 @@ first element is that symbol and whose remaining elements are options."
 ;;; -----------------------------------------------------------------
 
 (defstruct test-record
-  "Structure storing parsed NST test records."
-  group fixtures criterion forms special-fixture-names
+  "Structure storing parsed NST test records.
+- =group= :: The group-record structure (not the symbolic name) of the group
+             containing this test."
+  name group fixtures criterion forms special-fixture-names
   setup cleanup startup finish results)
 
 ;; Provide debugging information about this test.
@@ -180,7 +182,8 @@ The =def-check= form is a deprecated synonym for =def-test=."
              (setf results-name (gensym base-name-string)))
 
            (setf (test-record the-group-name ',test-name)
-                 (make-test-record :group the-group-name
+                 (make-test-record :name ',test-name
+                                   :group the-group-record
                                    :criterion ',criterion
                                    :forms ',forms
                                    :fixtures ',fixtures

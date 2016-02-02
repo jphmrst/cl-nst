@@ -23,40 +23,40 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :defcontract-doc)
 
-(def-documentation (compiler-macro def-contract)
-  (:intro "The "
-          (:lisp compiler-macro def-contract)
-          " macro names a new contract and enumerates what that contract should enforce.")
-  (:callspec ((name (:bag param (param kind)))
-              (&key (entail ((:bag contract-name
-                                   (contract-name (:seq params))))))
-              &body (:seq clause)))
-  (:params (name "")
-           (param "")
-           (kind "")
-           (contract-name "")
-           (params "")
-           (clause "")))
+;;;(def-documentation (compiler-macro def-contract)
+;;;  (:intro "The "
+;;;          (:lisp compiler-macro def-contract)
+;;;          " macro names a new contract and enumerates what that contract should enforce.")
+;;;  (:callspec ((name (:bag param (param kind)))
+;;;              (&key (entail ((:bag contract-name
+;;;                                   (contract-name (:seq params))))))
+;;;              &body (:seq clause)))
+;;;  (:params (name "")
+;;;           (param "")
+;;;           (kind "")
+;;;           (contract-name "")
+;;;           (params "")
+;;;           (clause "")))
 
-(def-documentation (compiler-macro apply-contract)
-  (:intro "The "
-          (:lisp compiler-macro apply-contract)
-          " macro checks adherence to a contract.")
-  (:callspec (contract-name (:seq keyword-arguments)))
-  (:params (contract-name "")
-           (contract-arguments "")))
+;;;(def-documentation (compiler-macro apply-contract)
+;;;  (:intro "The "
+;;;          (:lisp compiler-macro apply-contract)
+;;;          " macro checks adherence to a contract.")
+;;;  (:callspec (contract-name (:seq keyword-arguments)))
+;;;  (:params (contract-name "")
+;;;           (contract-arguments "")))
 
-(def-target-type contract-clause (:lower-case "contract clause"
-                                  :symbol-definition-nocheck t))
+;;;(def-target-type contract-clause (:lower-case "contract clause"
+;;;                                  :symbol-definition-nocheck t))
 
-(def-documentation (contract-clause has-method)
-  (:intro "The "
-          (:lisp compiler-macro has-method)
-          " clause checks that a method definition for a generic function has been defined for particular classes of arguments.")
-  (:callspec (generic-function-name (:seq argument-spec) result-type-spec))
-  (:params (generic-function-name "")
-           (argument-spec "")
-           (result-type-spec "")))
+;;;(def-documentation (contract-clause has-method)
+;;;  (:intro "The "
+;;;          (:lisp compiler-macro has-method)
+;;;          " clause checks that a method definition for a generic function has been defined for particular classes of arguments.")
+;;;  (:callspec (generic-function-name (:seq argument-spec) result-type-spec))
+;;;  (:params (generic-function-name "")
+;;;           (argument-spec "")
+;;;           (result-type-spec "")))
 
 (ensure-api-documentation :defcontract)
 

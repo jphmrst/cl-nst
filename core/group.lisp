@@ -121,6 +121,18 @@ group name to an instance of =group-record=.")
     (when group-record
       (setf (gethash test (group-record-tests group-record)) test-record))))
 
+(defun package-groups (package-or-symbol)
+  "Return the groups whose name is a symbol in the given package."
+  (cond
+    ((symbolp package-or-symbol)
+     (when package-or-symbol
+       (package-groups (find-package package-or-symbol))))
+    ((packagep package-or-symbol)
+     (loop for group being the hash-keys of *group-records*
+           if (eq package-or-symbol (symbol-package group))
+             collect group))
+    (t nil)))
+
 ;;; ------------------------------------------------------------------
 
 (defmethod trace-group ((g group-record))

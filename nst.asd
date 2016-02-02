@@ -31,9 +31,6 @@
 (let ((*root-dir* (make-pathname
                    :directory (pathname-directory *load-truename*))))
   (declare (special *root-dir*))
-  (unless (find-system :defdoc nil)
-    (push (merge-pathnames "ext/defdoc/" *root-dir*)
-          *central-registry*))
   (unless (find-system :defcontract nil)
     (push (merge-pathnames "ext/defcontract/" *root-dir*)
           *central-registry*)))
@@ -62,8 +59,7 @@
     ;; The features allowing _closer-mop should only ever include
     ;; platforms which support Closer-to-MOP, and should always be a
     ;; superset of the features allowing file method below.
-    :depends-on ( #+(or allegro sbcl clozure openmcl clisp) :closer-mop
-                  :defdoc )
+    :depends-on (#+(or allegro sbcl clozure openmcl clisp) :closer-mop)
 
     :components ((:module "core" :components
                           (;; The NST package, plus internal packages
@@ -76,53 +72,52 @@
                            ;; Error declarations.
                            (:file "errors"  :depends-on ("package"))
 
-                           ;; Flags and generic function declarations.
-                           (:file "globals"  :depends-on ("errors" "utils"))
-
-                           ;;
-                           (:file "artifacts"  :depends-on ("globals"))
-
                            ;; Macro combining handler-bind and
                            ;; interrupt detection.
                            (:file "interrupt"  :depends-on ("package"))
 
-;;;                           ;; Main control flow of test and group
-;;;                           ;; execution.
-;;;                           (:file "runner"  :depends-on ("interrupt"
-;;;                                                         "artifacts"
-;;;                                                         "status"))
+                           ;; Helper functions for permuting lists.
+                           (:file "permuter" :depends-on ("package"))
+
+                           ;; Flags and generic function declarations.
+                           (:file "globals"  :depends-on ("errors" "utils"))
+
+                           ;; Definition and expansion of check
+                           ;; criteria.
+                           (:file "context" :depends-on ("package" "globals"))
+
+                           ;;
+                           (:file "artifacts"  :depends-on ("globals"))
 
                            ;; The def-group macro.
-                           (:file "group" #| :depends-on ("artifacts") |#)
+                           (:file "group" :depends-on ("artifacts"))
 
                            ;; Definition and expansion of check
                            ;; criteria.
-                           (:file "context" :depends-on ("package"))
-
-                           ;; Definition and expansion of check
-                           ;; criteria.
-                           (:file "check" :depends-on ("context"
-                                                       "interrupt"))
+                           (:file "check" :depends-on ("context" "interrupt"))
 
                            ;; The def-fixture macro and supporting
                            ;; functions.
                            (:file "fixture" :depends-on ("errors" "globals"))
 
                            ;; The def-check macro.
-                           (:file "test-def" :depends-on ("errors" "globals"))
-
-;;;                           ;; Helper functions for permuting lists.
-;;;                           (:file "permuter" :depends-on ("package"))
+                           (:file "test-def" :depends-on
+                                  ("errors" "globals" "group"))
 
                            ;; Receiving and bookkeeping the results of
                            ;; tests.
                            (:file "status" :depends-on
                                   ("globals" "artifacts" "check"))
 
-;;;                           ;; Standard criteria declarations.
-;;;                           (:file "criteria"
-;;;                                  :depends-on ("errors" "interrupt"
-;;;                                               "permuter" "check" "status"))
+                           ;; Main control flow of test and group
+                           ;; execution.
+                           (:file "runner" :depends-on
+                                  ("interrupt" "test-def" "group" "status"))
+
+                           ;; Standard criteria declarations.
+                           (:file "criteria"
+                                  :depends-on ("errors" "interrupt"
+                                               "permuter" "check" "status"))
 
                            ;; Process criteria declarations.
                            (:file "process"

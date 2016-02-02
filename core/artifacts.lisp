@@ -1,5 +1,3 @@
-;;; CURRENTLY EXCLUDED
-
 ;;; File artifacts.lisp
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
@@ -34,9 +32,6 @@
 ;;;;;;
 ;;;;;; Internal tables.
 ;;;;;;
-;;;(defvar +package-groups+ (make-hash-table :test 'eq)
-;;;  "Map from packages to the test groups declared in each package.")
-;;;
 ;;;;; Properties of groups.  Many of these function have methods on
 ;;;;; symbols (presumably class names) that either relay to class
 ;;;;; methods, or re-dispatch after instantiating an object of the named
@@ -79,15 +74,6 @@
 ;;;
 ;;;(defgeneric test-fixture-classes (name))
 ;;;(add-class-name-static-method test-fixture-classes)
-;;;
-;;;(defgeneric package-groups (package-or-symbol))
-;;;(defmethod package-groups ((s symbol))
-;;;  (when s
-;;;    (package-groups (find-package s))))
-;;;(defmethod package-groups ((p package))
-;;;  (let ((group-hash (gethash p +package-groups+)))
-;;;    (when group-hash
-;;;      (loop for g being the hash-keys of group-hash collect g))))
 ;;;
 ;;;;;;(defgeneric check-user-name (check-instance)
 ;;;;;;  (:documentation "Map from a check instance back to its user symbolic name.")
@@ -164,97 +150,98 @@
   (timestamp (multiple-value-list (get-decoded-time))))
 
 
-;;;;;;
-;;;;;; Tracking what an artifact is by name.
-;;;;;;
-;;;(defvar +name-use+ (make-hash-table :test 'eq)
-;;;  "Known uses of names of a particular package.")
-;;;(defvar +name-packages+ (make-hash-table :test 'eq)
-;;;  "Known occurances of names in different packages.")
 ;;;
+;;; Tracking what an artifact is by name.
 ;;;
-;;;(defun package-lookup (name)
-;;;  (intern (symbol-name name) (find-package :nst-name-use-in-packages)))
-;;;
-;;;(defun get-all-named-symbols (name)
-;;;  (let ((all-names (gethash (package-lookup name) +name-packages+)))
-;;;    (when all-names
-;;;      (loop for name being the hash-keys of all-names collect name))))
-;;;
-;;;(defun get-name-use (name)
-;;;  (loop for n in (get-all-named-symbols name) collect (gethash n +name-use+)))
-;;;
-;;;(defstruct name-use
-;;;  "Record for tracking the artifacts which NST associates with a name."
-;;;  fixture group (tests (make-hash-table :test 'eq)))
-;;;
-;;;(defun get-name-use-record (name)
-;;;  "Internal function for use within record-name-use --- this is not the function
-;;;you want to use to read +name-use+."
-;;;  (let ((this-name-use (gethash name +name-use+)))
-;;;    (unless this-name-use
-;;;      (setf this-name-use (make-name-use)
-;;;            (gethash name +name-use+) this-name-use))
-;;;    this-name-use))
-;;;
-;;;(defgeneric record-name-use (category name item)
-;;;  (:documentation "As of Oct. 2011, all callers pass a symbol for the item.")
-;;;  (:method :around (category name item)
-;;;     (declare (ignorable category item))
-;;;     (eval-when (:load-toplevel :execute)
-;;;       (call-next-method)
-;;;       (let* ((package-finder (package-lookup name))
-;;;              (this-name-package-use (gethash package-finder +name-packages+)))
-;;;         (unless this-name-package-use
-;;;           (setf this-name-package-use (make-hash-table :test 'eq)
-;;;                 (gethash package-finder
-;;;                          +name-packages+) this-name-package-use))
-;;;         (setf (gethash name this-name-package-use) t))))
-;;;  (:method ((category (eql :fixture)) name item)
-;;;     (let ((this-name-use (get-name-use-record name)))
-;;;       (setf (name-use-fixture this-name-use) item)))
-;;;  (:method ((category (eql :group)) name item)
-;;;     (let ((this-name-use (get-name-use-record name)))
-;;;       (setf (name-use-group this-name-use) item)))
-;;;  (:method ((category (eql :test)) name item)
-;;;     (let ((this-name-use (get-name-use-record name)))
-;;;       (let ((tests-by-group (name-use-tests this-name-use)))
-;;;         (setf (gethash (group-name (make-instance item)) tests-by-group) item)))))
-;;;
-;;;(defvar +last-name-use-sort+ (make-hash-table :test 'eq))
-;;;(defvar +last-test-group+ (make-hash-table :test 'eq))
-;;;(defun note-name-use-invocation (name sort &optional group)
-;;;  (setf (gethash name +last-name-use-sort+) sort)
-;;;  (when (and (eq sort :test) group)
-;;;    (setf (gethash name +last-test-group+) group)))
-;;;
-;;;(defun lookup-artifact (name)
-;;;  (loop for pname in (get-all-named-symbols name)
-;;;      append
-;;;      (let ((use (gethash pname +name-use+))
-;;;            (last-use-sort (gethash pname +last-name-use-sort+)))
-;;;          (when use
-;;;            (with-slots (fixture group tests) use
-;;;              (case last-use-sort
-;;;                ((:package)
-;;;                 (list (find-package pname)))
-;;;                ((:fixture)
-;;;                 (when fixture (list (make-instance fixture))))
-;;;                ((:group)
-;;;                 (when group (list (make-instance group))))
-;;;                ((:test)
-;;;                 (let ((test-group (gethash pname +last-test-group+)))
-;;;                   (cond
-;;;                     ((and test-group (gethash test-group tests))
-;;;                      (list (make-instance (gethash test-group tests))))
-;;;                     (t (loop for tst being the hash-values of tests
-;;;                            collect (make-instance tst))))))
-;;;                (otherwise `(,@(when fixture (list (make-instance fixture)))
-;;;                               ,@(when group (list (make-instance group)))
-;;;                               ,@(when tests (loop for tst being the hash-values
-;;;                                                 of tests
-;;;                                                 collect (make-instance tst)))))))))))
-;;;
+(defvar +name-use+ (make-hash-table :test 'eq)
+  "Known uses of names of a particular package.")
+(defvar +name-packages+ (make-hash-table :test 'eq)
+  "Known occurances of names in different packages.")
+
+
+(defun package-lookup (name)
+  (intern (symbol-name name) (find-package :nst-name-use-in-packages)))
+
+(defun get-all-named-symbols (name)
+  (let ((all-names (gethash (package-lookup name) +name-packages+)))
+    (when all-names
+      (loop for name being the hash-keys of all-names collect name))))
+
+(defun get-name-use (name)
+  (loop for n in (get-all-named-symbols name) collect (gethash n +name-use+)))
+
+(defstruct name-use
+  "Record for tracking the artifacts which NST associates with a name."
+  fixture group (tests (make-hash-table :test 'eq)))
+
+(defun get-name-use-record (name)
+  "Internal function for use within record-name-use --- this is not the function
+you want to use to read +name-use+."
+  (let ((this-name-use (gethash name +name-use+)))
+    (unless this-name-use
+      (setf this-name-use (make-name-use)
+            (gethash name +name-use+) this-name-use))
+    this-name-use))
+
+(defgeneric record-name-use (category name item)
+  (:documentation "As of Oct. 2011, all callers pass a symbol for the item.")
+  (:method :around (category name item)
+     (declare (ignorable category item))
+     (eval-when (:load-toplevel :execute)
+       (call-next-method)
+       (let* ((package-finder (package-lookup name))
+              (this-name-package-use (gethash package-finder +name-packages+)))
+         (unless this-name-package-use
+           (setf this-name-package-use (make-hash-table :test 'eq)
+                 (gethash package-finder
+                          +name-packages+) this-name-package-use))
+         (setf (gethash name this-name-package-use) t))))
+  (:method ((category (eql :fixture)) name item)
+     (let ((this-name-use (get-name-use-record name)))
+       (setf (name-use-fixture this-name-use) item)))
+  (:method ((category (eql :group)) name item)
+     (let ((this-name-use (get-name-use-record name)))
+       (setf (name-use-group this-name-use) item)))
+  (:method ((category (eql :test)) name item)
+     (let ((this-name-use (get-name-use-record name)))
+       (let ((tests-by-group (name-use-tests this-name-use)))
+         (setf (gethash (group-record-name (make-instance item)) tests-by-group)
+               item)))))
+
+(defvar +last-name-use-sort+ (make-hash-table :test 'eq))
+(defvar +last-test-group+ (make-hash-table :test 'eq))
+(defun note-name-use-invocation (name sort &optional group)
+  (setf (gethash name +last-name-use-sort+) sort)
+  (when (and (eq sort :test) group)
+    (setf (gethash name +last-test-group+) group)))
+
+(defun lookup-artifact (name)
+  (loop for pname in (get-all-named-symbols name)
+      append
+      (let ((use (gethash pname +name-use+))
+            (last-use-sort (gethash pname +last-name-use-sort+)))
+          (when use
+            (with-slots (fixture group tests) use
+              (case last-use-sort
+                ((:package)
+                 (list (find-package pname)))
+                ((:fixture)
+                 (when fixture (list (make-instance fixture))))
+                ((:group)
+                 (when group (list (make-instance group))))
+                ((:test)
+                 (let ((test-group (gethash pname +last-test-group+)))
+                   (cond
+                     ((and test-group (gethash test-group tests))
+                      (list (make-instance (gethash test-group tests))))
+                     (t (loop for tst being the hash-values of tests
+                            collect (make-instance tst))))))
+                (otherwise `(,@(when fixture (list (make-instance fixture)))
+                               ,@(when group (list (make-instance group)))
+                               ,@(when tests (loop for tst being the hash-values
+                                                 of tests
+                                                 collect (make-instance tst)))))))))))
+
 ;;;(set-pprint-dispatch 'name-use
 ;;;  (named-function name-use-pprint-dispatch
 ;;;    (lambda (stream usage)
@@ -313,25 +300,25 @@
 ;;;                      (format stream "~a (package ~a) is a test in group ~a"
 ;;;                        tst
 ;;;                        (package-name (symbol-package tst))
-;;;                        (group-name (make-instance tst)))))
+;;;                        (group-record-name (make-instance tst)))))
 ;;;               (otherwise
 ;;;                (loop for tst being the hash-values of tests do
 ;;;                      (format stream "~a (package ~a) is a test in group ~a~%"
 ;;;                        tst
 ;;;                        (package-name (symbol-package tst))
-;;;                        (group-name (make-instance tst)))))))
+;;;                        (group-record-name (make-instance tst)))))))
 ;;;
 ;;;            (t
 ;;;             (format stream "MULTI"))))))))
+
 ;;;
-;;;;;;
-;;;;;; Recording of results.  We use a hash table here --- unlike the
-;;;;;; method-based recording of test symbols, we're not worried about
-;;;;;; straddling the compile/load/run-time borders for result recording.
-;;;;;;
-;;;(defvar +results-record+ (make-hash-table :test 'eq)
-;;;  "Results of test runs.")
+;;; Recording of results.  We use a hash table here --- unlike the
+;;; method-based recording of test symbols, we're not worried about
+;;; straddling the compile/load/run-time borders for result recording.
 ;;;
+(defvar +results-record+ (make-hash-table :test 'eq)
+  "Results of test runs.")
+
 ;;;;; Extracting information for debugging.
 ;;;
 ;;;(defgeneric trace-fixture (fx)
@@ -347,9 +334,9 @@
 ;;;(defgeneric trace-test (gr ts)
 ;;;  (:documentation "Provide debugging information about a test.")
 ;;;  (:method (gr ts) (format t "No known test ~s in group ~s~%" ts gr)))
-;;;
-;;;(defun trace-results ()
-;;;  "Internal debugging function: dump the results hash."
-;;;  (loop for ts being the hash-keys of +results-record+ using (hash-value rs) do
-;;;    (format t "~s -> ~s~%" ts rs)))
+
+(defun trace-results ()
+  "Internal debugging function: dump the results hash."
+  (loop for ts being the hash-keys of +results-record+ using (hash-value rs) do
+    (format t "~s -> ~s~%" ts rs)))
 

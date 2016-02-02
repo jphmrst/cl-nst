@@ -27,7 +27,7 @@
 (defpackage :sift.nst
   (:documentation "Unit and regression testing for Common Lisp")
   (:nicknames :nst)
-  (:use :common-lisp :defdoc)
+  (:use :common-lisp)
   #+allegro (:import-from excl #:named-function)
 
   (:export #:def-fixtures #:def-test-group #:def-test

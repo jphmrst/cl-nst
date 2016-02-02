@@ -1,5 +1,3 @@
-;;; CURRENTLY EXCLUDED
-
 ;;; File process.lisp
 ;;;
 ;;; This file is part of the NST unit/regression testing system.
@@ -27,7 +25,7 @@
 (in-package :sift.nst)
 
 ;;; Documentation generator for process-testing predicates
-(defdoc:def-target-type process-predicate (:symbol-definition-nocheck t))
+;;;(defdoc:def-target-type process-predicate (:symbol-definition-nocheck t))
 
 (define-condition nst-assertion-condition (condition)
     ((fatal :initarg :fatal :reader assertion-failure-fatal)))
@@ -70,6 +68,7 @@
                                       (message-defvar nil defvar-supp-p)
                                       (doc-state-flag t)
                                       (pred-name predicate) &allow-other-keys)
+  (declare (ignore pred-name doc-state-flag))
   (let* ((tested (gensym))
          (keyargs (gensym))
          (format-supp-p (gensym))
@@ -136,6 +135,7 @@
 (defmacro def-binary-predicate-assert (assert-fn predicate default-message &key
                                        (message-defvar nil defvar-supp-p)
                                        (doc-state-flag t) (pred-name predicate))
+  (declare (ignore pred-name doc-state-flag))
   (let* ((target (gensym))
          (tested (gensym))
          (keyargs (gensym))

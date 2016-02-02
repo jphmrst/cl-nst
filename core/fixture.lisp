@@ -38,6 +38,18 @@
 setting, and does not change e.g. *fixture-function-bindings*."
   (setf (gethash name *fixture-functions*) new-fixture-function))
 
+(defun apply-fixtures (fixtures body-thunk)
+  (cond
+    (fixtures (apply-fixture (car fixtures) (cdr fixtures) body-thunk))
+    (t (funcall body-thunk))))
+
+(defun apply-fixture (fixture next-fixtures body-thunk)
+  (cond
+    ((symbolp fixture)
+     (funcall (fixture-function fixture) next-fixtures body-thunk))
+    ((functionp fixture) (funcall fixture next-fixtures body-thunk))
+    (t (error "TODO anonymous fixtures not implemented"))))
+
 ;;; ------------------------------------------------------------------
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -52,6 +64,20 @@ fixture."))
 (defun (setf fixture-bindings) (new-fixture-bindings name)
   "Associate a list of names as bound by fixtures with the given name."
   (setf (gethash name *fixture-bindings*) new-fixture-bindings))
+
+;;; ------------------------------------------------------------------
+
+(defvar *fixture-letlist* (make-hash-table :test 'eq)
+  "Map from fixture name to the list of local variable names bound that
+fixture.")
+
+(defun fixture-letlist (name)
+  "Return the names bound by the fixture associated with the given name."
+  (gethash name *fixture-letlist*))
+
+(defun (setf fixture-letlist) (new-fixture-letlist name)
+  "Associate a list of names as bound by fixtures with the given name."
+  (setf (gethash name *fixture-letlist*) new-fixture-letlist))
 
 ;;; ------------------------------------------------------------------
 
@@ -81,18 +107,14 @@ the list of names defined by the fixture."
                           `((let ,bindings
                               (declare (special ,@names) ,@decls)
                               ,@(when setup `(,setup))
-                              (cond
-                                (fs (funcall (car fs) (cdr fs) thunk))
-                                (t (funcall thunk)))
+                              (apply-fixtures fs thunk)
                               ,@(when cleanup `(,cleanup)))))
 
                          ;; No bindings at all.
                          (names
                           `(,@(when setup `(,setup))
-                            (cond
-                              (fs (funcall (car fs) (cdr fs) thunk))
-                              (t (funcall thunk)))
-                            ,@(when cleanup `(,cleanup)))))))
+                              (apply-fixtures fs thunk)
+                              ,@(when cleanup `(,cleanup)))))))
 
       ;; If we're caching any results at all, then wrap the core
       ;; expressions inside bindings for variables to manage that
@@ -109,7 +131,7 @@ the list of names defined by the fixture."
                        ,@(when startup `(,startup))
                        ,@core-exprs
                        ,@(when finish `(,finish))))
-              names))))
+              names bindings))))
 
 (defun decode-caching-decls (binding-specs all-cache)
   "Process a list of binding specifications to extract both the bindings, and
@@ -282,16 +304,17 @@ documentation such as form =:whatis=, any =nil=s are omitted."
     ;; Decode the syntax for the fixture function and the list of bound
     ;; names.
   `(eval-when (:compile-toplevel :load-toplevel :execute)
-     (multiple-value-bind (fixture-function fixture-bindings)
+     (multiple-value-bind (fixture-function fixture-bindings let-list)
          (decode-fixture-syntax ',bindings ',inner ',outer ',setup
                                 ',cleanup ',startup ',finish ',cache)
 
        ;; Save the compiled artifacts,
+       (setf (fixture-letlist ',name) let-list)
        (setf (fixture-function ',name) fixture-function)
-       (setf (fixture-bindings ',name) fixture-bindings)
+       (setf (fixture-bindings ',name) fixture-bindings))
 
-       ;; Return the name of the fixture.
-       ',name)))
+     ;; Return the name of the fixture.
+     ',name))
 
 (defmacro with-fixtures ((&rest fixtures) &body forms)
   "The =with-fixtures= macro faciliates debugging and other non-NST uses of
@@ -309,11 +332,21 @@ provided by the fixtures.
   (loop for fixture in fixtures
         append (fixture-bindings fixture) into fixture-bindings
         collect (fixture-function fixture) into fixture-functions
-        finally (return-from with-fixtures
-                  (cond
-                    ((null fixture-functions) `(progn ,@forms))
-                    (t `(funcall ,(car fixture-functions)
-                                 ,(cdr fixture-functions)
-                                 #'(lambda ()
-                                     (declare (special ,@fixture-bindings))
-                                     ,@forms)))))))
+        finally
+     (return-from with-fixtures
+       (cond
+         ((null fixture-functions) `(progn ,@forms))
+         (t `(apply-fixtures fixture-functions
+                             #'(lambda ()
+                                 (declare (special ,@fixture-bindings))
+                                 ,@forms)))))))
+
+
+(defun open-fixture (name &optional (in-package *package*))
+  "Push the bindings from a fixture into a package's namespace."
+  (unless (packagep in-package)
+    (setf in-package (find-package in-package)))
+  (let ((bindings (fixture-letlist name)))
+    (loop for (name val) in bindings do
+      (setf (symbol-value (intern (symbol-name name) in-package)) (eval val))))
+  name)

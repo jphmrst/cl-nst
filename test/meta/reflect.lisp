@@ -92,7 +92,7 @@
 (def-criterion (---on-test (group-name test-name &rest subcriteria)
                                (results-hash))
   "Subcriteria get a results report of type nst:check-result"
-  (let* ((inst (ensure-test-instance group-name test-name))
+  (let* ((inst (nst::test-record group-name test-name))
          (result (gethash (nst::check-group-name inst) results-hash)))
     (cond
       (result

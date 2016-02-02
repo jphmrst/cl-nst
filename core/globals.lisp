@@ -39,26 +39,26 @@
 
 (defvar *debug-on-error* nil
   "User variable =*debug-on-error*=: if non-nil, will break into the Lisp REPL debugger upon encountering an unexpected error.  If nil, will record the error and continue with other tests.")
-(def-documentation (variable *debug-on-error*)
-  (:tags control)
-  (:properties (api-summary control))
-    (:blurb (:latex "User variable \\texttt{*debug-on-error*}: if non-nil, will break into the Lisp REPL debugger upon encountering an unexpected error.  If nil, will record the error and continue with other tests.")))
+;;;(def-documentation (variable *debug-on-error*)
+;;;  (:tags control)
+;;;  (:properties (api-summary control))
+;;;    (:blurb (:latex "User variable \\texttt{*debug-on-error*}: if non-nil, will break into the Lisp REPL debugger upon encountering an unexpected error.  If nil, will record the error and continue with other tests.")))
 
 (defvar *debug-on-fail* nil
   "User variable =*debug-on-fail*=: if non-nil, will break into the Lisp REPL debugger upon encountering a test which fails.  If nil, will record the failure and continue with other tests.  This variable is useful inspecting the dynamic environment under which a test was evaluated.")
-(def-documentation (variable *debug-on-fail*)
-  (:tags control)
-  (:properties (api-summary control))
-    (:blurb (:latex "User variable \\texttt{*debug-on-fail*}: if non-nil, will break into the Lisp REPL debugger upon encountering a test which fails.  If nil, will record the failure and continue with other tests.  This variable is useful inspecting the dynamic environment under which a test was evaluated.")))
+;;;(def-documentation (variable *debug-on-fail*)
+;;;  (:tags control)
+;;;  (:properties (api-summary control))
+;;;    (:blurb (:latex "User variable \\texttt{*debug-on-fail*}: if non-nil, will break into the Lisp REPL debugger upon encountering a test which fails.  If nil, will record the failure and continue with other tests.  This variable is useful inspecting the dynamic environment under which a test was evaluated.")))
 
-;;;(defvar *generate-backtraces*
-;;;    (cond
-;;;      ((boundp 'common-lisp-user::*nst-generate-backtraces*)
-;;;       (symbol-value 'common-lisp-user::*nst-generate-backtraces*))
-;;;      ((member :nst-unsafe-allegro-backtraces *features*) t)
-;;;      ((member :macos *features*) nil)
-;;;      (t (member :allegro *features*)))
-;;;  "User variable: if non-null, will attempt to capture the Lisp backtrace of errors in tests.")
+(defvar *generate-backtraces*
+    (cond
+      ((boundp 'common-lisp-user::*nst-generate-backtraces*)
+       (symbol-value 'common-lisp-user::*nst-generate-backtraces*))
+      ((member :nst-unsafe-allegro-backtraces *features*) t)
+      ((member :macos *features*) nil)
+      (t (member :allegro *features*)))
+  "User variable: if non-null, will attempt to capture the Lisp backtrace of errors in tests.")
 
 (defmacro format-at-verbosity (lv format &rest args)
   `(at-verbosity ,lv
@@ -96,10 +96,10 @@
 
 (defvar *default-report-verbosity* 2
   "User variable =*default-report-verbosity*= determines the default value for =*nst-verbosity*= when printing reports (2 by default).")
-(def-documentation (variable *default-report-verbosity*)
-  (:tags control)
-  (:properties (api-summary control))
-    (:blurb (:latex "User variable \\texttt{*default-report-verbosity*} determines the default value for *nst-verbosity* when printing reports (2 by default).")))
+;;;(def-documentation (variable *default-report-verbosity*)
+;;;  (:tags control)
+;;;  (:properties (api-summary control))
+;;;    (:blurb (:latex "User variable \\texttt{*default-report-verbosity*} determines the default value for *nst-verbosity* when printing reports (2 by default).")))
 
 (defvar *nst-debug* nil
   "User variable: apply customizable debugging settings.")
@@ -119,25 +119,25 @@ alternating keyword/forms matching:
   "Dynamic variable used to set the name of a test in its result report.")
 (defparameter *nst-group-name* nil
   "Dynamic variable used to set the name of the group in a test result report.")
-;;;
-;;;(defparameter *nst-context-evaluable* nil
-;;;  "Dynamic-scoped variable tracking whether the values under test should be asusmed evaluated.  Used in preparing context expressions.")
+
+(defparameter *nst-context-evaluable* nil
+  "Dynamic-scoped variable tracking whether the values under test should be asusmed evaluated.  Used in preparing context expressions.")
 (defparameter *nst-context* nil
   "Dynamic-scoped variable recording the values under test - a list of
 context-layer instances.")
-;;;(defparameter *nst-stack* nil
-;;;  "Dynamic-scoped variable - the stack of values under test by the
-;;;current criterion.")
+(defparameter *nst-stack* nil
+  "Dynamic-scoped variable - the stack of values under test by the
+current criterion.")
 
 (defparameter *nst-report-driver* nil
   "Dynamic-scoped variable - one of :multiple, :package, :group or :test to determine the top-level form of a report.  Used as a control parameter for printing reports.")
 
 (defvar *nst-output-stream* t
   "Determines the output stream to which NST should print its output (=*standard-output*= by default).")
-(def-documentation (variable *nst-output-stream*)
-  (:tags control)
-  (:properties (api-summary control))
-    (:intro (:latex "User variable \\texttt{*nst-output-stream*} determines the output stream to which NST should print its output (\\texttt{*standard-output*} by default).")))
+;;;(def-documentation (variable *nst-output-stream*)
+;;;  (:tags control)
+;;;  (:properties (api-summary control))
+;;;    (:intro (:latex "User variable \\texttt{*nst-output-stream*} determines the output stream to which NST should print its output (\\texttt{*standard-output*} by default).")))
 
 (defparameter *nst-group-shown* nil
   "Dynamic-scoped variable tracking whether the name of a group has been printed, so that tests need not repeat it.")
@@ -161,11 +161,11 @@ context-layer instances.")
        (t nil)))
     result))
 
-;;;(defun restore-protected-option-values (stored-values)
-;;;  (loop for symbol being the hash-keys of stored-values
-;;;        using (hash-value val)
-;;;        do (setf (symbol-value symbol) val))
-;;;  nil)
+(defun restore-protected-option-values (stored-values)
+  (loop for symbol being the hash-keys of stored-values
+        using (hash-value val)
+        do (setf (symbol-value symbol) val))
+  nil)
 
 (defun run-debug-options (options-form)
   (when *nst-debug*
@@ -174,23 +174,23 @@ context-layer instances.")
       (loop for form in progn do (eval form))))
   nil)
 
-;;;(defmacro apply-debug-options (forms-spec protect-vars &body forms)
-;;;  (let ((protects (gensym)))
-;;;    `(let ((*debug-on-error* (or *debug-on-error* *nst-debug*))
-;;;           (*debug-on-fail* (or *debug-on-fail* *nst-debug*))
-;;;           (,protects (assemble-protected-option-values ',protect-vars)))
-;;;       (declare (special *debug-on-error* *debug-on-fail*))
-;;;       (run-debug-options ',forms-spec)
-;;;       (prog1 (progn ,@forms)
-;;;         (restore-protected-option-values ,protects)))))
-;;;
-;;;(defmacro apply-default-debug-options (&body forms)
-;;;  `(apply-debug-options ,*default-debug-config* ,*default-debug-protect*
-;;;      ,@forms))
-;;;
-;;;(defmacro protect-nst-config (&body forms)
-;;;  `(apply-debug-options () () ,@forms))
-;;;
+(defmacro apply-debug-options (forms-spec protect-vars &body forms)
+  (let ((protects (gensym)))
+    `(let ((*debug-on-error* (or *debug-on-error* *nst-debug*))
+           (*debug-on-fail* (or *debug-on-fail* *nst-debug*))
+           (,protects (assemble-protected-option-values ',protect-vars)))
+       (declare (special *debug-on-error* *debug-on-fail*))
+       (run-debug-options ',forms-spec)
+       (prog1 (progn ,@forms)
+         (restore-protected-option-values ,protects)))))
+
+(defmacro apply-default-debug-options (&body forms)
+  `(apply-debug-options ,*default-debug-config* ,*default-debug-protect*
+      ,@forms))
+
+(defmacro protect-nst-config (&body forms)
+  `(apply-debug-options () () ,@forms))
+
 ;;;(defparameter *binding-variable* nil
 ;;;  "Variable tracking the binding of names by fixtures, checked when binding fails.")
 ;;;
