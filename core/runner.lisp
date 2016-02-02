@@ -245,7 +245,7 @@ configuration provided by those wrappers."
                             group-name)
             :with-retry "Try performing group setup again."
             :handler-return-to run-group-tests
-            :tests test-records
+            :group group-record :tests test-records
             :fail-test-msg "Error in pre-fixture setup"
             :log-location ("in setup handler" :group group-record
                                               :tests test-records)))
@@ -270,7 +270,7 @@ configuration provided by those wrappers."
             :handler-return-to run-group-tests
             :log-location ("in post-fixture cleanup"
                                :group group-record :tests test-records)
-            :tests test-records
+            :group group-record :tests test-records
             :fail-test-msg "Error in post-fixture cleanup"))
       (funcall (group-record-fixtures-cleanup-thunk group-record)))))
 
@@ -289,7 +289,7 @@ configuration provided by those wrappers."
                 :handler-return-to group-withfix
                 :log-location ("in post-fixture setup"
                                    :group group-record :tests test-records)
-                :tests test-records
+                :group group-record :tests test-records
                 :fail-test-msg "Error in post-fixture setup"))
 
           ;; The pre-fixture setup call wrapped by the above handlers.
@@ -317,7 +317,7 @@ configuration provided by those wrappers."
                   :handler-return-to group-withfix
                   :log-location ("in group fixtures cleanup"
                                      :group group-record :tests test-records)
-                  :tests test-records
+                  :group group-record :tests test-records
                   :fail-test-msg "Error in group fixtures cleanup"))
             (funcall (group-record-withfixtures-cleanup-thunk group-record)))))))
 
@@ -333,7 +333,7 @@ configuration provided by those wrappers."
           :handler-return-to run-group-test
           :log-location ("in each-test setup"
                          :group group-record :test test-record)
-          :tests test-record
+          :group group-record :tests (list test-record)
           :fail-test-msg "Error in each-test setup"))
     (funcall (group-record-eachtest-setup-thunk group-record)))
   (format-at-verbosity 4 "Passed each-test setup for group ~a, test ~a~%"
@@ -351,7 +351,7 @@ configuration provided by those wrappers."
                 :handler-return-to run-group-test
                 :log-location ("in test startup"
                                    :group group-record :test test-record)
-                :tests (list test-record)
+                :group group-record :tests (list test-record)
                 :fail-test-msg "Error in test startup"))
           (funcall (test-record-startup test-record)))
         (format-at-verbosity 4 "Passed test startup for group ~a, test ~a~%"
@@ -371,7 +371,7 @@ configuration provided by those wrappers."
                   :handler-return-to run-group-test
                   :log-location ("in test finish"
                                      :group group-record :test test-record)
-                  :tests (list test-record)
+                  :group group-record :tests (list test-record)
                   :fail-test-msg "Error in test finish"))
             (funcall (test-record-finish test-record)))))
 
@@ -385,7 +385,7 @@ configuration provided by those wrappers."
             :handler-return-to run-group-test
             :log-location ("in each-test cleanup"
                                :group group-record :test test-record)
-            :tests (list test-record)
+            :group group-record :tests (list test-record)
             :fail-test-msg "Error in each-test cleanup"))
       (funcall (group-record-eachtest-cleanup-thunk group-record)))))
 
@@ -402,7 +402,7 @@ configuration provided by those wrappers."
                 :handler-return-to run-test-fixtures-thunk
                 :log-location ("in test setup"
                                :group group-record :test test-record)
-                :tests (list test-record)
+                :group group-record :tests (list test-record)
                 :fail-test-msg "Error in test setup"))
           (funcall (test-record-setup test-record)))
         (format-at-verbosity 4 "Passed test setup for group ~a, test ~a~%"
@@ -422,7 +422,7 @@ configuration provided by those wrappers."
                   :handler-return-to run-test-fixtures-thunk
                   :log-location ("in test cleanup"
                                  :group group-record :test test-record)
-                  :tests (list test-record)
+                  :group group-record :tests (list test-record)
                   :fail-test-msg "Error in test cleanup"))
             (funcall (test-record-cleanup test-record)))))))
 
@@ -447,7 +447,7 @@ configuration provided by those wrappers."
 ;;;             :handler-return-to do-group-fixture-assignment
 ;;;             :log-location ("in postfixture group setup"
 ;;;                                :group group-obj :tests test-obj)
-;;;          :tests test-objs
+;;;          :group group-record :tests test-objs
 ;;;          :fail-test-msg "Error in post-fixture group setup"))
 ;;;       (funcall (group-withfixtures-setup-thunk group-obj)))
 ;;;
@@ -493,7 +493,7 @@ configuration provided by those wrappers."
 ;;;                               :handler-return-to test-inner
 ;;;                               :log-location ("in prefixture setup"
 ;;;                                                  :group group-obj
-;;;                                                  :test test-inst))
+;;;                               :group group-record :test test-inst))
 ;;;                            (setf (gethash (check-group-name test-inst)
 ;;;                                           +results-record+)
 ;;;                              (make-config-error e test-inst

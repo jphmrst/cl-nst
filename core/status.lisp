@@ -663,9 +663,7 @@ six-value summary of the results:
         (user-package (find-package package)))
     (unless user-package
       (error "No such package ~s" package))
-    (let ((sym-pack (loop for k being the hash-keys
-                        of (package-groups user-package)
-                        collect k)))
+    (let ((sym-pack (package-groups user-package)))
       (format-at-verbosity 3 "Reporting for actual package ~s~%sym-pack ~s~%"
         user-package sym-pack)
       (when sym-pack
@@ -687,8 +685,12 @@ six-value summary of the results:
                     (result-stats-warning report))))))
       result)))
 
+;; TODO Track down the places this function is called.  Can we only
+;; ever pass the group-record?
 (defun group-report (group)
   "Top-level function for reporting the results of a group."
+  (when (symbolp group) (setf group (group-record group)))
+
   (let ((result (make-group-result)))
     (with-accessors ((the-check-results group-result-check-results)
                      (the-group-name group-result-group-name)
@@ -714,9 +716,12 @@ six-value summary of the results:
            (t (incf total-tests)))))
     result))
 
+;; TODO Track down the places this function is called.  Can we only
+;; ever pass the group-record and test-record?
 (defun test-report (group test)
   "Top-level function for reporting the results of a test."
-  (declare (ignore group))
+  (when (symbolp group) (setf group (group-record group)))
+  (when (symbolp test) (setf test (test-record (group-record-name group) test)))
   (gethash (test-record-results test) +results-record+))
 
 (defun multiple-report (packages groups tests &key system)
