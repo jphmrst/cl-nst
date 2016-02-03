@@ -26,17 +26,8 @@
 (in-package :sift.nst)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defvar *fixture-functions* (make-hash-table :test 'eq)
-    "Map from a fixture name to the associated fixture function."))
-
-(defun fixture-function (name)
-  "Return the fixture function associated with the given name."
-  (gethash name *fixture-functions*))
-
-(defun (setf fixture-function) (new-fixture-function name)
-  "Associate a function with the given fixture name.  This is a low-level
-setting, and does not change e.g. *fixture-function-bindings*."
-  (setf (gethash name *fixture-functions*) new-fixture-function))
+  (def-hashtable-fns fixture-function ()
+    "from fixture name to the list of local variable names bound that fixture"))
 
 (defun apply-fixtures (fixtures body-thunk)
   (cond
@@ -53,31 +44,14 @@ setting, and does not change e.g. *fixture-function-bindings*."
 ;;; ------------------------------------------------------------------
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defvar *fixture-bindings* (make-hash-table :test 'eq)
-    "Map from fixture name to the list of local variable names bound that
-fixture."))
+  (def-hashtable-fns fixture-bindings ()
+    "from fixture name to the list of local variable names bound that fixture"))
 
-(defun fixture-bindings (name)
-  "Return the names bound by the fixture associated with the given name."
-  (gethash name *fixture-bindings*))
+(def-hashtable-fns fixture-letlist ()
+  "from fixture name to the list of local variable names bound that fixture")
 
-(defun (setf fixture-bindings) (new-fixture-bindings name)
-  "Associate a list of names as bound by fixtures with the given name."
-  (setf (gethash name *fixture-bindings*) new-fixture-bindings))
-
-;;; ------------------------------------------------------------------
-
-(defvar *fixture-letlist* (make-hash-table :test 'eq)
-  "Map from fixture name to the list of local variable names bound that
-fixture.")
-
-(defun fixture-letlist (name)
-  "Return the names bound by the fixture associated with the given name."
-  (gethash name *fixture-letlist*))
-
-(defun (setf fixture-letlist) (new-fixture-letlist name)
-  "Associate a list of names as bound by fixtures with the given name."
-  (setf (gethash name *fixture-letlist*) new-fixture-letlist))
+(def-hashtable-fns fixture-cache-flush ()
+  "from fixture name to the list of local variable names bound that fixture")
 
 ;;; ------------------------------------------------------------------
 
@@ -89,7 +63,7 @@ the list of names defined by the fixture."
 
   ;; First go through the list of the given bindings specifications to
   ;; find any with by-binding options declared.
-  (multiple-value-bind (cache-defs bindings)
+  (multiple-value-bind (cache-names bindings)
       (decode-caching-decls binding-specs cache)
 
     ;; Pull the list of names from the bindings.
@@ -116,22 +90,16 @@ the list of names defined by the fixture."
                               (apply-fixtures fs thunk)
                               ,@(when cleanup `(,cleanup)))))))
 
-      ;; If we're caching any results at all, then wrap the core
-      ;; expressions inside bindings for variables to manage that
-      ;; cache.
-      (when cache-defs
-        (setf core-exprs `((let ,cache-defs ,@core-exprs))))
-
       ;; Finally put together the fixture function, and also return
       ;; the list of defined names.
-      (values (eval `(lambda (fs thunk)
-                       ,@(when (or outer-decls (and decls (not names)))
-                           `((declare ,@outer-decls
-                                      ,@(unless names decls))))
-                       ,@(when startup `(,startup))
-                       ,@core-exprs
-                       ,@(when finish `(,finish))))
-              names bindings))))
+      (values `(lambda (fs thunk)
+                 ,@(when (or outer-decls (and decls (not names)))
+                     `((declare ,@outer-decls
+                                ,@(unless names decls))))
+                 ,@(when startup `(,startup))
+                 ,@core-exprs
+                 ,@(when finish `(,finish)))
+              names bindings cache-names))))
 
 (defun decode-caching-decls (binding-specs all-cache)
   "Process a list of binding specifications to extract both the bindings, and
@@ -160,13 +128,13 @@ the local variables needed for caching."
         for cache-full-name = (gensym)
         if (destructuring-bind (&key (cache nil cache-supp-p)) options
              (if cache-supp-p cache all-cache))
-          append `((,cache-name nil) (,cache-full-name nil)) into cache-defs
+          append (list cache-name cache-full-name) into cache-names
           and do (setf (cadr binding)
                        `(cond
                           (,cache-full-name ,cache-name)
-                          (t (let ((,cache-name ,(cadr binding)))
-                               (setf ,cache-full-name t)
-                               ,cache-name))))
+                          (t (setf ,cache-name ,(cadr binding)
+                                   ,cache-full-name t)
+                             ,cache-name)))
         end
 
         ;; Collect the binding in the list of all bindings.
@@ -175,7 +143,7 @@ the local variables needed for caching."
         ;; We're finished and can return the list of bindings, and the
         ;; list of cache helper variables to which the bindings refer.
         finally (return-from decode-caching-decls
-                  (values cache-defs bindings))))
+                  (values cache-names bindings))))
 
 ;;; ------------------------------------------------------------------
 ;;; The big macro
@@ -301,20 +269,25 @@ documentation such as form =:whatis=, any =nil=s are omitted."
     (warn 'nst-soft-keyarg-deprecation
           :old-name :assumes :replacement :special))
 
-    ;; Decode the syntax for the fixture function and the list of bound
-    ;; names.
-  `(eval-when (:compile-toplevel :load-toplevel :execute)
-     (multiple-value-bind (fixture-function fixture-bindings let-list)
-         (decode-fixture-syntax ',bindings ',inner ',outer ',setup
-                                ',cleanup ',startup ',finish ',cache)
+  ;; Decode the syntax for the fixture function and the list of bound
+  ;; names.
+  (multiple-value-bind (fixture-function fixture-bindings let-list cache-names)
+      (decode-fixture-syntax bindings inner outer setup
+                             cleanup startup finish cache)
+    `(eval-when (:compile-toplevel :load-toplevel :execute)
 
        ;; Save the compiled artifacts,
-       (setf (fixture-letlist ',name) let-list)
-       (setf (fixture-function ',name) fixture-function)
-       (setf (fixture-bindings ',name) fixture-bindings))
+       (setf (fixture-letlist ',name) ',let-list
+             (fixture-function ',name) (eval ',fixture-function)
+             (fixture-bindings ',name) ',fixture-bindings
 
-     ;; Return the name of the fixture.
-     ',name))
+             (fixture-cache-flush ',name)
+             (eval '(lambda ()
+                      (setf ,@(loop for n in cache-names collect `(,n nil))))))
+
+       ;; Return the name of the fixture.
+       ',name)))
+
 
 (defmacro with-fixtures ((&rest fixtures) &body forms)
   "The =with-fixtures= macro faciliates debugging and other non-NST uses of
@@ -350,3 +323,9 @@ provided by the fixtures.
     (loop for (name val) in bindings do
       (setf (symbol-value (intern (symbol-name name) in-package)) (eval val))))
   name)
+
+
+(defun flush-fixture-cache (name)
+  (let ((flusher (fixture-cache-flush name)))
+    (when flusher
+      (funcall flusher))))

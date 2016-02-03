@@ -84,3 +84,24 @@
   `(function ,lambda-expression))
 
 (defun no-effect () nil)
+
+(defmacro def-hashtable-fns (fn (&key (test 'eq)
+                                      (global
+                                       (intern (concatenate 'string
+                                                 "*" (symbol-name fn) "*"))))
+                                   &optional docstring)
+  `(progn
+
+     (defvar ,global (make-hash-table :test ',test)
+       ,@(list (apply #'concatenate 'string "Map implementing " (symbol-name fn)
+                      (when docstring (list ": " docstring)))))
+
+     (defun ,fn (name)
+       ,@(when docstring
+           (list (concatenate 'string "Reader function: " docstring)))
+       (gethash name ,global))
+
+     (defun (setf ,fn) (value name)
+       ,@(when docstring
+           (list (concatenate 'string "Writer function: " docstring)))
+       (setf (gethash name ,global) value))))

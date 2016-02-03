@@ -35,18 +35,20 @@
     (check-criterion-on-value `(:all ,@subcriteria) group)))
 
 (def-criterion (--with-test (group-name test-name &rest subcriteria) ())
-  (let* ((group-obj (make-instance group-name))
-         (test-obj (make-instance (gethash test-name (nst::test-name-lookup group-obj)))))
+  (let* ((group-obj (nst::group-record group-name))
+         (test-obj (nst::test-record group-name test-name)))
     (check-criterion-on-value `(:all ,@subcriteria) test-obj)))
 
 (def-criterion (--nst-group-has-test (group-name test-name) ())
-    (cond
-      ((and (member test-name (nst::test-list (make-instance group-name)))
-            (gethash test-name (nst::test-name-lookup (make-instance group-name))))
-       (make-success-report))
-      (t
-       (make-failure-report :format "Expected NST group ~s to have test ~s"
-                            :args (list group-name test-name)))))
+    (let* ((group-record (nst::group-record group-name))
+           (test-record (nst::test-record group-name test-name))
+           (results-key (nst::test-record-results test-record)))
+      (cond
+        ((and (gethash test-name (nst::group-record-tests group-record))
+              (gethash results-key nst::+results-record+))
+         (make-success-report))
+        (t (make-failure-report :format "Expected NST group ~s to have test ~s"
+                                :args (list group-name test-name))))))
 
 (def-criterion (--nst-run (args &rest subcriteria) ())
   (let ((results))
@@ -93,7 +95,7 @@
                                (results-hash))
   "Subcriteria get a results report of type nst:check-result"
   (let* ((inst (nst::test-record group-name test-name))
-         (result (gethash (nst::check-group-name inst) results-hash)))
+         (result (gethash (nst::test-record-results inst) results-hash)))
     (cond
       (result
        (check-criterion-on-value `(:all ,@subcriteria) result))
