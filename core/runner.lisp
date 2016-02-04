@@ -165,6 +165,7 @@ configuration provided by those wrappers."
 
     ;; Apply fixtures and continue with group setup and test execution.
     (apply-fixtures (group-record-given-fixtures group-record)
+                    group-record test-records
                     (run-group-tests-fixtures-thunk group-record test-records))
     (format-at-verbosity 4
         "Passed test execution in (run-group-tests ~s ~s)~%"
@@ -280,6 +281,7 @@ configuration provided by those wrappers."
 
         (unwind-protect
             (apply-fixtures (test-record-fixtures test-record)
+                            group-record (list test-record)
                             (run-test-fixtures-thunk group-record test-record))
 
           (let ((thunk (test-record-finish test-record)))

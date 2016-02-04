@@ -27,23 +27,7 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (def-hashtable-fns fixture-function ()
-    "from fixture name to the list of local variable names bound that fixture"))
-
-(defun apply-fixtures (fixtures body-thunk)
-  (cond
-    (fixtures (apply-fixture (car fixtures) (cdr fixtures) body-thunk))
-    (t (funcall body-thunk))))
-
-(defun apply-fixture (fixture next-fixtures body-thunk)
-  (cond
-    ((symbolp fixture)
-     (funcall (fixture-function fixture) next-fixtures body-thunk))
-    ((functionp fixture) (funcall fixture next-fixtures body-thunk))
-    (t (error "TODO anonymous fixtures not implemented"))))
-
-;;; ------------------------------------------------------------------
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
+    "from fixture name to the list of local variable names bound that fixture")
   (def-hashtable-fns fixture-bindings ()
     "from fixture name to the list of local variable names bound that fixture"))
 
@@ -52,6 +36,24 @@
 
 (def-hashtable-fns fixture-cache-flush ()
   "from fixture name to the list of local variable names bound that fixture")
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(defun apply-fixtures (fixtures group-record test-records body-thunk)
+  (cond
+    (fixtures (apply-fixture (car fixtures) (cdr fixtures)
+                             group-record test-records body-thunk))
+    (t (funcall group-record test-records body-thunk))))
+
+(defun apply-fixture (fixture next-fixtures
+                      group-record test-records body-thunk)
+  (cond
+    ((symbolp fixture)
+     (funcall (fixture-function fixture)
+              next-fixtures group-record test-records body-thunk))
+    ((functionp fixture) (funcall fixture next-fixtures
+                                  group-record test-records body-thunk))
+    (t (error "TODO anonymous fixtures not implemented"))))
 
 ;;; ------------------------------------------------------------------
 
@@ -81,18 +83,20 @@ the list of names defined by the fixture."
                           `((let ,bindings
                               (declare (special ,@names) ,@decls)
                               ,@(when setup `(,setup))
-                              (apply-fixtures fs thunk)
+                              (apply-fixtures fs group-record test-records
+                                              thunk)
                               ,@(when cleanup `(,cleanup)))))
 
                          ;; No bindings at all.
                          (names
                           `(,@(when setup `(,setup))
-                              (apply-fixtures fs thunk)
+                              (apply-fixtures fs group-record test-records
+                                              thunk)
                               ,@(when cleanup `(,cleanup)))))))
 
       ;; Finally put together the fixture function, and also return
       ;; the list of defined names.
-      (values `(lambda (fs thunk)
+      (values `(lambda (fs group-record test-records thunk)
                  (block ,fixture-name
                    ,@(when (or outer-decls (and decls (not names)))
                        `((declare ,@outer-decls
@@ -133,7 +137,7 @@ the local variables needed for caching."
                            :with-retry ,(format nil
                                             "Calculate ~s for fixture ~s again."
                                           param fixture-name)
-                           :handler-return-to fixture-name
+                           :handler-return-to ,fixture-name
                            :group group-record :tests test-records
                            :fail-test-msg "Error in fixture application"
                            :log-location ("in fixture")))
@@ -288,7 +292,7 @@ documentation such as form =:whatis=, any =nil=s are omitted."
     (warn 'nst-soft-keyarg-deprecation
           :old-name :assumes :replacement :special))
 
-  ;; Decode the syntax for the fixture function and the list of bound
+   ;; Decode the syntax for the fixture function and the list of bound
   ;; names.
   (multiple-value-bind (fixture-function fixture-bindings let-list cache-names)
       (decode-fixture-syntax name bindings inner outer setup
@@ -297,12 +301,13 @@ documentation such as form =:whatis=, any =nil=s are omitted."
 
        ;; Save the compiled artifacts,
        (setf (fixture-letlist ',name) ',let-list
-             (fixture-function ',name) (eval ',fixture-function)
+             (fixture-function ',name) #',fixture-function
              (fixture-bindings ',name) ',fixture-bindings
 
              (fixture-cache-flush ',name)
-             (eval '(lambda ()
-                      (setf ,@(loop for n in cache-names collect `(,n nil))))))
+             '#(lambda ()
+                ,@(when cache-names
+                    `((setf ,@(loop for n in cache-names collect `(,n nil)))))))
 
        ;; Return the name of the fixture.
        ',name)))
@@ -328,7 +333,7 @@ provided by the fixtures.
      (return-from with-fixtures
        (cond
          ((null fixture-functions) `(progn ,@forms))
-         (t `(apply-fixtures fixture-functions
+         (t `(apply-fixtures fixture-functions nil nil
                              #'(lambda ()
                                  (declare (special ,@fixture-bindings))
                                  ,@forms)))))))
