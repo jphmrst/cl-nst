@@ -35,8 +35,7 @@
     (check-criterion-on-value `(:all ,@subcriteria) group)))
 
 (def-criterion (--with-test (group-name test-name &rest subcriteria) ())
-  (let* ((group-obj (nst::group-record group-name))
-         (test-obj (nst::test-record group-name test-name)))
+  (let* ((test-obj (nst::test-record group-name test-name)))
     (check-criterion-on-value `(:all ,@subcriteria) test-obj)))
 
 (def-criterion (--nst-group-has-test (group-name test-name) ())
@@ -87,9 +86,9 @@
   `(--nst-run (:tests ((,group-name ,test-name))) ,@subcriteria))
 
 (def-criterion-alias (--nst-no-test-in-group group-name test-name)
-  `(:true-form (not (gethash ',test-name
-                             (nst::test-name-lookup
-                              (make-instance ',group-name))))))
+    `(:true-form (not (gethash ',test-name
+                               (nst::group-record-tests
+                                (nst::group-record ',group-name))))))
 
 (def-criterion (---on-test (group-name test-name &rest subcriteria)
                                (results-hash))

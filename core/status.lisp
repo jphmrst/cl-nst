@@ -231,7 +231,6 @@
   group-name
   (check-results (make-hash-table :test 'eq)))
 
-#|
 (set-pprint-dispatch 'group-result
   (named-function pprint-group-result
     (lambda (s gr)
@@ -241,7 +240,7 @@
             (result-summary gr)
           (declare (ignorable erred failed warned))
           (when (group-record-p name)
-            (setf name (group-name name)))
+            (setf name (group-record-name name)))
           (let ((tests
                  (loop for check being the hash-keys of checks collect check))
                 (*nst-group-shown* t))
@@ -257,7 +256,6 @@
                                      (eq :info (result-summary cr)))
                            (pprint-newline :mandatory s)
                            (format s " - ~:w" cr)))))))))))))
-|#
 
 
 (defstruct (check-result (:include result-stats (tests 1))
@@ -282,7 +280,10 @@ instances, and the info field is of any value."
                                (elapsed-time 0)
                                (timestamp (multiple-value-list
                                               (get-decoded-time))))
-  (%make-check-result :group-name group-name
+  (%make-check-result :group-name (cond
+                                    ((group-record-p group-name)
+                                     (group-record-name group-name))
+                                    (t group-name))
                       :check-name check-name
                       :warnings warnings
                       :failures failures

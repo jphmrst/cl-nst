@@ -55,16 +55,16 @@
 
 ;;; ------------------------------------------------------------------
 
-(defun decode-fixture-syntax (binding-specs &optional decls outer-decls
-                                              setup cleanup startup finish
-                                              cache)
+(defun decode-fixture-syntax (fixture-name binding-specs
+                              &optional decls outer-decls
+                                setup cleanup startup finish cache)
   "Assemble syntactic elements of a fixture into the fixture function and
 the list of names defined by the fixture."
 
   ;; First go through the list of the given bindings specifications to
   ;; find any with by-binding options declared.
   (multiple-value-bind (cache-names bindings)
-      (decode-caching-decls binding-specs cache)
+      (decode-caching-decls fixture-name binding-specs cache)
 
     ;; Pull the list of names from the bindings.
     (let* ((names (loop for binding in bindings collect (car binding)))
@@ -93,15 +93,16 @@ the list of names defined by the fixture."
       ;; Finally put together the fixture function, and also return
       ;; the list of defined names.
       (values `(lambda (fs thunk)
-                 ,@(when (or outer-decls (and decls (not names)))
-                     `((declare ,@outer-decls
-                                ,@(unless names decls))))
-                 ,@(when startup `(,startup))
-                 ,@core-exprs
-                 ,@(when finish `(,finish)))
+                 (block ,fixture-name
+                   ,@(when (or outer-decls (and decls (not names)))
+                       `((declare ,@outer-decls
+                                  ,@(unless names decls))))
+                   ,@(when startup `(,startup))
+                   ,@core-exprs
+                   ,@(when finish `(,finish))))
               names bindings cache-names))))
 
-(defun decode-caching-decls (binding-specs all-cache)
+(defun decode-caching-decls (fixture-name binding-specs all-cache)
   "Process a list of binding specifications to extract both the bindings, and
 the local variables needed for caching."
 
@@ -114,12 +115,29 @@ the local variables needed for caching."
         ;; a list of options.  So we first separate the list of
         ;; options from the list making up a standard Common Lisp
         ;; binding.
-        for (options binding) = (cond
-                                  ((symbolp spec) (list nil (list spec)))
-                                  ;; Some kind of error
-                                  ((not (listp spec)) (list nil nil))
-                                  ((symbolp (car spec)) (list nil spec))
-                                  (t (list (car spec) (cdr spec))))
+        for (options pre-binding)
+          = (cond
+              ((symbolp spec) (list nil (list spec)))
+              ;; Some kind of error
+              ((not (listp spec)) (list nil nil))
+              ((symbolp (car spec)) (list nil spec))
+              (t (list (car spec) (cdr spec))))
+        for binding
+          = (let ((param (car pre-binding)))
+              (list param
+                  `(with-nst-control-handlers
+                       ((e flag
+                           :cerror-label ,(format nil
+                                              "~@<Quit applying fixture ~s~:>"
+                                            fixture-name)
+                           :with-retry ,(format nil
+                                            "Calculate ~s for fixture ~s again."
+                                          param fixture-name)
+                           :handler-return-to fixture-name
+                           :group group-record :tests test-records
+                           :fail-test-msg "Error in fixture application"
+                           :log-location ("in fixture")))
+                     ,(cadr pre-binding))))
 
         ;; If the options specify that we need to cache this binding,
         ;; then create some additional local variables for it, and
@@ -129,12 +147,13 @@ the local variables needed for caching."
         if (destructuring-bind (&key (cache nil cache-supp-p)) options
              (if cache-supp-p cache all-cache))
           append (list cache-name cache-full-name) into cache-names
-          and do (setf (cadr binding)
-                       `(cond
-                          (,cache-full-name ,cache-name)
-                          (t (setf ,cache-name ,(cadr binding)
-                                   ,cache-full-name t)
-                             ,cache-name)))
+          and do
+            (setf (cadr binding)
+              `(cond
+                 (,cache-full-name ,cache-name)
+                 (t (setf ,cache-name ,(cadr binding)
+                          ,cache-full-name t)
+                    ,cache-name)))
         end
 
         ;; Collect the binding in the list of all bindings.
@@ -272,7 +291,7 @@ documentation such as form =:whatis=, any =nil=s are omitted."
   ;; Decode the syntax for the fixture function and the list of bound
   ;; names.
   (multiple-value-bind (fixture-function fixture-bindings let-list cache-names)
-      (decode-fixture-syntax bindings inner outer setup
+      (decode-fixture-syntax name bindings inner outer setup
                              cleanup startup finish cache)
     `(eval-when (:compile-toplevel :load-toplevel :execute)
 
