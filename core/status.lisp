@@ -718,13 +718,11 @@ six-value summary of the results:
            (t (incf total-tests)))))
     result))
 
-;; TODO Track down the places this function is called.  Can we only
-;; ever pass the group-record and test-record?
 (defun test-report (group test)
   "Top-level function for reporting the results of a test."
-  (when (symbolp group) (setf group (group-record group)))
-  (when (symbolp test) (setf test (test-record (group-record-name group) test)))
-  (gethash (test-record-results test) +results-record+))
+  (when (group-record-p group) (setf group (group-record-name group)))
+  (when (symbolp test) (setf test (test-record group test)))
+  (when test (gethash (test-record-results test) +results-record+)))
 
 (defun multiple-report (packages groups tests &key system)
   (let ((group-source (copy-seq groups)))
@@ -734,16 +732,16 @@ six-value summary of the results:
         (when (consp g)
           (setf g (intern (symbol-name (cdr g)) (find-package (car g)))))
         (push g groups)
-        (loop for add in (group-record-include-groups g) do
-          (push (make-instance add) group-source)))))
+        ;; TODO Address when returning :include-groups to def-test-group
+        #|(loop for add in (group-record-include-groups g) do
+            (push (make-instance add) group-source))|#)))
   (let* ((package-reports (loop for p in packages collect (package-report p)))
          (group-reports (loop for g in groups collect (group-report g)))
          (test-reports
           (loop for item in tests
               append (cond
-                      ((consp item)
-                       (destructuring-bind (g . ts) item
-                         (list (test-report g ts))))
+                      ((consp item) (destructuring-bind (g . ts) item
+                                      (list (test-report g ts))))
 
                       ((test-record-p item)
                        (list (test-report (group-record-name item)
