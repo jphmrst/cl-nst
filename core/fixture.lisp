@@ -57,13 +57,14 @@
 ;;; ------------------------------------------------------------------
 
 (defun decode-fixture-syntax (fixture-name binding-specs
-                              &optional decls outer-decls
-                                setup cleanup startup finish cache
-                                specials special-variables)
+                              decls outer-decls
+                              setup cleanup startup finish cache
+                              specials use-fixtures special-variables)
   "Assemble syntactic elements of a fixture into the fixture function and
 the list of names defined by the fixture."
 
-  ;; Go through the SPECIAL list to find additional unbound variables.
+  ;; Go through the SPECIAL and USE-FIXTURES lists to find additional
+  ;; unbound variables.
   (loop for special in specials do
     (cond
       ((symbolp special) (push special special-variables))
@@ -72,6 +73,9 @@ the list of names defined by the fixture."
          (setf special-variables
                (append (fixture-bindings used-fixture-name)
                        special-variables))))))
+  (loop for used-fixture-name in use-fixtures do
+    (setf special-variables
+          (append (fixture-bindings used-fixture-name) special-variables)))
 
   ;; First go through the list of the given bindings specifications to
   ;; find any with by-binding options declared.
@@ -234,7 +238,7 @@ debugging.  A set of fixtures is defined using the =def-fixtures= macro:
 - outer :: List of declarations to be made outside the let-binding of
      names of any use of this fixture.
 - documentation :: TODO A documentation string for the fixture set.
-- special :: TODO Specifies a list of names which should be declared
+- special :: Specifies a list of names which should be declared
      =special= in the scope within which this set's fixtures are
      evaluated.  The individual names are taken to be single variable
      names.  Each =(:fixture NAME)= specifies all of the names of the given
@@ -250,7 +254,7 @@ debugging.  A set of fixtures is defined using the =def-fixtures= macro:
      package.
 - export-names :: TODO When non-nil, sets the default value to t for the
      two options above.
-- cache :: TODO If specified with the group options, when non-nil, the
+- cache :: If specified with the group options, when non-nil, the
      fixture values are cached at their first use, and re-applied at
      subsequent fixture application rather than being recalculated.
 
@@ -324,7 +328,7 @@ documentation such as form =:whatis=, any =nil=s are omitted."
   (multiple-value-bind (fixture-function fixture-bindings let-list cache-names)
       (decode-fixture-syntax name bindings inner outer setup
                              cleanup startup finish cache
-                             special (append uses assumes))
+                             special uses assumes)
     `(progn
 
        ,@(loop for cname in cache-names
