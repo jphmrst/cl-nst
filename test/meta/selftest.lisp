@@ -209,14 +209,11 @@
         (---error-records (:apply length (:eql 0)))
         (---warning-records (:apply length (:eql 0))))))
 
-;;; TODO Not sure at this point what this is testing, but should put
-;;; back in.
-;;;
-;;;(def-test-group nil-use-fixtures ())
-;;;(def-test (nil-fix :group nil-use-fixtures
-;;;                   :setup (setf nst-meta-sources::zzz 0))
-;;;    (--nst-group nst-meta-sources::use-fixture-with-nil
-;;;      (---form-true (eql nst-meta-sources::zzz 10))))
+(def-test-group nil-use-fixtures ())
+(def-test (nil-fix :group nil-use-fixtures
+                   :setup (setf nst-meta-sources::zzz 0))
+    (--nst-group nst-meta-sources::use-fixture-with-nil
+      (---form-true (eql nst-meta-sources::zzz 10))))
 
 ;;; TODO Put the export functionality back in.
 ;;;
