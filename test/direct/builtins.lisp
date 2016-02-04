@@ -45,7 +45,7 @@
 (def-fixtures f2 (:uses (f1))
   (d 4) (e 'asdfg) (f c))
 
-(def-fixtures f2a (:special (:fixture f1))
+(def-fixtures f2a (:special ((:fixture f1)))
   (d 4) (e 'asdfg) (f c))
 
 (def-fixtures fxy ()

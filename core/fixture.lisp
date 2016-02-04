@@ -26,14 +26,13 @@
 (in-package :sift.nst)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (def-hashtable-fns fixture-function ()
-    "from fixture name to the list of local variable names bound that fixture")
   (def-hashtable-fns fixture-bindings ()
+    "from fixture name to the list of local variable names bound that fixture")
+  (def-hashtable-fns fixture-letlist ()
     "from fixture name to the list of local variable names bound that fixture"))
 
-(def-hashtable-fns fixture-letlist ()
-  "from fixture name to the list of local variable names bound that fixture")
-
+(def-hashtable-fns fixture-function ()
+    "from fixture name to the list of local variable names bound that fixture")
 (def-hashtable-fns fixture-cache-flush ()
   "from fixture name to the list of local variable names bound that fixture")
 
@@ -43,7 +42,7 @@
   (cond
     (fixtures (apply-fixture (car fixtures) (cdr fixtures)
                              group-record test-records body-thunk))
-    (t (funcall group-record test-records body-thunk))))
+    (t (funcall body-thunk #| group-record test-records |#))))
 
 (defun apply-fixture (fixture next-fixtures
                       group-record test-records body-thunk)
@@ -59,13 +58,24 @@
 
 (defun decode-fixture-syntax (fixture-name binding-specs
                               &optional decls outer-decls
-                                setup cleanup startup finish cache)
+                                setup cleanup startup finish cache
+                                specials special-variables)
   "Assemble syntactic elements of a fixture into the fixture function and
 the list of names defined by the fixture."
 
+  ;; Go through the SPECIAL list to find additional unbound variables.
+  (loop for special in specials do
+    (cond
+      ((symbolp special) (push special special-variables))
+      ((and (listp special) (eq :fixture (car special)))
+       (loop for used-fixture-name in (cdr special) do
+         (setf special-variables
+               (append (fixture-bindings used-fixture-name)
+                       special-variables))))))
+
   ;; First go through the list of the given bindings specifications to
   ;; find any with by-binding options declared.
-  (multiple-value-bind (cache-names bindings)
+  (multiple-value-bind (cache-names bindings ignore-names)
       (decode-caching-decls fixture-name binding-specs cache)
 
     ;; Pull the list of names from the bindings.
@@ -81,7 +91,9 @@ the list of names defined by the fixture."
                          ;; abstract them here.
                          (names
                           `((let ,bindings
-                              (declare (special ,@names) ,@decls)
+                              (declare (special ,@names) ,@decls
+                                       ,@(when ignore-names
+                                           `((ignore ,@ignore-names))))
                               ,@(when setup `(,setup))
                               (apply-fixtures fs group-record test-records
                                               thunk)
@@ -92,81 +104,97 @@ the list of names defined by the fixture."
                           `(,@(when setup `(,setup))
                               (apply-fixtures fs group-record test-records
                                               thunk)
-                              ,@(when cleanup `(,cleanup)))))))
+                              ,@(when cleanup `(,cleanup))))))
+
+           ;; Body forms of the fixture function.
+           (fixtures-function-body-forms
+            `((block ,fixture-name
+                ,@(when (or outer-decls (and decls (not names)))
+                    `((declare ,@outer-decls
+                               ,@(unless names decls))))
+                ,@(when startup `(,startup))
+                ,@core-exprs
+                ,@(when finish `(,finish))))))
+
+      (when special-variables
+        (setf fixtures-function-body-forms
+              `((locally (declare ,@(when special-variables
+                                      `((special ,@special-variables))))
+                  ,@fixtures-function-body-forms))))
 
       ;; Finally put together the fixture function, and also return
       ;; the list of defined names.
       (values `(lambda (fs group-record test-records thunk)
-                 (block ,fixture-name
-                   ,@(when (or outer-decls (and decls (not names)))
-                       `((declare ,@outer-decls
-                                  ,@(unless names decls))))
-                   ,@(when startup `(,startup))
-                   ,@core-exprs
-                   ,@(when finish `(,finish))))
+                 ,@fixtures-function-body-forms)
               names bindings cache-names))))
 
 (defun decode-caching-decls (fixture-name binding-specs all-cache)
   "Process a list of binding specifications to extract both the bindings, and
 the local variables needed for caching."
+  (let ((ignore-names nil))
 
-  ;; Process each binding in turn.
-  (loop for spec in binding-specs
+    ;; Process each binding in turn.
+    (loop for spec in binding-specs
 
-        ;; In a standard Common Lisp binding, the first item is the
-        ;; local name (or the whole thing is just the local name).  In
-        ;; an NST fixture, the first item in the binding spec could be
-        ;; a list of options.  So we first separate the list of
-        ;; options from the list making up a standard Common Lisp
-        ;; binding.
-        for (options pre-binding)
-          = (cond
-              ((symbolp spec) (list nil (list spec)))
-              ;; Some kind of error
-              ((not (listp spec)) (list nil nil))
-              ((symbolp (car spec)) (list nil spec))
-              (t (list (car spec) (cdr spec))))
-        for binding
-          = (let ((param (car pre-binding)))
-              (list param
-                  `(with-nst-control-handlers
-                       ((e flag
-                           :cerror-label ,(format nil
-                                              "~@<Quit applying fixture ~s~:>"
-                                            fixture-name)
-                           :with-retry ,(format nil
-                                            "Calculate ~s for fixture ~s again."
-                                          param fixture-name)
-                           :handler-return-to ,fixture-name
-                           :group group-record :tests test-records
-                           :fail-test-msg "Error in fixture application"
-                           :log-location ("in fixture")))
-                     ,(cadr pre-binding))))
+          ;; In a standard Common Lisp binding, the first item is the
+          ;; local name (or the whole thing is just the local name).
+          ;; In an NST fixture, the first item in the binding spec
+          ;; could be a list of options.  So we first separate the
+          ;; list of options from the list making up a standard Common
+          ;; Lisp binding.
+          for (options pre-binding)
+            = (cond
+                ((symbolp spec) (list nil (list spec)))
+                ;; Some kind of error
+                ((not (listp spec)) (list nil nil))
+                ((symbolp (car spec)) (list nil spec))
+                (t (list (car spec) (cdr spec))))
+          for binding
+            = (let ((param (car pre-binding)))
+                ;; Fixture-bound names are allowed to be nil, to
+                ;; simply give a side-effect.
+                (unless param
+                  (setf param (gensym))
+                  (push param ignore-names))
+                (list param
+                      `(with-nst-control-handlers
+                           ((e flag :cerror-label
+                               ,(format nil "~@<Quit applying fixture ~s~:>"
+                                  fixture-name)
+                               :with-retry
+                               ,(format nil "Calculate ~s for fixture ~s again."
+                                  param fixture-name)
+                               :handler-return-to ,fixture-name
+                               :group group-record :tests test-records
+                               :fail-test-msg "Error in fixture application"
+                               :log-location ("in fixture")))
+                         ,(cadr pre-binding))))
 
-        ;; If the options specify that we need to cache this binding,
-        ;; then create some additional local variables for it, and
-        ;; wrap the binding's form to do the caching.
-        for cache-name = (gensym)
-        for cache-full-name = (gensym)
-        if (destructuring-bind (&key (cache nil cache-supp-p)) options
-             (if cache-supp-p cache all-cache))
-          append (list cache-name cache-full-name) into cache-names
-          and do
-            (setf (cadr binding)
-              `(cond
-                 (,cache-full-name ,cache-name)
-                 (t (setf ,cache-name ,(cadr binding)
-                          ,cache-full-name t)
-                    ,cache-name)))
-        end
+          ;; If the options specify that we need to cache this binding,
+          ;; then create some additional local variables for it, and
+          ;; wrap the binding's form to do the caching.
+          for cache-name = (gensym)
+          for cache-full-name = (gensym)
+          if (destructuring-bind (&key (cache nil cache-supp-p)) options
+               (if cache-supp-p cache all-cache))
+            append (list cache-name cache-full-name) into cache-names
+            and do
+              (setf (cadr binding)
+                    `(cond
+                       (,cache-full-name ,cache-name)
+                       (t (setf ,cache-name ,(cadr binding)
+                                ,cache-full-name t)
+                          ,cache-name)))
+          end
 
-        ;; Collect the binding in the list of all bindings.
-        collect binding into bindings
+          ;; Collect the binding in the list of all bindings.
+          collect binding into bindings
 
-        ;; We're finished and can return the list of bindings, and the
-        ;; list of cache helper variables to which the bindings refer.
-        finally (return-from decode-caching-decls
-                  (values cache-names bindings))))
+          ;; We're finished and can return the list of bindings, and
+          ;; the list of cache helper variables to which the bindings
+          ;; refer.
+          finally (return-from decode-caching-decls
+                    (values cache-names bindings ignore-names)))))
 
 ;;; ------------------------------------------------------------------
 ;;; The big macro
@@ -178,7 +206,6 @@ the local variables needed for caching."
                                    setup cleanup startup finish export-names
                                    export-bound-names export-fixture-name)
                         &body bindings)
-
   "Fixtures are data structures and values which may be referred to by name
 during testing.  NST provides the ability to use fixtures across multiple tests
 and test groups, and to inject fixtures into the runtime namespace for
@@ -266,7 +293,7 @@ Examples of fixture definitions:
 \(def-fixtures f1 ()
   \(c 3)
   \(d 'asdfg))
-\(def-fixtures f2 (:special (:fixture f1))
+\(def-fixtures f2 (:special ((:fixture f1)))
   \(d 4)
   \(e 'asdfg)
   \(f c))
@@ -281,8 +308,8 @@ fixture, NST will replace =nil= with a non-interned symbol; in
 documentation such as form =:whatis=, any =nil=s are omitted."
 
   ;; Unimplemented or now-disregarded options.
-  (declare (ignore assumes special export-names export-bound-names
-                   export-fixture-name uses documentation))
+  (declare (ignore export-names export-bound-names export-fixture-name
+                   documentation))
 
   ;; Discourage deprecated forms
   (when uses-supp-p
@@ -292,17 +319,25 @@ documentation such as form =:whatis=, any =nil=s are omitted."
     (warn 'nst-soft-keyarg-deprecation
           :old-name :assumes :replacement :special))
 
-   ;; Decode the syntax for the fixture function and the list of bound
+  ;; Decode the syntax for the fixture function and the list of bound
   ;; names.
   (multiple-value-bind (fixture-function fixture-bindings let-list cache-names)
       (decode-fixture-syntax name bindings inner outer setup
-                             cleanup startup finish cache)
-    `(eval-when (:compile-toplevel :load-toplevel :execute)
+                             cleanup startup finish cache
+                             special (append uses assumes))
+    `(progn
 
-       ;; Save the compiled artifacts,
-       (setf (fixture-letlist ',name) ',let-list
-             (fixture-function ',name) #',fixture-function
-             (fixture-bindings ',name) ',fixture-bindings
+       ,@(loop for cname in cache-names
+             collect `(defvar ,cname nil
+                        ,(format nil "Cache variable for NST fixture ~s" name)))
+
+       ;; We'll need the bound names at compile-time.
+       (eval-when (:compile-toplevel :load-toplevel :execute)
+         (setf (fixture-bindings ',name) ',fixture-bindings
+               (fixture-letlist ',name) ',let-list))
+
+       ;; Save the other compiled artifacts,
+       (setf (fixture-function ',name) #',fixture-function
 
              (fixture-cache-flush ',name)
              '#(lambda ()

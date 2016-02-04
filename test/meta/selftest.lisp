@@ -106,39 +106,38 @@
       (---form-true (eql nst-meta-sources::*nst-fc1* 2))
       (---form-true (eql nst-meta-sources::*nst-fc2* 2))))
 
-;;; TODO Put these back in.
-;;;
-;;;(def-test (cfix1 :group caching-fixtures-1
-;;;                 :setup (progn
-;;;                          (setf nst-meta-sources::*nst-fc1* 0
-;;;                                nst-meta-sources::*nst-fc2* 0)
-;;;                          (nst::flush-fixture-cache
-;;;                           'nst-meta-sources::fixtures-cache-all)))
-;;;    (--nst-group (nst-meta-sources::group-fixtures-cache-all
-;;;                  nst-meta-sources::group-fixtures-cache-all)
-;;;      (---form-true (eql nst-meta-sources::*nst-fc1* 1))
-;;;      (---form-true (eql nst-meta-sources::*nst-fc2* 1))))
-;;;(def-test (cfix2 :group caching-fixtures-1
-;;;                 :setup (progn
-;;;                          (setf nst-meta-sources::*nst-fc1* 0
-;;;                                nst-meta-sources::*nst-fc2* 0)
-;;;                          (nst::flush-fixture-cache
-;;;                           'nst-meta-sources::fixtures-cache-one)))
-;;;    (--nst-group (nst-meta-sources::group-fixtures-cache-one
-;;;                  nst-meta-sources::group-fixtures-cache-one)
-;;;      (---form-true (eql nst-meta-sources::*nst-fc1* 1))
-;;;      (---form-true (eql nst-meta-sources::*nst-fc2* 2))))
-;;;
-;;;(def-test (cfix3 :group caching-fixtures-1
-;;;                 :setup (progn
-;;;                          (setf nst-meta-sources::*nst-fc1* 0
-;;;                                nst-meta-sources::*nst-fc2* 0)
-;;;                          (nst::flush-fixture-cache
-;;;                           'nst-meta-sources::fixtures-cache-override-t)))
-;;;    (--nst-group (nst-meta-sources::group-fixtures-cache-override-t
-;;;                  nst-meta-sources::group-fixtures-cache-override-t)
-;;;      (---form-true (eql nst-meta-sources::*nst-fc1* 2))
-;;;      (---form-true (eql nst-meta-sources::*nst-fc2* 1))))
+(def-test (cfix1 :group caching-fixtures-1
+                 :setup (progn
+                          (setf nst-meta-sources::*nst-fc1* 0
+                                nst-meta-sources::*nst-fc2* 0)
+                          (nst::flush-fixture-cache
+                           'nst-meta-sources::fixtures-cache-all)))
+    (--nst-group (nst-meta-sources::group-fixtures-cache-all
+                  nst-meta-sources::group-fixtures-cache-all)
+      (---form-true (eql nst-meta-sources::*nst-fc1* 1))
+      (---form-true (eql nst-meta-sources::*nst-fc2* 1))))
+
+(def-test (cfix2 :group caching-fixtures-1
+                 :setup (progn
+                          (setf nst-meta-sources::*nst-fc1* 0
+                                nst-meta-sources::*nst-fc2* 0)
+                          (nst::flush-fixture-cache
+                           'nst-meta-sources::fixtures-cache-one)))
+    (--nst-group (nst-meta-sources::group-fixtures-cache-one
+                  nst-meta-sources::group-fixtures-cache-one)
+      (---form-true (eql nst-meta-sources::*nst-fc1* 1))
+      (---form-true (eql nst-meta-sources::*nst-fc2* 2))))
+
+(def-test (cfix3 :group caching-fixtures-1
+                 :setup (progn
+                          (setf nst-meta-sources::*nst-fc1* 0
+                                nst-meta-sources::*nst-fc2* 0)
+                          (nst::flush-fixture-cache
+                           'nst-meta-sources::fixtures-cache-override-t)))
+    (--nst-group (nst-meta-sources::group-fixtures-cache-override-t
+                  nst-meta-sources::group-fixtures-cache-override-t)
+      (---form-true (eql nst-meta-sources::*nst-fc1* 2))
+      (---form-true (eql nst-meta-sources::*nst-fc2* 1))))
 
 #-(or lispworks clozure-common-lisp)
 (def-test-group dispatched-tests ())
