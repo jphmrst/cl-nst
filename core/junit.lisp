@@ -4,6 +4,7 @@
 ;;;
 ;;; Except as noted below, all contents are:
 ;;; Copyright (c) 2009-2011 Smart Information Flow Technologies.
+;;; Copyright (c) 2015-2016 John Maraist
 ;;; Written by John Maraist.
 ;;;
 ;;; NST is free software: you can redistribute it and/or modify it
