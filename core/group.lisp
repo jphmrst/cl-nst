@@ -94,7 +94,7 @@ test forms.  Returns many results:
 
 (defstruct group-record
   "Superclass of NST group definitions."
-  name anon-fixture-forms aspirational given-fixtures
+  name anon-fixture-forms aspirational given-fixtures documentation
   (tests (make-hash-table :test 'eq)) ;; test-list test-name-lookup
   fixtures-setup-thunk fixtures-cleanup-thunk
   withfixtures-setup-thunk withfixtures-cleanup-thunk
@@ -234,15 +234,13 @@ Arguments:
                           docstring aspirational aspirational-supp-p
                           include-groups)
         (separate-group-subforms forms)
-      (declare (ignore aspirational-supp-p docstring
-                       fixtures-setup fixtures-setup-supp-p
+      (declare (ignore aspirational-supp-p fixtures-setup fixtures-setup-supp-p
                        fixtures-cleanup fixtures-cleanup-supp-p))
 
       `(let ((*group-name* ',group-name)
              (*group-record*
               (make-group-record :name ',group-name
                                  ;; :anon-fixture-forms anon-fixture-forms
-                                 ;; :aspirational aspirational
                                  :given-fixtures ',given-fixtures
                                  ,@(when setup-supp-p `(:fixtures-setup-thunk
                                                         #'(lambda () ,@setup)))
@@ -256,7 +254,8 @@ Arguments:
                                      `(:eachtest-cleanup-thunk
                                        #'(lambda () ,@each-cleanup)))
                                  :include-groups ',include-groups
-                                 :aspirational ',aspirational)))
+                                 :aspirational ',aspirational
+                                 :documentation ,docstring)))
            (declare (special *group-name* *group-record*))
            (setf (group-record ',group-name) *group-record*)
            ,@check-forms))))

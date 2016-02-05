@@ -31,6 +31,8 @@
   (def-hashtable-fns fixture-letlist ()
     "from fixture name to the list of local variable names bound that fixture"))
 
+(def-hashtable-fns fixture-docstring ()
+    "from fixture name to the docstring for that fixture")
 (def-hashtable-fns fixture-function ()
     "from fixture name to the list of local variable names bound that fixture")
 (def-hashtable-fns fixture-cache-flush ()
@@ -240,7 +242,7 @@ debugging.  A set of fixtures is defined using the =def-fixtures= macro:
      special declaration of all bound names.
 - outer :: List of declarations to be made outside the let-binding of
      names of any use of this fixture.
-- documentation :: TODO A documentation string for the fixture set.
+- documentation :: A documentation string for the fixture set.
 - special :: Specifies a list of names which should be declared
      =special= in the scope within which this set's fixtures are
      evaluated.  The individual names are taken to be single variable
@@ -314,9 +316,6 @@ definitions, =nil= can be provided as a fixture name.  In uses of the
 fixture, NST will replace =nil= with a non-interned symbol; in
 documentation such as form =:whatis=, any =nil=s are omitted."
 
-  ;; Unimplemented or now-disregarded option.
-  (declare (ignore documentation))
-
   ;; Discourage deprecated forms
   (when uses-supp-p
     (warn 'nst-soft-keyarg-deprecation
@@ -362,6 +361,7 @@ documentation such as form =:whatis=, any =nil=s are omitted."
                                        (find-package :keyword))))))
 
        ;; Save the other compiled artifacts,
+       (setf (fixture-docstring ',name) ,documentation)
        (setf (fixture-function ',name) #',fixture-function
 
              (fixture-cache-flush ',name)

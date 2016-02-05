@@ -45,12 +45,11 @@ first element is that symbol and whose remaining elements are options."
         name-or-name-and-args
       (when (and fixtures (symbolp fixtures))
         (setf fixtures (list fixtures)))
-      (values name
-                setup setup-supp-p cleanup cleanup-supp-p
-                startup startup-supp-p finish finish-supp-p
-                fixtures fixtures-supp-p
-                group group-supp-p aspirational aspirational-supp-p
-                documentation documentation-supp-p)))
+      (values name setup setup-supp-p cleanup cleanup-supp-p
+              startup startup-supp-p finish finish-supp-p
+              fixtures fixtures-supp-p
+              group group-supp-p aspirational aspirational-supp-p
+              documentation documentation-supp-p)))
    (t (error "~@<Expected symbol or list for def-test argument~_ ~s~:>"
              name-or-name-and-args))))
 
@@ -60,7 +59,7 @@ first element is that symbol and whose remaining elements are options."
   "Structure storing parsed NST test records.
 - =group= :: The group-record structure (not the symbolic name) of the group
              containing this test."
-  name group fixtures criterion forms special-fixture-names
+  name group fixtures criterion forms special-fixture-names documentation
   setup cleanup startup finish results aspirational aspirational-supp)
 
 ;; Provide debugging information about this test.
@@ -146,7 +145,7 @@ The =def-check= form is a deprecated synonym for =def-test=."
                           aspirational aspirational-supp-p
                           docstring docstring-supp-p)
         (decode-defcheck-name-and-args name-or-name-and-args)
-      (declare (ignore fixtures-supp-p docstring-supp-p docstring))
+      (declare (ignore fixtures-supp-p docstring-supp-p))
 
       `(progn
          ,@(when group-supp-p
@@ -210,7 +209,8 @@ The =def-check= form is a deprecated synonym for =def-test=."
                                        `(:finish #'(lambda () ,finish)))
                                    :results results-name
                                    :aspirational-supp ',aspirational-supp-p
-                                   :aspirational ',aspirational)))))))
+                                   :aspirational ',aspirational
+                                   :documentation ,docstring)))))))
 
 ;;;        ;; Expand the fixtures into the definitions we'll actually
 ;;;        ;; use.
