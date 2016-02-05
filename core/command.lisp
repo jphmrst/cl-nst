@@ -343,6 +343,7 @@ available from compile-time forward.")
 ;;;  (:blurb "Run a single test.")
 ;;;  (:intro (:latex "The \\texttt{:run-test} command executes the given test.  Both the group and test name should be package-qualified.")))
 
+;;; TODO Doesn't work.  Not feeding the artifact finder?
 (def-nst-interactive-command
     (:run :short-help "Run NST packages, groups and tests."
           :args (&rest stuff)

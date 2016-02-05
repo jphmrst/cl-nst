@@ -208,7 +208,10 @@ the local variables needed for caching."
                                    (assumes nil assumes-supp-p)
                                    special outer inner documentation cache
                                    setup cleanup startup finish export-names
-                                   export-bound-names export-fixture-name)
+                                   (export-bound-names
+                                    nil export-bound-names-supp-p)
+                                   (export-fixture-name
+                                    nil export-fixture-name-supp-p))
                         &body bindings)
   "Fixtures are data structures and values which may be referred to by name
 during testing.  NST provides the ability to use fixtures across multiple tests
@@ -247,12 +250,12 @@ debugging.  A set of fixtures is defined using the =def-fixtures= macro:
      multiple =NAMEs= may be listed, and these lists and the bare
      names may be intermixed.  If only one name or fixture is
      specified, it need not be placed in a list
-- export-fixture-name :: TODO When non-nil, the fixture name will be added
+- export-fixture-name :: When non-nil, the fixture name will be added
      to the list of symbols exported by the current package.
-- export-bound-names :: TODO When non-nil, the names bound by this fixture
+- export-bound-names :: When non-nil, the names bound by this fixture
      will be added to the list of symbols exported by the current
      package.
-- export-names :: TODO When non-nil, sets the default value to t for the
+- export-names :: When non-nil, sets the default value to t for the
      two options above.
 - cache :: If specified with the group options, when non-nil, the
      fixture values are cached at their first use, and re-applied at
@@ -311,9 +314,8 @@ definitions, =nil= can be provided as a fixture name.  In uses of the
 fixture, NST will replace =nil= with a non-interned symbol; in
 documentation such as form =:whatis=, any =nil=s are omitted."
 
-  ;; Unimplemented or now-disregarded options.
-  (declare (ignore export-names export-bound-names export-fixture-name
-                   documentation))
+  ;; Unimplemented or now-disregarded option.
+  (declare (ignore documentation))
 
   ;; Discourage deprecated forms
   (when uses-supp-p
@@ -322,6 +324,13 @@ documentation such as form =:whatis=, any =nil=s are omitted."
   (when assumes-supp-p
     (warn 'nst-soft-keyarg-deprecation
           :old-name :assumes :replacement :special))
+
+  ;; Propagate catchall export switch
+  (when export-names
+    (unless export-bound-names-supp-p
+      (setf export-bound-names t))
+    (unless export-fixture-name-supp-p
+      (setf export-fixture-name t)))
 
   ;; Decode the syntax for the fixture function and the list of bound
   ;; names.
@@ -335,10 +344,22 @@ documentation such as form =:whatis=, any =nil=s are omitted."
              collect `(defvar ,cname nil
                         ,(format nil "Cache variable for NST fixture ~s" name)))
 
-       ;; We'll need the bound names at compile-time.
+       ;; Things we'll need at compile-time: first the bound names.
        (eval-when (:compile-toplevel :load-toplevel :execute)
          (setf (fixture-bindings ',name) ',fixture-bindings
-               (fixture-letlist ',name) ',let-list))
+               (fixture-letlist ',name) ',let-list)
+
+         ;; Export bound names
+         ,@(when export-bound-names
+             (loop for id in fixture-bindings
+                 collect `(export ',id
+                                  ,(intern (package-name (symbol-package id))
+                                           (find-package :keyword)))))
+
+         ;; Export the fixture name
+         ,@(when export-fixture-name
+             `((export ',name ,(intern (package-name (symbol-package name))
+                                       (find-package :keyword))))))
 
        ;; Save the other compiled artifacts,
        (setf (fixture-function ',name) #',fixture-function
