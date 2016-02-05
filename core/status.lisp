@@ -730,9 +730,8 @@ six-value summary of the results:
         (when (consp g)
           (setf g (intern (symbol-name (cdr g)) (find-package (car g)))))
         (push g groups)
-        ;; TODO Address when returning :include-groups to def-test-group
-        #|(loop for add in (group-record-include-groups g) do
-            (push (make-instance add) group-source))|#)))
+        (loop for add in (group-record-include-groups g) do
+          (push (group-record add) group-source)))))
   (let* ((package-reports (loop for p in packages collect (package-report p)))
          (group-reports (loop for g in groups collect (group-report g)))
          (test-reports

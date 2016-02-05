@@ -240,18 +240,16 @@
           nst-meta-sources::counter-test
         (:true-form (eql nst-meta-sources::*test-exec-counter* 1)))))
 
-;;; TODO Add the group include functionality again.
-;;;
-;;;(def-test-group group-includes-tests ()
-;;;  (:documentation "These tests validate the :include-groups feature."))
-;;;(def-test (group-includes-1 :group group-includes-tests)
-;;;    (--nst-group mnst-src::base-include
-;;;      (---test-passes mnst-src::base-include mnst-src::inc1)
-;;;      (---test-passes mnst-src::base-include mnst-src::inc2)
-;;;      (---test-passes mnst-src::included-1 mnst-src::inc1-1)
-;;;      (---test-passes mnst-src::included-1 mnst-src::inc1-2)
-;;;      (---test-passes mnst-src::included-2 mnst-src::inc2-1)
-;;;      (---test-passes mnst-src::included-2 mnst-src::inc2-2)))
+(def-test-group group-includes-tests ()
+  (:documentation "These tests validate the :include-groups feature."))
+(def-test (group-includes-1 :group group-includes-tests)
+    (--nst-group mnst-src::base-include
+      (---test-passes mnst-src::base-include mnst-src::inc1)
+      (---test-passes mnst-src::base-include mnst-src::inc2)
+      (---test-passes mnst-src::included-1 mnst-src::inc1-1)
+      (---test-passes mnst-src::included-1 mnst-src::inc1-2)
+      (---test-passes mnst-src::included-2 mnst-src::inc2-1)
+      (---test-passes mnst-src::included-2 mnst-src::inc2-2)))
 
 (def-test-group process-failure-tests ()
   (:documentation "These tests validate the :process criterion"))

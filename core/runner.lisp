@@ -95,11 +95,10 @@ or REPL macros require the dynamic configuration provided by those wrappers."
                      (loop for test-record being the hash-values of test-lookups
                            collect test-record)))
 
-  ;; TODO We aren't yet parsing included groups.
-  #|(let ((*implicit-group-choice* t))
-      (declare (special *implicit-group-choice*))
-      (loop for included-group in (group-include-groups group-record) do
-        (run-group included-group)))|#)
+  (let ((*implicit-group-choice* t))
+    (declare (special *implicit-group-choice*))
+    (loop for included-group in (group-record-include-groups group-record) do
+      (run-group included-group))))
 
 (defun run-test-inst (test-record)
   (format-at-verbosity 4 "Called (run-test-inst ~s)~%" test-record)
