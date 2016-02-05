@@ -173,9 +173,7 @@ The =def-check= form is a deprecated synonym for =def-test=."
            (multiple-value-bind (old-record old-record-p)
                (test-record the-group-name ',test-name)
              (when old-record-p
-               (setf results-name (test-record-results old-record))
-               ;; TODO Erase results
-               ))
+               (remhash results-name (test-record-results old-record))))
 
            ;; If we aren't reusing a name, make up a new one.
            (unless results-name
