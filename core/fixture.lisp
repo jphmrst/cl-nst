@@ -306,7 +306,7 @@ Examples of fixture definitions:
   \((:cache nil) h (factorial 5)))
 #+end_example
 
-TODO To cause a side-effect among the evaluation of a fixture's name
+To cause a side-effect among the evaluation of a fixture's name
 definitions, =nil= can be provided as a fixture name.  In uses of the
 fixture, NST will replace =nil= with a non-interned symbol; in
 documentation such as form =:whatis=, any =nil=s are omitted."
