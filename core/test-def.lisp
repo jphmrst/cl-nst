@@ -82,9 +82,7 @@ aspirational."
   (cond
     ((test-record-aspirational-supp test-record)
      (test-record-aspirational test-record))
-    (t (group-record-aspirational
-        (group-record (test-record-group test-record)
-                      (test-record-name test-record))))))
+    (t (group-record-aspirational (test-record-group test-record)))))
 
 ;;; -----------------------------------------------------------------
 
