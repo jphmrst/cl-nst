@@ -344,9 +344,11 @@ documentation such as form =:whatis=, any =nil=s are omitted."
        (setf (fixture-function ',name) #',fixture-function
 
              (fixture-cache-flush ',name)
-             '#(lambda ()
-                ,@(when cache-names
-                    `((setf ,@(loop for n in cache-names collect `(,n nil)))))))
+             #'(lambda ()
+                ,@(cond
+                    (cache-names
+                     `((setf ,@(loop for n in cache-names append `(,n nil)))))
+                    (t '(nil)))))
 
        ;; Return the name of the fixture.
        ',name)))
