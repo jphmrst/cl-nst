@@ -206,7 +206,8 @@ initialization, and stateful cleanup.
 Arguments:
  - group-name :: Name of the test group being defined
  - given-fixtures :: List of the names of fixtures and anonymous fixtures to be used with the tests in this group.
- - aspirational :: TODO An aspirational test is one which verifies some part of an API or code contract which may not yet be implemented.  Failures and errors of tests in aspirational groups may be treated differently than for other groups. When a group is marked aspirational, all tests within the group are taken to be aspirational as well.
+ - aspirational :: An aspirational test is one which verifies some part of an API or code contract which may not yet be implemented.  When a group is marked aspirational, all tests within the group are taken to be aspirational as well.
+                   At this point, there is no particular processing for aspirational tests and groups, but we hope to implement it at some point in the future.
  - forms :: Zero or more test forms, given by =def-check=.
  - setup :: These forms are run once, before any of the individual tests, but after the fixture names are bound.
  - cleanup :: These forms are run once, after all of the individual tests, but while the fixture names are still bound.
@@ -230,11 +231,10 @@ Arguments:
                           fixtures-cleanup fixtures-cleanup-supp-p
                           each-setup each-setup-supp-p
                           each-cleanup each-cleanup-supp-p
-                          docstring
-                          aspirational aspirational-supp-p
+                          docstring aspirational aspirational-supp-p
                           include-groups)
         (separate-group-subforms forms)
-      (declare (ignore aspirational aspirational-supp-p docstring
+      (declare (ignore aspirational-supp-p docstring
                        fixtures-setup fixtures-setup-supp-p
                        fixtures-cleanup fixtures-cleanup-supp-p))
 
@@ -255,7 +255,8 @@ Arguments:
                                  ,@(when each-cleanup-supp-p
                                      `(:eachtest-cleanup-thunk
                                        #'(lambda () ,@each-cleanup)))
-                                 :include-groups ',include-groups)))
+                                 :include-groups ',include-groups
+                                 :aspirational ',aspirational)))
            (declare (special *group-name* *group-record*))
            (setf (group-record ',group-name) *group-record*)
            ,@check-forms))))

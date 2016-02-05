@@ -61,7 +61,7 @@ first element is that symbol and whose remaining elements are options."
 - =group= :: The group-record structure (not the symbolic name) of the group
              containing this test."
   name group fixtures criterion forms special-fixture-names
-  setup cleanup startup finish results)
+  setup cleanup startup finish results aspirational aspirational-supp)
 
 ;; Provide debugging information about this test.
 (defmethod trace-test ((gr group-record) (ts test-record))
@@ -76,18 +76,29 @@ first element is that symbol and whose remaining elements are options."
       (pprint-newline :fill)))
   (format t "~%"))
 
+(defun test-is-aspirational (test-record)
+  "Check both the test and group record to see if a test should be considered
+aspirational."
+  (cond
+    ((test-record-aspirational-supp test-record)
+     (test-record-aspirational test-record))
+    (t (group-record-aspirational
+        (group-record (test-record-group test-record)
+                      (test-record-name test-record))))))
+
 ;;; -----------------------------------------------------------------
 
 (defmacro def-test (name-or-name-and-args criterion &rest forms)
   "Individual unit tests are encoded with the =def-test= form:
 #+begin_example
-\(def-test NAME &key (group GROUP-NAME)
-                    \(setup FORM)
-                    \(cleanup FORM)
-                    \(startup FORM)
-                    \(finish FORM)
-                    \(fixtures ((:seq FIXTURE)))
-                    \(documentation STRING))
+\(def-test NAME ( [ :group GROUP-NAME ]
+                  [ :setup FORM ]
+                  [ :cleanup FORM ]
+                  [ :startup FORM ]
+                  [ :finish FORM ]
+                  [ :fixtures (FIXTURE FIXTURE ... FIXTURE) ]
+                  [ :aspirational FLAG ]
+                  [ :documentation STRING ] )
   criterion &body (:seq FORM))
 
 \(def-test NAME criterion &body (:seq FORM))
@@ -113,6 +124,12 @@ against names, and since the same name can be used for several tests
 \(so long as they are all in different packages), documentation strings
 on tests may not be particularly useful.
 
+An =aspirational= test is one which verifies some part of an API or code
+contract which may not yet be implemented.  When a group is marked
+aspirational, all tests within the group are taken to be aspirational as well.
+At this point, there is no particular processing for aspirational tests and
+groups, but we hope to implement it at some point in the future.
+
 The =def-check= form is a deprecated synonym for =def-test=."
 
   ;; (declare (special *group-object-variable*))
@@ -131,8 +148,7 @@ The =def-check= form is a deprecated synonym for =def-test=."
                           aspirational aspirational-supp-p
                           docstring docstring-supp-p)
         (decode-defcheck-name-and-args name-or-name-and-args)
-      (declare (ignore fixtures-supp-p docstring-supp-p docstring
-                       aspirational aspirational-supp-p))
+      (declare (ignore fixtures-supp-p docstring-supp-p docstring))
 
       `(progn
          ,@(when group-supp-p
@@ -194,7 +210,9 @@ The =def-check= form is a deprecated synonym for =def-test=."
                                        `(:startup #'(lambda () ,startup)))
                                    ,@(when finish-supp-p
                                        `(:finish #'(lambda () ,finish)))
-                                   :results results-name)))))))
+                                   :results results-name
+                                   :aspirational-supp ',aspirational-supp-p
+                                   :aspirational ',aspirational)))))))
 
 ;;;        ;; Expand the fixtures into the definitions we'll actually
 ;;;        ;; use.

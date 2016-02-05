@@ -687,8 +687,6 @@ six-value summary of the results:
                     (result-stats-warning report))))))
       result)))
 
-;; TODO Track down the places this function is called.  Can we only
-;; ever pass the group-record?
 (defun group-report (group)
   "Top-level function for reporting the results of a group."
   (when (symbolp group) (setf group (group-record group)))
