@@ -60,6 +60,76 @@
 
 ;;; ------------------------------------------------------------------
 
+(defun decode-caching-decls (fixture-name binding-specs all-cache)
+  "Process a list of binding specifications to extract both the bindings, and
+the local variables needed for caching."
+
+    ;; Process each binding in turn.
+  (loop for spec in binding-specs
+
+        ;; In a standard Common Lisp binding, the first item is the
+        ;; local name (or the whole thing is just the local name).  In
+        ;; an NST fixture, the first item in the binding spec could be
+        ;; a list of options.  So we first separate the list of
+        ;; options from the list making up a standard Common Lisp
+        ;; binding.
+        for (options pre-binding)
+          = (cond
+              ((symbolp spec) (list nil (list spec)))
+              ;; Some kind of error
+              ((not (listp spec)) (list nil nil))
+              ((symbolp (car spec)) (list nil spec))
+              (t (list (car spec) (cdr spec))))
+        for given-param = (car pre-binding)
+        for param = (cond
+                      (given-param given-param)
+                      (t (gensym)))
+        for binding
+          = (list param
+                  `(with-nst-control-handlers
+                       ((e flag :cerror-label
+                           ,(format nil "~@<Quit applying fixture ~s~:>"
+                              fixture-name)
+                           :with-retry
+                           ,(format nil "Calculate ~s for fixture ~s again."
+                              param fixture-name)
+                           :handler-return-to ,fixture-name
+                           :group group-record :tests test-records
+                           :fail-test-msg "Error in fixture application"
+                           :log-location ("in fixture")))
+                     ,(cadr pre-binding)))
+
+        ;; If the options specify that we need to cache this binding,
+        ;; then create some additional local variables for it, and
+        ;; wrap the binding's form to do the caching.
+        for cache-name = (gensym)
+        for cache-full-name = (gensym)
+        if (destructuring-bind (&key (cache nil cache-supp-p)) options
+             (if cache-supp-p cache all-cache))
+          append (list cache-name cache-full-name) into cache-names
+          and do
+            (setf (cadr binding)
+              `(cond
+                 (,cache-full-name ,cache-name)
+                 (t (setf ,cache-name ,(cadr binding)
+                          ,cache-full-name t)
+                    ,cache-name)))
+        end
+
+        ;; Collect the binding in the list of all bindings.
+        if given-param
+          collect given-param into special-names
+        else
+          collect param into ignore-names
+        end
+
+        collect binding into bindings
+
+        ;; We're finished and can return the list of bindings, and the
+        ;; list of cache helper variables to which the bindings refer.
+        finally (return-from decode-caching-decls
+                  (values cache-names bindings special-names ignore-names))))
+
 (defun decode-fixture-syntax (fixture-name binding-specs
                               decls outer-decls
                               setup cleanup startup finish cache
@@ -83,7 +153,7 @@ the list of names defined by the fixture."
 
   ;; First go through the list of the given bindings specifications to
   ;; find any with by-binding options declared.
-  (multiple-value-bind (cache-names bindings ignore-names)
+  (multiple-value-bind (cache-names bindings special-names ignore-names)
       (decode-caching-decls fixture-name binding-specs cache)
 
     ;; Pull the list of names from the bindings.
@@ -99,7 +169,9 @@ the list of names defined by the fixture."
                          ;; abstract them here.
                          (names
                           `((let ,bindings
-                              (declare (special ,@names) ,@decls
+                              (declare ,@(when special-names
+                                           `((special ,@special-names)))
+                                       ,@decls
                                        ,@(when ignore-names
                                            `((ignore ,@ignore-names))))
                               ,@(when setup `(,setup))
@@ -134,74 +206,6 @@ the list of names defined by the fixture."
       (values `(lambda (fs group-record test-records thunk)
                  ,@fixtures-function-body-forms)
               names bindings cache-names))))
-
-(defun decode-caching-decls (fixture-name binding-specs all-cache)
-  "Process a list of binding specifications to extract both the bindings, and
-the local variables needed for caching."
-  (let ((ignore-names nil))
-
-    ;; Process each binding in turn.
-    (loop for spec in binding-specs
-
-          ;; In a standard Common Lisp binding, the first item is the
-          ;; local name (or the whole thing is just the local name).
-          ;; In an NST fixture, the first item in the binding spec
-          ;; could be a list of options.  So we first separate the
-          ;; list of options from the list making up a standard Common
-          ;; Lisp binding.
-          for (options pre-binding)
-            = (cond
-                ((symbolp spec) (list nil (list spec)))
-                ;; Some kind of error
-                ((not (listp spec)) (list nil nil))
-                ((symbolp (car spec)) (list nil spec))
-                (t (list (car spec) (cdr spec))))
-          for binding
-            = (let ((param (car pre-binding)))
-                ;; Fixture-bound names are allowed to be nil, to
-                ;; simply give a side-effect.
-                (unless param
-                  (setf param (gensym))
-                  (push param ignore-names))
-                (list param
-                      `(with-nst-control-handlers
-                           ((e flag :cerror-label
-                               ,(format nil "~@<Quit applying fixture ~s~:>"
-                                  fixture-name)
-                               :with-retry
-                               ,(format nil "Calculate ~s for fixture ~s again."
-                                  param fixture-name)
-                               :handler-return-to ,fixture-name
-                               :group group-record :tests test-records
-                               :fail-test-msg "Error in fixture application"
-                               :log-location ("in fixture")))
-                         ,(cadr pre-binding))))
-
-          ;; If the options specify that we need to cache this binding,
-          ;; then create some additional local variables for it, and
-          ;; wrap the binding's form to do the caching.
-          for cache-name = (gensym)
-          for cache-full-name = (gensym)
-          if (destructuring-bind (&key (cache nil cache-supp-p)) options
-               (if cache-supp-p cache all-cache))
-            append (list cache-name cache-full-name) into cache-names
-            and do
-              (setf (cadr binding)
-                    `(cond
-                       (,cache-full-name ,cache-name)
-                       (t (setf ,cache-name ,(cadr binding)
-                                ,cache-full-name t)
-                          ,cache-name)))
-          end
-
-          ;; Collect the binding in the list of all bindings.
-          collect binding into bindings
-
-          ;; We're finished and can return the list of bindings, and
-          ;; the list of cache helper variables to which the bindings
-          ;; refer.
-          finally (return-from decode-caching-decls
-                    (values cache-names bindings ignore-names)))))
 
 ;;; ------------------------------------------------------------------
 ;;; The big macro
