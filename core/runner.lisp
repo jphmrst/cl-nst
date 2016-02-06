@@ -547,7 +547,17 @@ configuration provided by those wrappers."
   (cond
    ((null fixture-names-special) form)
    ((equal fixture-names-special '(special)) form)
+   ((and (listp fixture-names-special)
+         (not (eq 'special (car fixture-names-special))))
+    `(locally (declare (special ,@fixture-names-special)) ,form))
    (t `(locally (declare ,fixture-names-special) ,form))))
+
+(defun get-test-record-specials (test-record)
+  (apply #'append
+         (mapcar #'fixture-bindings
+                 (append (group-record-given-fixtures
+                          (test-record-group test-record))
+                         (test-record-fixtures test-record)))))
 
 (defun core-run-test (test)
   "Capture the result of the test."
@@ -568,7 +578,7 @@ configuration provided by those wrappers."
 
                     (let ((forms (test-record-forms test))
                           (fixture-names-special
-                           (test-record-special-fixture-names test))
+                           (get-test-record-specials test))
                           (criterion (test-record-criterion test)))
                       (with-retry ((format nil "Try running test ~s again"
                                      *nst-check-user-name*))
