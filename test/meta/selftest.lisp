@@ -3,6 +3,7 @@
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
 ;;; Copyright (c) 2006-2011 Smart Information Flow Technologies.
+;;; Copyright (c) 2015-2016 John Maraist
 ;;; Written by John Maraist.
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
@@ -103,8 +104,8 @@
                            'nst-meta-sources::fixtures-cache-none)))
     (--nst-group (nst-meta-sources::group-fixtures-cache-none
                   nst-meta-sources::group-fixtures-cache-none)
-      (---form-true (eql nst-meta-sources::*nst-fc1* 2))
-      (---form-true (eql nst-meta-sources::*nst-fc2* 2))))
+                 (---form-true (eql nst-meta-sources::*nst-fc1* 2))
+                 (---form-true (eql nst-meta-sources::*nst-fc2* 2))))
 
 (def-test (cfix1 :group caching-fixtures-1
                  :setup (progn

@@ -3,6 +3,7 @@
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
 ;;; Copyright (c) 2006-2011 Smart Information Flow Technologies.
+;;; Copyright (c) 2015-2016 John Maraist
 ;;; Written by John Maraist.
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
@@ -24,10 +25,9 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :common-lisp-user)
 
-(defpackage :sift.nst
+(defpackage :nst
   (:documentation "Unit and regression testing for Common Lisp")
-  (:nicknames :nst)
-  (:use :common-lisp :defdoc)
+  (:use :common-lisp)
   #+allegro (:import-from excl #:named-function)
 
   (:export #:def-fixtures #:def-test-group #:def-test
@@ -77,53 +77,6 @@
            #:def-test-generic
            #:def-test-method
            #:def-test-method-criterion))
-
-(defdoc:def-documentation (package :sift.nst)
-    (:blurb "NST unit testing package")
-  (:descriptive "NST"))
-
-(defdoc:def-doc-tag nst::primary (:package :nst)
-  :sort 0
-  :formatter (lambda (sy pk tg sr)
-               (declare (ignore sy pk tg))
-               (format sr "Primary macros")))
-(defdoc:def-doc-tag nst::criteria (:package :nst)
-  :sort 3
-  :formatter (lambda (sy pk tg sr)
-               (declare (ignore sy pk tg))
-               (format sr "Functions used in criteria definitions")))
-(defdoc:def-doc-tag nst::control (:package :nst)
-  :sort 5
-  :formatter (lambda (sy pk tg sr)
-               (declare (ignore sy pk tg))
-               (format sr "Programmatic control of testing and output")))
-(defdoc:def-doc-tag nst::sample (:package :nst)
-  :sort 8
-  :formatter (lambda (sy pk tg sr)
-               (declare (ignore sy pk tg))
-               (format sr "Testing randomized samples")))
-(defdoc:def-doc-tag nst::object (:package :nst)
-  :sort 11
-  :formatter (lambda (sy pk tg sr)
-               (declare (ignore sy pk tg))
-               (format sr "Method-based tests on objects")))
-(defdoc:def-doc-tag &rest (:package :nst)
-  :sort 15
-  :formatter (lambda (sy pk tg sr)
-               (declare (ignore sy pk tg))
-               (format sr "Other symbols")))
-(defdoc:def-doc-tag nst::deprecated (:package :nst)
-  :sort 20
-  :formatter (lambda (sy pk tg sr)
-               (declare (ignore sy pk tg))
-               (format sr "Deprecated macros, functions and variable")))
-
-(defun nst::make-package-documentation ()
-  "Write documentation for this package, using system package-doc."
-  (asdf:oos 'asdf:load-op 'package-doc)
-  (funcall (symbol-function (intern (symbol-name 'package-doc)
-                                    (find-package :package-doc)))
-           (find-package :nst)))
 
 ;;; -----------------------------------------------------------------
 ;;; Internal packages.

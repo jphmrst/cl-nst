@@ -3,6 +3,7 @@
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
 ;;; Copyright (c) 2006-2010 Smart Information Flow Technologies.
+;;; Copyright (c) 2015-2016 John Maraist
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
 ;;; NST is free software: you can redistribute it and/or modify it
@@ -45,7 +46,7 @@
 (def-fixtures f2 (:uses (f1))
   (d 4) (e 'asdfg) (f c))
 
-(def-fixtures f2a (:special (:fixture f1))
+(def-fixtures f2a (:special ((:fixture f1)))
   (d 4) (e 'asdfg) (f c))
 
 (def-fixtures fxy ()

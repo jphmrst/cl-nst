@@ -3,6 +3,7 @@
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
 ;;; Copyright (c) 2006-2014 Smart Information Flow Technologies.
+;;; Copyright (c) 2015-2016 John Maraist
 ;;; Written by John Maraist.
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
@@ -26,8 +27,7 @@
 (defpackage :nst-meta
     (:documentation "Package for reflective NST test suites")
     (:nicknames :mnst)
-    (:use :common-lisp :nst :nst-control-api :nst-test-utils)
-    (:import-from :nst #:ensure-group-instance #:ensure-test-instance))
+    (:use :common-lisp :nst :nst-control-api :nst-test-utils))
 
 (defpackage :nst-meta-sources
     (:documentation

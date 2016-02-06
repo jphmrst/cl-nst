@@ -3,6 +3,7 @@
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
 ;;; Copyright (c) 2006-2011 Smart Information Flow Technologies.
+;;; Copyright (c) 2015-2016 John Maraist
 ;;; Written by John Maraist.
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
@@ -22,19 +23,19 @@
 ;;; along with NST.  If not, see respectively
 ;;; <http://opensource.franz.com/preamble.html> and
 ;;; <http://www.gnu.org/licenses/>.
-(in-package :sift.nst)
+(in-package :nst)
 
+;;;;;;
+;;;;;; Generic functions whose methods are defined by the various macros.
+;;;;;;
+;;;(defmacro add-class-name-static-method (fn)
+;;;  `(progn
+;;;     (defmethod ,fn ((g symbol)) (,fn (make-instance g)))
+;;;     ;; (defmethod ,fn ((g standard-class)) (,fn (make-instance g)))
+;;;     ))
 ;;;
-;;; Generic functions whose methods are defined by the various macros.
-;;;
-(defmacro add-class-name-static-method (fn)
-  `(progn
-     (defmethod ,fn ((g symbol)) (,fn (make-instance g)))
-     ;; (defmethod ,fn ((g standard-class)) (,fn (make-instance g)))
-     ))
-
-(defmacro add-class-name-instantiator-method (fn)
-  `(defmethod ,fn ((g symbol)) (,fn (make-instance g))))
+;;;(defmacro add-class-name-instantiator-method (fn)
+;;;  `(defmethod ,fn ((g symbol)) (,fn (make-instance g))))
 
 
 ;;;
@@ -82,3 +83,26 @@
 (defmacro named-function (name lambda-expression)
   (declare (ignore name))
   `(function ,lambda-expression))
+
+(defun no-effect () nil)
+
+(defmacro def-hashtable-fns (fn (&key (test 'eq)
+                                      (global
+                                       (intern (concatenate 'string
+                                                 "*" (symbol-name fn) "*"))))
+                                   &optional docstring)
+  `(progn
+
+     (defvar ,global (make-hash-table :test ',test)
+       ,@(list (apply #'concatenate 'string "Map implementing " (symbol-name fn)
+                      (when docstring (list ": " docstring)))))
+
+     (defun ,fn (name)
+       ,@(when docstring
+           (list (concatenate 'string "Reader function: " docstring)))
+       (gethash name ,global))
+
+     (defun (setf ,fn) (value name)
+       ,@(when docstring
+           (list (concatenate 'string "Writer function: " docstring)))
+       (setf (gethash name ,global) value))))

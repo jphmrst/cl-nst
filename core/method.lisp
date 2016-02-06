@@ -3,6 +3,7 @@
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
 ;;; Copyright (c) 2010, 2011 Smart Information Flow Technologies.
+;;; Copyright (c) 2015-2016 John Maraist
 ;;;
 ;;; NST is free software: you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lisp Lesser General Public License,
@@ -20,7 +21,7 @@
 ;;; along with NST.  If not, see respectively
 ;;; <http://opensource.franz.com/preamble.html> and
 ;;; <http://www.gnu.org/licenses/>.
-(in-package :sift.nst)
+(in-package :nst)
 
 (defun check-result-union (&rest reports)
   (let ((result (cond
@@ -44,19 +45,19 @@
     result))
 
 (define-method-combination nst-results :operator check-result-union)
-(def-documentation (method-combination nst-results)
-  (:tags object)
-  (:properties (api-summary object))
-  (:intro (:latex "NST defines a method combination \\texttt{nst-results} as the default method combination for functions defined by \\texttt{def-test-generic}.  This combination runs \\emph{all} applicable methods, and combines all of their results into a single NST result record."))
-  (:details (:latex "This default can be overridden by specifying \\texttt{t} as the method combination in the intial declaration.")
-         (:code "(nst:def-test-generic overridden
-    (:method-combination t))
-(nst:def-test-method-criterion overridden mid-cls
-  (:slots (mc1 (:eql 0))
-          (mc2 (:eql 2))))
-(nst:def-test-method-criterion overridden bot-cls
-  (:slots (sc1 (:eql 1))
-          (sc2 (:eql 1))))")))
+;;;(def-documentation (method-combination nst-results)
+;;;  (:tags object)
+;;;  (:properties (api-summary object))
+;;;  (:intro (:latex "NST defines a method combination \\texttt{nst-results} as the default method combination for functions defined by \\texttt{def-test-generic}.  This combination runs \\emph{all} applicable methods, and combines all of their results into a single NST result record."))
+;;;  (:details (:latex "This default can be overridden by specifying \\texttt{t} as the method combination in the intial declaration.")
+;;;         (:code "(nst:def-test-generic overridden
+;;;    (:method-combination t))
+;;;(nst:def-test-method-criterion overridden mid-cls
+;;;  (:slots (mc1 (:eql 0))
+;;;          (mc2 (:eql 2))))
+;;;(nst:def-test-method-criterion overridden bot-cls
+;;;  (:slots (sc1 (:eql 1))
+;;;          (sc2 (:eql 1))))")))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defvar *test-methods* (make-hash-table :test 'eq)
@@ -77,13 +78,13 @@
          (eval-when (:compile-toplevel :load-toplevel :execute)
            (setf (gethash ',function-name *test-methods*) ',use-combination))
          ',function-name))))
-(def-documentation (macro def-test-generic)
-  (:tags object)
-  (:properties (api-summary object))
-    (:intro (:latex "The \\texttt{def-test-generic} declares a generic test function."))
-    (:callspec (function-name))
-    (:details (:latex "For example,")
-           (:code "(nst:def-test-generic for-clses)")))
+;;;(def-documentation (macro def-test-generic)
+;;;  (:tags object)
+;;;  (:properties (api-summary object))
+;;;    (:intro (:latex "The \\texttt{def-test-generic} declares a generic test function."))
+;;;    (:callspec (function-name))
+;;;    (:details (:latex "For example,")
+;;;           (:code "(nst:def-test-generic for-clses)")))
 
 (defun decode-def-test-generic-body (forms)
   (let ((documentation)
@@ -168,26 +169,26 @@
                  (check-result-info result))
            result))
        ',function-name)))
-(def-documentation (macro def-test-method)
-  (:tags object)
-  (:properties (api-summary object))
-    (:intro (:latex "The \\texttt{def-test-method} defines a general method for a generic test function."))
-    (:callspec (function-name (test-value class-name) &body (:seq form)))
-    (:params (function-name (:latex "The name of the test function for which we are defining a method."))
-             (test-value (:latex "Formal parameter to which the value under test will be bound."))
-             (class-name (:latex "The class for which we are defining a method.")))
-    (:details (:latex "The method body should return a test result report, constructed with \\texttt{make-success-result}, etc.")
-           (:latex "For example:")
-           (:code "(nst:def-test-method for-clses (o mid-cls)
-  (with-slots (mc1 mc2) o
-    (cond
-      ((< mc1 mc2) (make-success-report))
-      (t (make-failure-report :format \"~d not < ~d\" :args (list mc1 mc2))))))
-(nst:def-test-method for-clses (o side-cls)
-  (with-slots (sc1 sc2) o
-    (cond
-      ((eql sc1 sc2) (make-success-report))
-      (t (make-failure-report :format \"~d not eql ~d\" :args (list sc1 sc2))))))")))
+;;;(def-documentation (macro def-test-method)
+;;;  (:tags object)
+;;;  (:properties (api-summary object))
+;;;    (:intro (:latex "The \\texttt{def-test-method} defines a general method for a generic test function."))
+;;;    (:callspec (function-name (test-value class-name) &body (:seq form)))
+;;;    (:params (function-name (:latex "The name of the test function for which we are defining a method."))
+;;;             (test-value (:latex "Formal parameter to which the value under test will be bound."))
+;;;             (class-name (:latex "The class for which we are defining a method.")))
+;;;    (:details (:latex "The method body should return a test result report, constructed with \\texttt{make-success-result}, etc.")
+;;;           (:latex "For example:")
+;;;           (:code "(nst:def-test-method for-clses (o mid-cls)
+;;;  (with-slots (mc1 mc2) o
+;;;    (cond
+;;;      ((< mc1 mc2) (make-success-report))
+;;;      (t (make-failure-report :format \"~d not < ~d\" :args (list mc1 mc2))))))
+;;;(nst:def-test-method for-clses (o side-cls)
+;;;  (with-slots (sc1 sc2) o
+;;;    (cond
+;;;      ((eql sc1 sc2) (make-success-report))
+;;;      (t (make-failure-report :format \"~d not eql ~d\" :args (list sc1 sc2))))))")))
 
 (defmacro def-test-method-criterion (function-name class documentation
                                                    &optional
@@ -199,17 +200,17 @@
     `(def-test-method ,function-name (,arg ,class)
        ,@(when documentation `(,documentation))
        (check-criterion-on-form ',criterion `(list ,,arg)))))
-(def-documentation (macro def-test-method-criterion)
-  (:tags object)
-  (:properties (api-summary object))
-    (:intro (:latex "The \\texttt{def-test-method-criterion} macro provides a simple facility for defining a generic test function method in terms of an NST criterion."))
-    (:callspec (function-name class-name &body criterion))
-    (:params (function-name (:latex "The name of the test function for which we are defining a method."))
-             (class-name (:latex "The class for which we are defining a method."))
-             (criterion (:latex "The criterion to be applied to members of the class.")))
-    (:details (:latex "For example:")
-           (:code "(nst:def-test-method-criterion for-clses top-cls
-      (:predicate (lambda (tc) (< (tc1 tc) (tc2 tc)))))")))
+;;;(def-documentation (macro def-test-method-criterion)
+;;;  (:tags object)
+;;;  (:properties (api-summary object))
+;;;    (:intro (:latex "The \\texttt{def-test-method-criterion} macro provides a simple facility for defining a generic test function method in terms of an NST criterion."))
+;;;    (:callspec (function-name class-name &body criterion))
+;;;    (:params (function-name (:latex "The name of the test function for which we are defining a method."))
+;;;             (class-name (:latex "The class for which we are defining a method."))
+;;;             (criterion (:latex "The criterion to be applied to members of the class.")))
+;;;    (:details (:latex "For example:")
+;;;           (:code "(nst:def-test-method-criterion for-clses top-cls
+;;;      (:predicate (lambda (tc) (< (tc1 tc) (tc2 tc)))))")))
 
 (defun collect-test-generics (obj)
   (loop for method-name being the hash-keys of *test-methods*
@@ -227,35 +228,35 @@
 
 (def-criterion (:methods () (object))
   (invoke-test-methods object))
-(defdoc:def-documentation (criterion :methods)
-  (:intro (:latex "The \\texttt{:methods} criterion runs the test functions applicable to the value under test."))
-  (:details (:seq
-          (:plain " For example:")
-          (:code "(def-test-group method-tests ()
-  (def-test t-p :methods (make-instance 'top-cls :tc1 0 :tc2 2))
-  (def-test m-p :methods (make-instance 'mid-cls :tc1 0 :tc2 2 :mc1 0 :mc2 2))
-  (def-test s-p :methods (make-instance 'side-cls :sc1 1 :sc2 1))
-  (def-test b-p :methods (make-instance 'bot-cls
-                           :tc1 0 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 1))
-  (def-test t-f :methods (make-instance 'top-cls :tc1 4 :tc2 2))
-  (def-test m-f-t  :methods (make-instance 'mid-cls
-                              :tc1 4 :tc2 2 :mc1 0 :mc2 2))
-  (def-test m-f-m  :methods (make-instance 'mid-cls
-                              :tc1 0 :tc2 2 :mc1 4 :mc2 2))
-  (def-test m-f-mt :methods (make-instance 'mid-cls
-                              :tc1 4 :tc2 2 :mc1 4 :mc2 2))
-  (def-test s-f :methods (make-instance 'side-cls :sc1 1 :sc2 3))
-  (def-test b-f-t :methods (make-instance 'bot-cls
-                             :tc1 4 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 1))
-  (def-test b-f-m :methods (make-instance 'bot-cls
-                             :tc1 0 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 1))
-  (def-test b-f-s :methods (make-instance 'bot-cls
-                             :tc1 0 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 3))
-  (def-test b-f-mt :methods (make-instance 'bot-cls
-                              :tc1 4 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 1))
-  (def-test b-f-ms :methods (make-instance 'bot-cls
-                              :tc1 0 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 3))
-  (def-test b-f-ts :methods (make-instance 'bot-cls
-                              :tc1 4 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 3))
-  (def-test b-f-mts :methods (make-instance 'bot-cls
-                               :tc1 4 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 3)))"))))
+;;;(defdoc:def-documentation (criterion :methods)
+;;;  (:intro (:latex "The \\texttt{:methods} criterion runs the test functions applicable to the value under test."))
+;;;  (:details (:seq
+;;;          (:plain " For example:")
+;;;          (:code "(def-test-group method-tests ()
+;;;  (def-test t-p :methods (make-instance 'top-cls :tc1 0 :tc2 2))
+;;;  (def-test m-p :methods (make-instance 'mid-cls :tc1 0 :tc2 2 :mc1 0 :mc2 2))
+;;;  (def-test s-p :methods (make-instance 'side-cls :sc1 1 :sc2 1))
+;;;  (def-test b-p :methods (make-instance 'bot-cls
+;;;                           :tc1 0 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 1))
+;;;  (def-test t-f :methods (make-instance 'top-cls :tc1 4 :tc2 2))
+;;;  (def-test m-f-t  :methods (make-instance 'mid-cls
+;;;                              :tc1 4 :tc2 2 :mc1 0 :mc2 2))
+;;;  (def-test m-f-m  :methods (make-instance 'mid-cls
+;;;                              :tc1 0 :tc2 2 :mc1 4 :mc2 2))
+;;;  (def-test m-f-mt :methods (make-instance 'mid-cls
+;;;                              :tc1 4 :tc2 2 :mc1 4 :mc2 2))
+;;;  (def-test s-f :methods (make-instance 'side-cls :sc1 1 :sc2 3))
+;;;  (def-test b-f-t :methods (make-instance 'bot-cls
+;;;                             :tc1 4 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 1))
+;;;  (def-test b-f-m :methods (make-instance 'bot-cls
+;;;                             :tc1 0 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 1))
+;;;  (def-test b-f-s :methods (make-instance 'bot-cls
+;;;                             :tc1 0 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 3))
+;;;  (def-test b-f-mt :methods (make-instance 'bot-cls
+;;;                              :tc1 4 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 1))
+;;;  (def-test b-f-ms :methods (make-instance 'bot-cls
+;;;                              :tc1 0 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 3))
+;;;  (def-test b-f-ts :methods (make-instance 'bot-cls
+;;;                              :tc1 4 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 3))
+;;;  (def-test b-f-mts :methods (make-instance 'bot-cls
+;;;                               :tc1 4 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 3)))"))))

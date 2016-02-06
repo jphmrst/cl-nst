@@ -3,6 +3,7 @@
 ;;; This file is part of the NST unit/regression testing system.
 ;;;
 ;;; Copyright (c) 2006-2011 Smart Information Flow Technologies.
+;;; Copyright (c) 2015-2016 John Maraist
 ;;; Derived from RRT, Copyright (c) 2005 Robert Goldman.
 ;;;
 ;;; NST is free software: you can redistribute it and/or modify it
@@ -21,7 +22,7 @@
 ;;; along with NST.  If not, see respectively
 ;;; <http://opensource.franz.com/preamble.html> and
 ;;; <http://www.gnu.org/licenses/>.
-(in-package :sift.nst)
+(in-package :nst)
 
 (defclass permuter-frame ()
      ((next-firsts :initarg :next :type (or null cons))
