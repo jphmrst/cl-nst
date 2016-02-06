@@ -28,12 +28,12 @@
 (defpackage :nst-asd (:use :common-lisp :asdf))
 (in-package :nst-asd)
 
-(let ((*root-dir* (make-pathname
-                   :directory (pathname-directory *load-truename*))))
-  (declare (special *root-dir*))
-  (unless (find-system :defcontract nil)
-    (push (merge-pathnames "ext/defcontract/" *root-dir*)
-          *central-registry*)))
+;;;(let ((*root-dir* (make-pathname
+;;;                   :directory (pathname-directory *load-truename*))))
+;;;  (declare (special *root-dir*))
+;;;  (unless (find-system :defcontract nil)
+;;;    (push (merge-pathnames "ext/defcontract/" *root-dir*)
+;;;          *central-registry*)))
 
 (defsystem :nst
     :description "The NST unit/regression testing system"
@@ -50,7 +50,7 @@
                                         ; number) should be
                                         ; incremented immediately
                                         ; after a version is shipped.
-    :version "5.0.0"
+    :version "4.1.0"
     :author "John Maraist <lisper@maraist.org>"
     :license "LLGPL 3.latest"
     :in-order-to ((test-op (test-op :nst-test))
