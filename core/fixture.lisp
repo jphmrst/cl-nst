@@ -126,8 +126,7 @@ the list of names defined by the fixture."
 
       (when special-variables
         (setf fixtures-function-body-forms
-              `((locally (declare ,@(when special-variables
-                                      `((special ,@special-variables))))
+              `((locally (declare (special ,@special-variables))
                   ,@fixtures-function-body-forms))))
 
       ;; Finally put together the fixture function, and also return
