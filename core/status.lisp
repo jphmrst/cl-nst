@@ -737,14 +737,14 @@ six-value summary of the results:
          (test-reports
           (loop for item in tests
               append (cond
-                      ((consp item) (destructuring-bind (g . ts) item
-                                      (list (test-report g ts))))
+                       ((consp item) (destructuring-bind (g . ts) item
+                                       (list (test-report g ts))))
 
-                      ((test-record-p item)
-                       (list (test-report (group-record-name item)
-                                          (test-record-name item))))
+                       ((test-record-p item)
+                        (list (test-report (group-record-name (test-record-group item))
+                                           (test-record-name item))))
 
-                      (t nil))))
+                       (t nil))))
          (result (make-multi-results :package-reports package-reports
                                      :group-reports group-reports
                                      :test-reports test-reports
@@ -893,7 +893,7 @@ six-value summary of the results:
    ((and (find-class group-or-package nil)
          )
     (group-report group-or-package))
-   (t (let ((interps (lookup-artifact group-or-package)))
+   (t (let ((interps (executable-uses group-or-package)))
          (cond
           ((null interps)
            (format t "There is no NST-testable unit with the name ~a.~%"

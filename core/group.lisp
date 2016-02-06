@@ -110,6 +110,9 @@ group name to an instance of =group-record=.")
 (defun (setf group-record) (group-record name)
   (setf (gethash name *group-records*) group-record))
 
+(defmethod base-name ((group-record group-record))
+  (group-record-name group-record))
+
 (defun test-record (group test)
   (let ((group-record (gethash group *group-records*)))
     (cond
@@ -258,6 +261,8 @@ Arguments:
                                  :documentation ,docstring)))
            (declare (special *group-name* *group-record*))
            (setf (group-record ',group-name) *group-record*)
+           (record-name-use *group-record*)
+                                        ; Record name usage.
            ,@check-forms))))
 
 ;;;      ;; Get the package where the public group name symbol lives.

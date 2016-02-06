@@ -43,7 +43,7 @@ function --- certain behaviors provided by e.g. the ASDF extension or
 REPL macros require the dynamic configuration provided by those wrappers."
   (let* ((user-package (find-package package-or-name))
          (group-names (package-groups user-package)))
-    (note-name-use-invocation (package-name user-package) :package)
+    (note-name-invocation user-package)
     ;; (note-artifact-choice (package-name user-package) user-package)
 
     ;; Print a message at the appropriate level of verbosity.
@@ -90,7 +90,7 @@ or REPL macros require the dynamic configuration provided by those wrappers."
   (let ((test-lookups (group-record-tests group-record)))
     (unless *implicit-group-choice*
       ;; (note-artifact-choice (group-record-name group-record) group-record)
-      (note-name-use-invocation (group-record-name group-record) :group))
+      (note-name-invocation group-record))
     (run-group-tests group-record
                      (loop for test-record being the hash-values of test-lookups
                            collect test-record)))
@@ -102,10 +102,9 @@ or REPL macros require the dynamic configuration provided by those wrappers."
 
 (defun run-test-inst (test-record)
   (format-at-verbosity 4 "Called (run-test-inst ~s)~%" test-record)
-  (let* ((group-record (test-record-group test-record))
-         (group-name (group-record-name group-record)))
+  (let* ((group-record (test-record-group test-record)))
     ;; (note-artifact-choice (test-name-lookup test-inst) test-inst)
-    (note-name-use-invocation (test-record-name test-record) :test group-name)
+    (note-name-invocation test-record)
     (run-group-tests group-record (list test-record))))
 
 (defun run-test (group-name test-name)
@@ -124,8 +123,7 @@ configuration provided by those wrappers."
     (unless test-record
       (error 'no-such-nst-test :group group-name :test test-name))
 
-    ;; (note-artifact-choice test-name test-record)
-    (note-name-use-invocation test-name :test group-name)
+    (note-name-invocation test-record)
 
     ;; Print a message at the appropriate level of verbosity.
     (format-at-verbosity 0 "Running test ~s (group ~s)~%" test-name group-name)

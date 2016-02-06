@@ -213,3 +213,12 @@ current criterion.")
 ;;;(defgeneric nst-repl-property-encode (prop val)
 ;;;  (:documentation
 ;;;   "Encode an NST property's display value as an internal value."))
+
+(defgeneric base-name (record)
+  (:documentation "Return a symbol naming the record")
+  (:method (record)
+    "By default, return =nil= for a non-indexable artifact."
+    (declare (ignore record))
+    (values nil))
+  (:method ((package package))
+    (intern (package-name package) :keyword)))

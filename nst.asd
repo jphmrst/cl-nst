@@ -90,7 +90,7 @@
                            (:file "artifacts"  :depends-on ("globals"))
 
                            ;; The def-group macro.
-                           (:file "group" :depends-on ("artifacts"))
+                           (:file "group" :depends-on ("artifacts" "globals"))
 
                            ;; Definition and expansion of check
                            ;; criteria.
@@ -145,5 +145,5 @@
                            (:file "method" :depends-on ("status" "check"))
 
                            ;; Other packaged APIs.
-                           (:file "interfaces"
-                                  :depends-on ("check" #|"runner"|# "status"))))))
+                           (:file "interfaces" :depends-on
+                                  ("check" #|"runner"|# "status"))))))

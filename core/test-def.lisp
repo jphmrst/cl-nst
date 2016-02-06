@@ -62,6 +62,9 @@ first element is that symbol and whose remaining elements are options."
   name group fixtures criterion forms special-fixture-names documentation
   setup cleanup startup finish results aspirational aspirational-supp)
 
+(defmethod base-name ((test-record test-record))
+  (test-record-name test-record))
+
 ;; Provide debugging information about this test.
 (defmethod trace-test ((gr group-record) (ts test-record))
   "Return non-nil if an item is a group record."
@@ -192,8 +195,7 @@ The =def-check= form is a deprecated synonym for =def-test=."
            (unless results-name
              (setf results-name (gensym base-name-string)))
 
-           (setf (test-record the-group-name ',test-name)
-                 (make-test-record :name ',test-name
+           (let ((record (make-test-record :name ',test-name
                                    :group the-group-record
                                    :criterion ',criterion
                                    :forms ',forms
@@ -210,7 +212,16 @@ The =def-check= form is a deprecated synonym for =def-test=."
                                    :results results-name
                                    :aspirational-supp ',aspirational-supp-p
                                    :aspirational ',aspirational
-                                   :documentation ,docstring)))))))
+                                   :documentation ,docstring)))
+
+             ;; Record the name use.
+             (record-name-use record)
+
+             ;; Build and save the test record.
+             (setf (test-record the-group-name ',test-name) record))
+
+           ;; Return the test name.
+           ',test-name)))))
 
 ;;;        ;; Expand the fixtures into the definitions we'll actually
 ;;;        ;; use.

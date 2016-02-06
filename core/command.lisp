@@ -343,21 +343,19 @@ available from compile-time forward.")
 ;;;  (:blurb "Run a single test.")
 ;;;  (:intro (:latex "The \\texttt{:run-test} command executes the given test.  Both the group and test name should be package-qualified.")))
 
-;;; TODO Doesn't work.  Not feeding the artifact finder?
 (def-nst-interactive-command
     (:run :short-help "Run NST packages, groups and tests."
-          :args (&rest stuff)
-          :repeatable t)
+          :args (&rest stuff) :repeatable t)
   (apply-default-debug-options
    (let (report-packages report-groups report-tests)
      (loop for id in stuff do
-       (let ((interps (lookup-artifact id)))
+       (let ((interps (executable-uses id)))
          (cond
           ((null interps)
            (format t "There is no NST-testable unit with the name ~a.~%" id))
 
           ((> (length interps) 1)
-           (format t "~a is ambiguous; try again with one of:~%" id)
+           (format t "~a is ambiguous. Try again with one of:~%" id)
            (loop for interp in interps do
              (cond
               ((packagep interp)
@@ -366,7 +364,7 @@ available from compile-time forward.")
               ((group-record-p interp)
                (format t " - :nst :run-group ~s~%" (group-record-name interp)))
 
-              (t
+              ((test-record-p interp)
                (format t " - :nst :run-test ~s ~s~%"
                  (group-record-name (test-record-group interp))
                  (test-record-name interp))))))
@@ -379,17 +377,14 @@ available from compile-time forward.")
 
                 ((group-record-p interp)
                  (push interp report-groups)
-                 (run-group interp))
+                 (run-group-record interp))
 
-;;; TODO Put this back in
-;;;                ((test-record-p interp)
-;;;                 (push interp report-tests)
-;;;                 (run-test interp))
+                ((test-record-p interp)
+                 (push interp report-tests)
+                 (run-group-tests (test-record-group interp) (list interp)))
 
-                (t
-                 (error
-                  "Unrecognizable artifact ~s returned by lookup-artifact"
-                  interp))))))))
+                (t (error "Unrecognized ~s returned by executable-uses"
+                          interp))))))))
      (when (or report-packages report-groups report-tests)
        (report-multiple report-packages report-groups report-tests)))))
 ;;;(def-documentation (command :run)
@@ -457,37 +452,6 @@ The last form shows all interesting results."
 ;;;  (:blurb "Set or show a property value setting.")
 ;;;  (:intro (:latex "The \\texttt{:set} command assigns or displays the values of NST runtime switches.")))
 
-;;;(def-nst-interactive-command
-;;;    (:undef :short-help "Un-define an NST group or test"
-;;;            :args (group &optional (test nil test-supp-p)))
-;;;    (cond
-;;;      (test-supp-p
-;;;       (let* ((group-obj (make-instance group))
-;;;              (test-obj (make-instance (gethash test
-;;;                                                (test-name-lookup group-obj)))))
-;;;         (remove-group-testclassname (group-name group-obj)
-;;;                                     (check-group-name test-obj))
-;;;         (remhash test (test-name-lookup group-obj))))
-;;;
-;;;      (t (let ((package-hash (package-groups (symbol-package group))))
-;;;           (cond
-;;;            ((and package-hash (gethash group package-hash))
-;;;             (remhash group package-hash)
-;;;             (let ((this-name-use (get-name-use-record group)))
-;;;               (setf (name-use-group this-name-use) nil))
-;;;             ;; Undo (note-executable ',group-name ,*group-object-variable*)
-;;;             ;; TO DO
-;;;             )
-;;;            (t (format t "No such group ~s.~%" group)))))))
-;;;(def-documentation (command :undef)
-;;;  (:callspec (group) (group test))
-;;;  (:blurb "Erase the definition of an NST group or test.")
-;;;  (:intro (:latex "The \\texttt{:undef} command retracts the definition of an NST group or test."))
-;;;  (:callspec (group-name) (test-record-group test-name))
-;;;  (:details "Currently, NST does require that the symbols passed to "
-;;;            (:lisp command :undef)
-;;;            " be correctly package-qualified."))
-
 (def-nst-interactive-command
     (:unset :short-help "Clear an NST property." :args (name))
     (set-nst-property name nil))
@@ -498,12 +462,10 @@ The last form shows all interesting results."
 
 (def-nst-interactive-command
     (:whatis :short-help "Query what NST artifacts a name denotes" :args (name))
-    (let ((usage (get-name-use name)))
+    (let ((usage (name-use name t)))
       (cond
         ((null usage) (format t "The symbol ~s is not known to NST" name))
-        ((null (cdr usage)) (format t "~a~%" (car usage)))
-        (t (format t "There are ~d uses of ~s:~%" (length usage) name)
-           (loop for u in usage do (format t " - ~a~%" u))))
+        (t (format t "~a" usage)))
       nil))
 ;;;(def-documentation (command :whatis)
 ;;;  (:callspec (name))

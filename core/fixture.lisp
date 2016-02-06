@@ -31,12 +31,14 @@
   (def-hashtable-fns fixture-letlist ()
     "from fixture name to the list of local variable names bound that fixture"))
 
-(def-hashtable-fns fixture-docstring ()
-    "from fixture name to the docstring for that fixture")
-(def-hashtable-fns fixture-function ()
-    "from fixture name to the list of local variable names bound that fixture")
-(def-hashtable-fns fixture-cache-flush ()
-  "from fixture name to the list of local variable names bound that fixture")
+(defstruct fixture-record
+  "Information associated with a fixture definition"
+  name function bound-names bindings-list documentation cache-flush)
+(def-hashtable-fns fixture-record ()
+    "from fixture name to its =fixture-record=")
+
+(defmethod base-name ((fixture-record fixture-record))
+  (fixture-record-name fixture-record))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -50,7 +52,7 @@
                       group-record test-records body-thunk)
   (cond
     ((symbolp fixture)
-     (funcall (fixture-function fixture)
+     (funcall (fixture-record-function (fixture-record fixture))
               next-fixtures group-record test-records body-thunk))
     ((functionp fixture) (funcall fixture next-fixtures
                                   group-record test-records body-thunk))
@@ -361,15 +363,21 @@ documentation such as form =:whatis=, any =nil=s are omitted."
                                        (find-package :keyword))))))
 
        ;; Save the other compiled artifacts,
-       (setf (fixture-docstring ',name) ,documentation)
-       (setf (fixture-function ',name) #',fixture-function
-
-             (fixture-cache-flush ',name)
-             #'(lambda ()
-                ,@(cond
-                    (cache-names
-                     `((setf ,@(loop for n in cache-names append `(,n nil)))))
-                    (t '(nil)))))
+       (let ((record
+              (make-fixture-record :name ',name
+                                   :function #',fixture-function
+                                   :bound-names ',fixture-bindings
+                                   :bindings-list ',let-list
+                                   :documentation ,documentation
+                                   :cache-flush
+                                   #'(lambda ()
+                                       ,@(cond
+                                           (cache-names
+                                            `((setf ,@(loop for n in cache-names
+                                                          append `(,n nil)))))
+                                           (t '(nil)))))))
+         (setf (fixture-record ',name) record)
+         (record-name-use record))
 
        ;; Return the name of the fixture.
        ',name)))
@@ -389,8 +397,9 @@ This macro evaluates the forms in a namespace expanded with the bindings
 provided by the fixtures.
 "
   (loop for fixture in fixtures
+        for fixture-record = (fixture-record fixture)
         append (fixture-bindings fixture) into fixture-bindings
-        collect (fixture-function fixture) into fixture-functions
+        collect (fixture-record-function fixture-record) into fixture-functions
         finally
      (return-from with-fixtures
        (cond
@@ -412,6 +421,8 @@ provided by the fixtures.
 
 
 (defun flush-fixture-cache (name)
-  (let ((flusher (fixture-cache-flush name)))
-    (when flusher
-      (funcall flusher))))
+  (let ((fixture-record (fixture-record name)))
+    (when fixture-record
+      (let ((flusher (fixture-record-cache-flush fixture-record)))
+        (when flusher
+          (funcall flusher))))))
