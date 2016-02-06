@@ -32,16 +32,6 @@
                 #:slot-definition-name #:slot-definition-initargs)
   (:export #:def-derived-criterion))
 
-;;;(defdoc:def-documentation (package :nst-mop-utils)
-;;;    (:blurb "MOP-based utilities for NST")
-;;;  (:descriptive "NST MOP Utilities"))
-;;;
-;;;(defdoc:def-doc-tag nst::primary (:package :nst-mop)
-;;;  :sort 0
-;;;  :formatter (lambda (sy pk tg sr)
-;;;               (declare (ignore sy pk tg))
-;;;               (format sr "MOP utilities")))
-
 (defun nst-mop-utils::make-package-documentation ()
   "Write documentation for this package, using system package-doc."
   (asdf:oos 'asdf:load-op 'package-doc)

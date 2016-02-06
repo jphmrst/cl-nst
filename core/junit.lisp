@@ -28,11 +28,9 @@
 (defun nst-xml-dump (stream)
   (nst-junit-dump stream))
 
-(defgeneric nst-junit-dump (stream))
-;;;(def-documentation (function nst-junit-dump)
-;;;  (:tags control)
-;;;  (:properties (api-summary control))
-;;;    (:blurb (:latex "Function \\texttt{nst-junit-dump} pushes the entire NST state to a JUnit XML file whose stream is specified by its argument.")))
+(defgeneric nst-junit-dump (stream)
+  (:documentation "Function =nst-junit-dump= pushes the entire NST state to a
+JUnit XML file whose stream is specified by its argument."))
 
 (defmethod nst-junit-dump ((stream stream))
   (junit-header stream)
@@ -118,19 +116,22 @@
     (unless stream-supp-p (close the-stream))))
 
 (defun junit-results-by-group (&rest args &key verbose &allow-other-keys)
+  "The \\texttt{junit-results-by-group} function writes the NST test results in JUnit XML format, organized by group, aligning test groups with Java classes, and individual tests with \\texttt{@Test} methods.
+#+begin_example
+(junit-results-by-group [ :verbose FLAG ]
+                        [ :dir DIRECTORY ]
+                        [ :file FILESPEC ]
+                        [ :stream STREAM ]
+                        [ :if-dir-does-not-exist BOOL ]
+                        [ :if-file-exists BOOL ] )
+#+end_example
+Either =:dir= and =:file= options, or the =:stream= option, but not both, should
+e used to specify the target for XML output; if none of the three options are
+given, the function will write to =*standard-output*=."
   (loop for report in (multi-results-group-reports (all-groups-report)) do
     (when verbose
       (format t "Making XML for group ~s~%" (group-result-group-name report)))
     (apply #'junit-group-result report args)))
-;;;(def-documentation (function junit-results-by-group)
-;;;  (:tags control)
-;;;  (:properties (api-summary control))
-;;;    (:intro (:latex "The \\texttt{junit-results-by-group} function writes the NST test results in JUnit XML format, organized by group, aligning test groups with Java classes, and individual tests with \\texttt{@Test} methods."))
-;;;    (:callspec (&key (verbose flag) (dir directory) (file filespec)
-;;;                     (stream stream)
-;;;                     (if-dir-does-not-exist bool)
-;;;                     (if-file-exists bool)))
-;;;    (:details (:latex "Either \\texttt{:dir} and \\texttt{:file} options, or the \\texttt{:stream} option, but not both, should be used to specify the target for XML output; if none of the three options are given, the function will write to \\texttt{*standard-output*}.")))
 
 ;;; The following three definitions are
 ;;; Copyright (c) 2003, Miles Egan. All rights reserved.
@@ -165,7 +166,6 @@
 ;;; TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 ;;; THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 ;;; SUCH DAMAGE.
-
 
 (defvar *entities*
   #(("lt;" #\<)

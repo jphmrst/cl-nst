@@ -36,21 +36,23 @@
 ;;;  User-controlled options.
 ;;;
 (defvar *nst-verbosity* 0
-  "User variable determining how verbose NST's output to the REPL should be.  Internally, this variable takes an integer value: 0 and below are silent, 1 is the default, 2 and 3 are more verbose, and 4 is for full tracing.  The command-line interpreter assigns keywords to these values, from most terse to most verbose: :silent, nil, :quiet, :default, t, :verbose, :vverbose (:quiet and :default are the same, and are the initial setting).")
+  "User variable determining how verbose NST's output to the REPL should be.
+Internally, this variable takes an integer value: 0 and below are silent, 1 is
+the default, 2 and 3 are more verbose, and 4 is for full tracing.  The
+command-line interpreter assigns keywords to these values, from most terse to
+most verbose: :silent, nil, :quiet, :default, t, :verbose, :vverbose (:quiet
+and :default are the same, and are the initial setting).")
 
 (defvar *debug-on-error* nil
-  "User variable =*debug-on-error*=: if non-nil, will break into the Lisp REPL debugger upon encountering an unexpected error.  If nil, will record the error and continue with other tests.")
-;;;(def-documentation (variable *debug-on-error*)
-;;;  (:tags control)
-;;;  (:properties (api-summary control))
-;;;    (:blurb (:latex "User variable \\texttt{*debug-on-error*}: if non-nil, will break into the Lisp REPL debugger upon encountering an unexpected error.  If nil, will record the error and continue with other tests.")))
+  "User variable =*debug-on-error*=: if non-nil, will break into the Lisp REPL
+debugger upon encountering an unexpected error.  If nil, will record the error
+and continue with other tests.")
 
 (defvar *debug-on-fail* nil
-  "User variable =*debug-on-fail*=: if non-nil, will break into the Lisp REPL debugger upon encountering a test which fails.  If nil, will record the failure and continue with other tests.  This variable is useful inspecting the dynamic environment under which a test was evaluated.")
-;;;(def-documentation (variable *debug-on-fail*)
-;;;  (:tags control)
-;;;  (:properties (api-summary control))
-;;;    (:blurb (:latex "User variable \\texttt{*debug-on-fail*}: if non-nil, will break into the Lisp REPL debugger upon encountering a test which fails.  If nil, will record the failure and continue with other tests.  This variable is useful inspecting the dynamic environment under which a test was evaluated.")))
+  "User variable =*debug-on-fail*=: if non-nil, will break into the Lisp REPL
+debugger upon encountering a test which fails.  If nil, will record the failure
+and continue with other tests.  This variable is useful inspecting the dynamic
+environment under which a test was evaluated.")
 
 (defvar *generate-backtraces*
     (cond
@@ -59,7 +61,8 @@
       ((member :nst-unsafe-allegro-backtraces *features*) t)
       ((member :macos *features*) nil)
       (t (member :allegro *features*)))
-  "User variable: if non-null, will attempt to capture the Lisp backtrace of errors in tests.")
+  "User variable: if non-null, will attempt to capture the Lisp backtrace of
+errors in tests.")
 
 (defmacro format-at-verbosity (lv format &rest args)
   `(at-verbosity ,lv
@@ -96,11 +99,8 @@
 ;;;
 
 (defvar *default-report-verbosity* 2
-  "User variable =*default-report-verbosity*= determines the default value for =*nst-verbosity*= when printing reports (2 by default).")
-;;;(def-documentation (variable *default-report-verbosity*)
-;;;  (:tags control)
-;;;  (:properties (api-summary control))
-;;;    (:blurb (:latex "User variable \\texttt{*default-report-verbosity*} determines the default value for *nst-verbosity* when printing reports (2 by default).")))
+  "User variable =*default-report-verbosity*= determines the default value for
+=*nst-verbosity*= when printing reports (2 by default).")
 
 (defvar *nst-debug* nil
   "User variable: apply customizable debugging settings.")
@@ -122,7 +122,8 @@ alternating keyword/forms matching:
   "Dynamic variable used to set the name of the group in a test result report.")
 
 (defparameter *nst-context-evaluable* nil
-  "Dynamic-scoped variable tracking whether the values under test should be asusmed evaluated.  Used in preparing context expressions.")
+  "Dynamic-scoped variable tracking whether the values under test should be
+asusmed evaluated.  Used in preparing context expressions.")
 (defparameter *nst-context* nil
   "Dynamic-scoped variable recording the values under test - a list of
 context-layer instances.")
@@ -131,17 +132,17 @@ context-layer instances.")
 current criterion.")
 
 (defparameter *nst-report-driver* nil
-  "Dynamic-scoped variable - one of :multiple, :package, :group or :test to determine the top-level form of a report.  Used as a control parameter for printing reports.")
+  "Dynamic-scoped variable - one of :multiple, :package, :group or :test to
+determine the top-level form of a report.  Used as a control parameter for
+printing reports.")
 
 (defvar *nst-output-stream* t
-  "Determines the output stream to which NST should print its output (=*standard-output*= by default).")
-;;;(def-documentation (variable *nst-output-stream*)
-;;;  (:tags control)
-;;;  (:properties (api-summary control))
-;;;    (:intro (:latex "User variable \\texttt{*nst-output-stream*} determines the output stream to which NST should print its output (\\texttt{*standard-output*} by default).")))
+  "Determines the output stream to which NST should print its output
+\(=*standard-output*= by default).")
 
 (defparameter *nst-group-shown* nil
-  "Dynamic-scoped variable tracking whether the name of a group has been printed, so that tests need not repeat it.")
+  "Dynamic-scoped variable tracking whether the name of a group has been
+printed, so that tests need not repeat it.")
 
 (defun assemble-protected-option-values (other-vars)
   (let ((result (make-hash-table :test 'eq)))

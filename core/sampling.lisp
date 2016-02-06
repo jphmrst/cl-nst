@@ -39,40 +39,30 @@
                      ,outcome))))))
 
 (defvar *current-compound-structure-depth* 0)
-(defvar *max-compound-structure-depth* 4)
-;;;(def-documentation (variable *max-compound-structure-depth*)
-;;;  (:tags sample)
-;;;  (:properties (api-summary sample))
-;;;  (:blurb "The " (:lisp variable *max-compound-structure-depth*)
-;;;          " variable sets the maximum nesting depth of compound data structures: beyond that depth, " (:lisp symbol scalar)
-;;;          " rather than " (:lisp symbol t)
-;;;          " is the default element generator.  This restriction does not apply to explicitly specified element types, only to the use of defaults."))
+(defvar *max-compound-structure-depth* 4
+  "The =*max-compound-structure-depth*= variable sets the maximum nesting depth
+of compound data structures: beyond that depth, =scalar= rather than =t= is the
+default element generator.  This restriction does not apply to explicitly
+specified element types, only to the use of defaults.")
 
 (defmacro compound-structure (&body forms)
+  "The =compound-structure= macro wraps substructure which should be considered
+compound for the limits set by =*max-compound-structure-depth*=."
   `(let ((*current-compound-structure-depth*
           (+ 1 *current-compound-structure-depth*)))
      ,@forms))
-;;;(def-documentation (macro compound-structure)
-;;;  (:tags sample)
-;;;  (:properties (api-summary sample))
-;;;  (:blurb "The " (:lisp macro compound-structure)
-;;;          " macro wraps substructure which should be considered compound for the limits set by "
-;;;          (:lisp variable *max-compound-structure-depth*)
-;;;          "."))
 
 (defgeneric arbitrary (typ)
+  (:documentation "This function takes a single argument, which determines the
+type of the value to be generated.  For simple types, the name of the type (or
+the class object, such as returned by =find-class= by itself is a complete
+specification.  For more complicated types, =arbitrary= can also take a list
+argument, where the first element gives the type and the remaining elements are
+keyword argument providing additional requirements for the generated value.")
   (:method ((spec cons))
      (apply #'arbitrary-by-spec (car spec) (cdr spec)))
   (:method (other)
      (arbitrary-by-spec other)))
-;;;(def-documentation (function arbitrary)
-;;;  (:tags sample)
-;;;  (:properties (api-summary sample))
-;;;    (:intro "This function takes a single argument, which determines the type of the value to be generated.  For simple types, the name of the type (or the class object, such as returned by "
-;;;          (:lisp function find-class)
-;;;          ") by itself is a complete specification.  For more complicated types, "
-;;;          (:lisp function arbitrary)
-;;;          " can also take a list argument, where the first element gives the type and the remaining elements are keyword argument providing additional requirements for the generated value."))
 
 (define-nst-error unknown-arbitrary-domain
     ((domain  :initarg :domain  :reader domain)
@@ -95,6 +85,47 @@
      (arbitrary (pick-from-sequence (arbitrary-generable-types)))))
 
 (defmacro def-arbitrary-instance-type (type-expr &body technique)
+  "New type specifications for invariant-testing. are defined with the
+=def-arbitrary-instance-type= macro.
+#+begin_example
+\(def-arbitrary-instance-type ( SPEC-NAME [ :params FORMALS ]
+                                         [ :scalar BOOL ]
+                                         [ :key KEY ] )
+  FORM
+  FORM
+  ...
+  FORM)
+#+end_example
+- =formals= :: Formal parameter definition used to pass subcomponent types.
+- =scalar= :: When a non-null value is provided for the =:scalar= argument, the
+              new specifier is taken to be generable by the =:scalar=
+              specification.
+              #+begin_example
+              \(def-arbitrary-instance-type (ratio :scalar t)
+                \(/ (arbitrary 'integer)
+                   \(let ((raw (arbitrary (find-class 'integer))))
+                     \(cond
+                       \((< raw 0) raw)
+                       \(t (+ 1 raw))))))
+              #+end_example
+- =key= :: The =:key= argument gives a list of keyword arguments which may
+           accompany the new specification.  For the =cons= type, keyword
+           arguments allow specifications for the left and right components:
+           #+begin_example
+           (def-arbitrary-instance-type
+             (cons :key ((car t car-supp-p) (cdr t cdr-supp-p)))
+             (compound-structure
+              (when (and (not car-supp-p)
+                         (>= *current-compound-structure-depth*
+                             *max-compound-structure-depth*))
+                (setf car 'scalar))
+              (when (and (not cdr-supp-p)
+                         (>= *current-compound-structure-depth*
+                             *max-compound-structure-depth*))
+                (setf cdr 'scalar))
+              (cons (arbitrary car) (arbitrary cdr))))
+           #+end_example
+- =form= :: Construct and return (as if through =progn= the arbtrary instance."
 
   (let (type-spec self keyargs scalar-p)
     (cond
@@ -123,44 +154,6 @@
        ,@(when scalar-p
            `((setf (gethash ,type-spec +scalar-generable-types+) t)))
        (setf (gethash ,type-spec +arbitrary-generable-types+) t))))
-;;;(def-documentation (macro def-arbitrary-instance-type)
-;;;  (:tags sample)
-;;;  (:properties (api-summary sample))
-;;;  (:intro "New type specifications for invariant-testing. are defined with the "
-;;;          (:lisp macro def-arbitrary-instance-type) " macro.")
-;;;  (:callspec ((spec-name &key (params formals) (scalar bool) (key key))
-;;;              &body (:seq form)))
-;;;  (:params (formals "Formal parameter definition used to pass subcomponent types.")
-;;;           (scalar (:seq
-;;;                    "When a non-null value is provided for the "
-;;;                    (:lisp keyword :scalar)
-;;;                    " argument, the new specifier is taken to be generable by the "
-;;;                    (:lisp keyword :scalar)
-;;;                    " specification."
-;;;                    (:code "  (def-arbitrary-instance-type (ratio :scalar t)
-;;;    (/ (arbitrary 'integer)
-;;;       (let ((raw (arbitrary (find-class 'integer))))
-;;;         (cond
-;;;           ((< raw 0) raw)
-;;;           (t (+ 1 raw))))))")))
-;;;           (key (:seq "The " (:lisp keyword :key)
-;;;                      " argument gives a list of keyword arguments which may accompany the new specification.  For the "
-;;;                      (:lisp function cons)
-;;;                      " type, keyword arguments allow specifications for the left and right components:"
-;;;                 (:code "  (def-arbitrary-instance-type (cons :key ((car t car-supp-p)
-;;;                                           (cdr t cdr-supp-p)))
-;;;    (compound-structure
-;;;     (when (and (not car-supp-p)
-;;;                (>= *current-compound-structure-depth*
-;;;                    *max-compound-structure-depth*))
-;;;       (setf car 'scalar))
-;;;     (when (and (not cdr-supp-p)
-;;;                (>= *current-compound-structure-depth*
-;;;                    *max-compound-structure-depth*))
-;;;       (setf cdr 'scalar))
-;;;     (cons (arbitrary car) (arbitrary cdr))))")))
-;;;           (form "Construct and return (as if through "
-;;;                 (:lisp macro progn) ") the arbtrary instance.")))
 
 (def-arbitrary-instance-type (number :param n)
     (arbitrary (arbitrary-grounded-type n)))
@@ -452,6 +445,63 @@
                                  nil qualifying-sample-supp-p)
                                 (max-tries nil max-tries-supp-p))
                         :ignore)
+    "Invariants to be tested, and the domains over which they range, are specified
+with the =:sample= criterion:
+#+begin_example
+\(def-criterion ( [ :verify FORM ]
+                 [ :value LAMBDA-LIST ]
+                 [ :domains ((NAME SPEC) ... (NAME SPEC)) ]
+                 [ :where FORM ]
+                 [ :where-ignore (NAME ... NAME) ]
+                 [ :where-declare (DECLARATION ... DECLARATION) ]
+                 [ :sample-size NUMBER ]
+                 [ :qualifying-sample NUMBER ]
+                 [ :max-tries NUMBER ] ) )
+#+end_example
+- =:verify= :: The expression to be (repeatedly) evaluated, which is expected
+               always to return a non-null value.  This is the sole required
+               argument, although in any particular use it is unlikely to be
+               the only argument given.
+- =:domains= :: The variables in the =verify= expression which are to be given
+                multiple randomized values.  The default value is =nil=,
+                denoting an empty list.
+- =:value= :: A lambda list to which the values given by the argument form
+              should be applied. The default value is =nil=, denoting no such
+              arguments.
+- =:where= :: A condition which determines the validity of the input argument.
+              For example, the condition would assert that a number is positive
+              in an application where a negative value would be known to cause
+              a failure.  The default value is =t=, allowing any values.
+- =:where-ignore= :: List of domain variables which are not mentioned in the
+                     =where= clause.  These names will be declared as ignored
+                     in appropriate bindings, suppressing warnings under Lisps
+                     which check for such things in interpreted expressions.
+                     This list need not be given explicitly when no =where=
+                     argument is given.  Similarly, the =where-declare= argument
+                     accepts a list of declarations to be associated with the
+                     =where= form.
+- =:sample-size= :: Gives the base specification of the number of value sets
+                    which will be generated.  Two further arguments have some
+                    bearing on the number of generation attempts when the
+                    =where= argument is non =t=.  The =qualifying-sample=
+                    argument gives the minimum acceptable size of actual tested
+                    values, not counting sets rejected via the =where=
+                    expression.  The =max-tries= argument gives the maximum
+                    number of value sets to be generated.
+Examples:
+#+begin_example
+(:sample :sample-size 10
+  :domains ((x (list :elem symbol)))
+  :verify (equal x (reverse (reverse x))))
+#+end_example
+#+begin_example
+(:sample :domains ((x real))
+  :where (> x 1)
+  :verify (< (sqrt x) x)
+  :sample-size 10
+  :max-tries 12)
+#+end_example
+"
   (declare (ignore values))
   (when values-supp-p
     (warn 'nst-soft-keyarg-deprecation :old-name :values :replacement nil))
@@ -571,62 +621,7 @@
              (length (check-result-errors result))))
 
     result))
-;;;(defdoc:def-documentation (criterion :sample)
-;;;    (:intro "Invariants to be tested, and the domains over which they range, are specified with the "
-;;;            (:lisp keyword :sample)
-;;;            " criterion:")
-;;;  (:callspec (&key (verify FORM)
-;;;                   (value LAMBDA-LIST)
-;;;                   (domains (:seq (NAME SPEC)))
-;;;                   (where FORM)
-;;;                   (where-ignore ((:seq NAME)))
-;;;                   (where-declare ((:seq DECLARATION)))
-;;;                   (sample-size NUMBER)
-;;;                   (qualifying-sample NUMBER)
-;;;                   (max-tries NUMBER)))
-;;;  (:params (verify
-;;;            "The the expression to be (repeatedly) evaluated, which is expected always to return a non-null value.  This is the sole required argument, although in any particular use it is unlikely to be the only argument given.")
-;;;           (domains
-;;;            "Declares the variables in the "
-;;;            (:lisp param verify)
-;;;            " expression which are to be given multiple randomized values.  The default value is "
-;;;            (:inline "nil")
-;;;            ", denoting an empty list.")
-;;;           (value
-;;;            (:seq "A lambda list to which the values given by the argument form should be applied. The default value is "
-;;;                  (:inline "nil")
-;;;                  ", denoting no such arguments."))
-;;;           (where
-;;;            (:seq "A condition which determines the validity of the input argument.  For example, the condition would assert that a number is positive in an application where a negative value would be known to cause a failure.  The default value is "
-;;;                  (:inline "t")
-;;;                  ", allowing any values."))
-;;;           (where-ignore
-;;;            (:seq "List of domain variables which are not mentioned in the "
-;;;                  (:lisp param where) " clause.  These names will be declared as ignored in appropriate bindings, suppressing warnings under Lisps which check for such things in interpreted expressions.  This list need not be given explicitly when no "
-;;;                  (:lisp param where) " argument is given.  Similarly, the "
-;;;                  (:lisp param where-declare)
-;;;                  " argument accepts a list of declarations to be associated with the "
-;;;                  (:lisp param where) " form."))
-;;;           (sample-size
-;;;            (:seq "Gives the base specification of the number of value sets which will be generated.  Two further arguments have some bearing on the number of generation attempts when the "
-;;;                  (:lisp param where) " argument is non-" (:lisp symbol t)
-;;;                  ".  The " (:lisp param qualifying-sample)
-;;;                  " argument gives the minimum acceptable size of actual tested values, not counting sets rejected via the "
-;;;                  (:lisp param where) " expression.  The "
-;;;                  (:lisp param max-tries)
-;;;                  " argument gives the maximum number of value sets to be generated.")))
-;;;  (:details (:seq
-;;;          (:plain "Examples:")
-;;;          (:code
-;;;           "(:sample :sample-size 10
-;;;  :domains ((x (list :elem symbol)))
-;;;  :verify (equal x (reverse (reverse x))))")
-;;;          (:code
-;;;           "(:sample :domains ((x real))
-;;;  :where (> x 1)
-;;;  :verify (< (sqrt x) x)
-;;;  :sample-size 10
-;;;  :max-tries 12)"))))
+
 
 (defun generate-sample (domains)
   (let ((result (make-hash-table :test 'eq)))
