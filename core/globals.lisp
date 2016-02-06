@@ -195,25 +195,25 @@ printed, so that tests need not repeat it.")
 
 ;;;(defparameter *binding-variable* nil
 ;;;  "Variable tracking the binding of names by fixtures, checked when binding fails.")
-;;;
-;;;(defgeneric show-nst-property (name)
-;;;  (:documentation "Display a property value \(presumably\) to the REPL."))
 
-;;;;;
-;;;;; Management of global properties.
-;;;;;
-;;;(defgeneric set-nst-property (name value)
-;;;  (:method (name value)
-;;;     (declare (ignorable value))
-;;;     (format t "No such property ~s~%" name)))
-;;;(defgeneric nst-repl-property-doc (n)
-;;;  (:documentation "Return the documentation string of an NST property."))
-;;;(defgeneric nst-repl-property-display (n)
-;;;  (:documentation
-;;;   "Return the display value of an NST property's internal value."))
-;;;(defgeneric nst-repl-property-encode (prop val)
-;;;  (:documentation
-;;;   "Encode an NST property's display value as an internal value."))
+(defgeneric show-nst-property (name)
+  (:documentation "Display a property value \(presumably\) to the REPL."))
+
+;;
+;; Management of global properties.
+;;
+(defgeneric set-nst-property (name value)
+  (:method (name value)
+     (declare (ignorable value))
+     (format t "No such property ~s~%" name)))
+(defgeneric nst-repl-property-doc (n)
+  (:documentation "Return the documentation string of an NST property."))
+(defgeneric nst-repl-property-display (n)
+  (:documentation
+   "Return the display value of an NST property's internal value."))
+(defgeneric nst-repl-property-encode (prop val)
+  (:documentation
+   "Encode an NST property's display value as an internal value."))
 
 (defgeneric base-name (record)
   (:documentation "Return a symbol naming the record")

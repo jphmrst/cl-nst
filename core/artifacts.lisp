@@ -36,21 +36,21 @@
 (defvar +results-record+ (make-hash-table :test 'eq)
   "Results of test runs.")
 
-;;;;; Extracting information for debugging.
-;;;
+;;; Extracting information for debugging.
+
 ;;;(defgeneric trace-fixture (fx)
 ;;;  (:documentation "Provide debugging information about a fixture.")
 ;;;  (:method (fx) (format t "No known fixture ~s~%" fx)))
 ;;;(add-class-name-instantiator-method trace-fixture)
-;;;
-;;;(defgeneric trace-group (gr)
-;;;  (:documentation "Provide debugging information about a group.")
-;;;  (:method (gr) (format t "No known group ~s~%" gr)))
-;;;(add-class-name-instantiator-method trace-group)
-;;;
-;;;(defgeneric trace-test (gr ts)
-;;;  (:documentation "Provide debugging information about a test.")
-;;;  (:method (gr ts) (format t "No known test ~s in group ~s~%" ts gr)))
+
+(defgeneric trace-group (gr)
+  (:documentation "Provide debugging information about a group.")
+  (:method (gr) (format t "No known group ~s~%" gr)))
+;;; (add-class-name-instantiator-method trace-group)
+
+(defgeneric trace-test (gr ts)
+  (:documentation "Provide debugging information about a test.")
+  (:method (gr ts) (format t "No known test ~s in group ~s~%" ts gr)))
 
 (defun trace-results ()
   "Internal debugging function: dump the results hash."
