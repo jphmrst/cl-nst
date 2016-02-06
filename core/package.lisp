@@ -25,9 +25,8 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :common-lisp-user)
 
-(defpackage :sift.nst
+(defpackage :nst
   (:documentation "Unit and regression testing for Common Lisp")
-  (:nicknames :nst)
   (:use :common-lisp)
   #+allegro (:import-from excl #:named-function)
 

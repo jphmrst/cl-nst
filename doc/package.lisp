@@ -23,8 +23,7 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :common-lisp-user)
 
-(defpackage :sift.nst-doc
+(defpackage :nst-doc
     (:documentation "Unit and regression testing for Common Lisp")
-    (:nicknames :nst-doc)
     (:use :common-lisp :defdoc :defdoc-control-api :nst)
     (:export #:build-nst-docs))

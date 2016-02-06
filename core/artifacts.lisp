@@ -23,7 +23,7 @@
 ;;; along with NST.  If not, see respectively
 ;;; <http://opensource.franz.com/preamble.html> and
 ;;; <http://www.gnu.org/licenses/>.
-(in-package :sift.nst)
+(in-package :nst)
 
 (defstruct result-stats "Statistics common to the different result summaries."
   (tests 0) (passing 0) (erring 0) (failing 0) (warning 0)

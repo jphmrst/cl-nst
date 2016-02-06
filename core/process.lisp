@@ -23,7 +23,7 @@
 ;;; along with NST.  If not, see respectively
 ;;; <http://opensource.franz.com/preamble.html> and
 ;;; <http://www.gnu.org/licenses/>.
-(in-package :sift.nst)
+(in-package :nst)
 
 ;;; Documentation generator for process-testing predicates
 ;;;(defdoc:def-target-type process-predicate (:symbol-definition-nocheck t))

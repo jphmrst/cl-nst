@@ -497,7 +497,7 @@ additional package."))
 
   (aftermatter)
   (collect-output (:style docspec-itemize-latex-style) ()
-    (collect-docspec :sift.nst package :style nst-package-list-latex-style))
+    (collect-docspec :nst package :style nst-package-list-latex-style))
   (collect-output (:title "Output to JUnit" :short-title "JUnit"
                           :leader "NST reports can be formatted as XML for use with JUnit, although the API for this feature is underdeveloped.") ()
     (collect-symbols :nst (#:junit-results-by-group #:nst-junit-dump)))

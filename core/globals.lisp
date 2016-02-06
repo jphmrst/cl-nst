@@ -30,7 +30,7 @@
 
 ;;; ------------------------------------------------------------------
 
-(in-package :sift.nst)
+(in-package :nst)
 
 ;;;
 ;;;  User-controlled options.

@@ -23,7 +23,7 @@
 ;;; along with NST.  If not, see respectively
 ;;; <http://opensource.franz.com/preamble.html> and
 ;;; <http://www.gnu.org/licenses/>.
-(in-package :sift.nst)
+(in-package :nst)
 
 (defun decode-defcheck-name-and-args (name-or-name-and-args)
   "This function unpacks the information inside the first form of a def-test
