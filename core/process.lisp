@@ -51,25 +51,45 @@
         (error 'nst-assertion-result-check :fatal fatal :result result)))))
 
 (defmacro assert-criterion (key-args criterion-expr &rest value-exprs)
-  `(assert-criterion-fn ',criterion-expr '(list ,@value-exprs)
-                        ,@key-args))
-;;;(defdoc:def-documentation (macro assert-criterion)
-;;;  (:properties (nst-manual process-predicate))
-;;;  (:intro (:seq "The " (:lisp macro assert-criterion)
-;;;                " macro asserts that an NST criterion should pass."))
-;;;  (:callspec ((&key (msg-format format-string) (msg-args format-arguments)
-;;;                    (fatal flag) (fail-on-warning flag))
-;;;              criterion (:seq form)))
-;;;  (:params (msg-format "Format string used to build the label of the restart point.")
-;;;           (msg-args "Format arguments used to build the label of the restart point.")
-;;;           (fatal "If non-nil, a failure of this assertion indicates that execution of the test forms should be aborted.")
-;;;           (fail-on-warning "If non-nil, then an NST result which includes a warning indicates failure of this assertion.")))
+  "The =assert-criterion= macro asserts that an NST criterion should pass.
+#+begin_example
+\(assert-criterion ( [ :msg-format FORMAT-STRING ]
+                    [ :msg-args FORMAT-ARGUMENTS ]
+                    [ :fatal FLAG [
+                    [ :fail-on-warning FLAG ] )
+  FORM
+  ...
+  FORM)
+#+end_example
+- msg-format :: Format string used to build the label of the restart point.
+- msg-args :: Format arguments used to build the label of the restart point.
+- fatal :: If non-nil, a failure of this assertion indicates that execution of
+           the test forms should be aborted.
+- fail-on-warning :: If non-nil, then an NST result which includes a warning
+                     indicates failure of this assertion.
+"
+  `(assert-criterion-fn ',criterion-expr '(list ,@value-exprs) ,@key-args))
 
 (defmacro def-unary-predicate-assert (assert-fn predicate default-message &key
                                       (message-defvar nil defvar-supp-p)
                                       (doc-state-flag t)
                                       (pred-name predicate) &allow-other-keys)
+  "Macro =macro def-unary-predicate-assert= creates an assertion function using
+the result of a call to a unary predicate.  A non-nil result from the predicate
+corresponds to a successful assertion.
+#+begin_example
+(def-unary-predicate-assert ASSERT-FN PREDICATE DEFAULT-MESSAGE
+                            [ :message-defvar NAME ]
+                            [ :pred-name NAME ]
+                            [ :doc-state-flag BOOL ] )
+#+end_example
+- assert-fn :: The name of the assertion function being defined.
+- predicate :: The predicate used to define the assertion function.  It should take a single argument.
+- default-message :: Format string used by default for reporting failures of this assertion.  It should expect to be used in a call to =format= with one additional argument, the value being tested.
+- message-defvar :: The name of a global variable into which the default message will be stored.  If this argument is omitted, the result of a call to =gensym= is used.
+- pred-name :: This argument is used only for documenting the underlying predicate in the assertion function's docstring.  By default, it is the same as the predicate."
   (declare (ignore pred-name doc-state-flag))
+
   (let* ((tested (gensym))
          (keyargs (gensym))
          (format-supp-p (gensym))
@@ -79,6 +99,8 @@
                                (format nil ,format-supp-p)
                                (format-args nil ,format-args-supp-p)
                                (fatal nil) &allow-other-keys)
+              ,(format nil "The =~a= function is a unary predicate for use within the forms evaluated for an =:eval= criterion.  It succeeds whenever the =~a= function returns ~a."
+                 assert-fn pred-name (if doc-state-flag "non-nil" "=nil="))
               (declare (ignorable ,keyargs))
               (unless ,format-supp-p (setf format ,default-message))
               (unless ,format-args-supp-p (setf format-args (list ,tested)))
@@ -86,39 +108,12 @@
                                     (apply #'format nil format format-args))
                 (unless (funcall #',predicate ,tested)
                   (error 'nst-assertion-failure
-                         :fatal fatal :args format-args :formatter format))))
-;;;            (defdoc:def-documentation (function ,assert-fn)
-;;;              (:properties (nst-manual process-predicate))
-;;;              (:callspec (TESTED-VALUE))
-;;;              (:intro (:seq "The " (:lisp function ,assert-fn)
-;;;                            " function is a unary predicate for use within the forms evaluated for an "
-;;;                            (:lisp criterion :eval)
-;;;                            " criterion.  It succeeds whenever the "
-;;;                            (:lisp function ,pred-name)
-;;;                            " function returns "
-;;;                            ,(if doc-state-flag "non-nil." "nil."))))
-            )))
+                         :fatal fatal :args format-args :formatter format)))))))
     (cond
       (defvar-supp-p
           `(progn (defvar ,message-defvar ,default-message)
                   ,@the-defuns))
       (t `(progn ,@the-defuns)))))
-;;;(defdoc:def-documentation (macro def-unary-predicate-assert)
-;;;  (:properties (nst-manual process-pred-maker))
-;;;  (:intro (:seq "Macro " (:lisp macro def-unary-predicate-assert)
-;;;                " creates an assertion function using the result of a call to a unary predicate.  A non-nil result from the predicate corresponds to a successful assertion."))
-;;;  (:callspec (assert-fn predicate default-message &key
-;;;                        (message-defvar name)
-;;;                        (pred-name name)
-;;;                        (doc-state-flag bool)))
-;;;  (:params (assert-fn (:seq "The name of the assertion function being defined."))
-;;;           (predicate (:seq "The predicate used to define the assertion function.  It should take a single argument."))
-;;;           (default-message (:seq "Format string used by default for reporting failures of this assertion.  It should expect to be used in a call to "
-;;;                                  (:lisp function format)
-;;;                                  " with one additional argument, the value being tested."))
-;;;           (message-defvar (:seq "The name of a global variable into which the default message will be stored.  If this argument is omitted, the result of a call to "
-;;;                                 (:lisp function gensym) " is used."))
-;;;           (pred-name (:seq "This argument is used only for documenting the underlying predicate in the assertion function's docstring.  By default, it is the same as the predicate."))))
 
 (defmacro def-unary-negated-predicate-assert (assert-fn predicate
                                               default-message
