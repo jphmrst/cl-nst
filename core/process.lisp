@@ -78,7 +78,7 @@
 the result of a call to a unary predicate.  A non-nil result from the predicate
 corresponds to a successful assertion.
 #+begin_example
-(def-unary-predicate-assert ASSERT-FN PREDICATE DEFAULT-MESSAGE
+\(def-unary-predicate-assert ASSERT-FN PREDICATE DEFAULT-MESSAGE
                             [ :message-defvar NAME ]
                             [ :pred-name NAME ]
                             [ :doc-state-flag BOOL ] )
@@ -118,19 +118,21 @@ corresponds to a successful assertion.
 (defmacro def-unary-negated-predicate-assert (assert-fn predicate
                                               default-message
                                               &rest keyargs &key message-defvar)
-  (declare (ignore message-defvar))
+  "Macro =def-unary-negated-predicate-assert= uses the negated result of a
+unary predicate as the basis of an assertion function.  This macro's arguments
+are just as for =def-unary-predicate-assert=."
+    (declare (ignore message-defvar))
   `(def-unary-predicate-assert ,assert-fn
        (lambda (x) (not (funcall #',predicate x)))
      ,default-message :doc-state-flag nil :pred-name ,predicate ,@keyargs))
-;;;(defdoc:def-documentation (macro def-unary-negated-predicate-assert)
-;;;  (:properties (nst-manual process-pred-maker))
-;;;  (:intro (:seq "Macro " (:lisp macro def-unary-negated-predicate-assert)
-;;;                " uses the negated result of a unary predicate as the basis of an assertion function.  This macro's arguments are just as for "
-;;;                (:lisp macro def-unary-predicate-assert) ".")))
 
 (defmacro def-binary-predicate-assert (assert-fn predicate default-message &key
                                        (message-defvar nil defvar-supp-p)
                                        (doc-state-flag t) (pred-name predicate))
+  "Macro =def-binary-predicate-assert= uses a binary predicate as the basis for
+an assertion function just as =def-unary-predicate-assert= uses a unary
+predicate.  This macro's arguments are just as for
+=def-unary-predicate-assert=."
   (declare (ignore pred-name doc-state-flag))
   (let* ((target (gensym))
          (tested (gensym))
@@ -142,6 +144,8 @@ corresponds to a successful assertion.
                                (format nil ,format-supp-p)
                                (format-args nil ,format-args-supp-p)
                                (fatal nil) &allow-other-keys)
+              ,(format nil "The =~a= function is a unary predicate for use within the forms evaluated for an =:eval= criterion.  It compares the expected and tested values using =~a=, succeeds whenever that call returns ~a."
+                 assert-fn pred-name (if doc-state-flag "non-nil" "=nil="))
               (declare (ignorable ,keyargs))
               (unless ,format-supp-p (setf format ,default-message))
               (unless ,format-args-supp-p (setf format-args
@@ -150,45 +154,25 @@ corresponds to a successful assertion.
                                     (apply #'format nil format format-args))
                 (unless (funcall #',predicate ,target ,tested)
                   (error 'nst-assertion-failure
-                         :fatal fatal :args format-args :formatter format))))
-;;;            (defdoc:def-documentation (function ,assert-fn)
-;;;              (:properties (nst-manual process-predicate))
-;;;              (:callspec (EXPECTED-VALUE TESTED-VALUE))
-;;;              (:intro (:seq "The " (:lisp function ,assert-fn)
-;;;                            " function is a binary predicate for use within the forms evaluated for an "
-;;;                            (:lisp criterion :eval)
-;;;                            " criterion.  It compares the expected and tested values using "
-;;;                            (:lisp function ,pred-name)
-;;;                            ", and succeeds whenever that call returns "
-;;;                            ,(if doc-state-flag "non-nil." "nil."))))
-            )))
+                         :fatal fatal :args format-args :formatter format)))))))
     (cond
       (defvar-supp-p
           `(progn (defvar ,message-defvar ,default-message)
                   ,@the-defuns))
       (t `(progn ,@the-defuns)))))
-;;;(defdoc:def-documentation (macro def-binary-predicate-assert)
-;;;  (:properties (nst-manual process-pred-maker))
-;;;  (:intro (:seq "Macro " (:lisp macro def-binary-predicate-assert)
-;;;                " uses a binary predicate as the basis for an assertion function just as "
-;;;                (:lisp macro def-unary-predicate-assert)
-;;;                " uses a unary predicate.  This macro's arguments are just as for "
-;;;                (:lisp macro def-unary-predicate-assert) ".")))
 
 (defmacro def-binary-negated-predicate-assert (assert-fn predicate
                                                default-message &rest keyargs
                                                &key message-defvar)
+  "Macro =def-binary-negated-predicate-assert= uses the negated result of a
+binary predicate as the basis for an assertion function just as
+=def-unary-negated-predicate-assert= uses the negated result of a unary
+predicate.  This macro's arguments are just as for
+=def-unary-predicate-assert=."
   (declare (ignore message-defvar))
   `(def-binary-predicate-assert ,assert-fn
        (lambda (x y) (not (funcall #',predicate x y)))
      ,default-message :doc-state-flag nil :pred-name ,predicate ,@keyargs))
-;;;(defdoc:def-documentation (macro def-binary-negated-predicate-assert)
-;;;  (:properties (nst-manual process-pred-maker))
-;;;  (:intro (:seq "Macro " (:lisp macro def-binary-negated-predicate-assert)
-;;;                " uses the negated result of a binary predicate as the basis for an assertion function just as "
-;;;                (:lisp macro def-unary-negated-predicate-assert)
-;;;                " uses the negated result of a unary predicate.  This macro's arguments are just as for "
-;;;                (:lisp macro def-unary-predicate-assert) ".")))
 
 (def-unary-predicate-assert assert-null null  "~@<Expected null, ~_got ~s~:>"
                             :message-defvar *assert-null-format-string*)
@@ -233,6 +217,20 @@ corresponds to a successful assertion.
 (def-criterion (:eval (:forms &key (check-warnings t) (muffle-warnings t)
                               (attempt-continue t) force-continue)
                       (:form forms-list))
+    "#+begin_example
+\(def-criterion ( [ :check-warnings FLAG ] [ :muffle-warnings FLAG ]
+                 [ :attempt-continue FLAG ] [ :force-continue FLAG ] )
+  FORM
+  ...
+  FORM)
+#+end_example
+The =:eval= criterion executes its forms, expecting calls to various assertion
+functions to check intermediate states of an arbitrarily-long process.
+- check-warnings :: If non-nil, will add warnings thrown when evaluating the forms under test as NST warnings.  The default is =t=.
+- muffle-warnings :: If non-nil, will muffle warnings thrown when evaluating the forms under test, so that they are reported only as NST result warnings and if the =:check-warnings= flag is set.  The default is =t=.
+- attempt-continue :: If non-nil, will continue evaluation after failed assertions, so long as the failure is not deemed =fatal=. The default is =t=.
+- force-continue :: If non-nil, will continue evaluation after failed assertions even if the failure is not deemed =fatal=. The default is =nil=."
+
   ;; Should have a better way of working out whether we have a list of
   ;; forms top-level here.
   (case (car forms-list)
@@ -275,17 +273,25 @@ corresponds to a successful assertion.
                                       (muffle-warning)))))
           (eval `(progn ,@forms-list)))))
     (calibrate-check-result result)))
-;;;(defdoc:def-documentation (criterion :eval)
-;;;  (:properties (nst-manual process))
-;;;  (:callspec (&key (check-warnings FLAG) (muffle-warnings FLAG)
-;;;                   (attempt-continue FLAG) (force-continue FLAG)))
-;;;  (:intro (:seq "The " (:lisp criterion :eval) " criterion executes its forms, expecting calls to various assertion functions to check intermediate states of an arbitrarily-long process."))
-;;;  (:params (check-warnings "If non-nil, will add warnings thrown when evaluating the forms under test as NST warnings.  The default is " (:inline "t") ".")
-;;;           (muffle-warnings "If non-nil, will muffle warnings thrown when evaluating the forms under test, so that they are reported only as NST result warnings and if the " (:inline ":check-warnings") " flag is set.  The default is " (:inline "t") ".")
-;;;           (attempt-continue "If non-nil, will continue evaluation after failed assertions, so long as the failure is not deemed " (:inline "fatal") ". The default is " (:inline "t") ".")
-;;;           (force-continue "If non-nil, will continue evaluation after failed assertions even if the failure is not deemed " (:inline "fatal") ". The default is " (:inline "nil") ".")))
 
 (defmacro def-eval-test (name-or-name-and-args &rest forms)
+  "#+begin_example
+\(def-eval-test (NAME [ :group GROUP-NAME ]
+                     [ :setup FORM ]
+                     [ :cleanup FORM ]
+                     [ :startup FORM ]
+                     [ :finish FORM ]
+                     [ :fixtures (FIXTURE ... FIXTURE) ]
+                     [ :documentation STRING ]
+                     [ :check-warnings FLAG ]
+                     [ :muffle-warnings FLAG ]
+                     [ :attempt-continue FLAG ]
+                     [ :force-continue FLAG ] )
+  FORM
+  ...
+  FORM)
+The =def-eval-test= macro abbreviates a call to =def-test= with a single =:eval=
+criterion.  Its arguments are just as for =def-test= and =:eval=."
   (let (name test-args eval-args)
     (cond
       ((symbolp name-or-name-and-args)
@@ -301,23 +307,6 @@ corresponds to a successful assertion.
                (otherwise
                 (setf test-args `(,@test-args ,key ,val))))))))
     `(def-test (,name ,@test-args) (:eval ,@eval-args) ,@forms)))
-;;;(defdoc:def-documentation (macro def-eval-test)
-;;;  (:properties (nst-manual process))
-;;;  (:callspec ((NAME &key (group GROUP-NAME)
-;;;                    (setup FORM)
-;;;                    (cleanup FORM)
-;;;                    (startup FORM)
-;;;                    (finish FORM)
-;;;                    (fixtures ((:seq FIXTURE)))
-;;;                    (documentation STRING)
-;;;                    (check-warnings FLAG) (muffle-warnings FLAG)
-;;;                    (attempt-continue FLAG) (force-continue FLAG))
-;;;              &body (:seq FORM))
-;;;             (NAME &body (:seq FORM)))
-;;;  (:intro "The " (:lisp macro def-eval-test) " macro abbreviates a call to "
-;;;          (:lisp macro def-test) " with a single " (:lisp criterion :eval)
-;;;          " criterion.  Its arguments are just as for " (:lisp macro def-test)
-;;;          " and " (:lisp criterion :eval) "."))
 
 (def-criterion (:process (:forms &rest forms) :ignore)
     (let ((result (make-success-report)))

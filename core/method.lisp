@@ -44,26 +44,36 @@
       (calibrate-check-result result))
     result))
 
-(define-method-combination nst-results :operator check-result-union)
-;;;(def-documentation (method-combination nst-results)
-;;;  (:tags object)
-;;;  (:properties (api-summary object))
-;;;  (:intro (:latex "NST defines a method combination \\texttt{nst-results} as the default method combination for functions defined by \\texttt{def-test-generic}.  This combination runs \\emph{all} applicable methods, and combines all of their results into a single NST result record."))
-;;;  (:details (:latex "This default can be overridden by specifying \\texttt{t} as the method combination in the intial declaration.")
-;;;         (:code "(nst:def-test-generic overridden
-;;;    (:method-combination t))
-;;;(nst:def-test-method-criterion overridden mid-cls
-;;;  (:slots (mc1 (:eql 0))
-;;;          (mc2 (:eql 2))))
-;;;(nst:def-test-method-criterion overridden bot-cls
-;;;  (:slots (sc1 (:eql 1))
-;;;          (sc2 (:eql 1))))")))
+(define-method-combination nst-results :operator check-result-union
+  :documentation "NST defines a method combination =nst-results= as the default
+method combination for functions defined by =def-test-generic=.  This
+combination runs /all/ applicable methods, and combines all of their results
+into a single NST result record.
+
+This default can be overridden by specifying =t= as the method combination in
+the intial declaration.
+#+begin_example
+\(nst:def-test-generic overridden (:method-combination t))
+\(nst:def-test-method-criterion overridden mid-cls
+  \(:slots (mc1 (:eql 0))
+          \(mc2 (:eql 2))))
+\(nst:def-test-method-criterion overridden bot-cls
+  \(:slots (sc1 (:eql 1))
+          \(sc2 (:eql 1))))")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defvar *test-methods* (make-hash-table :test 'eq)
     "Global variable for programmer-defined NST test methods."))
 
 (defmacro def-test-generic (function-name &body forms)
+  "The =def-test-generic= declares a generic test function.
+#+begin_example
+\(def-test-generic FUNCTION-NAME)
+#+end_example
+For example,
+#+begin_example
+\(nst:def-test-generic for-clses)
+#+end_example"
   (multiple-value-bind (documentation method-combination)
       (decode-def-test-generic-body forms)
     (let ((arg (gensym))
@@ -78,13 +88,6 @@
          (eval-when (:compile-toplevel :load-toplevel :execute)
            (setf (gethash ',function-name *test-methods*) ',use-combination))
          ',function-name))))
-;;;(def-documentation (macro def-test-generic)
-;;;  (:tags object)
-;;;  (:properties (api-summary object))
-;;;    (:intro (:latex "The \\texttt{def-test-generic} declares a generic test function."))
-;;;    (:callspec (function-name))
-;;;    (:details (:latex "For example,")
-;;;           (:code "(nst:def-test-generic for-clses)")))
 
 (defun decode-def-test-generic-body (forms)
   (let ((documentation)
@@ -149,6 +152,32 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmacro def-test-method (function-name (arg class) &body body)
+  "The =def-test-method= defines a general method for a generic test function.
+#+begin_example
+\(def-test-method FUNCTION-NAME (TEST-VALUE CLASS-NAME)
+  FORM
+  ...
+  FORM)
+#+end_example
+- function-name :: The name of the test function for which we are defining a
+                   method.
+- test-value :: Formal parameter to which the value under test will be bound.
+- class-name :: The class for which we are defining a method.
+The method body should return a test result report, constructed with
+=make-success-result=, etc.
+For example:
+#+begin_example
+\(nst:def-test-method for-clses (o mid-cls)
+  \(with-slots (mc1 mc2) o
+    \(cond
+      \((< mc1 mc2) (make-success-report))
+      \(t (make-failure-report :format \"~d not < ~d\" :args (list mc1 mc2))))))
+\(nst:def-test-method for-clses (o side-cls)
+  \(with-slots (sc1 sc2) o
+    \(cond
+      \((eql sc1 sc2) (make-success-report))
+      \(t (make-failure-report :format \"~d not eql ~d\" :args (list sc1 sc2))))))
+#+end_example"
   (let ((documentation (when (and body (stringp (car body)))
                          (pop body)))
         (combination (gethash function-name *test-methods*)))
@@ -169,30 +198,23 @@
                  (check-result-info result))
            result))
        ',function-name)))
-;;;(def-documentation (macro def-test-method)
-;;;  (:tags object)
-;;;  (:properties (api-summary object))
-;;;    (:intro (:latex "The \\texttt{def-test-method} defines a general method for a generic test function."))
-;;;    (:callspec (function-name (test-value class-name) &body (:seq form)))
-;;;    (:params (function-name (:latex "The name of the test function for which we are defining a method."))
-;;;             (test-value (:latex "Formal parameter to which the value under test will be bound."))
-;;;             (class-name (:latex "The class for which we are defining a method.")))
-;;;    (:details (:latex "The method body should return a test result report, constructed with \\texttt{make-success-result}, etc.")
-;;;           (:latex "For example:")
-;;;           (:code "(nst:def-test-method for-clses (o mid-cls)
-;;;  (with-slots (mc1 mc2) o
-;;;    (cond
-;;;      ((< mc1 mc2) (make-success-report))
-;;;      (t (make-failure-report :format \"~d not < ~d\" :args (list mc1 mc2))))))
-;;;(nst:def-test-method for-clses (o side-cls)
-;;;  (with-slots (sc1 sc2) o
-;;;    (cond
-;;;      ((eql sc1 sc2) (make-success-report))
-;;;      (t (make-failure-report :format \"~d not eql ~d\" :args (list sc1 sc2))))))")))
 
 (defmacro def-test-method-criterion (function-name class documentation
                                                    &optional
                                                    (criterion nil crit-supp-p))
+  "The =def-test-method-criterion= macro provides a simple facility for defining a generic test function method in terms of an NST criterion.
+#+begin_example
+\(def-test-method-criterion FUNCTION-NAME CLASS-NAME [ CRITERION ] )
+#+end_example
+- function-name :: The name of the test function for which we are defining a
+                   method.
+- class-name :: The class for which we are defining a method.
+- criterion :: The criterion to be applied to members of the class.
+For example:
+#+begin_example
+\(nst:def-test-method-criterion for-clses top-cls
+  \(:predicate (lambda (tc) (< (tc1 tc) (tc2 tc)))))
+#+end_example"
   (unless crit-supp-p
     (setf criterion documentation
           documentation nil))
@@ -200,17 +222,6 @@
     `(def-test-method ,function-name (,arg ,class)
        ,@(when documentation `(,documentation))
        (check-criterion-on-form ',criterion `(list ,,arg)))))
-;;;(def-documentation (macro def-test-method-criterion)
-;;;  (:tags object)
-;;;  (:properties (api-summary object))
-;;;    (:intro (:latex "The \\texttt{def-test-method-criterion} macro provides a simple facility for defining a generic test function method in terms of an NST criterion."))
-;;;    (:callspec (function-name class-name &body criterion))
-;;;    (:params (function-name (:latex "The name of the test function for which we are defining a method."))
-;;;             (class-name (:latex "The class for which we are defining a method."))
-;;;             (criterion (:latex "The criterion to be applied to members of the class.")))
-;;;    (:details (:latex "For example:")
-;;;           (:code "(nst:def-test-method-criterion for-clses top-cls
-;;;      (:predicate (lambda (tc) (< (tc1 tc) (tc2 tc)))))")))
 
 (defun collect-test-generics (obj)
   (loop for method-name being the hash-keys of *test-methods*

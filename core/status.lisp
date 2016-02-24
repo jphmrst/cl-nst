@@ -123,13 +123,12 @@
            :error e
            other-args)))
 (defun make-error-report (e &rest format-args)
+  "Function =make-error-report= produces a report of an error during test execution.
+#+begin_example
+\(make-error-report [ :format FORMAT-STRING ] [ :args ARG-FORM-LIST ] )
+#+end_example"
   (let ((error-note (apply #'make-error-note e format-args)))
     (make-and-calibrate-check-result :errors (list error-note))))
-;;;(def-documentation (function make-error-report)
-;;;  (:tags criteria)
-;;;  (:properties (api-summary criteria))
-;;;  (:intro (:latex "Function \\texttt{make-error-report} produces a report of an error during test execution."))
-;;;  (:callspec (&key (format format-string) (args arg-form-list))))
 
 (defun make-config-error (error group-record test-record msg)
   (let ((*nst-group-name* (group-record-name group-record))
@@ -281,6 +280,8 @@ instances, and the info field is of any value."
                                (elapsed-time 0)
                                (timestamp (multiple-value-list
                                               (get-decoded-time))))
+  "Functional wrapper around the constructor for =check-result= structure,
+permitting the use of apply."
   (%make-check-result :group-name (cond
                                     ((group-record-p group-name)
                                      (group-record-name group-name))
@@ -294,11 +295,6 @@ instances, and the info field is of any value."
                       :failing failing :warning warning
                       :elapsed-time elapsed-time
                       :timestamp timestamp))
-;;;(def-documentation (function make-check-result)
-;;;  (:tags criteria)
-;;;  (:properties (api-summary criteria))
-;;;    (:intro "Functional wrapper around the constructor for check-result
-;;;structure, permitting the use of apply."))
 
 (defun interesting-result-p (result)
   (when (typep result 'check-result)
@@ -310,28 +306,26 @@ instances, and the info field is of any value."
       (or warnings failures errors))))
 
 (defun wrap-thrown-lisp-warning (w)
+  "The helper function =wrap-thrown-lisp-warning= creates an NST =check-note=
+object from a standard Lisp =warning=."
   (declare (special *nst-context* *nst-stack*))
   (make-check-note :context *nst-context* :stack *nst-stack*
                    :format "Lisp warning: ~:@_~/nst::format-for-warning/"
                    :args (list w)))
-;;;(def-documentation (function wrap-thrown-lisp-warning)
-;;;  (:properties (api-summary criteria))
-;;;  (:intro "The helper function " (:lisp function wrap-thrown-lisp-warning)
-;;;          " creates an NST " (:lisp type check-note)
-;;;          " object from a standard Lisp " (:lisp type warning) "."))
 
 (defgeneric add-warning (result w &rest args)
+  (:documentation "For use within user-defined NST criteria: add a warning to a
+result.
+
+The =add-warning= function adds an warning to a result record.  The item can be
+any of a Lisp warning, an NST check-note or a format string; in the first two
+cases, no additional arguments should be provided.
+#+begin_example
+\(add-warning RESULT-REPORT [ :format ITEM ] [ :args ARGUMENT-LIST ] )
+#+end_example")
   (:method (result (w warning) &rest args)
     (declare (ignore args))
     (add-warning result (wrap-thrown-lisp-warning w))))
-;;;(def-documentation (function add-warning)
-;;;  (:tags criteria)
-;;;  (:properties (api-summary criteria))
-;;;    (:blurb (:latex "For use within user-defined NST criteria: add a warning to a result."))
-;;;    (:intro (:latex
-;;;             "The \\texttt{add-warning} function adds an warning to a result record.  The item can be any of a Lisp warning, an NST check-note or a format string; in the first two cases, no additional arguments should be provided."))
-;;;    (:callspec (result-report &key
-;;;                              (format item) (args argument-list))))
 
 (defun calibrate-check-result (r)
   (with-accessors ((passing-count result-stats-passing)
@@ -957,105 +951,88 @@ six-value summary of the results:
 ;;;
 
 (defun make-warning-report (&key format args)
+  "Function =make-warning-report= is like =make-failure-report=, but provides
+supplimentary information as a warning.
+#+begin_example
+\(make-warning-report [ :format FORMAT-STRING ] [ :args ARG-FORM-LIST ])
+#+end_example
+The =emit-warning= function is an older, deprecated version of this function."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
   (make-success-report :warnings (list (make-check-note :context *nst-context*
                                                         :stack *nst-stack*
                                                         :format format
                                                         :args args))))
-;;;(def-documentation (function make-warning-report)
-;;;  (:tags criteria)
-;;;  (:properties (api-summary criteria))
-;;;    (:intro (:latex "Function \\texttt{make-warning-report} is like \\texttt{make-failure-report}, but provides supplimentary information as a warning."))
-;;;  (:callspec (&key (format format-string) (args arg-form-list)))
-;;;  (:details (:latex "The \\texttt{emit-warning} function is an older, deprecated version of this function.")))
 
 (defmacro emit-warning (&rest args)
+  "The =emit-warning= function is deprecated; use =make-warning-report=
+instead."
   (warn 'nst-soft-deprecation :old-name 'emit-warning
         :replacement '(make-warning-report))
   `(make-warning-report ,@args))
-;;;(def-documentation (macro emit-warning)
-;;;  (:tags deprecated)
-;;;  (:properties (api-summary deprecated))
-;;;  (:deprecated t)
-;;;  (:blurb (:latex "The \\texttt{emit-warning} function is deprecated; use \\texttt{make-warning-report} instead.")))
 
 (defun make-failure-report (&key format args info)
+  "The =make-failure-report= function returns a report of test failure.
+#+begin_example
+\(make-failure-report FORMAT ARGS)
+#+end_example
+The =format-string= and =args= are as to the Common Lisp function =format=.  The
+=emit-failure= function is an older, deprecated version of this function."
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
   (make-and-calibrate-check-result
    :failures (list (make-check-note :context *nst-context*
                                     :stack *nst-stack*
                                     :format format :args args))
    :info info))
-;;;(def-documentation (function make-failure-report)
-;;;  (:tags criteria)
-;;;  (:properties (api-summary criteria))
-;;;    (:intro (:latex "The \\texttt{make-failure-report} function returns a report of test failure."))
-;;;  (:callspec (&key (format format-string) (args arg-form-list)))
-;;;  (:details (:latex "The \\texttt{format-string} and \\texttt{args} are as to the Common Lisp function \\texttt{format}.  The \\texttt{emit-failure} function is an older, deprecated version of this function.")))
 
 (defmacro emit-failure (&rest args)
+  "The =emit-failure= function is deprecated; use =make-failure-report=
+instead."
   (warn 'nst-soft-deprecation :old-name 'emit-failure
         :replacement '(make-failure-report))
   `(make-failure-report ,@args))
-;;;(def-documentation (macro emit-failure)
-;;;  (:tags deprecated)
-;;;  (:properties (api-summary deprecated))
-;;;  (:deprecated t)
-;;;  (:blurb (:latex "The \\texttt{emit-failure} function is deprecated; use \\texttt{make-failure-report} instead.")))
 
 (defun make-success-report (&rest args &key warnings info)
+  "The =make-success-report= function indicates a successful test result.
+#+begin_example
+\(make-success-report)
+#+end_example
+Note that some older examples show =(make-check-result)=, =(emit-success)= or
+=(check-result)=.  The former is an internal function and should not be used
+from outside the core NST files.  The latter two are deprecated."
   (declare (ignore warnings info))
   (apply #'make-and-calibrate-check-result args))
-;;;(def-documentation (function make-success-report)
-;;;  (:tags criteria)
-;;;  (:properties (api-summary criteria))
-;;;    (:intro (:latex "The \\texttt{make-success-report} function indicates a successful test result."))
-;;;  (:callspec ())
-;;;  (:details (:latex "Note that some older examples show \\texttt{(make-check-result)}, \\texttt{(emit-success)} or \\texttt{(check-result)}.  The former is an internal function and should not be used from outside the core NST files.  The latter two are deprecated.")))
 
 (defmacro emit-success (&rest args)
+  "The =emit-success= function is deprecated; use =make-success-report=
+instead."
   (warn 'nst-soft-deprecation :old-name 'emit-success
         :replacement '(make-success-report))
   `(make-success-report ,@args))
-;;;(def-documentation (macro emit-success)
-;;;  (:tags deprecated)
-;;;  (:properties (api-summary deprecated))
-;;;  (:deprecated t)
-;;;  (:blurb (:latex "The \\texttt{emit-success} function is deprecated; use \\texttt{make-success-report} instead.")))
 
 (defun add-failure (result &key format args)
+  "For use within user-defined NST criteria: add a failure to a result.
+#+begin_example
+\(add-failure RESULT-REPORT [ :format FORMAT-STRING ] [ :args ARGUMENT-LIST ])
+#+end_example"
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
 
   (push (make-check-note :context *nst-context* :stack *nst-stack*
                          :format format :args args)
         (check-result-failures result)))
-;;;(def-documentation (function add-failure)
-;;;  (:tags criteria)
-;;;  (:properties (api-summary criteria))
-;;;    (:blurb (:latex
-;;;             "For use within user-defined NST criteria: add a failure to a result."))
-;;;    (:intro (:latex
-;;;             "The \\texttt{add-failure} function adds a failure note to a result record."))
-;;;    (:callspec (result-report &key
-;;;                              (format format-string) (args argument-list))))
 
 (defun add-thrown-error (result e &rest format-args)
   (push (apply #'make-error-note e format-args)
         (check-result-errors result)))
 (defun add-error (result &key format args)
+  "For use within user-defined NST criteria: add an error to a result.
+#+begin_example
+\(add-error RESULT-REPORT [ :format FORMAT-STRING ] [ :args ARGUMENT-LIST ] )
+#+end_example"
   (declare (special *nst-context* *nst-stack* *nst-check-name*))
 
   (push (make-check-note :context *nst-context* :stack *nst-stack*
                          :format format :args args)
         (check-result-errors result)))
-;;;(def-documentation (function add-error)
-;;;  (:tags criteria)
-;;;  (:properties (api-summary criteria))
-;;;    (:blurb (:latex "For use within user-defined NST criteria: add an error to a result."))
-;;;    (:intro (:latex
-;;;             "The \\texttt{add-error} function adds an error note to a result record."))
-;;;    (:callspec (result-report &key
-;;;                              (format format-string) (args argument-list))))
 
 #|
 (defun add-test-config-error (test-obj format &rest args)
@@ -1067,15 +1044,12 @@ six-value summary of the results:
 |#
 
 (defun add-info (result item)
+  "For use within user-defined NST criteria: add an info note to a result.
+#+begin_example
+(add-info RESULT-REPORT INFO-ITEM)
+#+end_example"
   (declare (special *nst-context* *nst-check-name*))
   (push item (check-result-info result)))
-;;;(def-documentation (function add-info)
-;;;  (:tags criteria)
-;;;  (:properties (api-summary criteria))
-;;;    (:blurb "For use within user-defined NST criteria: add an info note to a result.")
-;;;    (:intro (:latex
-;;;             "The \\texttt{add-info} function adds auxiliary information to a result record."))
-;;;    (:callspec (result-report info-item)))
 
 (defgeneric format-for-warning (stream item colon at-sign &rest params)
   (:documentation "Hook allowing us to sometimes do better than the usual

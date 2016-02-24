@@ -497,14 +497,17 @@ The last form shows all interesting results."
          (t (apply #'run-command-actual command-name command-args)))))))
 
 (defmacro nst-cmd (&rest args)
+  "User-level NST operations are accessible from the REPL via the =nst-cmd=
+macro.
+#+begin_example
+\(nst-cmd NST-COMMAND ARG ... ARG)
+#+end_example
+Where a particular system supports the facility (Currently Allegro, and SBCL
+under ACL-REPL) the top-level alias =:nst= provides a shorthand to this
+function.
+
+See the manual for a list of NST commands."
   `(apply #'run-nst-command ',args))
-;;;(def-documentation (macro nst-cmd)
-;;;  (:tags control)
-;;;  (:properties (api-summary control))
-;;;    (:intro (:latex "User-level NST operations are accessible from the REPL via the~\\texttt{nst-cmd}\\index{nst-cmd@\\texttt{nst-cmd}} macro."))
-;;;    (:callspec (nst-command (:seq arg)))
-;;;    (:details (:latex "Where a particular system supports the facility,\\footnote{Currently Allegro, and SBCL under ACL-REPL.} the top-level alias \\texttt{:nst}\\index{nst@\texttt{:nst}} provides a shorthand to this function."))
-;;;    (:blurb "Run an NST command.  See the NST manual for a list of NST commands."))
 
 ;;; Platform-specific command-line interpreter interfaces.
 
