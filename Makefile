@@ -1,4 +1,8 @@
 
+README.md:
+	(cd doc; make nst-manual.md)
+	cp doc/nst-manual.md README.md
+
 clean:
 	rm -rf doc/html
 	rm -f *.ps */*.ps */*/*.ps \
