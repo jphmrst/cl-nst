@@ -1,6 +1,10 @@
+#+LaTeX_HEADER: \parindent 0pt \parskip 0.5em
 #+TITLE: NST 4.1 User Manual
 #+AUTHOR:
+#+OPTIONS: skip:nil toc:1
+#+LaTeX: \vspace*{5mm}
 
+#+LaTeX: \noindent
 This document is the manual and users' guide to the 4.1.$x$ series of
 the NST test framework, last updated for 4.1.0.  NST is a unit test
 system for Common Lisp which provides support for test fixture data,
@@ -13,17 +17,15 @@ we have adapted for this manual).  Known bugs and infelicities,
 platform-specific release notes, and other technical materials are
 available via the link on NST's CLiki page, =cliki.net/NST=.
 
-\paragraph{Contributors.}The primary author of both NST and this
-manual is John Maraist\footnote{Smart Information Flow Technologies,
-211 North First Street, Suite 300, Minneapolis, MN 55401;
-\textsl{jmaraist} at \textsl{sift.info}.}.  Robert P. Goldman
-provided guidance, comments and suggestions through the development.
-Other contributors include Michael J.\,S. Pelican, Steven A. Harp,
-Michael Atighetchi and Patrick
-Stein.
+*Contributors.* The primary author of both NST and this manual is John
+Maraist (Smart Information Flow Technologies, 211 North First Street,
+Suite 300, Minneapolis, MN 55401; =jmaraist= at =sift.info=).  Robert
+P. Goldman provided guidance, comments and suggestions through the
+development.  Other contributors include Michael J.S. Pelican,
+Steven A. Harp, Michael Atighetchi and Patrick Stein.
 
 * Fixtures
-#+INCLUDE: "./gen/def-fixture.org"
+#+INCLUDE: "./gen/def-fixtures.org"
 #+INCLUDE: "./gen/with-fixtures.org"
 * Test groups
 #+INCLUDE: "./gen/def-test-group.org"
@@ -94,7 +96,10 @@ process.
 #+INCLUDE: "./gen/assert-not-eql.org"
 
 ** Defining new assertion functions
+#+INCLUDE: "./gen/def-unary-predicate-assert.org"
 #+INCLUDE: "./gen/def-binary-predicate-assert.org"
+#+INCLUDE: "./gen/def-unary-negated-predicate-assert.org"
+#+INCLUDE: "./gen/def-binary-negated-predicate-assert.org"
 
 ** A simpler process checker
 - =:process=
@@ -117,60 +122,43 @@ be generated, and specifying the test itself.
 Data generation is centered around the generic function =arbitrary=.
 #+INCLUDE: "./gen/arbitrary.org"
 
-NST provides methods of \emph{arbitrary} for many standard Lisp
-types, listed in Table~\ref{table:built-in-arbitrary-types}.  Types in
-the first column --- the standard numeric types plus the common
-supertype \index{t@\texttt{t}}\texttt{t} are not associated with
-additional keyword arguments.\begin{verbatim} (nst:arbitrary t)
-#+begin_example
-(nst:arbitrary 'complex)
-(nst:arbitrary 'integer)
-(nst:arbitrary 'ratio)
-(nst:arbitrary 'single-float)
-#+end_example
-Keyword arguments for other NST-provided type specifiers are as
-follows:
-\begin{table}
-\begin{center}
-  \texttt{
-    \begin{tabular}{lll|ll||l}
-      \multicolumn{5}{c}{\textrm{\textbf{Standard Lisp types}}}
-          & \multicolumn{1}{c}{\textrm{\textbf{Other types}}}
-      \ \hline
-         number  & character & symbol & cons   & hash-table & scalar
-      \ real & string    &        & list   & &
-      \ rational &       &        & vector & &
-      \ integer  &       &        & array  & &
-      \ float &&&&t&
-      \ fixnum &&&& &
-      \ bignum &&&& &
-      \ ratio &&&& &
-      \ \multicolumn{2}{l}{short-float\footnotemark} &&& &
-      \ \multicolumn{2}{l}{single-float} &&& &
-      \ \multicolumn{2}{l}{double-float\addtocounter{footnote}{-1}\footnotemark} &&& &
-      \ \multicolumn{2}{l}{long-float} &&& &
-      \ complex &&&& &
-      \ \cline{1-3} \multicolumn{3}{c}{\textrm{Considered \texttt{scalar}}}
-    \end{tabular}}
-\end{center}
-\caption{NST provides methods of generic function \texttt{arbitrary} generating values of the types in this table.}
-\label{table:built-in-arbitrary-types}
-\end{table}
-\footnotetext{Not available on Allegro Lisp.}
+NST provides methods of /arbitrary/ for many standard Lisp types.
+Non-scalar types are associated with additional keyword arguments for
+constraints on value generation.
+- Standard numeric types =number=, =real=, =rational=, =integer=,
+  =float=, =fixnum=, =bignum=, =ratio=, =short-float=, =single-float=,
+  =double-float=, =long-float=, =complex=.
+
+  These standard numeric types are not associated with additional
+  keyword arguments.
+  #+begin_example
+  (nst:arbitrary t)
+  (nst:arbitrary 'complex)
+  (nst:arbitrary 'integer)
+  (nst:arbitrary 'ratio)
+  (nst:arbitrary 'single-float)
+  #+end_example
+
+  Note that =short-float=, =single-float=, =double-float= are not
+  available on Allegro Lisp.
 
 - Types =character= and =string=:
   - Argument =noncontrol=.  Excludes the control characters associated
     with ASCII code 0 through 31.
   - Argument =range=.  Allows the range of characters to be restricted
     to a particular subset:
-    \begin{center}
-      \begin{tabular}{>{\ttfamily:}c|l}
-        \multicolumn{1}{c|}{Value} & \multicolumn{1}{c}{Meaning}
-        \ \hline standard & Codes up to 96
-        \ ascii & Codes through 127
-        \ ascii-ext & Codes through 255
-      \end{tabular}
-    \end{center}
+    |--------------+-------------------|
+    | Value        | Meaning           |
+    |--------------+-------------------|
+    | =:standard=  | Codes up to 96    |
+    | =:ascii=     | Codes through 127 |
+    | =:ascii-ext= | Codes through 255 |
+    |--------------+-------------------|
+    # LaTeX: \begin{center}
+    # LaTeX:   \begin{tabular}{>{\ttfamily:}c|l}
+    # LaTeX:     \multicolumn{1}{c|}{Value} & \multicolumn{1}{c}{Meaning}
+    # LaTeX:   \end{tabular}
+    # LaTeX: \end{center}
     Omitted or with any other value, characters with any code up to
     =char-code-limit= can result.  Examples:
     #+begin_example
@@ -178,7 +166,7 @@ follows:
 (nst:arbitrary '(character :noncontrol t
                            :range :standard))
     #+end_example
-- Type \texttt{symbol}.
+- Type =symbol=.
   - Argument =existing=. If non-nil, requires that the result be a
     previously-interned symbol.
   - Argument =exported=. Requires that the result be not only a
@@ -191,17 +179,24 @@ follows:
     restriction to guarantee returning a non-nil symbol.  When null,
     =arbitrary= may return nil.
   - Argument =gensym=. If non-nil, and if =arbitrary= is explicitly
-    set to nil, returns a new uninterned symbol.\end{itemize}
+    set to nil, returns a new uninterned symbol.
+
+- Type =scalar=.  The common supertype of the above numeric types,
+  =character=, =string= and =symbol=.  This specifier is not
+  associated with additional keyword arguments.
+
 - Type =cons=.
-\item Arguments =car= and =cdr= should be additional type
-specifications, used direct the generation of respectively the left
-and right elements of the result.  Each defaults to =t=.\end{itemize}
+  - Arguments =car= and =cdr= should be additional type
+    specifications, used direct the generation of respectively the left
+    and right elements of the result.  Each defaults to =t=.
+
 - Type =list= and
   =vector=.
   - Argument =length= specifies the length of the structure. If
     omitted, will be randomly generated.
   - Argument =elem= directs the generation of the container's
-    elements.  For both, the default element type is =t=.\end{itemize}
+    elements.  For both, the default element type is =t=.
+
 - Type =array=.
   - Argument =elem=. As for =list= and =vector=.
   - Argument =dimens=.  Should be a list of nonnegative integers
@@ -210,7 +205,8 @@ and right elements of the result.  Each defaults to =t=.\end{itemize}
   - Argument =rank=. Specifies the number of dimensions. If omitted
     but =dimens= is given, will be set to the length of =dimens=.  If
     both =rank= and =dimens= are omitted, then both are randomly
-    generated.\end{itemize}
+    generated.
+
 - Type =hash-table=.
   - Argument =size=. Specifies the number of entries in the table.  If
     omitted, will be randomly generated.
@@ -223,36 +219,22 @@ and right elements of the result.  Each defaults to =t=.\end{itemize}
     =scalar= otherwise.  For the values, the default element type is
     =t=.
 
+- Type =t=.  The common supertype of all Lisp types.  This specifier
+  is not associated with additional keyword arguments.
+
 Beyond those standard Lisp types, NST provides the type =scalar= as a
 supertype of the numeric types plus character, =string= and
-\texttt{symbol}. Users may extend this definition to include
+=symbol=. Users may extend this definition to include
 additional type specifications, as we discuss below.  Types are not
-associated with \texttt{scalar} are referred to as \texttt{compound}\
+associated with =scalar= are referred to as =compound=
 (although there is no corresponding type specification).  To avoid
 generating structures too large to hold in memory, NST provides the
-global variable *max-compound-structure-depth* and the macro
+global variable =*max-compound-structure-depth*= and the macro
 =compound-structure=.
 
-- =*max-compound-structure-depth*=
-
-  The =*max-compound-structure-depth*= variable sets the maximum
-  nesting depth of compound data structures: beyond that depth,
-  =scalar= rather than =t= is the default element generator.  This
-  restriction does not apply to explicitly specified element types,
-  only to the use of defaults.
-
-
-#+INCLUDE: "./gen/compound-structure@.org"
-#+INCLUDE: "./gen/def-arbitrary-instance-type@.org"
-#+INCLUDE: "./gen/.org"
-#+INCLUDE: "./gen/.org"
-#+INCLUDE: "./gen/.org"
-#+INCLUDE: "./gen/.org"
-#+INCLUDE: "./gen/.org"
-#+INCLUDE: "./gen/.org"
-#+INCLUDE: "./gen/.org"
-#+INCLUDE: "./gen/.org"
-#+INCLUDE: "./gen/.org"
+#+INCLUDE: "./gen/_max-compound-structure-depth_.org"
+#+INCLUDE: "./gen/compound-structure.org"
+#+INCLUDE: "./gen/def-arbitrary-instance-type.org"
 
 ** Invariants as tests
 
@@ -265,346 +247,378 @@ requires.  NST provides two mechanisms for defining new criteria, and
 a number of support functions for use within these definitions.  The
 simpler, but more limited, way to define a new criterion is by
 specifying how it should be rewritten to another criterion.  The
-\index{def-criterion-alias@\texttt{def-criterion-alias}}\texttt{def-criterion-alias}
-macro provides this mechanism, which we discuss in Section
-\ref{def-criterion-alias-section}.  The
-\index{def-criterion@\texttt{def-criterion}}\texttt{def-criterion}
+=def-criterion-alias= macro provides this mechanism, which we discuss
+in Section \ref{def-criterion-alias-section}.  The =def-criterion=
 macro provides the more general mechanism for criteria definition,
 where Lisp code produces a result report from the forms under test and
-criterion's forms and subcriteria.  We discuss
-\index{def-criterion@\texttt{def-criterion}}\texttt{def-criterion} in
+criterion's forms and subcriteria.  We discuss =def-criterion= in
 Section \ref{def-criterion-section}.  We discuss the NST API for
 creating these result reports in Section
 \ref{criteria-forms-report-section}, and for recursive processing of
 subcriteria in Section \ref{subcriteria-section}.
 
-\label{g17100}\subsection{Aliases over criteria}\label{def-criterion-alias-section}\index{def-criterion-alias@\texttt{def-criterion-alias}|(}\label{def-criterion-alias:primary}The simplest mechanism for defining a new criterion involves simply
-defining one criterion to rewrite as another using
-\texttt{def-criterion-alias}:\index{def-criterion-alias@\texttt{def-criterion-alias}}\begin{verbatim}  (def-criterion-alias ( name arg ... arg )
-    [ documentation ]
-    expansion)
-\end{verbatim}The body of the expansion should be a Lisp form which, when evaluated, returns an S-expression quoting the new criterion which the rewrite should produce.  The \texttt{arg}s are passed as for Lisp macros: they are not evaluated and are most typically comma-inserted into a backquoted result.  For example:\begin{verbatim}  (def-criterion-alias (:forms-eq) `(:predicate eq))
-  (def-criterion-alias (:symbol name) `(:eq ',name))\end{verbatim}\index{def-criterion-alias@\texttt{def-criterion-alias}|)}
+** Aliases over criteria
+#+LaTeX: \label{def-criterion-alias-section}
+#+INCLUDE: "./gen/def-criterion-alias.org"
 
-\subsection{Reporting forms}NST provides functions both for building test reports, and for adding information to a report.
+** Reporting forms
+#+LaTeX: \label{def-criterion-section}
+NST provides functions both for building test reports, and for adding
+information to a report.
+#+INCLUDE: "./gen/make-success-report.org"
+#+INCLUDE: "./gen/make-failure-report.org"
+#+INCLUDE: "./gen/make-warning-report.org"
+#+INCLUDE: "./gen/make-error-report.org"
+#+INCLUDE: "./gen/add-error.org"
+#+INCLUDE: "./gen/add-failure.org"
+#+INCLUDE: "./gen/add-info.org"
+#+INCLUDE: "./gen/add-warning.org"
+#+INCLUDE: "./gen/wrap-thrown-lisp-warning.org"
 
-\begin{itemize}\label{def-criterion-section}
-\item \index{make-success-report@\texttt{make-success-report}|(}\label{make-success-report:primary}The \texttt{make-success-report} function indicates a successful test result.\begin{verbatim}  (make-success-report )
-\end{verbatim}Note that some older examples show \texttt{(make-check-result)}, \texttt{(emit-success)} or \texttt{(check-result)}.  The former is an internal function and should not be used from outside the core NST files.  The latter two are deprecated.\index{make-success-report@\texttt{make-success-report}|)}
-\item \index{make-failure-report@\texttt{make-failure-report}|(}\label{make-failure-report:primary}The \texttt{make-failure-report} function returns a report of test failure.\begin{verbatim}  (make-failure-report [ :format format-string ]
-                       [ :args arg-form-list ])
-\end{verbatim}The \texttt{format-string} and \texttt{args} are as to the Common Lisp function \texttt{format}.  The \texttt{emit-failure} function is an older, deprecated version of this function.\index{make-failure-report@\texttt{make-failure-report}|)}
-\item \index{make-warning-report@\texttt{make-warning-report}|(}\label{make-warning-report:primary}Function \texttt{make-warning-report} is like \texttt{make-failure-report}, but provides supplimentary information as a warning.\begin{verbatim}  (make-warning-report [ :format format-string ]
-                       [ :args arg-form-list ])
-\end{verbatim}The \texttt{emit-warning} function is an older, deprecated version of this function.\index{make-warning-report@\texttt{make-warning-report}|)}
-\item \index{make-error-report@\texttt{make-error-report}|(}\label{make-error-report:primary}Function \texttt{make-error-report} produces a report of an error during test execution.\begin{verbatim}  (make-error-report [ :format format-string ]
-                     [ :args arg-form-list ])
-\end{verbatim}\index{make-error-report@\texttt{make-error-report}|)}
-\item \index{add-error@\texttt{add-error}|(}\label{add-error:primary}The \texttt{add-error} function adds an error note to a result record.\begin{verbatim}  (add-error result-report
-             [ :format format-string ]
-             [ :args argument-list ])
-\end{verbatim}\index{add-error@\texttt{add-error}|)}
-\item \index{add-failure@\texttt{add-failure}|(}\label{add-failure:primary}The \texttt{add-failure} function adds a failure note to a result record.\begin{verbatim}  (add-failure result-report
-               [ :format format-string ]
-               [ :args argument-list ])
-\end{verbatim}\index{add-failure@\texttt{add-failure}|)}
-\item \index{add-info@\texttt{add-info}|(}\label{add-info:primary}The \texttt{add-info} function adds auxiliary information to a result record.\begin{verbatim}  (add-info result-report info-item)
-\end{verbatim}\index{add-info@\texttt{add-info}|)}
-\item \index{add-warning@\texttt{add-warning}|(}\label{add-warning:primary}The \texttt{add-warning} function adds an warning to a result record.  The item can be any of a Lisp warning, an NST check-note or a format string; in the first two cases, no additional arguments should be provided.\begin{verbatim}  (add-warning result-report
-               [ :format item ] [ :args argument-list ])
-\end{verbatim}\index{add-warning@\texttt{add-warning}|)}
-\item \index{wrap-thrown-lisp-warning@\texttt{wrap-thrown-lisp-warning}|(}\label{wrap-thrown-lisp-warning:primary}The helper function \index{wrap-thrown-lisp-warning@\texttt{wrap-thrown-lisp-warning}}\texttt{wrap-thrown-lisp-warning}  creates an NST \index{check-note@\texttt{check-note}}\texttt{check-note}  object from a standard Lisp \index{warning@\texttt{warning}}\texttt{warning}.\index{wrap-thrown-lisp-warning@\texttt{wrap-thrown-lisp-warning}|)}\end{itemize}
-
-\subsection{Processing subcriteria}The criterion itself can contain \emph{subcriteria}  which can be
+** Processing subcriteria
+#+LaTeX: \label{criteria-forms-report-section}
+The criterion itself can contain /subcriteria/ which can be
 incorporated into the main criterion's assessment.  NST provides two
 functions which trigger testing by a subcriterion, each returning the
 check's result report.
 
-\label{criteria-forms-report-section}\index{check-criterion-on-value@\texttt{check-criterion-on-value}|(}\label{check-criterion-on-value:primary}The \texttt{check-criterion-on-value} function can be called from within a criterion body to verify that a value adheres to a criterion.\begin{verbatim}  (check-criterion-on-value criterion value)
-\end{verbatim}\index{check-criterion-on-value@\texttt{check-criterion-on-value}|)}
+#+INCLUDE: "./gen/check-criterion-on-value.org"
+#+INCLUDE: "./gen/check-criterion-on-form.org"
 
-\index{check-criterion-on-form@\texttt{check-criterion-on-form}|(}\label{check-criterion-on-form:primary}The \texttt{check-criterion-on-form} function verifies that an unevaluated form adheres to a criterion.\begin{verbatim}  (check-criterion-on-form criterion form)
-\end{verbatim}\index{check-criterion-on-form@\texttt{check-criterion-on-form}|)}
+** General criteria definitions
+#+LaTeX: \label{subcriteria-section}
+#+INCLUDE: "./gen/def-criterion.org"
 
-\subsection{General criteria definitions}\label{subcriteria-section}\index{def-criterion@\texttt{def-criterion}|(}\label{def-criterion:primary}The \texttt{def-criterion} macro defines a new criterion for use in NST tests.  These criteria definitions are like generic function method definitions with two sets of formal parameters: the forms provided as the actual parameters of the criterion  itself, and the values arising from the evaluation of the forms under test.\index{def-criterion@texttt{def-criterion}}\begin{verbatim}  (def-criterion ( name criterion-lambda-list
-                   values-lambda-list )
-    [ documentation ]
-    form
-    ...
-    form)
-\end{verbatim}\begin{description}
-\item[name] Name of the criterion.
-\item[criterion-lambda-list] Lambda list for the arguments to the criterion.  Optionally, the first element of the list is a symbol specifying the parameter-passing semantics for the criterion arguments: \texttt{:values} for call-by-value, or \texttt{:forms} for call-by-name (the default).  The list may include the keywords \texttt{\&key}, \texttt{\&optional}, \texttt{\&body} and \texttt{\&rest} but may not use \texttt{\&whole} or \texttt{\&environment}.  Apart from this restriction, in the former case the list may be any ordinary lambda list as for \texttt{defun}, and in the latter case the list may be any macro lambda list as for \texttt{defmacro}.
-\item[values-lambda-list] Lambda list for the forms under test.  Optionally, the first element of the list is a symbol specifying the parameter-passing semantics for the criterion arguments: \texttt{:values} for call-by-value (the default), or \texttt{:form} for call-by-name.  In the former case, the list may include the keywords \texttt{\&key}, \texttt{\&optional}, \texttt{\&body} and \texttt{\&rest}, but not \texttt{\&whole} or \texttt{\&environment}; apart from that restriction, list may be any ordinary lambda list as for \texttt{defun}.  In the latter case, the remainder of the list must contain exactly one symbol, to which a form which would evaluate to the values under test will be bound.
+* The runtime system
+The runtime system provides several operations for scheduling and
+running tests, and debugging failing and erring tests.
+#+INCLUDE: "./gen/nst-cmd.org"
+For the sake of brevity we use the =:nst= shorthand below.
+- =:help=
+There are a number of commands for running tests, but most of the time
+only one will be needed:
+- \label{run:primary}The =:run= command executes all tests in the
+  named package, or in the named group, or runs the named test. It is
+  not necessary to prefix the name with a package prefix.  The name
+  does not need to be prefix-qualified, but if the name is ambiguous
+  then =:run= will simply report the possible interpretations.
+  #+begin_example
+  :nst :run name
+  #+end_example
+- \label{run-package:primary} The =:run-package= command executes all
+  tests associated with groups in the named packages, and reports the
+  test results afterwards.
+  #+begin_example
+  :nst :run-package package ... package
+  #+end_example
+- \label{run-group:primary} The =:run-group= command executes all
+  tests associated with the name groups, and reports the test results
+  afterwards. The group name should be package-qualified.
+  #+begin_example
+  :nst :run-group group ... group
+  #+end_example
+- \label{run-test:primary} The =:run-test= command executes the given
+  test.  Both the group and test name should be package-qualified.
+  #+begin_example
+  :nst :run-test group test
+  #+end_example
 
-If the criterion ignores the values, then instead of a lambda list, this argument may be the symbol \texttt{:ignore}.  On many platforms, listing a dummy parameter which is then \texttt{declare}d \texttt{ignore} or \texttt{ignorable} will produce a style warning: the body of a \texttt{def-criterion} should not be assumed to correspond directly to the body of a \texttt{defmethod}; in general there will be surrounding \texttt{destructuring-bind}s.
-\item[documentation] An optional documentation string for the criterion.
-\item[form] The body of the criterion definition should return a test result report contructed with the \texttt{make-success-report}, etc. functions.\end{description}Examples:\begin{verbatim}(def-criterion (:true () (bool))
-  (if bool
-      (make-success-report)
-      (make-failure-report :format "Expected non-null, got: ~s"
-                    :args (list bool))))
+One further command for running a test is useful when writing and
+debugging the tests themselves:
 
-(def-criterion (:eql (target) (actual))
-  (if (eql (eval target) actual)
-      (make-success-report)
-      (make-failure-report :format "Not eql to value of ~s"
-                    :args (list target))))\end{verbatim}\index{def-criterion@\texttt{def-criterion}|)}
-
-\section{The runtime system}The runtime system provides several operations for scheduling and running tests, and debugging failing and erring tests.
-
-\label{g17101}\index{nst-cmd@\texttt{nst-cmd}|(}\label{nst-cmd:primary}User-level NST operations are accessible from the REPL via the~\texttt{nst-cmd}\index{nst-cmd@\texttt{nst-cmd}} macro.\begin{verbatim}  (nst-cmd nst-command arg ... arg)
-\end{verbatim}Where a particular system supports the facility,\footnote{Currently Allegro, and SBCL under ACL-REPL.} the top-level alias \texttt{:nst}\index{nst@texttt{:nst}} provides a shorthand to this function.\index{nst-cmd@\texttt{nst-cmd}|)}
-
-For the sake of brevity we use the \index{nst@\texttt{nst}}\texttt{nst}  shorthand below.
-
-\index{help@\texttt{help}|(}\label{help:primary}The \texttt{:help} command gives a complete inventory of runtime system commands.\begin{verbatim}  :nst :help
-\end{verbatim}\index{help@\texttt{help}|)}
-
-There are a number of commands for running tests, but most of the time only one will be needed:
-
-\begin{itemize}\label{g17371}
-\item \index{run@\texttt{run}|(}\label{run:primary}The \texttt{:run} command executes all tests in the named package, or in the named group, or runs the named test. It is not necessary to prefix the name with a package prefix.  The name does not need to be prefix-qualified, but if the name is ambiguous then \texttt{:run} will simply report the possible interpretations.\begin{verbatim}  :nst :run name
-\end{verbatim}\index{run@\texttt{run}|)}
-\item \index{run-package@\texttt{run-package}|(}\label{run-package:primary}The \texttt{:run-package} command executes all tests associated with groups in the named packages, and reports the test results afterwards.\begin{verbatim}  :nst :run-package package ... package
-\end{verbatim}\index{run-package@\texttt{run-package}|)}
-\item \index{run-group@\texttt{run-group}|(}\label{run-group:primary}The \texttt{:run-group} command executes all tests associated with the name groups, and reports the test results afterwards. The group name should be package-qualified.\begin{verbatim}  :nst :run-group group ... group
-\end{verbatim}\index{run-group@\texttt{run-group}|)}
-\item \index{run-test@\texttt{run-test}|(}\label{run-test:primary}The \texttt{:run-test} command executes the given test.  Both the group and test name should be package-qualified.\begin{verbatim}  :nst :run-test group test
-\end{verbatim}\index{run-test@\texttt{run-test}|)}\end{itemize}
-
-One further command for running a test is useful when writing and debugging the tests themselves:
-
-\begin{itemize}\label{g17372}
-\item \index{apply@\texttt{apply}|(}\label{apply:primary}The \texttt{:apply} command assesses whether a test criterion prints the uses to which a particular name has been applied in an NST session.\begin{verbatim}  :nst :apply name
-\end{verbatim}\index{apply@\texttt{apply}|)}
-\item \index{apply@\texttt{apply}|(}The \index{apply@\texttt{apply}}\texttt{apply}  criterion first evaluates the forms under test, applying \texttt{FUNCTION} to them.  The overall criterion passes or fails exactly when the subordinate \texttt{CRITERION} with the application's multiple result values.\begin{verbatim}  (:apply FUNCTION CRITERION)
-\end{verbatim}Example:\begin{verbatim}(def-test applycheck (:apply cadr (:eql 10)) '(0 10 20))\end{verbatim}\index{apply@\texttt{apply}|)}\end{itemize}
+- \label{apply:primary} The =:apply= command assesses whether a test
+  criterion prints the uses to which a particular name has been
+  applied in an NST session.
+  #+begin_example
+  :nst :apply name
+  #+end_example
+- The =apply= criterion first evaluates the forms under test, applying
+  =FUNCTION= to them.  The overall criterion passes or fails exactly
+  when the subordinate =CRITERION= with the application's multiple
+  result values.
+  #+begin_example
+  (:apply FUNCTION CRITERION)
+  #+end_example
+  Example:
+  #+begin_example
+  (def-test applycheck (:apply cadr (:eql 10)) '(0 10 20))
+  #+end_example
 
 There are two commands for (re)printing the results of tests:
 
-\begin{itemize}\label{g17373}
-\item \index{report@\texttt{report}|(}\label{report:primary}The \texttt{:report} command summarizes successes, failures and errors in tests.  It reports either for the named artifact, or for all recently-run tests.\begin{verbatim}  :nst :report
-
+- \label{report:primary} The =:report= command summarizes successes,
+  failures and errors in tests.  It reports either for the named
+  artifact, or for all recently-run tests.
+  #+begin_example
+  :nst :report
   :nst :report package
-
   :nst :report group
-
   :nst :report group test
-\end{verbatim}\index{report@\texttt{report}|)}
-\item \index{detail@\texttt{detail}|(}\label{detail:primary}The \texttt{:report} command gives detailed information about individual test results.\begin{verbatim}  :nst :detail
-
+  #+end_example
+- \label{detail:primary} The =:report= command gives detailed
+  information about individual test results.
+  #+begin_example  :nst :detail
   :nst :detail package
-
   :nst :detail group
-
   :nst :detail group test
-\end{verbatim}\index{detail@\texttt{detail}|)}\end{itemize}
+  #+end_example
 
-The \index{undef@\texttt{undef}}\texttt{undef}  and \index{clear@\texttt{clear}}\texttt{clear}  commands allow removal of groups, tests and results.
+The =undef=  and =clear=  commands allow removal of groups, tests and results.
 
-\begin{itemize}\label{g17374}
-\item \index{undef@\texttt{undef}|(}\label{undef:primary}The \texttt{:undef} command retracts the definition of an NST group or test.\begin{verbatim}  :nst :undef group-name
-
+- \label{undef:primary}The =:undef= command retracts the definition of
+  an NST group or test.
+  #+begin_example
+  :nst :undef group-name
   :nst :undef group-name test-name
-\end{verbatim}Currently, NST does require that the symbols passed to \index{undef@\texttt{undef}}\texttt{undef}  be correctly package-qualified.\index{undef@\texttt{undef}|)}
-\item \index{clear@\texttt{clear}|(}\label{clear:primary}The \texttt{:clear} command empties NST's internal record of test results.\begin{verbatim}  :nst :clear
-\end{verbatim}\index{clear@\texttt{clear}|)}\end{itemize}
+  #+end_example
 
-The \index{set@\texttt{set}}\texttt{set}  and \index{unset@\texttt{unset}}\texttt{unset}  display and adjust NST's configuration.
+  Currently, NST does require that the symbols passed to =undef= be
+  correctly package-qualified.
 
-\begin{itemize}\label{g17375}
-\item \index{set@\texttt{set}|(}\label{set:primary}The \texttt{:set} command assigns or displays the values of NST runtime switches.\begin{verbatim}  :nst :set property
+- \label{clear:primary} The =:clear= command empties NST's internal
+  record of test results.
+  #+begin_example
+  :nst :clear
+  #+end_example
 
+The =set= and =unset= display and adjust NST's configuration.
+
+- \label{set:primary} The =:set= command assigns or displays the
+  values of NST runtime switches.
+  #+begin_example
+  :nst :set property
   :nst :set property value
-\end{verbatim}\index{set@\texttt{set}|)}
-\item \index{unset@\texttt{unset}|(}\label{unset:primary}The \texttt{:unset} command clears the values of NST runtime switches.\begin{verbatim}  :nst :unset property
-\end{verbatim}\index{unset@\texttt{unset}|)}\end{itemize}
+  #+end_example
+- \label{unset:primary} The =:unset= command clears the values of NST
+  runtime switches.
+  #+begin_example
+  :nst :unset property
+  #+end_example
 
-There are currently three properties which can be manipulated by \index{set@\texttt{set}}\texttt{set}  and \index{unset@\texttt{unset}}\texttt{unset}:
+There are currently three properties which can be manipulated by =set=
+and =unset=:
 
-\begin{itemize}\label{g17376}
-\item \index{verbose@\texttt{verbose}|(}\label{verbose:primary}The \texttt{:verbosity} switch controls the level of NST's output.\begin{verbatim}  :nst :set :verbose setting
-\end{verbatim}Valid settings are:\begin{itemize}
-\item\texttt{:silent} (aka \texttt{nil})
-\item\texttt{:quiet} (aka \texttt{:default})
-\item\texttt{:verbose} (aka \texttt{t})
-\item\texttt{:vverbose}
-\item\texttt{:trace}\end{itemize}The \texttt{:report} and \texttt{:detail} commands operate by setting minimum levels of verbosity.\index{verbose@\texttt{verbose}|)}
-\item \index{debug-on-error@\texttt{debug-on-error}|(}\label{debug-on-error:primary}The \texttt{:debug-on-error} switch controls NST's behavior on errors.  When non-nil, NST will break into the debugger when it encounters an error.\begin{verbatim}  :nst :set :debug-on-error flag
-\end{verbatim}The \texttt{:debug} command is a short-cut for setting this property.\index{debug@\texttt{:debug}}\index{debug-on-error@\texttt{debug-on-error}|)}
-\item \index{debug-on-fail@\texttt{debug-on-fail}|(}\label{debug-on-fail:primary}The \texttt{:debug-on-fail} switch controls NST's behavior when a test fails  When non-nil, NST will break into the debugger when it encounters a failing test.\begin{verbatim}  :nst :set :debug-on-fail flag
-\end{verbatim}This behavior is less useful than it may seem; by the time the results of the test are examined for failure, the stack from the actual form evaluation will usually have been released.  Still, this switch is useful for inspecting the environment in which a failing test was run.Note that both \texttt{:debug-on-error} and \texttt{:debug-on-fail} apply in the case of an error; if the latter is set but the former is not, then the debugger will be entered after an erring test completes.The \texttt{:debug} command is a short-cut for setting this property.\index{debug@\texttt{:debug}}\index{debug-on-fail@\texttt{debug-on-fail}|)}
-\item \index{backtraces@\texttt{backtraces}|(}\label{backtraces:primary}The \texttt{:backtraces} switch, when non-\texttt{nil}, directs NST to attempt to capture the Lisp backtrace of errors in tests.\begin{verbatim}  :nst :set :backtraces flag
-\end{verbatim}This property is only available on platform which allow programmatic examination of backtraces, which is not standardized in Common Lisp; currently we have implemented this feature on Allegro only.This property has a complicated default setting.  Firstly, if the symbol \texttt{'common-lisp-user::*nst-generate-backtraces*} is bound when NST loads, NST will use its value as the initial value for this property.  Otherwise by default, on MacOS systems the property initializes to \texttt{nil} because of a known error on that system, but this setting can be overriden by the property \texttt{:nst-unsafe-allegro-backtraces}.  Finally, if none of these issues apply, the initial value is \texttt t.\index{backtraces@\texttt{backtraces}|)}\end{itemize}
+- \label{verbose:primary}The =:verbosity= switch controls the level of
+  NST's output.
+  #+begin_example
+  :nst :set :verbose setting
+  #+end_example
+  Valid settings are:
+  - =:silent= (aka =nil=)
+  - =:quiet= (aka =:default=)
+  - =:verbose= (aka =t=)
+  - =:vverbose=
+  - =:trace=
+  The =:report= and =:detail= commands operate by setting minimum
+  levels of verbosity.
+- \label{debug-on-error:primary}The =:debug-on-error= switch controls
+  NST's behavior on errors.  When non-nil, NST will break into the
+  debugger when it encounters an error.
+  #+begin_example
+  :nst :set :debug-on-error flag
+  #+end_example
+  The =:debug= command is a short-cut for setting this
+  property.
+- \label{debug-on-fail:primary} The =:debug-on-fail= switch controls
+  NST's behavior when a test fails When non-nil, NST will break into
+  the debugger when it encounters a failing test.
+  #+begin_example
+  :nst :set :debug-on-fail flag
+  #+end_example
+  This behavior is less useful than it may seem; by the time the
+  results of the test are examined for failure, the stack from the
+  actual form evaluation will usually have been released.  Still, this
+  switch is useful for inspecting the environment in which a failing
+  test was run.Note that both =:debug-on-error= and =:debug-on-fail=
+  apply in the case of an error; if the latter is set but the former
+  is not, then the debugger will be entered after an erring test
+  completes.The =:debug= command is a short-cut for setting this
+  property.
+- \label{backtraces:primary} The =:backtraces= switch, when non-=nil=,
+  directs NST to attempt to capture the Lisp backtrace of errors in
+  tests.
+  #+begin_example
+  :nst :set :backtraces flag
+  #+end_example
+  This property is only available on platform which allow programmatic
+  examination of backtraces, which is not standardized in Common Lisp;
+  currently we have implemented this feature on Allegro only.This
+  property has a complicated default setting.  Firstly, if the symbol
+  ='common-lisp-user::*nst-generate-backtraces*= is bound when NST
+  loads, NST will use its value as the initial value for this
+  property.  Otherwise by default, on MacOS systems the property
+  initializes to =nil= because of a known error on that system, but
+  this setting can be overriden by the property
+  =:nst-unsafe-allegro-backtraces=.  Finally, if none of these issues
+  apply, the initial value is ==.
 
-The above NST commands are governed by a number of global variables. In general, interactive use of NST should not require direct access to these variables, but when automating NST operations may require changing, or creating a new dynamic scope for, their settings.
+The above NST commands are governed by a number of global
+variables. In general, interactive use of NST should not require
+direct access to these variables, but when automating NST operations
+may require changing, or creating a new dynamic scope for, their
+settings.
 
-\begin{itemize}\label{g17377}
-\item \index{*debug-on-error*@\texttt{*debug-on-error*}|(}\label{*debug-on-error*:primary}User variable \texttt{*debug-on-error*}: if non-nil, will break into the Lisp REPL debugger upon encountering an unexpected error.  If nil, will record the error and continue with other tests.\index{*debug-on-error*@\texttt{*debug-on-error*}|)}
-\item \index{*debug-on-fail*@\texttt{*debug-on-fail*}|(}\label{*debug-on-fail*:primary}User variable \texttt{*debug-on-fail*}: if non-nil, will break into the Lisp REPL debugger upon encountering a test which fails.  If nil, will record the failure and continue with other tests.  This variable is useful inspecting the dynamic environment under which a test was evaluated.\index{*debug-on-fail*@\texttt{*debug-on-fail*}|)}
-\item \index{*default-report-verbosity*@\texttt{*default-report-verbosity*}|(}\label{*default-report-verbosity*:primary}User variable \texttt{*default-report-verbosity*} determines the default value for *nst-verbosity* when printing reports (2 by default).\index{*default-report-verbosity*@\texttt{*default-report-verbosity*}|)}
-\item \index{*nst-output-stream*@\texttt{*nst-output-stream*}|(}\label{*nst-output-stream*:primary}User variable \texttt{*nst-output-stream*} determines the output stream to which NST should print its output (\texttt{*standard-output*} by default).\index{*nst-output-stream*@\texttt{*nst-output-stream*}|)}\end{itemize}
+- \label{*debug-on-error*:primary} User variable =*debug-on-error*=: if
+  non-nil, will break into the Lisp REPL debugger upon encountering an
+  unexpected error.  If nil, will record the error and continue with
+  other tests.
+- \label{*debug-on-fail*:primary} User variable =*debug-on-fail*=: if
+  non-nil, will break into the Lisp REPL debugger upon encountering a
+  test which fails.  If nil, will record the failure and continue with
+  other tests.  This variable is useful inspecting the dynamic
+  environment under which a test was evaluated.
+- \label{*default-report-verbosity*:primary} User variable
+  =*default-report-verbosity*= determines the default value for
+  *nst-verbosity* when printing reports (2 by default).
+- \label{*nst-output-stream*:primary} User =*nst-output-stream*=
+  determines the output stream to which NST should print its
+  =*standard-output*= by default).
 
-Fixtures\index{fixtures!debugging} can be \emph{opened} into the interactive namespace for debugging with the \texttt{:nst~:open}
-\ Syntax: \texttt{:nst :open FIXTURE-NAME FIXTURE-NAME ... FIXTURE-NAME}
-\ Example:
-\begin{verbatim}
-  CL-USER(75): (nst:def-fixtures small-fixture ()
-                  (fix-var1 3)
-                  (fix-var2 'asdfg))
-  NIL
-  CL-USER(76): (boundp 'fix-var1)
-  NIL
-  CL-USER(77): :nst :open small-fixture
-  Opened fixture SMALL-FIXTURE.
-  CL-USER(78): fix-var1
-  3
-  CL-USER(79):
-\end{verbatim}
+Fixtures can be /opened/ into the interactive namespace for debugging:
+#+begin_example
+:nst :open FIXTURE-NAME FIXTURE-NAME ... FIXTURE-NAME
+#+end_example
+Example:
+#+begin_example
+CL-USER(75): (nst:def-fixtures small-fixture ()
+                (fix-var1 3)
+                (fix-var2 'asdfg))
+NIL
+CL-USER(76): (boundp 'fix-var1)
+NIL
+CL-USER(77): :nst :open small-fixture
+Opened fixture SMALL-FIXTURE.
+CL-USER(78): fix-var1
+3
+CL-USER(79):
+#+end_example
 Fixtures can be opened into a different package than where they were
 first defined, but these bindings are in addition to the bindings in
 the original package, and are made by a symbol import to the
 additional package.
 
-Calling \index{nst@\texttt{nst}}\texttt{nst}  or \index{nst-cmd@\texttt{nst-cmd}}\texttt{nst-cmd}  without a command argument repeats the last test-executing command.
+Calling =nst= or =nst-cmd= without a command argument repeats the last
+test-executing command.
 
-\section{Integration with ASDF}
+* Integration with ASDF
 NST's integration with ASDF is a work in progress.  This section
 described the current integration, the ways we expect it to change,
 and a less-flexible and lower-level, but likely more stable,
 alternative integration technique.
 
-\subsection{NST's ASDF systems}
-From version~1.2.2, the system \texttt{:asdf-nst} provides two classes
-for ASDF system definitions, \texttt{asdf:nst-test-runner} and
-\texttt{asdf:nst-test-holder}.
+** NST's ASDF systems
+From version 1.2.2, the system =:asdf-nst= provides two classes
+for ASDF system definitions, =asdf:nst-test-runner= and
+=asdf:nst-test-holder=.
 
-Up to NST~1.2.1 \texttt{:asdf-nst} provided a single class
-\texttt{asdf:nst-testable}, and in the future we plan to reunify the
+Up to NST 1.2.1 =:asdf-nst= provided a single class
+=asdf:nst-testable=, and in the future we plan to reunify the
 current two classes into a single class again.  However our first
 implementation required NST to be loaded even when a system was
-\emph{not} being tested, because we had no way to distinguish the
+/not/ being tested, because we had no way to distinguish the
 source code associated with testing from production code.  We plan to
-solve this problem with a new file type \texttt{nst-file} in a future
-version of NST.  This file type would \emph{not} be compiled or loaded
-for the \texttt{compile-op} or \texttt{load-op} of the system, only
-for its \texttt{test-op}\,.
+solve this problem with a new file type =nst-file= in a future
+version of NST.  This file type /not/ be compiled or loaded
+for the =compile-op= or =load-op= of the system, only
+for its =test-op=.
 
-\subsubsection{Test-running systems}
-ASDF systems of the \texttt{asdf:nst-test-runner} class do not
+*** Test-running systems
+ASDF systems of the =asdf:nst-test-runner= class do not
 themselves contain NST declarations in their source code, but may
 identify other systems which do, and which should be tested as a part
 of testing the given system.  These systems also allow local
 definitions of NST's configuration for the execution of their tests.
 
-Specify that a system runs NST tests by providing \texttt{:class
-  asdf:nst-test-runner} argument to \texttt{asdf:defsystem}.  Use the
-\texttt{:nst-systems} argument to name the systems which house the
+Specify that a system runs NST tests by providing =:class
+  asdf:nst-test-runner= argument to =asdf:defsystem=.  Use the
+=:nst-systems= argument to name the systems which house the
 actual unit tests:
-\begin{itemize}
 
-\item\texttt{:nst-systems ({\slshape system} {\slshape system}
-    $\cdots$ {\slshape system})}
+- =:nst-systems (system system ... system)=
 
-Specifies a list of other systems
+  Specifies a list of other systems
   which should be tested when testing this system.  These other
-  systems do \emph{not} otherwise need to be identified as a
-  dependency of this system (nor, for that matter, does \texttt{:nst}
-  itself); they will be loaded upon \texttt{test-op} if they are not
+  systems /not/ otherwise need to be identified as a
+  dependency of this system (nor, for that matter, does =:nst=
+  itself); they will be loaded upon =test-op= if they are not
   yet present.
-\end{itemize}
-Another optional argument to an \texttt{nst-test-runner} system
+
+Another optional argument to an =nst-test-runner= system
 definition is:
-\begin{itemize}
 
-\item\texttt{:nst-init ({\slshape arg-list ... arg-list})}\par
+- =:nst-init (arg-list ... arg-list)=
+
   Initializing arguments to NST, to be executed after this system is
-  loaded.  Each \texttt{arg-list} is passed as the arguments as if to
-  a call to the \texttt{nst-cmd} macro.
+  loaded.  Each =arg-list= is passed as the arguments as if to
+  a call to the =nst-cmd= macro.
 
-\item\texttt{:nst-debug-config {\slshape form}}
+- =:nst-debug-config form=
 
-NST debugging
-  customization for this system.  The \texttt{FORM} Should be an
-  expression which, when evaluated, returns a list of keyword
+  NST debugging customization for this system.  The =FORM= Should be
+  an expression which, when evaluated, returns a list of keyword
   arguments; note that to give the list itself, it must be explicitly
-  quoted, \emph{which is a change of behavior from pre-1.2.2
-    versions}.
+  quoted, /which is a change of behavior from pre-1.2.2 versions/.
 
-\item\texttt{:nst-debug-protect ({\slshape symbol ... symbol})} \par
+- =:nst-debug-protect (symbol ... symbol)= \par
   Gives a list of variables whose values should be saved before
-  applying any configuration changes from \texttt{:nst-debug-config},
+  applying any configuration changes from =:nst-debug-config=,
   and restored after testing.
 
-\item\texttt{:nst-push-debug-config {\slshape t-or-nil}}
+- =:nst-push-debug-config t-or-nil=
 
-If
-  non-nil, then when this system is loaded its \texttt{:nst-debug} and
-  \texttt{:nst-debug-protect} settings will be used as NST's defaults.
-\end{itemize}
+  If non-nil, then when this system is loaded its =:nst-debug= and
+  =:nst-debug-protect= settings will be used as NST's defaults.
 
-\subsubsection{Test-containing systems}
-The \texttt{asdf:nst-test-holder} class is a subclass of
-\texttt{nst-test-runner} for systems which are not only tested via
+*** Test-containing systems
+The =asdf:nst-test-holder= class is a subclass of
+=nst-test-runner= for systems which are not only tested via
 NST, but also contains NST tests in their source code.
 
-Specify that a system defines NST tests by providing \texttt{:class
-  asdf:nst-test-holder} to \texttt{asdf:defsystem}.  The arguments for
-\texttt{asdf:nst-test-runner} may be used for
-\texttt{asdf:nst-test-holder}, as well as the following:
-\begin{itemize}
+Specify that a system defines NST tests by providing =:class
+  asdf:nst-test-holder= to =asdf:defsystem=.  The arguments for
+=asdf:nst-test-runner= may be used for
+=asdf:nst-test-holder=, as well as the following:
 
-\item\texttt{:nst-packages ({\slshape package} {\slshape package}
-    $\cdots$ {\slshape package})}
+- =:nst-packages (package package ... package)=
 
-When the system is tested, all
+  When the system is tested, all
   groups and tests in the named packages should be run.
 
-\item\texttt{:nst-groups (({\slshape package} {\slshape group})
-    $\cdots$ ({\slshape package} {\slshape group}))}
+- =:nst-groups ((package group) ... (package group))=
 
-When the
-  system is tested, tests in the named groups should be run.  Naming
-  the package separately from the group and test in this argument (and
-  in the similar arguments below) allows the group to be named before
-  its package is necessarily defined.
+  When the system is tested, tests in the named groups should be run.
+  Naming the package separately from the group and test in this
+  argument (and in the similar arguments below) allows the group to be
+  named before its package is necessarily defined.
 
-\item\texttt{:nst-tests (({\slshape package} {\slshape group}
-    {\slshape test}) $\cdots$ ({\slshape package} {\slshape group}
-    {\slshape test}))}
+- =:nst-tests ((package group test) ... (package group test))=
 
-When the system is tested, all the named
+  When the system is tested, all the named
   tests should be run.
-\end{itemize}
-The next three arguments to an \texttt{nst-testable} system are
-mutually exclusive, and moreover exclude any of the above group or
-\texttt{:nst-systems}\,:
-\begin{itemize}
 
-\item\texttt{:nst-package {\slshape package}}
+The next three arguments to an =nst-testable= system are mutually
+exclusive, and moreover exclude any of the above group or
+=:nst-systems=:
 
-When the system is
+- =:nst-package package=
+
+  When the system is
   tested, all groups and tests in the named package should be run.
 
-\item\texttt{:nst-group ({\slshape package} {\slshape group})}\par
+- =:nst-group (package group)=
+
   When the system is tested, all tests in the named group should be
   run.
 
-\item\texttt{:nst-test ({\slshape package} {\slshape group} {\slshape
-      test})}
+- =:nst-test (package group test)=
 
-When the system is tested, the given test should be
-  run.
-\end{itemize}
-Figure~\ref{fig:asdf} gives examples of \texttt{nst-testable}
-ASDF system definitions.
-\begin{figure}
-\begin{verbatim}
+  When the system is tested, the given test should be run.
+Examples of =nst-testable= ASDF system definitions:
+#+begin_example
 ;; NST and its ASDF interface must be loaded
 ;; before we can process the defsystem form.
 (asdf:oos 'asdf:load-op :asdf-nst)
-
+#+LaTeX:
 (defsystem :mnst
     :class nst-test-holder
     :description "The NST test suite's self-test."
@@ -619,163 +633,163 @@ ASDF system definitions.
     :components ((:module "core"
                   :components ((:file "byhand")
                                (:file "builtin-checks")))))
-\end{verbatim}
-\caption{Definitions of \texttt{nst-testable} ASDF systems.}
-\label{fig:asdf}
-\end{figure}
+#+end_example
 
-\subsection{An alternate ASDF integration technique}
-We plan to deprecate and then remove \texttt{asdf:nst-test-holder} and
-\texttt{nst-test-runner} once we have implemented a unified
+** An alternate ASDF integration technique
+We plan to deprecate and then remove =asdf:nst-test-holder= and
+=nst-test-runner= once we have implemented a unified
 replacement for them.  To avoid the possibility of a bit-rotted test
 scheme, the link between a system and its unit tests can be made
 explicit by providing methods for ASDF generic functions which make
 calls to the NST API.  Specifically:
-\begin{itemize}
 
-\item A method of the ASDF \texttt{asdf:perform} generic function
-  specialized to the \texttt{asdf:test-op} operation and the system in
+- A method of the ASDF =asdf:perform= generic function
+  specialized to the =asdf:test-op= operation and the system in
   question will be executed to test a system.  So an appropriate
   method definition would begin:
-  \begin{verbatim}
+  #+begin_example
   (defmethod asdf:perform ((op asdf:test-op)
                            (sys (eql (asdf:find-system
                                         :SYSTEM-NAME))))
-\end{verbatim}
+  #+end_example
 
-\item NST API functions for running tests are:
-\begin{itemize}
+- NST API functions for running tests are:
 
-\item\texttt{nst:run-package}
+  - =nst:run-package=
 
-\item\texttt{nst:run-group}
+  - =nst:run-group=
 
-\item\texttt{nst:run-test}
-\end{itemize}
+  - =nst:run-test=
 
-\item The main NST API function for printing the results of testing is
-  \texttt{asdf:report-multiple}\,.  In situations where only a single
+- The main NST API function for printing the results of testing is
+  =asdf:report-multiple=\,.  In situations where only a single
   package, group or test is associated with a system, one of the
   following function may be more convenient:
-  \begin{itemize}
 
-\item\texttt{nst:report-package}
+  - =nst:report-package=
 
-\item\texttt{nst:report-group}
+  - =nst:report-group=
 
-\item\texttt{nst:report-test}
-  \end{itemize}
-\end{itemize}
-When providing an explicit \texttt{asdf:perform} method, it is also
-necessary to explicitly list system dependencies to NST and to the
-other systems which contain the tested system's unit test definitions.
+  - =nst:report-test=
+
+When providing an explicit =asdf:perform= method, it is also necessary
+to explicitly list system dependencies to NST and to the other systems
+which contain the tested system's unit test definitions.
+
+#+LaTeX: \appendix \addtocontents{toc}{\setcounter{tocdepth}{1}}
+#+LaTeX: \label{output-contents}
+
+* The NST API
+** Primary macros
+=def-criterion= --- \S\ref{def-criterion:primary}, p. \pageref{def-criterion:primary}.
+
+=def-criterion-alias= --- \S\ref{def-criterion-alias:primary}, p. \pageref{def-criterion-alias:primary}.
+
+=def-fixtures= --- \S\ref{def-fixtures:primary}, p. \pageref{def-fixtures:primary}.
+
+=def-test= --- \S\ref{def-test:primary}, p. \pageref{def-test:primary}.
+
+=def-test-group= --- \S\ref{def-test-group:primary}, p. \pageref{def-test-group:primary}.
+
+** Functions used in criteria definitions
+=add-error= --- \S\ref{add-error:primary}, p. \pageref{add-error:primary}.
+
+=add-failure= --- \S\ref{add-failure:primary}, p. \pageref{add-failure:primary}.
+
+=add-info= --- \S\ref{add-info:primary}, p. \pageref{add-info:primary}.
+
+=add-warning= --- \S\ref{add-warning:primary}, p. \pageref{add-warning:primary}.
+
+=check-criterion-on-form= --- \S\ref{check-criterion-on-form:primary}, p. \pageref{check-criterion-on-form:primary}.
+
+=check-criterion-on-value= --- \S\ref{check-criterion-on-value:primary}, p. \pageref{check-criterion-on-value:primary}.
+
+=make-error-report= --- \S\ref{make-error-report:primary}, p. \pageref{make-error-report:primary}.
+
+=make-failure-report= --- \S\ref{make-failure-report:primary}, p. \pageref{make-failure-report:primary}.
+
+=make-success-report= --- \S\ref{make-success-report:primary}, p. \pageref{make-success-report:primary}.
+
+=make-warning-report= --- \S\ref{make-warning-report:primary}, p. \pageref{make-warning-report:primary}.
+
+** Programmatic control of testing and output
+=*debug-on-error*= --- \S\ref{*debug-on-error*:primary}, p. \pageref{*debug-on-error*:primary}.
+
+=*debug-on-fail*= --- \S\ref{*debug-on-fail*:primary}, p. \pageref{*debug-on-fail*:primary}.
+
+=*default-report-verbosity*= --- \S\ref{*default-report-verbosity*:primary}, p. \pageref{*default-report-verbosity*:primary}.
+
+=*nst-output-stream*= --- \S\ref{*nst-output-stream*:primary}, p. \pageref{*nst-output-stream*:primary}.
+
+=junit-results-by-group= --- \S\ref{junit-results-by-group:primary}, p. \pageref{junit-results-by-group:primary}.
+
+=nst-cmd= --- \S\ref{nst-cmd:primary}, p. \pageref{nst-cmd:primary}.
+
+=nst-junit-dump= --- \S\ref{nst-junit-dump:primary}, p. \pageref{nst-junit-dump:primary}.
+
+** Testing randomized samples
+=*max-compound-structure-depth*= --- \S\ref{*max-compound-structure-depth*:primary}, p. \pageref{*max-compound-structure-depth*:primary}.
+
+=arbitrary= --- \S\ref{arbitrary:primary}, p. \pageref{arbitrary:primary}.
+
+=compound-structure= --- \S\ref{compound-structure:primary}, p. \pageref{compound-structure:primary}.
+
+=def-arbitrary-instance-type= --- \S\ref{def-arbitrary-instance-type:primary}, p. \pageref{def-arbitrary-instance-type:primary}.
+
+** Method-based tests on objects
+=def-test-generic= --- \S\ref{def-test-generic:primary}, p. \pageref{def-test-generic:primary}.
+
+=def-test-method= --- \S\ref{def-test-method:primary}, p. \pageref{def-test-method:primary}.
+
+=def-test-method-criterion= --- \S\ref{def-test-method-criterion:primary}, p. \pageref{def-test-method-criterion:primary}.
+
+=nst-results= --- \S\ref{nst-results:primary}, p. \pageref{nst-results:primary}.
+
+** Other symbols
+=with-fixtures= --- \S\ref{with-fixtures:primary}, p. \pageref{with-fixtures:primary}.
+
+** Deprecated macros, functions and variable
+=def-criterion-unevaluated= --- \S\ref{def-criterion-unevaluated:primary}, p. \pageref{def-criterion-unevaluated:primary}.
+
+=def-form-criterion= --- \S\ref{def-form-criterion:primary}, p. \pageref{def-form-criterion:primary}.
+
+=def-values-criterion= --- \S\ref{def-values-criterion:primary}, p. \pageref{def-values-criterion:primary}.
+
+=emit-failure= --- \S\ref{emit-failure:primary}, p. \pageref{emit-failure:primary}.
+
+=emit-success= --- \S\ref{emit-success:primary}, p. \pageref{emit-success:primary}.
+
+=emit-warning= --- \S\ref{emit-warning:primary}, p. \pageref{emit-warning:primary}.
 
 
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: "manual"
-%%% End:
 
+** Output to JUnit
+NST reports can be formatted as XML for use with JUnit, although the
+API for this feature is underdeveloped.
 
-\appendix \addtocontents{toc}{\setcounter{tocdepth}{1}}
+The =junit-results-by-group= function writes the NST test results in
+JUnit XML format, organized by group, aligning test groups with Java
+classes, and individual tests with =@Test= methods.
+#+begin_example
+(junit-results-by-group [ :verbose flag ]
+                        [ :dir directory ]
+                        [ :file filespec ]
+                        [ :stream stream ]
+                        [ :if-dir-does-not-exist bool ]
+                        [ :if-file-exists bool ])
+#+end_example
+Either =:dir= and =:file= options, or the =:stream= option, but not
+both, should be used to specify the target for XML output; if none of
+the three options are given, the function will write to
+=*standard-output*=.
 
-\label{g17102}\label{output-contents}\index{sift.nst@\texttt{sift.nst}|(}\section{The NST API}
-\subsection{Primary macros}
-\texttt{def-criterion} --- \S\ref{def-criterion:primary}, p.\,\pageref{def-criterion:primary}.
+Function =nst-junit-dump= pushes the entire NST state to a JUnit XML
+file whose stream is specified by its argument.
 
-\texttt{def-criterion-alias} --- \S\ref{def-criterion-alias:primary}, p.\,\pageref{def-criterion-alias:primary}.
-
-\texttt{def-fixtures} --- \S\ref{def-fixtures:primary}, p.\,\pageref{def-fixtures:primary}.
-
-\texttt{def-test} --- \S\ref{def-test:primary}, p.\,\pageref{def-test:primary}.
-
-\texttt{def-test-group} --- \S\ref{def-test-group:primary}, p.\,\pageref{def-test-group:primary}.
-
-\subsection{Functions used in criteria definitions}
-\texttt{add-error} --- \S\ref{add-error:primary}, p.\,\pageref{add-error:primary}.
-
-\texttt{add-failure} --- \S\ref{add-failure:primary}, p.\,\pageref{add-failure:primary}.
-
-\texttt{add-info} --- \S\ref{add-info:primary}, p.\,\pageref{add-info:primary}.
-
-\texttt{add-warning} --- \S\ref{add-warning:primary}, p.\,\pageref{add-warning:primary}.
-
-\texttt{check-criterion-on-form} --- \S\ref{check-criterion-on-form:primary}, p.\,\pageref{check-criterion-on-form:primary}.
-
-\texttt{check-criterion-on-value} --- \S\ref{check-criterion-on-value:primary}, p.\,\pageref{check-criterion-on-value:primary}.
-
-\texttt{make-error-report} --- \S\ref{make-error-report:primary}, p.\,\pageref{make-error-report:primary}.
-
-\texttt{make-failure-report} --- \S\ref{make-failure-report:primary}, p.\,\pageref{make-failure-report:primary}.
-
-\texttt{make-success-report} --- \S\ref{make-success-report:primary}, p.\,\pageref{make-success-report:primary}.
-
-\texttt{make-warning-report} --- \S\ref{make-warning-report:primary}, p.\,\pageref{make-warning-report:primary}.
-
-\subsection{Programmatic control of testing and output}
-\texttt{*debug-on-error*} --- \S\ref{*debug-on-error*:primary}, p.\,\pageref{*debug-on-error*:primary}.
-
-\texttt{*debug-on-fail*} --- \S\ref{*debug-on-fail*:primary}, p.\,\pageref{*debug-on-fail*:primary}.
-
-\texttt{*default-report-verbosity*} --- \S\ref{*default-report-verbosity*:primary}, p.\,\pageref{*default-report-verbosity*:primary}.
-
-\texttt{*nst-output-stream*} --- \S\ref{*nst-output-stream*:primary}, p.\,\pageref{*nst-output-stream*:primary}.
-
-\texttt{junit-results-by-group} --- \S\ref{junit-results-by-group:primary}, p.\,\pageref{junit-results-by-group:primary}.
-
-\texttt{nst-cmd} --- \S\ref{nst-cmd:primary}, p.\,\pageref{nst-cmd:primary}.
-
-\texttt{nst-junit-dump} --- \S\ref{nst-junit-dump:primary}, p.\,\pageref{nst-junit-dump:primary}.
-
-\subsection{Testing randomized samples}
-\texttt{*max-compound-structure-depth*} --- \S\ref{*max-compound-structure-depth*:primary}, p.\,\pageref{*max-compound-structure-depth*:primary}.
-
-\texttt{arbitrary} --- \S\ref{arbitrary:primary}, p.\,\pageref{arbitrary:primary}.
-
-\texttt{compound-structure} --- \S\ref{compound-structure:primary}, p.\,\pageref{compound-structure:primary}.
-
-\texttt{def-arbitrary-instance-type} --- \S\ref{def-arbitrary-instance-type:primary}, p.\,\pageref{def-arbitrary-instance-type:primary}.
-
-\subsection{Method-based tests on objects}
-\texttt{def-test-generic} --- \S\ref{def-test-generic:primary}, p.\,\pageref{def-test-generic:primary}.
-
-\texttt{def-test-method} --- \S\ref{def-test-method:primary}, p.\,\pageref{def-test-method:primary}.
-
-\texttt{def-test-method-criterion} --- \S\ref{def-test-method-criterion:primary}, p.\,\pageref{def-test-method-criterion:primary}.
-
-\texttt{nst-results} --- \S\ref{nst-results:primary}, p.\,\pageref{nst-results:primary}.
-
-\subsection{Other symbols}
-\texttt{with-fixtures} --- \S\ref{with-fixtures:primary}, p.\,\pageref{with-fixtures:primary}.
-
-\subsection{Deprecated macros, functions and variable}
-\texttt{def-criterion-unevaluated} --- \S\ref{def-criterion-unevaluated:primary}, p.\,\pageref{def-criterion-unevaluated:primary}.
-
-\texttt{def-form-criterion} --- \S\ref{def-form-criterion:primary}, p.\,\pageref{def-form-criterion:primary}.
-
-\texttt{def-values-criterion} --- \S\ref{def-values-criterion:primary}, p.\,\pageref{def-values-criterion:primary}.
-
-\texttt{emit-failure} --- \S\ref{emit-failure:primary}, p.\,\pageref{emit-failure:primary}.
-
-\texttt{emit-success} --- \S\ref{emit-success:primary}, p.\,\pageref{emit-success:primary}.
-
-\texttt{emit-warning} --- \S\ref{emit-warning:primary}, p.\,\pageref{emit-warning:primary}.
-
-\index{sift.nst@\texttt{sift.nst}|)}
-
-\section{Output to JUnit}NST reports can be formatted as XML for use with JUnit, although the API for this feature is underdeveloped.
-
-\label{g17103}\index{junit-results-by-group@\texttt{junit-results-by-group}|(}\label{junit-results-by-group:primary}The \texttt{junit-results-by-group} function writes the NST test results in JUnit XML format, organized by group, aligning test groups with Java classes, and individual tests with \texttt{@Test} methods.\begin{verbatim}  (junit-results-by-group [ :verbose flag ]
-                          [ :dir directory ]
-                          [ :file filespec ]
-                          [ :stream stream ]
-                          [ :if-dir-does-not-exist bool ]
-                          [ :if-file-exists bool ])
-\end{verbatim}Either \texttt{:dir} and \texttt{:file} options, or the \texttt{:stream} option, but not both, should be used to specify the target for XML output; if none of the three options are given, the function will write to \texttt{*standard-output*}.\index{junit-results-by-group@\texttt{junit-results-by-group}|)}
-
-\index{nst-junit-dump@\texttt{nst-junit-dump}|(}\label{nst-junit-dump:primary}Function \texttt{nst-junit-dump} pushes the entire NST state to a JUnit XML file whose stream is specified by its argument.\index{nst-junit-dump@\texttt{nst-junit-dump}|)}
-
-\section{Inheritance-based test methods}\emph{This feature is in-progress. It currently does not work under Lispworks or Clisp, and details of the API may change in subsequent versions.}
+* Inheritance-based test methods
+/This feature is in-progress. It currently does not work under
+Lispworks or Clisp, and details of the API may change in subsequent
+versions./
 
 For testing objects in a class hierarchy NST offers xUnit-style test
 methods dispatching on different classes.  The idea is that an object
@@ -784,7 +798,10 @@ the tests be explicitly enumerated in the test definition: all tests
 applicable to an object's class, or to any of its superclasses, should
 be discovered and run.
 
-Our running examples of this section are tests on objects of these four classes:\begin{verbatim}(defclass top-cls ()
+Our running examples of this section are tests on objects of these
+four classes:
+#+begin_example
+(defclass top-cls ()
      ((tc1 :initarg :tc1 :reader tc1)
       (tc2 :initarg :tc2 :reader tc2)))
 
@@ -798,30 +815,55 @@ Our running examples of this section are tests on objects of these four classes:
 
 (defclass bot-cls (mid-cls side-cls)
      ((bc1 :initarg :bc1 :reader bc1)
-      (bc2 :initarg :bc2 :reader bc2)))\end{verbatim}
+      (bc2 :initarg :bc2 :reader bc2)))
+#+end_example
 
-\label{g17104}\subsection{Declaring methods}There are two macros which define a particular method of a generic test function.
 
-\label{g17599}\index{def-test-method-criterion@\texttt{def-test-method-criterion}|(}\label{def-test-method-criterion:primary}The \texttt{def-test-method-criterion} macro provides a simple facility for defining a generic test function method in terms of an NST criterion.\begin{verbatim}  (def-test-method-criterion function-name class-name
-    criterion)
-\end{verbatim}\begin{description}
-\item[function-name] The name of the test function for which we are defining a method.
-\item[class-name] The class for which we are defining a method.
-\item[criterion] The criterion to be applied to members of the class.\end{description}For example:\begin{verbatim}(nst:def-test-method-criterion for-clses top-cls
-      (:predicate (lambda (tc) (< (tc1 tc) (tc2 tc)))))\end{verbatim}\index{def-test-method-criterion@\texttt{def-test-method-criterion}|)}
+** Declaring methods
+There are two macros which define a particular method of a generic
+test function.
 
-\index{def-test-generic@\texttt{def-test-generic}|(}\label{def-test-generic:primary}The \texttt{def-test-generic} declares a generic test function.\begin{verbatim}  (def-test-generic function-name)
-\end{verbatim}For example,\begin{verbatim}(nst:def-test-generic for-clses)\end{verbatim}\index{def-test-generic@\texttt{def-test-generic}|)}
+The =def-test-method-criterion= macro provides a simple facility for
+defining a generic test function method in terms of an NST criterion.
+#+begin_example
+(def-test-method-criterion function-name class-name
+  criterion)
+#+end_example
+- function-name :: The name of the test function for which we are
+     defining a method.
+- class-name :: The class for which we are defining a method.
+- criterion :: The criterion to be applied to members of the class.
+For example:
+#+begin_example
+(nst:def-test-method-criterion for-clses top-cls
+      (:predicate (lambda (tc) (< (tc1 tc) (tc2 tc)))))
+#+end_example
 
-\index{def-test-method@\texttt{def-test-method}|(}\label{def-test-method:primary}The \texttt{def-test-method} defines a general method for a generic test function.\begin{verbatim}  (def-test-method function-name
+The =def-test-generic= declares a generic test function.
+#+begin_example
+  (def-test-generic function-name)
+#+end_example
+For example,
+#+begin_example
+(nst:def-test-generic for-clses)
+#+end_example
+
+The =def-test-method= defines a general method for a generic test
+function.
+#+begin_example
+  (def-test-method function-name
                    ( test-value class-name )
     form
     ...
     form)
-\end{verbatim}\begin{description}
-\item[function-name] The name of the test function for which we are defining a method.
-\item[test-value] Formal parameter to which the value under test will be bound.
-\item[class-name] The class for which we are defining a method.\end{description}The method body should return a test result report, constructed with \texttt{make-success-result}, etc.For example:\begin{verbatim}(nst:def-test-method for-clses (o mid-cls)
+#+end_example
+- function-name :: The name of the test function for which we are defining a method.
+- test-value :: Formal parameter to which the value under test will be bound.
+- class-name :: The class for which we are defining a method.
+The method body should return a test result report, constructed with
+=make-success-result=, etc.For example:
+#+begin_example
+(nst:def-test-method for-clses (o mid-cls)
   (with-slots (mc1 mc2) o
     (cond
       ((< mc1 mc2) (make-success-report))
@@ -830,11 +872,15 @@ Our running examples of this section are tests on objects of these four classes:
   (with-slots (sc1 sc2) o
     (cond
       ((eql sc1 sc2) (make-success-report))
-      (t (make-failure-report :format "~d not eql ~d" :args (list sc1 sc2))))))\end{verbatim}\index{def-test-method@\texttt{def-test-method}|)}
+      (t (make-failure-report :format "~d not eql ~d" :args (list sc1 sc2))))))
+#+end_example
 
-\subsection{Invokng methods}\label{g17600}\index{methods@\texttt{methods}|(}The \texttt{:methods} criterion runs the test functions applicable to the value under test.
+** Invoking methods
+The =:methods= criterion runs the test functions applicable to the value under test.
 
- For example:\begin{verbatim}(def-test-group method-tests ()
+ For example:
+#+begin_example
+(def-test-group method-tests ()
   (def-test t-p :methods (make-instance 'top-cls :tc1 0 :tc2 2))
   (def-test m-p :methods (make-instance 'mid-cls :tc1 0 :tc2 2 :mc1 0 :mc2 2))
   (def-test s-p :methods (make-instance 'side-cls :sc1 1 :sc2 1))
@@ -861,35 +907,40 @@ Our running examples of this section are tests on objects of these four classes:
   (def-test b-f-ts :methods (make-instance 'bot-cls
                               :tc1 4 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 3))
   (def-test b-f-mts :methods (make-instance 'bot-cls
-                               :tc1 4 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 3)))\end{verbatim}\index{methods@\texttt{methods}|)}
+                               :tc1 4 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 3)))
+#+end_example
 
-\subsection{Method combinations}\label{g17601}\index{nst-results@\texttt{nst-results}|(}\label{nst-results:primary}NST defines a method combination \texttt{nst-results} as the default method combination for functions defined by \texttt{def-test-generic}.  This combination runs \emph{all} applicable methods, and combines all of their results into a single NST result record.
+** Method combinations
+NST defines a method combination =nst-results= as the default method
+combination for functions defined by =def-test-generic=.  This
+combination runs /all/ applicable methods, and combines all of their
+results into a single NST result record.
 
-This default can be overridden by specifying \texttt{t} as the method combination in the intial declaration.\begin{verbatim}(nst:def-test-generic overridden
+This default can be overridden by specifying =t= as the method
+combination in the intial declaration.
+#+begin_example
+(nst:def-test-generic overridden
     (:method-combination t))
 (nst:def-test-method-criterion overridden mid-cls
   (:slots (mc1 (:eql 0))
           (mc2 (:eql 2))))
 (nst:def-test-method-criterion overridden bot-cls
   (:slots (sc1 (:eql 1))
-          (sc2 (:eql 1))))\end{verbatim}\index{nst-results@\texttt{nst-results}|)}
+          (sc2 (:eql 1))))
+#+end_example
 
-\section{Deprecated forms}The macros, functions and variables documented in this section are all deprecated.  Some continue to be exported from the NST API; others have already been removed.  This section describes how code using these forms should be ported to the active NST API.
+* Deprecated forms
+The macros, functions and variables documented in this section are all
+deprecated.  Some continue to be exported from the NST API; others
+have already been removed.  This section describes how code using
+these forms should be ported to the active NST API.
 
-\label{g17105}\subsection{Older criteria-defining macros}\label{g17682}\index{def-criterion-unevaluated@\texttt{def-criterion-unevaluated}|(}\label{def-criterion-unevaluated:primary}The \texttt{def-criterion-unevaluated} macro is deprecated as of NST 2.1.2.  It was consolidated into the \texttt{def-criterion} macro.
+** Older criteria-defining macros
+#+INCLUDE: "./gen/def-criterion-unevaluated.org"
+#+INCLUDE: "./gen/def-values-criterion.org"
+#+INCLUDE: "./gen/def-form-criterion.org"
 
- Replace:\begin{verbatim}(def-criterion-unevaluated name (pattern ... pattern) name
-  BODY)\end{verbatim}with:\begin{verbatim}(def-criterion name (:forms pattern ... pattern)
-                    (:form name)
-  BODY)\end{verbatim}\index{def-criterion-unevaluated@\texttt{def-criterion-unevaluated}|)}
-
-\index{def-values-criterion@\texttt{def-values-criterion}|(}\label{def-values-criterion:primary}The \texttt{def-values-criterion} macro was deprecated as of NST 1.3.0. For new criteria, use \texttt{def-criterion} instead.  In the short term, code using \texttt{def-values-criterion} should continue to work as before.\index{def-values-criterion@\texttt{def-values-criterion}|)}
-
-\index{def-form-criterion@\texttt{def-form-criterion}|(}\label{def-form-criterion:primary}The \texttt{def-form-criterion} macro was deprecated as of NST 1.3.0. \emph{Code using \texttt{def-form-criterion} in any but the simplest ways is very likely to fail.} Use \texttt{def-criterion} instead.\index{def-form-criterion@\texttt{def-form-criterion}|)}
-
-\subsection{Old test result generators}\label{g17683}\index{emit-failure@\texttt{emit-failure}|(}\label{emit-failure:primary}The \texttt{emit-failure} function is deprecated; use \texttt{make-failure-report} instead.\index{emit-failure@\texttt{emit-failure}|)}
-
-\index{emit-success@\texttt{emit-success}|(}\label{emit-success:primary}The \texttt{emit-success} function is deprecated; use \texttt{make-success-report} instead.\index{emit-success@\texttt{emit-success}|)}
-
-\index{emit-warning@\texttt{emit-warning}|(}\label{emit-warning:primary}The \texttt{emit-warning} function is deprecated; use \texttt{make-warning-report} instead.\index{emit-warning@\texttt{emit-warning}|)}\printindex
-\end{document}
+** Old test result generators
+#+INCLUDE: "./gen/emit-failure.org"
+#+INCLUDE: "./gen/emit-success.org"
+#+INCLUDE: "./gen/emit-warning.org"
