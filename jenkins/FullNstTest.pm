@@ -10,8 +10,6 @@ sub initialize {
   my $self = shift;
   $self->SUPER::initialize(@_);
   $self->add_asdf_path($ENV{NST_DIR});
-  $self->add_asdf_path($ENV{NST_DIR}.'ext/defdoc/');
-  $self->add_asdf_path($ENV{NST_DIR}.'ext/defcontract/');
   $self->add_asdf_path($ENV{NST_DIR}.'test/');
   $self->add_asdf_path($ENV{NST_DIR}.'test/asdf/');
   $self->add_asdf_path($ENV{NST_DIR}.'test/direct/');

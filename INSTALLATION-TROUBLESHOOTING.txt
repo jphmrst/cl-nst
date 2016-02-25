@@ -30,11 +30,21 @@ svn export https://svn.sift.info:3333/svn/nst/tags/1.2.2 old-nst
 * Compiling and loading
 ** The core NST system
 *** Loading NST
-    NST is most easily loaded by its ASDF file.  Before loading, you must make sure that your asdf:*central-registry* contains the directories for nst.asd, as well as for the two ASFD systems on which NST depends, closer-mop and defdoc.  The latter system is distributed with NST in the ext/defdoc directory; the former is a separate system not packaged with NST.  The following sample initialization code will load NST:
+    NST is most easily loaded by its ASDF file.  Before loading, you
+    must make sure that your asdf:*central-registry* contains the
+    directories for nst.asd, as well as for the two ASFD systems on
+    which NST depends, closer-mop and org-sampler.  These systems are
+    not packaged with NST.  The former is generally available; the
+    latter is available from GitHub at
+    [[https://github.com/jphmrst/cl-org-sampler]] The following sample
+    initialization code will load NST:
 #+BEGIN_EXAMPLE
 (let ((repos-dir "/PATH/TO/YOUR/NST/REPOS/")
+      (orgsampler-dir "/PATH/TO/YOUR/ORG-SAMPLER/REPOS/")
       (closer-dir "/PATH/TO/YOUR/CLOSER-MOP/REPOS/"))
   (push (make-pathname :directory closer-dir)
+        asdf:*central-registry*)
+  (push (make-pathname :directory orgsampler-dir)
         asdf:*central-registry*)
   (push (make-pathname :directory repos-dir)
         asdf:*central-registry*)

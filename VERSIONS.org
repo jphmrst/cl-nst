@@ -5,8 +5,8 @@
   loading tests.
 - Added two criteria for association lists.
 - Removed DefDoc from the externals, and associated code for
-  generating the manual from the doc directory.  For now at least, the
-  documentation is not generated.
+  generating the manual from the doc directory.
+- Use Org-Sampler to generate documentation
 * 4.0 releases
   NST 4.0 releases introduce the :eval criterion, def-eval-test macro,
   and related functions for checking a computational process at

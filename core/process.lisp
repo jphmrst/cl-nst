@@ -25,9 +25,6 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :nst)
 
-;;; Documentation generator for process-testing predicates
-;;;(defdoc:def-target-type process-predicate (:symbol-definition-nocheck t))
-
 (define-condition nst-assertion-condition (condition)
     ((fatal :initarg :fatal :reader assertion-failure-fatal)))
 

@@ -25,10 +25,6 @@
 ;;; <http://www.gnu.org/licenses/>.
 (in-package :nst)
 
-;;; Documentation generator for criteria.
-
-;;;(defdoc:def-target-type criterion (:symbol-definition-nocheck t))
-
 ;;; Built-in basic testing criteria.
 
 (def-criterion (:pass (:forms) :ignore)

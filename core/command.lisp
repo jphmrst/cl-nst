@@ -27,13 +27,6 @@
 ;;; This file defines the interactive REPL commands.
 
 ;;; ----------------------------------------------------------------------
-;;; Documentation generator for interactive commands and session
-;;; flags.
-
-;;;(defdoc:def-target-type command (:symbol-definition-nocheck t))
-;;;(defdoc:def-target-type switch (:symbol-definition-nocheck t))
-
-;;; ----------------------------------------------------------------------
 ;;; Function version of the command-line interpreter.  The main logic
 ;;; is here; further below we define platform-specific command-line
 ;;; interfaces.
