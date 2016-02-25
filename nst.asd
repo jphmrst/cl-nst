@@ -59,7 +59,8 @@
     ;; The features allowing _closer-mop should only ever include
     ;; platforms which support Closer-to-MOP, and should always be a
     ;; superset of the features allowing file method below.
-    :depends-on (#+(or allegro sbcl clozure openmcl clisp) :closer-mop)
+    :depends-on (#+(or allegro sbcl clozure openmcl clisp) :closer-mop
+                   :org-sampler)
 
     :components ((:module "core" :components
                           (;; The NST package, plus internal packages
@@ -155,9 +156,27 @@
               (apply (symbol-function (intern (symbol-name fn-sym)
                                               (find-package pk)))
                      args)))
-       (pfuncall :asdf '#:load-system :org-sampler)
        (format t ";;; Generating org text from function docstrings.~%")
        (pfuncall :org-sampler '#:write-packages '(:nst)
+                 :package-headers nil :usage-headers nil :show-title nil
+                 :default-path "doc/gen/" :default-system :nst
+                 :latex-label-suffix ":primary")
+       (pfuncall :org-sampler '#:write-packages '(:keyword)
+                 :types (list (cons (intern (symbol-name 'criterion) :nst)
+                                    "criterion"))
+                 :always-disambiguate t :section-level 3
+                 :package-headers nil :usage-headers nil :show-title nil
+                 :default-path "doc/gen/" :default-system :nst)
+       (pfuncall :org-sampler '#:write-packages '(:keyword)
+                 :types (list (cons (intern (symbol-name 'command) :nst)
+                                    "cmd"))
+                 :always-disambiguate t :section-level 2
+                 :package-headers nil :usage-headers nil :show-title nil
+                 :default-path "doc/gen/" :default-system :nst)
+       (pfuncall :org-sampler '#:write-packages '(:keyword)
+                 :types (list (cons (intern (symbol-name 'switch) :nst)
+                                    "switch"))
+                 :always-disambiguate t :section-level nil
                  :package-headers nil :usage-headers nil :show-title nil
                  :default-path "doc/gen/" :default-system :nst)))
 

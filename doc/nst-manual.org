@@ -32,53 +32,53 @@ Steven A. Harp, Michael Atighetchi and Patrick Stein.
 * Testing values
 #+INCLUDE: "./gen/def-test.org"
 ** Basic criteria
-   - =:true=
-   - =:eq=
-   - =:symbol=
-   - =:eql=
-   - =:equal=
-   - =:equalp=
-   - =:forms-eq=
-   - =:forms-eql=
-   - =:forms-equal=
-   - =:predicate=
-   - =:err=
-   - =:perf=
+   #+INCLUDE: "./gen/true__criterion.org"
+   #+INCLUDE: "./gen/eq__criterion.org"
+   #+INCLUDE: "./gen/symbol__criterion.org"
+   #+INCLUDE: "./gen/eql__criterion.org"
+   #+INCLUDE: "./gen/equal__criterion.org"
+   #+INCLUDE: "./gen/equalp__criterion.org"
+   #+INCLUDE: "./gen/forms-eq__criterion.org"
+   #+INCLUDE: "./gen/forms-eql__criterion.org"
+   #+INCLUDE: "./gen/forms-equal__criterion.org"
+   #+INCLUDE: "./gen/predicate__criterion.org"
+   #+INCLUDE: "./gen/err__criterion.org"
+   #+INCLUDE: "./gen/perf__criterion.org"
 ** Compound criteria
-   - =:not=
-   - =:all=
-   - =:any=
-   - =:apply=
-   - =:check-err=
-   - =:progn=
-   - =:proj=
-   - =:with-common-criterion=
-   - =:applying-common-criterion=
+   #+INCLUDE: "./gen/not__criterion.org"
+   #+INCLUDE: "./gen/all__criterion.org"
+   #+INCLUDE: "./gen/any__criterion.org"
+   #+INCLUDE: "./gen/apply__criterion.org"
+   #+INCLUDE: "./gen/check-err__criterion.org"
+   #+INCLUDE: "./gen/progn__criterion.org"
+   #+INCLUDE: "./gen/proj__criterion.org"
+   #+INCLUDE: "./gen/with-common-criterion__criterion.org"
+   #+INCLUDE: "./gen/applying-common-criterion__criterion.org"
 ** Criteria for multiple values
-   - =:values=
-   - =:values-list=
-   - =:drop-values=
+   #+INCLUDE: "./gen/values__criterion.org"
+   #+INCLUDE: "./gen/value-list__criterion.org"
+   #+INCLUDE: "./gen/drop-values__criterion.org"
 ** Criteria for lists
-   - =:seq=
-   - =:each=
-   - =:permute=
-   - =:alist=
+   #+INCLUDE: "./gen/seq__criterion.org"
+   #+INCLUDE: "./gen/each__criterion.org"
+   #+INCLUDE: "./gen/permute__criterion.org"
+   #+INCLUDE: "./gen/alist__criterion.org"
 ** Criteria for vectors
-   - =:across=
+   #+INCLUDE: "./gen/across__criterion.org"
 ** Criteria for classes
-   - =:slots=
+   #+INCLUDE: "./gen/slots__criterion.org"
 ** Programmatic and debugging criteria
-   - =:pass=
-   - =:warn=
-   - =:info=
-
+   #+INCLUDE: "./gen/pass__criterion.org"
+   #+INCLUDE: "./gen/warn__criterion.org"
+   #+INCLUDE: "./gen/info__criterion.org"
 * Testing processes
 The test criteria of the previous section all examined the result of
 evaluating the forms under test.  This section presents NST's criteria
 for validating the /process/ of a computation, specifying assertions
 which should hold at the initial, intermediate and final points of the
 process.
-- =:eval=
+#+INCLUDE: "./gen/eval__criterion.org"
+** Defining tests
 #+INCLUDE: "./gen/def-eval-test.org"
 
 ** Asserting properties
@@ -102,7 +102,7 @@ process.
 #+INCLUDE: "./gen/def-binary-negated-predicate-assert.org"
 
 ** A simpler process checker
-- =:process=
+#+INCLUDE: "./gen/process__criterion.org"
 
 * Testing invariants against sampled data
 The =sample= criterion provides random generation of data for
@@ -154,11 +154,6 @@ constraints on value generation.
     | =:ascii=     | Codes through 127 |
     | =:ascii-ext= | Codes through 255 |
     |--------------+-------------------|
-    # LaTeX: \begin{center}
-    # LaTeX:   \begin{tabular}{>{\ttfamily:}c|l}
-    # LaTeX:     \multicolumn{1}{c|}{Value} & \multicolumn{1}{c}{Meaning}
-    # LaTeX:   \end{tabular}
-    # LaTeX: \end{center}
     Omitted or with any other value, characters with any code up to
     =char-code-limit= can result.  Examples:
     #+begin_example
@@ -293,45 +288,22 @@ check's result report.
 The runtime system provides several operations for scheduling and
 running tests, and debugging failing and erring tests.
 #+INCLUDE: "./gen/nst-cmd.org"
+Calling =nst= or =nst-cmd= without a command argument repeats the last
+test-executing command.
 For the sake of brevity we use the =:nst= shorthand below.
-- =:help=
+
+#+INCLUDE: "./gen/help__cmd.org"
 There are a number of commands for running tests, but most of the time
 only one will be needed:
-- \label{run:primary}The =:run= command executes all tests in the
-  named package, or in the named group, or runs the named test. It is
-  not necessary to prefix the name with a package prefix.  The name
-  does not need to be prefix-qualified, but if the name is ambiguous
-  then =:run= will simply report the possible interpretations.
-  #+begin_example
-  :nst :run name
-  #+end_example
-- \label{run-package:primary} The =:run-package= command executes all
-  tests associated with groups in the named packages, and reports the
-  test results afterwards.
-  #+begin_example
-  :nst :run-package package ... package
-  #+end_example
-- \label{run-group:primary} The =:run-group= command executes all
-  tests associated with the name groups, and reports the test results
-  afterwards. The group name should be package-qualified.
-  #+begin_example
-  :nst :run-group group ... group
-  #+end_example
-- \label{run-test:primary} The =:run-test= command executes the given
-  test.  Both the group and test name should be package-qualified.
-  #+begin_example
-  :nst :run-test group test
-  #+end_example
-
+#+INCLUDE: "./gen/run__cmd.org"
+#+INCLUDE: "./gen/run-package__cmd.org"
+#+INCLUDE: "./gen/run-group__cmd.org"
+#+INCLUDE: "./gen/run-test__cmd.org"
 One further command for running a test is useful when writing and
 debugging the tests themselves:
+#+INCLUDE: "./gen/apply__cmd.org"
 
-- \label{apply:primary} The =:apply= command assesses whether a test
-  criterion prints the uses to which a particular name has been
-  applied in an NST session.
-  #+begin_example
-  :nst :apply name
-  #+end_example
+
 - The =apply= criterion first evaluates the forms under test, applying
   =FUNCTION= to them.  The overall criterion passes or fails exactly
   when the subordinate =CRITERION= with the application's multiple
@@ -345,101 +317,24 @@ debugging the tests themselves:
   #+end_example
 
 There are two commands for (re)printing the results of tests:
+#+INCLUDE: "./gen/report__cmd.org"
+#+INCLUDE: "./gen/detail__cmd.org"
 
-- \label{report:primary} The =:report= command summarizes successes,
-  failures and errors in tests.  It reports either for the named
-  artifact, or for all recently-run tests.
-  #+begin_example
-  :nst :report
-  :nst :report package
-  :nst :report group
-  :nst :report group test
-  #+end_example
-- \label{detail:primary} The =:report= command gives detailed
-  information about individual test results.
-  #+begin_example  :nst :detail
-  :nst :detail package
-  :nst :detail group
-  :nst :detail group test
-  #+end_example
-
-The =undef=  and =clear=  commands allow removal of groups, tests and results.
-
-- \label{undef:primary}The =:undef= command retracts the definition of
-  an NST group or test.
-  #+begin_example
-  :nst :undef group-name
-  :nst :undef group-name test-name
-  #+end_example
-
-  Currently, NST does require that the symbols passed to =undef= be
-  correctly package-qualified.
-
-- \label{clear:primary} The =:clear= command empties NST's internal
-  record of test results.
-  #+begin_example
-  :nst :clear
-  #+end_example
+# The =undef=  and =clear=  commands allow removal of groups, tests and results.
+# INCLUDE: "./gen/undef__cmd.org"
+# INCLUDE: "./gen/clear__cmd.org"
 
 The =set= and =unset= display and adjust NST's configuration.
-
-- \label{set:primary} The =:set= command assigns or displays the
-  values of NST runtime switches.
-  #+begin_example
-  :nst :set property
-  :nst :set property value
-  #+end_example
-- \label{unset:primary} The =:unset= command clears the values of NST
-  runtime switches.
-  #+begin_example
-  :nst :unset property
-  #+end_example
-
+#+INCLUDE: "./gen/set__cmd.org"
 There are currently three properties which can be manipulated by =set=
 and =unset=:
+#+INCLUDE: "./gen/verbose__switch.org"
+#+INCLUDE: "./gen/debug-on-error__switch.org"
+#+INCLUDE: "./gen/debug-on-fail__switch.org"
+#+INCLUDE: "./gen/unset__cmd.org"
 
-- \label{verbose:primary}The =:verbosity= switch controls the level of
-  NST's output.
-  #+begin_example
-  :nst :set :verbose setting
-  #+end_example
-  Valid settings are:
-  - =:silent= (aka =nil=)
-  - =:quiet= (aka =:default=)
-  - =:verbose= (aka =t=)
-  - =:vverbose=
-  - =:trace=
-  The =:report= and =:detail= commands operate by setting minimum
-  levels of verbosity.
-- \label{debug-on-error:primary}The =:debug-on-error= switch controls
-  NST's behavior on errors.  When non-nil, NST will break into the
-  debugger when it encounters an error.
-  #+begin_example
-  :nst :set :debug-on-error flag
-  #+end_example
-  The =:debug= command is a short-cut for setting this
-  property.
-- \label{debug-on-fail:primary} The =:debug-on-fail= switch controls
-  NST's behavior when a test fails When non-nil, NST will break into
-  the debugger when it encounters a failing test.
-  #+begin_example
-  :nst :set :debug-on-fail flag
-  #+end_example
-  This behavior is less useful than it may seem; by the time the
-  results of the test are examined for failure, the stack from the
-  actual form evaluation will usually have been released.  Still, this
-  switch is useful for inspecting the environment in which a failing
-  test was run.Note that both =:debug-on-error= and =:debug-on-fail=
-  apply in the case of an error; if the latter is set but the former
-  is not, then the debugger will be entered after an erring test
-  completes.The =:debug= command is a short-cut for setting this
-  property.
-- \label{backtraces:primary} The =:backtraces= switch, when non-=nil=,
-  directs NST to attempt to capture the Lisp backtrace of errors in
-  tests.
-  #+begin_example
-  :nst :set :backtraces flag
-  #+end_example
+#+INCLUDE: "./gen/backtraces__switch.org"
+
   This property is only available on platform which allow programmatic
   examination of backtraces, which is not standardized in Common Lisp;
   currently we have implemented this feature on Allegro only.This
@@ -458,26 +353,13 @@ direct access to these variables, but when automating NST operations
 may require changing, or creating a new dynamic scope for, their
 settings.
 
-- \label{*debug-on-error*:primary} User variable =*debug-on-error*=: if
-  non-nil, will break into the Lisp REPL debugger upon encountering an
-  unexpected error.  If nil, will record the error and continue with
-  other tests.
-- \label{*debug-on-fail*:primary} User variable =*debug-on-fail*=: if
-  non-nil, will break into the Lisp REPL debugger upon encountering a
-  test which fails.  If nil, will record the failure and continue with
-  other tests.  This variable is useful inspecting the dynamic
-  environment under which a test was evaluated.
-- \label{*default-report-verbosity*:primary} User variable
-  =*default-report-verbosity*= determines the default value for
-  *nst-verbosity* when printing reports (2 by default).
-- \label{*nst-output-stream*:primary} User =*nst-output-stream*=
-  determines the output stream to which NST should print its
-  =*standard-output*= by default).
+#+INCLUDE: "./gen/_debug-on-error_.org"
+#+INCLUDE: "./gen/_debug-on-fail_.org"
+#+INCLUDE: "./gen/_default-report-verbosity_.org"
+#+INCLUDE: "./gen/_nst-output-stream_.org"
 
-Fixtures can be /opened/ into the interactive namespace for debugging:
-#+begin_example
-:nst :open FIXTURE-NAME FIXTURE-NAME ... FIXTURE-NAME
-#+end_example
+#+INCLUDE: "./gen/open__cmd.org"
+
 Example:
 #+begin_example
 CL-USER(75): (nst:def-fixtures small-fixture ()
@@ -496,9 +378,6 @@ Fixtures can be opened into a different package than where they were
 first defined, but these bindings are in addition to the bindings in
 the original package, and are made by a symbol import to the
 additional package.
-
-Calling =nst= or =nst-cmd= without a command argument repeats the last
-test-executing command.
 
 * Integration with ASDF
 NST's integration with ASDF is a work in progress.  This section
@@ -679,112 +558,113 @@ which contain the tested system's unit test definitions.
 #+LaTeX: \appendix \addtocontents{toc}{\setcounter{tocdepth}{1}}
 #+LaTeX: \label{output-contents}
 
-* The NST API
-** Primary macros
-=def-criterion= --- \S\ref{def-criterion:primary}, p. \pageref{def-criterion:primary}.
 
-=def-criterion-alias= --- \S\ref{def-criterion-alias:primary}, p. \pageref{def-criterion-alias:primary}.
-
-=def-fixtures= --- \S\ref{def-fixtures:primary}, p. \pageref{def-fixtures:primary}.
-
-=def-test= --- \S\ref{def-test:primary}, p. \pageref{def-test:primary}.
-
-=def-test-group= --- \S\ref{def-test-group:primary}, p. \pageref{def-test-group:primary}.
-
-** Functions used in criteria definitions
-=add-error= --- \S\ref{add-error:primary}, p. \pageref{add-error:primary}.
-
-=add-failure= --- \S\ref{add-failure:primary}, p. \pageref{add-failure:primary}.
-
-=add-info= --- \S\ref{add-info:primary}, p. \pageref{add-info:primary}.
-
-=add-warning= --- \S\ref{add-warning:primary}, p. \pageref{add-warning:primary}.
-
-=check-criterion-on-form= --- \S\ref{check-criterion-on-form:primary}, p. \pageref{check-criterion-on-form:primary}.
-
-=check-criterion-on-value= --- \S\ref{check-criterion-on-value:primary}, p. \pageref{check-criterion-on-value:primary}.
-
-=make-error-report= --- \S\ref{make-error-report:primary}, p. \pageref{make-error-report:primary}.
-
-=make-failure-report= --- \S\ref{make-failure-report:primary}, p. \pageref{make-failure-report:primary}.
-
-=make-success-report= --- \S\ref{make-success-report:primary}, p. \pageref{make-success-report:primary}.
-
-=make-warning-report= --- \S\ref{make-warning-report:primary}, p. \pageref{make-warning-report:primary}.
-
-** Programmatic control of testing and output
-=*debug-on-error*= --- \S\ref{*debug-on-error*:primary}, p. \pageref{*debug-on-error*:primary}.
-
-=*debug-on-fail*= --- \S\ref{*debug-on-fail*:primary}, p. \pageref{*debug-on-fail*:primary}.
-
-=*default-report-verbosity*= --- \S\ref{*default-report-verbosity*:primary}, p. \pageref{*default-report-verbosity*:primary}.
-
-=*nst-output-stream*= --- \S\ref{*nst-output-stream*:primary}, p. \pageref{*nst-output-stream*:primary}.
-
-=junit-results-by-group= --- \S\ref{junit-results-by-group:primary}, p. \pageref{junit-results-by-group:primary}.
-
-=nst-cmd= --- \S\ref{nst-cmd:primary}, p. \pageref{nst-cmd:primary}.
-
-=nst-junit-dump= --- \S\ref{nst-junit-dump:primary}, p. \pageref{nst-junit-dump:primary}.
-
-** Testing randomized samples
-=*max-compound-structure-depth*= --- \S\ref{*max-compound-structure-depth*:primary}, p. \pageref{*max-compound-structure-depth*:primary}.
-
-=arbitrary= --- \S\ref{arbitrary:primary}, p. \pageref{arbitrary:primary}.
-
-=compound-structure= --- \S\ref{compound-structure:primary}, p. \pageref{compound-structure:primary}.
-
-=def-arbitrary-instance-type= --- \S\ref{def-arbitrary-instance-type:primary}, p. \pageref{def-arbitrary-instance-type:primary}.
-
-** Method-based tests on objects
-=def-test-generic= --- \S\ref{def-test-generic:primary}, p. \pageref{def-test-generic:primary}.
-
-=def-test-method= --- \S\ref{def-test-method:primary}, p. \pageref{def-test-method:primary}.
-
-=def-test-method-criterion= --- \S\ref{def-test-method-criterion:primary}, p. \pageref{def-test-method-criterion:primary}.
-
-=nst-results= --- \S\ref{nst-results:primary}, p. \pageref{nst-results:primary}.
-
-** Other symbols
-=with-fixtures= --- \S\ref{with-fixtures:primary}, p. \pageref{with-fixtures:primary}.
-
-** Deprecated macros, functions and variable
-=def-criterion-unevaluated= --- \S\ref{def-criterion-unevaluated:primary}, p. \pageref{def-criterion-unevaluated:primary}.
-
-=def-form-criterion= --- \S\ref{def-form-criterion:primary}, p. \pageref{def-form-criterion:primary}.
-
-=def-values-criterion= --- \S\ref{def-values-criterion:primary}, p. \pageref{def-values-criterion:primary}.
-
-=emit-failure= --- \S\ref{emit-failure:primary}, p. \pageref{emit-failure:primary}.
-
-=emit-success= --- \S\ref{emit-success:primary}, p. \pageref{emit-success:primary}.
-
-=emit-warning= --- \S\ref{emit-warning:primary}, p. \pageref{emit-warning:primary}.
-
-
-
-** Output to JUnit
-NST reports can be formatted as XML for use with JUnit, although the
-API for this feature is underdeveloped.
-
-The =junit-results-by-group= function writes the NST test results in
-JUnit XML format, organized by group, aligning test groups with Java
-classes, and individual tests with =@Test= methods.
-#+begin_example
-(junit-results-by-group [ :verbose flag ]
-                        [ :dir directory ]
-                        [ :file filespec ]
-                        [ :stream stream ]
-                        [ :if-dir-does-not-exist bool ]
-                        [ :if-file-exists bool ])
-#+end_example
-Either =:dir= and =:file= options, or the =:stream= option, but not
-both, should be used to specify the target for XML output; if none of
-the three options are given, the function will write to
-=*standard-output*=.
-
-Function =nst-junit-dump= pushes the entire NST state to a JUnit XML
-file whose stream is specified by its argument.
+# * The NST API
+# ** Primary macros
+# =def-criterion= --- \S\ref{def-criterion:primary}, p. \pageref{def-criterion:primary}.
+#
+# =def-criterion-alias= --- \S\ref{def-criterion-alias:primary}, p. \pageref{def-criterion-alias:primary}.
+#
+# =def-fixtures= --- \S\ref{def-fixtures:primary}, p. \pageref{def-fixtures:primary}.
+#
+# =def-test= --- \S\ref{def-test:primary}, p. \pageref{def-test:primary}.
+#
+# =def-test-group= --- \S\ref{def-test-group:primary}, p. \pageref{def-test-group:primary}.
+#
+# ** Functions used in criteria definitions
+# =add-error= --- \S\ref{add-error:primary}, p. \pageref{add-error:primary}.
+#
+# =add-failure= --- \S\ref{add-failure:primary}, p. \pageref{add-failure:primary}.
+#
+# =add-info= --- \S\ref{add-info:primary}, p. \pageref{add-info:primary}.
+#
+# =add-warning= --- \S\ref{add-warning:primary}, p. \pageref{add-warning:primary}.
+#
+# =check-criterion-on-form= --- \S\ref{check-criterion-on-form:primary}, p. \pageref{check-criterion-on-form:primary}.
+#
+# =check-criterion-on-value= --- \S\ref{check-criterion-on-value:primary}, p. \pageref{check-criterion-on-value:primary}.
+#
+# =make-error-report= --- \S\ref{make-error-report:primary}, p. \pageref{make-error-report:primary}.
+#
+# =make-failure-report= --- \S\ref{make-failure-report:primary}, p. \pageref{make-failure-report:primary}.
+#
+# =make-success-report= --- \S\ref{make-success-report:primary}, p. \pageref{make-success-report:primary}.
+#
+# =make-warning-report= --- \S\ref{make-warning-report:primary}, p. \pageref{make-warning-report:primary}.
+#
+# ** Programmatic control of testing and output
+# =*debug-on-error*= --- \S\ref{*debug-on-error*:primary}, p. \pageref{*debug-on-error*:primary}.
+#
+# =*debug-on-fail*= --- \S\ref{*debug-on-fail*:primary}, p. \pageref{*debug-on-fail*:primary}.
+#
+# =*default-report-verbosity*= --- \S\ref{*default-report-verbosity*:primary}, p. \pageref{*default-report-verbosity*:primary}.
+#
+# =*nst-output-stream*= --- \S\ref{*nst-output-stream*:primary}, p. \pageref{*nst-output-stream*:primary}.
+#
+# =junit-results-by-group= --- \S\ref{junit-results-by-group:primary}, p. \pageref{junit-results-by-group:primary}.
+#
+# =nst-cmd= --- \S\ref{nst-cmd:primary}, p. \pageref{nst-cmd:primary}.
+#
+# =nst-junit-dump= --- \S\ref{nst-junit-dump:primary}, p. \pageref{nst-junit-dump:primary}.
+#
+# ** Testing randomized samples
+# =*max-compound-structure-depth*= --- \S\ref{*max-compound-structure-depth*:primary}, p. \pageref{*max-compound-structure-depth*:primary}.
+#
+# =arbitrary= --- \S\ref{arbitrary:primary}, p. \pageref{arbitrary:primary}.
+#
+# =compound-structure= --- \S\ref{compound-structure:primary}, p. \pageref{compound-structure:primary}.
+#
+# =def-arbitrary-instance-type= --- \S\ref{def-arbitrary-instance-type:primary}, p. \pageref{def-arbitrary-instance-type:primary}.
+#
+# ** Method-based tests on objects
+# =def-test-generic= --- \S\ref{def-test-generic:primary}, p. \pageref{def-test-generic:primary}.
+#
+# =def-test-method= --- \S\ref{def-test-method:primary}, p. \pageref{def-test-method:primary}.
+#
+# =def-test-method-criterion= --- \S\ref{def-test-method-criterion:primary}, p. \pageref{def-test-method-criterion:primary}.
+#
+# =nst-results= --- \S\ref{nst-results:primary}, p. \pageref{nst-results:primary}.
+#
+# ** Other symbols
+# =with-fixtures= --- \S\ref{with-fixtures:primary}, p. \pageref{with-fixtures:primary}.
+#
+# ** Deprecated macros, functions and variable
+# =def-criterion-unevaluated= --- \S\ref{def-criterion-unevaluated:primary}, p. \pageref{def-criterion-unevaluated:primary}.
+#
+# =def-form-criterion= --- \S\ref{def-form-criterion:primary}, p. \pageref{def-form-criterion:primary}.
+#
+# =def-values-criterion= --- \S\ref{def-values-criterion:primary}, p. \pageref{def-values-criterion:primary}.
+#
+# =emit-failure= --- \S\ref{emit-failure:primary}, p. \pageref{emit-failure:primary}.
+#
+# =emit-success= --- \S\ref{emit-success:primary}, p. \pageref{emit-success:primary}.
+#
+# =emit-warning= --- \S\ref{emit-warning:primary}, p. \pageref{emit-warning:primary}.
+#
+#
+#
+# ** Output to JUnit
+# NST reports can be formatted as XML for use with JUnit, although the
+# API for this feature is underdeveloped.
+#
+# The =junit-results-by-group= function writes the NST test results in
+# JUnit XML format, organized by group, aligning test groups with Java
+# classes, and individual tests with =@Test= methods.
+# #+begin_example
+# (junit-results-by-group [ :verbose flag ]
+#                         [ :dir directory ]
+#                         [ :file filespec ]
+#                         [ :stream stream ]
+#                         [ :if-dir-does-not-exist bool ]
+#                         [ :if-file-exists bool ])
+# #+end_example
+# Either =:dir= and =:file= options, or the =:stream= option, but not
+# both, should be used to specify the target for XML output; if none of
+# the three options are given, the function will write to
+# =*standard-output*=.
+#
+# Function =nst-junit-dump= pushes the entire NST state to a JUnit XML
+# file whose stream is specified by its argument.
 
 * Inheritance-based test methods
 /This feature is in-progress. It currently does not work under
@@ -876,40 +756,7 @@ The method body should return a test result report, constructed with
 #+end_example
 
 ** Invoking methods
-The =:methods= criterion runs the test functions applicable to the value under test.
-
- For example:
-#+begin_example
-(def-test-group method-tests ()
-  (def-test t-p :methods (make-instance 'top-cls :tc1 0 :tc2 2))
-  (def-test m-p :methods (make-instance 'mid-cls :tc1 0 :tc2 2 :mc1 0 :mc2 2))
-  (def-test s-p :methods (make-instance 'side-cls :sc1 1 :sc2 1))
-  (def-test b-p :methods (make-instance 'bot-cls
-                           :tc1 0 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 1))
-  (def-test t-f :methods (make-instance 'top-cls :tc1 4 :tc2 2))
-  (def-test m-f-t  :methods (make-instance 'mid-cls
-                              :tc1 4 :tc2 2 :mc1 0 :mc2 2))
-  (def-test m-f-m  :methods (make-instance 'mid-cls
-                              :tc1 0 :tc2 2 :mc1 4 :mc2 2))
-  (def-test m-f-mt :methods (make-instance 'mid-cls
-                              :tc1 4 :tc2 2 :mc1 4 :mc2 2))
-  (def-test s-f :methods (make-instance 'side-cls :sc1 1 :sc2 3))
-  (def-test b-f-t :methods (make-instance 'bot-cls
-                             :tc1 4 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 1))
-  (def-test b-f-m :methods (make-instance 'bot-cls
-                             :tc1 0 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 1))
-  (def-test b-f-s :methods (make-instance 'bot-cls
-                             :tc1 0 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 3))
-  (def-test b-f-mt :methods (make-instance 'bot-cls
-                              :tc1 4 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 1))
-  (def-test b-f-ms :methods (make-instance 'bot-cls
-                              :tc1 0 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 3))
-  (def-test b-f-ts :methods (make-instance 'bot-cls
-                              :tc1 4 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 3))
-  (def-test b-f-mts :methods (make-instance 'bot-cls
-                               :tc1 4 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 3)))
-#+end_example
-
+   #+INCLUDE: "./gen/methods__criterion.org"
 ** Method combinations
 NST defines a method combination =nst-results= as the default method
 combination for functions defined by =def-test-generic=.  This

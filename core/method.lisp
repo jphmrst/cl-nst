@@ -239,35 +239,38 @@ For example:
 
 (def-criterion (:methods () (object))
   (invoke-test-methods object))
-;;;(defdoc:def-documentation (criterion :methods)
-;;;  (:intro (:latex "The \\texttt{:methods} criterion runs the test functions applicable to the value under test."))
-;;;  (:details (:seq
-;;;          (:plain " For example:")
-;;;          (:code "(def-test-group method-tests ()
-;;;  (def-test t-p :methods (make-instance 'top-cls :tc1 0 :tc2 2))
-;;;  (def-test m-p :methods (make-instance 'mid-cls :tc1 0 :tc2 2 :mc1 0 :mc2 2))
-;;;  (def-test s-p :methods (make-instance 'side-cls :sc1 1 :sc2 1))
-;;;  (def-test b-p :methods (make-instance 'bot-cls
-;;;                           :tc1 0 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 1))
-;;;  (def-test t-f :methods (make-instance 'top-cls :tc1 4 :tc2 2))
-;;;  (def-test m-f-t  :methods (make-instance 'mid-cls
-;;;                              :tc1 4 :tc2 2 :mc1 0 :mc2 2))
-;;;  (def-test m-f-m  :methods (make-instance 'mid-cls
-;;;                              :tc1 0 :tc2 2 :mc1 4 :mc2 2))
-;;;  (def-test m-f-mt :methods (make-instance 'mid-cls
-;;;                              :tc1 4 :tc2 2 :mc1 4 :mc2 2))
-;;;  (def-test s-f :methods (make-instance 'side-cls :sc1 1 :sc2 3))
-;;;  (def-test b-f-t :methods (make-instance 'bot-cls
-;;;                             :tc1 4 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 1))
-;;;  (def-test b-f-m :methods (make-instance 'bot-cls
-;;;                             :tc1 0 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 1))
-;;;  (def-test b-f-s :methods (make-instance 'bot-cls
-;;;                             :tc1 0 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 3))
-;;;  (def-test b-f-mt :methods (make-instance 'bot-cls
-;;;                              :tc1 4 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 1))
-;;;  (def-test b-f-ms :methods (make-instance 'bot-cls
-;;;                              :tc1 0 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 3))
-;;;  (def-test b-f-ts :methods (make-instance 'bot-cls
-;;;                              :tc1 4 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 3))
-;;;  (def-test b-f-mts :methods (make-instance 'bot-cls
-;;;                               :tc1 4 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 3)))"))))
+(setf (documentation* :methods 'criterion)
+      "The =:methods= criterion runs the test functions applicable to the value
+under test.
+
+For example:
+#+begin_example
+\(def-test-group method-tests ()
+  \(def-test t-p :methods (make-instance 'top-cls :tc1 0 :tc2 2))
+  \(def-test m-p :methods (make-instance 'mid-cls :tc1 0 :tc2 2 :mc1 0 :mc2 2))
+  \(def-test s-p :methods (make-instance 'side-cls :sc1 1 :sc2 1))
+  \(def-test b-p :methods (make-instance 'bot-cls
+                           :tc1 0 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 1))
+  \(def-test t-f :methods (make-instance 'top-cls :tc1 4 :tc2 2))
+  \(def-test m-f-t  :methods (make-instance 'mid-cls
+                              :tc1 4 :tc2 2 :mc1 0 :mc2 2))
+  \(def-test m-f-m  :methods (make-instance 'mid-cls
+                              :tc1 0 :tc2 2 :mc1 4 :mc2 2))
+  \(def-test m-f-mt :methods (make-instance 'mid-cls
+                              :tc1 4 :tc2 2 :mc1 4 :mc2 2))
+  \(def-test s-f :methods (make-instance 'side-cls :sc1 1 :sc2 3))
+  \(def-test b-f-t :methods (make-instance 'bot-cls
+                             :tc1 4 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 1))
+  \(def-test b-f-m :methods (make-instance 'bot-cls
+                             :tc1 0 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 1))
+  \(def-test b-f-s :methods (make-instance 'bot-cls
+                             :tc1 0 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 3))
+  \(def-test b-f-mt :methods (make-instance 'bot-cls
+                              :tc1 4 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 1))
+  \(def-test b-f-ms :methods (make-instance 'bot-cls
+                              :tc1 0 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 3))
+  \(def-test b-f-ts :methods (make-instance 'bot-cls
+                              :tc1 4 :tc2 2 :mc1 0 :mc2 2 :sc1 1 :sc2 3))
+  \(def-test b-f-mts :methods (make-instance 'bot-cls
+                               :tc1 4 :tc2 2 :mc1 4 :mc2 2 :sc1 1 :sc2 3)))
+#+end_example")

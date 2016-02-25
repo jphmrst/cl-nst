@@ -217,22 +217,8 @@ predicate.  This macro's arguments are just as for
 (def-criterion (:eval (:forms &key (check-warnings t) (muffle-warnings t)
                               (attempt-continue t) force-continue)
                       (:form forms-list))
-    "#+begin_example
-\(def-criterion ( [ :check-warnings FLAG ] [ :muffle-warnings FLAG ]
-                 [ :attempt-continue FLAG ] [ :force-continue FLAG ] )
-  FORM
-  ...
-  FORM)
-#+end_example
-The =:eval= criterion executes its forms, expecting calls to various assertion
-functions to check intermediate states of an arbitrarily-long process.
-- check-warnings :: If non-nil, will add warnings thrown when evaluating the forms under test as NST warnings.  The default is =t=.
-- muffle-warnings :: If non-nil, will muffle warnings thrown when evaluating the forms under test, so that they are reported only as NST result warnings and if the =:check-warnings= flag is set.  The default is =t=.
-- attempt-continue :: If non-nil, will continue evaluation after failed assertions, so long as the failure is not deemed =fatal=. The default is =t=.
-- force-continue :: If non-nil, will continue evaluation after failed assertions even if the failure is not deemed =fatal=. The default is =nil=."
-
-  ;; Should have a better way of working out whether we have a list of
-  ;; forms top-level here.
+    ;; Should have a better way of working out whether we have a list of
+    ;; forms top-level here.
   (case (car forms-list)
     ((multiple-value-list list)
      (pop forms-list)))
@@ -273,6 +259,20 @@ functions to check intermediate states of an arbitrarily-long process.
                                       (muffle-warning)))))
           (eval `(progn ,@forms-list)))))
     (calibrate-check-result result)))
+(setf (documentation* :eval 'criterion)
+      "#+begin_example
+\(def-criterion ( [ :check-warnings FLAG ] [ :muffle-warnings FLAG ]
+                 [ :attempt-continue FLAG ] [ :force-continue FLAG ] )
+  FORM
+  ...
+  FORM)
+#+end_example
+The =:eval= criterion executes its forms, expecting calls to various assertion
+functions to check intermediate states of an arbitrarily-long process.
+- check-warnings :: If non-nil, will add warnings thrown when evaluating the forms under test as NST warnings.  The default is =t=.
+- muffle-warnings :: If non-nil, will muffle warnings thrown when evaluating the forms under test, so that they are reported only as NST result warnings and if the =:check-warnings= flag is set.  The default is =t=.
+- attempt-continue :: If non-nil, will continue evaluation after failed assertions, so long as the failure is not deemed =fatal=. The default is =t=.
+- force-continue :: If non-nil, will continue evaluation after failed assertions even if the failure is not deemed =fatal=. The default is =nil=.")
 
 (defmacro def-eval-test (name-or-name-and-args &rest forms)
   "The =def-eval-test= macro abbreviates a call to =def-test= with a single
@@ -344,25 +344,28 @@ functions to check intermediate states of an arbitrarily-long process.
                    (check-result-union result
                                        (check-criterion-on-form form nil)))))))
       (calibrate-check-result result)))
-;;;(defdoc:def-documentation (criterion :process)
-;;;  (:properties (nst-manual process-dep))
-;;;  (:callspec ((:seq form)))
-;;;  (:intro (:seq "The " (:lisp criterion :process) " criterion allows simple interleaving of Lisp function calls and NST checks, to allow checking of intermediate states of an arbitrarily-long process."))
-;;;  (:details (:latex "This criterion takes as its body a list of forms.  The first element of each form should be a symbol:")
-;;;            (:itemize ()
-;;;              (:latex "\\texttt{:eval} --- Heads a list of forms which should be evaluated.")
-;;;              (:latex "\\texttt{:check} --- Heads a list of criteria which should be checked.")
-;;;              (:latex "\\texttt{:failcheck} --- If checks to this point have generated any errors or failures, then the \\texttt{process} criterion is aborted.")
-;;;              (:latex "\\texttt{:errcheck} --- If checks to this point have generated any errors (but not failures), then the \\texttt{process} criterion is aborted."))
-;;;            (:latex "The \\texttt{:process} criterion takes no value arguments in a \\texttt{def-test}.")
-;;;            (:seq
-;;;             (:plain "Example:")
-;;;             (:code
-;;;              "(def-test process-1
-;;;    (:process (:eval (setf zzz 0))
-;;;              (:check (:true-form (eql zzz 0)))
-;;;              (:eval (incf zzz))
-;;;              (:check (:true-form (eql zzz 1)))
-;;;              (:eval (incf zzz))
-;;;              (:check (:true-form (eql zzz 2)))))")))
-;;;  )
+(setf (documentation* :process 'criterion)
+      "The =:process= criterion allows simple interleaving of Lisp function
+calls and NST checks, to allow checking of intermediate states of an
+arbitrarily-long process.
+
+This criterion takes as its body a list of forms.  The first element of each
+form should be a symbol:
+- =:eval= :: Heads a list of forms which should be evaluated.
+- =:check= :: Heads a list of criteria which should be checked.
+- =:failcheck= :: If checks to this point have generated any errors or failures,
+                  then the =process= criterion is aborted.
+- =:errcheck= :: If checks to this point have generated any errors (but not
+                 failures), then the =process= criterion is aborted.
+The =:process= criterion takes no value arguments in a =def-test=.
+
+For example:
+#+begin_example
+\(def-test process-1
+    \(:process (:eval (setf zzz 0))
+              \(:check (:true-form (eql zzz 0)))
+              \(:eval (incf zzz))
+              \(:check (:true-form (eql zzz 1)))
+              \(:eval (incf zzz))
+              \(:check (:true-form (eql zzz 2)))))
+#+end_example")

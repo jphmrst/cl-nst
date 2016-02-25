@@ -28,6 +28,7 @@
 (defpackage :nst
   (:documentation "Unit and regression testing for Common Lisp")
   (:use :common-lisp)
+  (:import-from org-sampler #:documentation*)
   #+allegro (:import-from excl #:named-function)
 
   (:export #:def-fixtures #:def-test-group #:def-test

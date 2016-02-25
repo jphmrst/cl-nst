@@ -33,57 +33,57 @@
 
 (def-criterion (:pass (:forms) :ignore)
   (make-success-report))
-;;;(def-documentation (criterion :pass)
-;;;  (:properties (nst-manual misc-criteria))
-;;;  (:intro (:seq "The " (:lisp criterion :pass) (:latex " is a trivial test, which always passes.")))
-;;;  (:details (:seq
-;;;             (:plain "Example:")
-;;;             (:code "(def-test passing-test :pass 3 4 \"sd\")"))))
+(setf (documentation* :pass 'criterion)
+      "The =:pass= is a trivial test which always passes.
+
+Example:
+#+begin_example
+\(def-test passing-test :pass 3 4 \"sd\")
+#+end_example")
 
 (def-criterion (:fail (:forms &rest args) :ignore)
   (make-failure-report :format (car args) :args (cdr args)))
-;;;(def-documentation (criterion :fail)
-;;;  (:callspec (format-string (:seq form)))
-;;;  (:intro (:seq "The " (:lisp criterion :fail) (:latex " criterion is a trivial test which always fails.  The format string and arguments should be suitable for the Lisp \\texttt{format} function.")))
-;;;  (:details (:seq
-;;;          (:plain "Example:")
-;;;          (:code
-;;;           "(def-test fails (:fail \"Expected a \~{}a\" \"string\") 312)"))))
+(setf (documentation* :fail 'criterion)
+      "The =:fail= criterion is a trivial test which always fails.  The format string and arguments should be suitable for the Lisp =format= function.
+
+Usage:
+#+begin_example
+\(:fail FORMAT-STRING FORM ... FORM)
+#+end_example
+Example:
+#+begin_example
+\(def-test fails (:fail \"Expected a \~{}a\" \"string\") 312)
+#+end_example")
 
 (def-criterion (:warn (:forms &rest args) :ignore)
   (make-warning-report :format (car args) :args (cdr args)))
-;;;(def-documentation (criterion :warn)
-;;;  (:properties (nst-manual misc-criteria))
-;;;  (:callspec (format-string (:seq form)))
-;;;  (:intro (:seq "The " (:lisp criterion :warn) (:latex " criterion issues a warning.  The format string and arguments should be suitable for the Lisp \\texttt{format} function.")))
-;;;  (:details (:seq
-;;;             (:plain "Example:")
-;;;             (:code "(:warn \"\~{}d is not a perfect square\" 5)"))))
+(setf (documentation* :warn 'criterion)
+      "The =:warn= criterion issues a warning.  The format string and arguments should be suitable for the Lisp =format= function.
+
+Usage:
+#+begin_example
+\(:warn FORMAT-STRING FORM ... FORM)
+#+end_example
+Example:
+#+begin_example
+\(:warn \"\~{}d is not a perfect square\" 5)
+#+end_example")
 
 (def-criterion (:true-form (:forms bool) :ignore)
   (if (eval bool)
       (make-success-report)
       (make-failure-report :format "Expected non-null result of ~s"
                            :args (list bool))))
-;;;(def-documentation (criterion :true-form)
-;;;  (:callspec (bool))
-;;;  (:intro (:seq "The " (:lisp criterion :true-form) (:latex " criterion checks that a form evaluates to non-nil")))
-;;;;;;  (:details (:seq
-;;;;;;          (:plain "Example:")
-;;;;;;          (:code "")
-;;;;;;          (:plain "A example of a test which fails:")
-;;;;;;          (:code "")))
-;;;  )
+(setf (documentation* :true-form 'criterion)
+      "The =:true-form= criterion checks that a form evaluates to non-nil.")
 
 (def-criterion (:true (:forms) (:values bool))
   (if bool
       (make-success-report)
       (make-failure-report :format "Expected non-null, got: ~s"
                            :args (list bool))))
-;;;(def-documentation (criterion :true)
-;;;    (:properties (nst-manual basic-criteria))
-;;;  (:callspec ())
-;;;  (:intro (:seq "The " (:lisp criterion :true) (:latex " criterion expects one form, which is evaluated at testing time; the criterion requires the result to be non-nil."))))
+(setf (documentation* :true 'criterion)
+      "The =:true= criterion expects one form, which is evaluated at testing time; the criterion requires the result to be non-nil.")
 
 (def-criterion (:eq (:forms target) (:values actual))
   (let ((targ-value (eval target)))
@@ -91,106 +91,148 @@
         (make-success-report)
       (make-failure-report :format "Value ~s not eq to value of ~s"
                            :args (list actual targ-value)))))
-;;;(def-documentation (criterion :eq)
-;;;    (:properties (nst-manual basic-criteria))
-;;;  (:callspec (target))
-;;;  (:intro (:seq "The " (:lisp criterion :eq) " criterion checks a form using " (:lisp function eq) ".  The criterion argument and the form under test are both evaluated at testing time."))
-;;;  (:details (:seq (:plain "Example:")
-;;;               (:code "(def-test eq1 (:eq 'b) (cadr '(a b c)))"))))
+(setf (documentation* :eq 'criterion)
+      "The =:eq= criterion checks a form using =eq=.  The criterion argument and the form under test are both evaluated at testing time.
+
+Usage:
+#+begin_example
+\(:eq TARGET)
+#+end_example
+Example:
+#+begin_example
+\(def-test eq1 (:eq 'b) (cadr '(a b c)))
+#+end_example")
 
 (def-criterion-alias (:symbol name) `(:eq ',name))
-;;;(def-documentation (criterion :symbol)
-;;;    (:properties (nst-manual basic-criteria))
-;;;  (:callspec (name))
-;;;  (:intro (:seq "The " (:lisp criterion :symbol) " criterion checks that its form under test evaluates to a symbol which is " (:lisp function eq) " to the symbol name given as the criterion argument."))
-;;;  (:details (:seq
-;;;          (:plain "Example:")
-;;;          (:code "(def-test sym1  (:symbol a) (car '(a b c)))")
-;;;          (:plain "A example of a test which fails:")
-;;;          (:code "(def-test sym1x (:symbol a) (cadr '(a b c)))"))))
+(setf (documentation* :symbol 'criterion)
+      "The =:symbol= criterion checks that its form under test evaluates to a symbol which is =eq= to the symbol name given as the criterion argument.
+
+Usage:
+#+begin_example
+\(:symbol NAME)
+#+end_example
+Example:
+#+begin_example
+\(def-test sym1  (:symbol a) (car '(a b c)))
+#+end_example
+Example of a test which fails:
+#+begin_example
+\(def-test sym1x (:symbol a) (cadr '(a b c)))
+#+end_example")
 
 (def-criterion (:eql (:forms target) (:values actual))
   (if (eql (eval target) actual)
       (make-success-report)
       (make-failure-report :format "Value ~s not eql to value of ~s"
                            :args (list actual target))))
-;;;(def-documentation (criterion :eql)
-;;;    (:properties (nst-manual basic-criteria))
-;;;  (:callspec (target))
-;;;  (:intro (:seq "The " (:lisp criterion :eql) " criterion checks a form using " (:lisp function eql) ".  The criterion argument and the form under test are both evaluated at testing time."))
-;;;  (:details (:seq
-;;;          (:plain "Example:")
-;;;          (:code "(def-test eql1 (:eql 2) (cadr '(1 2 3)))"))))
+(setf (documentation* :eql 'criterion)
+      "The =:eql= criterion checks a form using =eql=.  The criterion argument and the form under test are both evaluated at testing time.
+
+Usage:
+#+begin_example
+\(:eql TARGET)
+#+end_example
+Example:
+#+begin_example
+\(def-test eql1 (:eql 2) (cadr '(1 2 3)))
+#+end_example")
 
 (def-criterion (:equal (:forms target) (:values actual))
   (if (equal (eval target) actual)
      (make-success-report)
      (make-failure-report :format "Value ~s not equal to value of ~s"
                           :args (list actual target))))
-;;;(def-documentation (criterion :equal)
-;;;    (:properties (nst-manual basic-criteria))
-;;;  (:callspec (target))
-;;;  (:intro (:seq "The " (:lisp criterion :equal) " criterion checks a form using " (:lisp function eql) ".  The criterion argument and the form under test are both evaluated at testing time.")))
+(setf (documentation* :equal 'criterion)
+      "The =:equal= criterion checks a form using =eql=.  The criterion argument and the form under test are both evaluated at testing time.")
 
 (def-criterion (:equalp (:forms target) (:values actual))
   (if (equalp (eval target) actual)
       (make-success-report)
       (make-failure-report :format "Value ~s not equalp to value of ~s"
                            :args (list actual target))))
-;;;(def-documentation (criterion :equalp)
-;;;    (:properties (nst-manual basic-criteria))
-;;;  (:callspec (target))
-;;;  (:intro (:seq "The " (:lisp criterion :equalp) " criterion checks a form using " (:lisp function equalp) ".  The criterion argument and the form under test are both evaluated at testing time.")))
+(setf (documentation* :equalp 'criterion)
+      "The =:equalp= criterion checks a form using =equalp=.  The criterion argument and the form under test are both evaluated at testing time.
+
+Usage:
+#+begin_example
+\(:equalp TARGET)
+#+end_example")
 
 (def-criterion-alias (:forms-eq)    `(:predicate eq))
-;;;(def-documentation (criterion :forms-eq)
-;;;    (:properties (nst-manual basic-criteria))
-;;;  (:callspec ())
-;;;  (:intro (:seq "The " (:lisp criterion :forms-eq) " criterion compares its two forms under test using " (:lisp function eq) ".  The forms are both evaluated at testing time."))
-;;;  (:details (:seq
-;;;          (:plain "Example:")
-;;;          (:code "(def-test eqforms1 :forms-eq (cadr '(a b c)) (caddr '(a c b)))"))))
+(setf (documentation* :forms-eq 'criterion)
+      "The =:forms-eq= criterion compares its two forms under test using =eq=.  The forms are both evaluated at testing time.
+
+Usage:
+#+begin_example
+\(:forms-eq)
+#+end_example
+Example:
+#+begin_example
+\(def-test eqforms1 :forms-eq (cadr '(a b c)) (caddr '(a c b)))
+#+end_example")
+
 (def-criterion-alias (:forms-eql)   `(:predicate eql))
-;;;(def-documentation (criterion :forms-eql)
-;;;    (:properties (nst-manual basic-criteria))
-;;;  (:callspec ())
-;;;  (:intro (:seq "The " (:lisp criterion :forms-eql) " criterion compares its two forms under test using " (:lisp function eql) ".  The two forms under test are both evaluated at testing time."))
-;;;  (:details (:seq
-;;;          (:plain "Example:")
-;;;          (:code "(def-test eqlforms1 :forms-eql (cadr '(a 3 c)) (caddr '(a c 3)))"))))
+(setf (documentation* :forms-eql 'criterion)
+      "The =:forms-eql= criterion compares its two forms under test using =eql=.  The two forms under test are both evaluated at testing time.
+
+Usage:
+#+begin_example
+\(:forms-eql)
+#+end_example
+Example:
+#+begin_example
+\(def-test eqlforms1 :forms-eql (cadr '(a 3 c)) (caddr '(a c 3)))
+#+end_example")
+
 (def-criterion-alias (:forms-equal) `(:predicate equal))
-;;;(def-documentation (criterion :forms-equal)
-;;;    (:properties (nst-manual basic-criteria))
-;;;  (:callspec ())
-;;;  (:intro (:seq "The " (:lisp criterion :forms-equal) " criterion compares its two forms under test using " (:lisp function equal) ".  The forms are both evaluated at testing time.")))
+(setf (documentation* :forms-equal 'criterion)
+      "The =:forms-equal= criterion compares its two forms under test using =equal=.  The forms are both evaluated at testing time.
+
+Usage:
+#+begin_example
+\(:forms-equal)
+#+end_example")
+
 (def-criterion-alias (:value-list further) `(:apply list ,further))
-;;;(def-documentation (criterion :value-list)
-;;;  (:properties (nst-manual multiple-values-criteria))
-;;;  (:callspec (further))
-;;;  (:intro :seq "The" (:lisp criterion :value-list) " criterion converts multiple values into a single list value."))
+(setf (documentation* :value-list 'criterion)
+      "The =:value-list= criterion converts multiple values into a single list value.
+
+Usage:
+#+begin_example
+\(:value-list FURTHER)
+#+end_example")
 
 (def-criterion (:predicate (:forms pred) (:values &rest vals))
   (if (apply (eval `(function ,pred)) vals)
       (make-success-report)
       (make-failure-report :format "Predicate ~s fails for ~s"
                            :args (list pred vals))))
-;;;(def-documentation (criterion :predicate)
-;;;    (:properties (nst-manual basic-criteria))
-;;;  (:callspec (pred))
-;;;  (:intro (:seq "The " (:lisp criterion :predicate) " criterion applies a predicate to the result of evaluating its form under test.  The criterion argument is a symbol (unquoted) or a lambda expression; at testing time, the forms under test are evaluated and passed to the denoted function.  The criterion expects that the result of the function is non-nil."))
-;;;  (:details (:seq
-;;;          (:plain "Example:")
-;;;          (:code "(def-test pred1 (:predicate numberp) 3)")
-;;;          (:plain "A example of a test which fails:")
-;;;          (:code "(def-test pred2 (:predicate eql) (+ 1 2) 3)"))))
+(setf (documentation* :predicate 'criterion)
+      "The =:predicate= criterion applies a predicate to the result of evaluating its form under test.  The criterion argument is a symbol (unquoted) or a lambda expression; at testing time, the forms under test are evaluated and passed to the denoted function.  The criterion expects that the result of the function is non-nil.
+
+Usage:
+#+begin_example
+\(:predicate PRED)
+#+end_example
+Example:
+#+begin_example
+\(def-test pred1 (:predicate numberp) 3)
+#+end_example
+Example of a test which fails:
+#+begin_example
+\(def-test pred2 (:predicate eql) (+ 1 2) 3)
+#+end_example")
 
 (def-criterion-alias (:drop-values criterion)
   `(:apply (lambda (x &rest others) (declare (ignorable others)) x)
            ,criterion))
-;;;(def-documentation (criterion :drop-values)
-;;;  (:properties (nst-manual multiple-values-criteria))
-;;;  (:callspec (criterion))
-;;;  (:intro (:seq "The " (:lisp criterion :drop-values) " criterion checks the primary value according to the subordinate criterion, ignoring any additional returned values from the evaluation of the form under test.")))
+(setf (documentation* :drop-values 'criterion)
+      "The =:drop-values= criterion checks the primary value according to the subordinate criterion, ignoring any additional returned values from the evaluation of the form under test.
+
+Usage:
+#+begin_example
+\(:drop-values CRITERION)
+#+end_example")
 
 (def-criterion (:dump-forms (:forms blurb) (:values &rest forms))
   (block nil
@@ -200,22 +242,29 @@
                                    :args (list forms))))
     (loop for form in forms do (format t "~s~%" form))
     (make-failure-report :format "Arguments dumped" :args nil)))
-;;;(def-documentation (criterion :dump-forms)
-;;;  (:properties (nst-manual misc-criteria))
-;;;  (:callspec (blurb))
-;;;  (:intro (:seq "The " (:lisp criterion :dump-forms) " criterion is for debugging NST criteria. It fails after writing the current forms to standard output.")))
+(setf (documentation* :dump-forms 'criterion)
+      "The =:dump-forms= criterion is for debugging NST criteria. It fails after writing the current forms to standard output.
+
+Usage:
+#+begin_example
+\(:dump-forms BLURB)
+#+end_example")
 
 (def-criterion (:info (:forms string subcriterion) (:form expr-list-form))
   (let ((subcheck (check-criterion-on-form subcriterion expr-list-form)))
     (push string (check-result-info subcheck))
     subcheck))
-;;;(def-documentation (criterion :info)
-;;;  (:properties (nst-manual misc-criteria))
-;;;  (:callspec (string subcriterion))
-;;;  (:intro (:seq "The " (:lisp criterion :info) (:latex " criterion adds an informational note to the check result.")))
-;;;  (:details (:seq
-;;;             (:plain "Example:")
-;;;             (:code "(def-test known-bug (:info \"Known bug\" (:eql 3)) 4)"))))
+(setf (documentation* :info 'criterion)
+      "The =:info= criterion adds an informational note to the check result.
+
+Usage:
+#+begin_example
+\(:info STRING SUBCRITERION)
+#+end_example
+Example:
+#+begin_example
+\(def-test known-bug (:info \"Known bug\" (:eql 3)) 4)
+#+end_example")
 
 (def-criterion (:err (:forms &key (type 'error)) (:form expr-form))
   (block err-criterion
@@ -247,14 +296,18 @@
                                           (eq 'list (car expr-form)))
                                      (cdr expr-form))
                                     (t (list expr-form)))))))
-;;;(def-documentation (criterion :err)
-;;;    (:properties (nst-manual basic-criteria))
-;;;  (:callspec (&key (type CLASS)))
-;;;  (:intro (:seq "The " (:lisp criterion :err) (:latex " criterion evaluates the form under test, expecting the evaluation to raise some condition.  If the \\textit{CLASS} argument is supplied, the criterion expects the raised condition to be a subclass.  Note that the name of the type should \\emph{not} be quoted; it is not evaluated.")))
-;;;  (:details (:seq
-;;;          (:plain "Examples:")
-;;;          (:code "(def-test err1 (:err :type error) (error \"this should be caught\"))")
-;;;          (:code "(def-test err2 (:err) (error \"this should be caught\"))"))))
+(setf (documentation* :err 'criterion)
+      "The =:err= criterion evaluates the form under test, expecting the evaluation to raise some condition.  If the =class= argument is supplied, the criterion expects the raised condition to be a subclass.  Note that the name of the type should /not/ be quoted; it is not evaluated.
+
+Usage:
+#+begin_example
+\(:err &KEY (TYPE CLASS))
+#+end_example
+Examples:
+#+begin_example
+\(def-test err1 (:err :type error) (error \"this should be caught\"))
+(def-test err2 (:err) (error \"this should be caught\"))
+#+end_example")
 
 (def-criterion (:perf (:forms &key (ms nil ms-supp-p) (sec nil sec-supp-p)
                               (min nil min-supp-p))
@@ -280,13 +333,17 @@
          :args (list elapsed-ms ms)))))
    (t
     (error ":perf check requires performance criteria specification"))))
-;;;(def-documentation (criterion :perf)
-;;;    (:properties (nst-manual basic-criteria))
-;;;  (:callspec (&key (ms MILLISECS) (sec SECONDS) (min MINUTES)))
-;;;  (:intro (:seq "The " (:lisp criterion :perf) " criterion evaluates the forms under test at testing time, checking that the evaluation completes within the given time limit."))
-;;;  (:details (:seq
-;;;          (:plain "Example:")
-;;;          (:code "(def-test perf1 (:perf :min 2) (ack 3 5))"))))
+(setf (documentation* :perf 'criterion)
+      "The =:perf= criterion evaluates the forms under test at testing time, checking that the evaluation completes within the given time limit.
+
+Usage:
+#+begin_example
+\(:perf &KEY (MS MILLISECS) (SEC SECONDS) (MIN MINUTES))
+#+end_example
+Example:
+#+begin_example
+\(def-test perf1 (:perf :min 2) (ack 3 5))
+#+end_example")
 
 (def-criterion (:not (:forms subcriterion) (:form expr-list-form))
   (let ((subcheck (check-criterion-on-form subcriterion expr-list-form)))
@@ -296,13 +353,17 @@
       (make-success-report :info (check-result-info subcheck)))
      (t (make-failure-report :format "Expected failure from ~s"
                              :args (list subcriterion))))))
-;;;(def-documentation (criterion :not)
-;;;    (:properties (nst-manual compound-criteria))
-;;;  (:callspec (subcriterion))
-;;;  (:intro (:seq "The " (:lisp criterion :not) (:latex " criterion passes when testing according to \\texttt{subcriterion} fails (but does not throw an error).")))
-;;;  (:details (:seq
-;;;          (:plain "Example:")
-;;;          (:code "(def-test not1 (:not (:symbol b)) 'a)"))))
+(setf (documentation* :not 'criterion)
+      "The =:not= criterion passes when testing according to =subcriterion= fails (but does not throw an error).
+
+Usage:
+#+begin_example
+\(:not SUBCRITERION)
+#+end_example
+Example:
+#+begin_example
+\(def-test not1 (:not (:symbol b)) 'a)
+#+end_example")
 
 (def-criterion (:all (:forms &rest subcriteria) (:form expr-list-form))
   (let ((*nst-context-evaluable* t))
@@ -317,16 +378,20 @@
           finally (return (make-and-calibrate-check-result :warnings warnings
                                             :failures failures
                                             :errors errors :info info)))))
-;;;(def-documentation (criterion :all)
-;;;  (:properties (nst-manual compound-criteria))
-;;;  (:callspec ((:seq subcriterion)))
-;;;  (:intro (:seq "The " (:lisp criterion :all) (:latex " criterion brings several other criteria under one check, and verifies that they all pass.")))
-;;;  (:details (:seq
-;;;             (:plain "Example:")
-;;;             (:code "(def-check not1 ()
-;;;    (:all (:predicate even-p)
-;;;          (:predicate prime-p))
-;;;  2)"))))
+(setf (documentation* :all 'criterion)
+      "The =:all= criterion brings several other criteria under one check, and verifies that they all pass.
+
+Usage:
+#+begin_example
+\(:all SUBCRITERION ... SUBCRITERION)
+#+end_example
+Example:
+#+begin_example
+\(def-check not1 ()
+    \(:all (:predicate even-p)
+          \(:predicate prime-p))
+  2)
+#+end_example")
 
 (def-criterion (:any (:forms &rest criteria) (:form expr-list-form))
   (let ((*nst-context-evaluable* t) (info nil))
@@ -358,27 +423,35 @@
                            (format stream " ~s" disjunct)))))
         :args (list criteria)
         :info info))))
-;;;(def-documentation (criterion :any)
-;;;  (:properties (nst-manual compound-criteria))
-;;;  (:callspec ((:seq subcriterion)))
-;;;  (:intro (:seq "The " (:lisp criterion :any) (:latex " criterion passes when any of the subordinate criteria pass.")))
-;;;  (:details (:seq
-;;;             (:plain "Example:")
-;;;             (:code "(def-check not1 ()
-;;;    (:any (:predicate even-p)
-;;;          (:predicate prime-p))
-;;;  5)"))))
+(setf (documentation* :any 'criterion)
+      "The =:any= criterion passes when any of the subordinate criteria pass.
+
+Usage:
+#+begin_example
+\(:any SUBCRITERION ... SUBCRITERION)
+#+end_example
+Example:
+#+begin_example
+\(def-check not1 ()
+    \(:any (:predicate even-p)
+          \(:predicate prime-p))
+  5)
+#+end_example")
 
 (def-criterion (:apply (:forms transform criterion) (:form exprs-form))
   (check-criterion-on-form criterion
                            `(multiple-value-call #'list (apply #',transform ,exprs-form))))
-;;;(def-documentation (criterion :apply)
-;;;  (:properties (nst-manual compound-criteria))
-;;;  (:callspec (FUNCTION CRITERION))
-;;;  (:intro (:seq "The " (:lisp criterion :apply) (:latex " criterion first evaluates the forms under test, applying \\texttt{FUNCTION} to them.  The overall criterion passes or fails exactly when the subordinate \\texttt{CRITERION} with the application's multiple result values.")))
-;;;  (:details (:seq
-;;;             (:plain "Example:")
-;;;             (:code "(def-test applycheck (:apply cadr (:eql 10)) '(0 10 20))"))))
+(setf (documentation* :apply 'criterion)
+      "The =:apply= criterion first evaluates the forms under test, applying =function= to them.  The overall criterion passes or fails exactly when the subordinate =criterion= with the application's multiple result values.
+
+Usage:
+#+begin_example
+\(:apply FUNCTION CRITERION)
+#+end_example
+Example:
+#+begin_example
+\(def-test applycheck (:apply cadr (:eql 10)) '(0 10 20))
+#+end_example")
 
 (def-criterion (:check-err (:forms criterion) (:form forms))
   (block nil
@@ -403,28 +476,36 @@
                                     (eq 'list (car forms)))
                                (cdr forms))
                               (t (list forms))))))))))
-;;;(def-documentation (criterion :check-err)
-;;;  (:properties (nst-manual compound-criteria))
-;;;  (:callspec (criterion))
-;;;  (:intro (:seq "The " (:lisp criterion :check-err) (:latex " criterion is like \\texttt{:err}, but proceeds according to the subordinate criterion rather than simply evaluating the input forms.")))
-;;;  (:details (:seq
-;;;             (:plain "Example:")
-;;;             (:code "(def-test check-err1
-;;;    (:check-err :forms-eq)
-;;;  'asdfgh (error \"this should be caught\"))"))))
+(setf (documentation* :check-err 'criterion)
+      "The =:check-err= criterion is like =:err=, but proceeds according to the subordinate criterion rather than simply evaluating the input forms.
+
+Usage:
+#+begin_example
+\(:check-err CRITERION)
+#+end_example
+Example:
+#+begin_example
+\(def-test check-err1
+    \(:check-err :forms-eq)
+  'asdfgh (error \"this should be caught\"))
+#+end_example")
 
 (def-criterion (:progn (:forms &rest forms-and-criterion) (:form forms))
   (let ((progn-forms (butlast forms-and-criterion))
         (criterion (car (last forms-and-criterion))))
     (loop for form in progn-forms do (eval form))
     (check-criterion-on-form criterion forms)))
-;;;(def-documentation (criterion :progn)
-;;;  (:properties (nst-manual compound-criteria))
-;;;  (:callspec ((:seq form) subcriterion))
-;;;  (:intro (:seq "The " (:lisp criterion :progn) (:latex " criterion first evaluates the \\texttt{FORM}s in order, and then proceeds with evaluation of the forms under test according to the subordinate criterion.")))
-;;;  (:details (:seq
-;;;             (:plain "Example:")
-;;;             (:code "(def-test form1 (:progn (setf zz 3) (:eql 3)) zz)"))))
+(setf (documentation* :progn 'criterion)
+      "The =:progn= criterion first evaluates the =FORM=s in order, and then proceeds with evaluation of the forms under test according to the subordinate criterion.
+
+Usage:
+#+begin_example
+\(:progn FORM ... FORM SUBCRITERION)
+#+end_example
+Example:
+#+begin_example
+\(def-test form1 (:progn (setf zz 3) (:eql 3)) zz)
+#+end_example")
 
 (def-criterion (:proj (:forms indices criterion) (:values &rest values))
   (block nil
@@ -434,22 +515,29 @@
     (check-criterion-on-form criterion
                              `(list ,@(loop for idx in indices
                                             collect `',(nth idx values))))))
-;;;(def-documentation (criterion :proj)
-;;;  (:properties (nst-manual compound-criteria))
-;;;  (:callspec (indices criterion))
-;;;  (:intro (:seq "The " (:lisp criterion :proj) (:latex " criterion rearranges the forms under test by selecting a new list according to the index numbers into the old list.  Checking of the reorganized forms continues according to the subordinate criterion.")))
-;;;  (:details (:seq
-;;;             (:plain "Example:")
-;;;             (:code "(def-test proj-1
-;;;    (:proj (0 2) :forms-eq)
-;;;  'a 3 (car '(a b)))"))))
+(setf (documentation* :proj 'criterion)
+      "The =:proj= criterion rearranges the forms under test by selecting a new list according to the index numbers into the old list.  Checking of the reorganized forms continues according to the subordinate criterion.
+
+Usage:
+#+begin_example
+\(:proj INDICES CRITERION)
+#+end_example
+Example:
+#+begin_example
+\(def-test proj-1
+    \(:proj (0 2) :forms-eq)
+  'a 3 (car '(a b)))
+#+end_example")
 
 (def-criterion (:values (:forms &rest args) (:form form))
   (check-criterion-on-form `(:seq ,@args) `(list ,form)))
-;;;(def-documentation (criterion :values)
-;;;  (:properties (nst-manual multiple-values-criteria))
-;;;  (:callspec ((:seq subcriterion)))
-;;;  (:intro (:seq "The " (:lisp criterion :values) " criterion checks each of the forms under test according to the respective subordinate criterion.")))
+(setf (documentation* :values 'criterion)
+      "The =:values= criterion checks each of the forms under test according to the respective subordinate criterion.
+
+Usage:
+#+begin_example
+\(:values SUBCRITERION ... SUBCRITERION)
+#+end_example")
 
 (def-criterion (:each (:forms criterion) (:values l))
   (block each
@@ -472,13 +560,17 @@
                    warnings (append warnings
                                 (check-result-warnings result)))))))
       (make-success-report :info info :warnings warnings))))
-;;;(def-documentation (criterion :each)
-;;;  (:properties (nst-manual list-criteria))
-;;;  (:callspec (criterion))
-;;;  (:intro (:seq "The " (:lisp criterion :each) (:latex " criterion evaluates the form under test, expecting to find a list as a result.  Expects that each argument of the list according to the subordinate \\texttt{criterion}, and passes when all of these checks pass.")))
-;;;  (:details (:seq
-;;;             (:plain "Example:")
-;;;             (:code "(def-test each1 (:each (:symbol a)) '(a a a a a))"))))
+(setf (documentation* :each 'criterion)
+      "The =:each= criterion evaluates the form under test, expecting to find a list as a result.  Expects that each argument of the list according to the subordinate =criterion=, and passes when all of these checks pass.
+
+Usage:
+#+begin_example
+\(:each CRITERION)
+#+end_example
+Example:
+#+begin_example
+\(def-test each1 (:each (:symbol a)) '(a a a a a))
+#+end_example")
 
 (def-criterion (:seq (:forms &rest criteria) (:values l))
   (block seq
@@ -500,15 +592,19 @@
                      warnings (append warnings
                                       (check-result-warnings result)))))))
       (make-success-report :info info :warnings warnings))))
-;;;(def-documentation (criterion :seq)
-;;;  (:properties (nst-manual list-criteria))
-;;;  (:callspec ((:seq subcriterion)))
-;;;  (:intro (:seq "The " (:lisp criterion :seq) (:latex " criterion evaluates its input form, checks each of its elements according to the respective subordinate criterion, and passes when all of them pass.")))
-;;;  (:details (:seq
-;;;             (:plain "Example:")
-;;;             (:code "(def-check seqcheck
-;;;    (:seq (:predicate symbolp) (:eql 1) (:symbol d))
-;;;  '(a 1 d))"))))
+(setf (documentation* :seq 'criterion)
+      "The =:seq= criterion evaluates its input form, checks each of its elements according to the respective subordinate criterion, and passes when all of them pass.
+
+Usage:
+#+begin_example
+\(:seq SUBCRITERION ... SUBCRITERION)
+#+end_example
+Example:
+#+begin_example
+\(def-check seqcheck
+    (:seq (:predicate symbolp) (:eql 1) (:symbol d))
+  '(a 1 d))
+#+end_example")
 
 (def-criterion (:alist* (:forms key-test-fn value-test-fn &rest specs)
                         (:values alist))
@@ -527,22 +623,24 @@
                        :format "For ~a value ~s does not match ~s"
                        :args (list key (cdr pair) val))))))))
     (make-success-report)))
-;;;(def-documentation (criterion ::alist)
-;;;  (:properties (nst-manual list-criteria))
-;;;  (:callspec (key-test-fn value-test-fn (:seq (key value))))
-;;;  (:intro (:seq "The " (:lisp criterion :alist) (:latex " criterion evaluates the form under test, expecting to find an association list as a result.  Using the two given function specs to test the keys (during retrieval, via ") (:lisp function assoc) (:latex ") and the values, the criterion enforces that the association lists contains exactly equivalent keys, mapping to respective equivalent values."))))
-;;;(def-documentation (criterion ::alist)
-;;;  (:properties (nst-manual list-criteria))
-;;;  (:callspec (key-test-fn value-test-fn (:seq (key value))))
-;;;  (:intro (:seq "The " (:lisp criterion :alist*) " criterion evaluates the form under test, expecting to find an association list as a result.  Using the two given function specs to test the keys (during retrieval, via " (:lisp function assoc) ") and the values, the criterion enforces that the lists contains equivalent keys, mapping to respective equivalent values.  Note that the list may contain additional key/value pairs; see also " (:lisp criterion :alist) ".")))
+(setf (documentation* :alist* 'criterion)
+      "The =:alist*= criterion evaluates the form under test, expecting to find an association list as a result.  Using the two given function specs to test the keys (during retrieval, via =assoc=) and the values, the criterion enforces that the lists contains equivalent keys, mapping to respective equivalent values.  Note that the list may contain additional key/value pairs; see also =:alist=.
+
+Usage:
+#+begin_example
+\(:alist* KEY-TEST-FN VALUE-TEST-FN (KEY VALUE) ... (KEY VALUE))
+#+end_example")
 
 (def-criterion-alias (:alist key-test-fn value-test-fn &rest specs)
   `(:all (:alist* ,key-test-fn ,value-test-fn ,@specs)
          (:drop-values (:apply length (:eql ,(length specs))))))
-;;;(def-documentation (criterion ::alist)
-;;;  (:properties (nst-manual list-criteria))
-;;;  (:callspec (key-test-fn value-test-fn (:seq (key value))))
-;;;  (:intro (:seq "The " (:lisp criterion :alist) " criterion evaluates the form under test, expecting to find an association list as a result.  Using the two given function specs to test the keys (during retrieval, via " (:lisp function assoc) ") and the values, the criterion enforces that the association lists contains exactly equivalent keys, mapping to respective equivalent values.  Implemented using " (:lisp criterion :alist*) " plus a check of the list " (:lisp function length) ", which could be incorrect if the criterion lists duplicate keys.")))
+(setf (documentation* :alist 'criterion)
+      "The =:alist= criterion evaluates the form under test, expecting to find an association list as a result.  Using the two given function specs to test the keys (during retrieval, via =assoc=) and the values, the criterion enforces that the association lists contains exactly equivalent keys, mapping to respective equivalent values.  Implemented using =:alist*= plus a check of the list =length=, which could be incorrect if the criterion lists duplicate keys.
+
+Usage:
+#+begin_example
+\(:alist KEY-TEST-FN VALUE-TEST-FN (KEY VALUE) ... (KEY VALUE))
+#+end_example")
 
 (def-criterion (:permute (:forms criterion) (:values l))
   (block permute-block
@@ -555,18 +653,22 @@
             (return-from permute-block (make-success-report)))))
       (make-failure-report :format "No permutation of ~s satisfies ~s"
                            :args `(,l ,criterion)))))
-;;;(def-documentation (criterion :permute)
-;;;  (:properties (nst-manual list-criteria))
-;;;  (:callspec (criterion))
-;;;  (:intro (:seq "The " (:lisp criterion :permute) (:latex " criterion evaluates the form under test, expecting to find a list as a result.  The criterion expects to find that some permutation of this list will satisfy the subordinate criterion.")))
-;;;  (:details (:seq
-;;;             (:plain "Examples:")
-;;;             (:code "(def-test permute1 (:permute (:each (:eq 'a))) '(a a))")
-;;;             (:code "(def-check permute2
-;;;    (:permute (:seq (:symbol b)
-;;;                    (:predicate symbolp)
-;;;                    (:predicate numberp)))
-;;;  '(1 a b))"))))
+(setf (documentation* :permute 'criterion)
+      "The =:permute= criterion evaluates the form under test, expecting to find a list as a result.  The criterion expects to find that some permutation of this list will satisfy the subordinate criterion.
+
+Usage:
+#+begin_example
+\(:permute CRITERION)
+#+end_example
+Example:
+#+begin_example
+\(def-test permute1 (:permute (:each (:eq 'a))) '(a a))
+\(def-check permute2
+    \(:permute (:seq (:symbol b)
+                    \(:predicate symbolp)
+                    \(:predicate numberp)))
+  '(1 a b))
+#+end_example")
 
 (def-criterion (:across (:forms &rest criteria) (:values v))
   (block across-block
@@ -588,15 +690,19 @@
                      warnings (append warnings
                                       (check-result-warnings result)))))))
       (make-success-report :info info :warnings warnings))))
-;;;(def-documentation (criterion :across)
-;;;  (:properties (nst-manual vector-criteria))
-;;;  (:callspec ((:seq subcriterion)))
-;;;  (:intro (:seq "The " (:lisp criterion :across) (:latex " criterion is like \\texttt{:seq}, but for a vector instead of a list.")))
-;;;  (:details (:seq
-;;;             (:plain "Example:")
-;;;             (:code "(def-check across1
-;;;    (:across (:predicate symbolp) (:eql 1))
-;;;  (vector 'a 1))"))))
+(setf (documentation* :across 'criterion)
+      "The =:across= criterion is like =:seq=, but for a vector instead of a list.
+
+Usage:
+#+begin_example
+\(:across SUBCRITERION ... SUBCRITERION)
+#+end_example
+Example:
+#+begin_example
+\(def-check across1
+    \(:across (:predicate symbolp) (:eql 1))
+  \(vector 'a 1))
+#+end_example")
 
 (def-criterion (:slots (:forms &rest clauses) (:values obj))
   (block slots-block
@@ -616,23 +722,27 @@
                      warnings (append warnings
                                       (check-result-warnings result))))))))
       (make-success-report :info info :warnings warnings))))
-;;;(def-documentation (criterion :slots)
-;;;  (:properties (nst-manual class-criteria))
-;;;  (:callspec ((:seq (slot-name subcriterion))))
-;;;  (:intro (:seq "The " (:lisp criterion :slots) (:latex " criterion evaluates its input form, and passes when the value at each given slot satisfies the corresponding subordinate constraint.")))
-;;;  (:details (:seq
-;;;             (:plain "Example:")
-;;;             (:code "(defclass classcheck ()
-;;;  ((s1 :initarg :s1 :reader get-s1)
-;;;   (s2 :initarg :s2)
-;;;   (s3 :initarg :s3)))
-;;; (def-test slot1
-;;;     (:slots (s1 (:eql 10))
-;;;             (s2 (:symbol zz))
-;;;             (s3 (:seq (:symbol q) (:symbol w)
-;;;                       (:symbol e) (:symbol r))))
-;;;   (make-instance 'classcheck
-;;;     :s1 10 :s2 'zz :s3 '(q w e r)))"))))
+(setf (documentation* :slots 'criterion)
+      "The =:slots= criterion evaluates its input form, and passes when the value at each given slot satisfies the corresponding subordinate constraint.
+
+Usage:
+#+begin_example
+\(:slots (SLOT-NAME SUBCRITERION) ... (SLOT-NAME SUBCRITERION))
+#+end_example
+Example:
+#+begin_example
+\(defclass classcheck ()
+  \((s1 :initarg :s1 :reader get-s1)
+   \(s2 :initarg :s2)
+   \(s3 :initarg :s3)))
+ \(def-test slot1
+     \(:slots (s1 (:eql 10))
+             \(s2 (:symbol zz))
+             \(s3 (:seq (:symbol q) (:symbol w)
+                       \(:symbol e) (:symbol r))))
+   \(make-instance 'classcheck
+     :s1 10 :s2 'zz :s3 '(q w e r)))
+#+end_example")
 
 (defun refine-package-symbol-desigs (package-desig symbol-desig)
   (block refiner
@@ -680,8 +790,13 @@
           (otherwise (make-error-report
                       :format "Unexpected status result from find-symbol ~s"
                       :args (list status))))))))
-;;;(def-documentation (criterion :package-exports)
-;;;  (:callspec (package-desig)))
+(setf (documentation* :package-exports 'criterion)
+      "
+
+Usage:
+#+begin_example
+\(:package-exports PACKAGE-DESIG)
+#+end_example")
 
 (def-criterion (:package-internal (:forms package-desig) (:values symbol-desig))
   (block crit
@@ -704,8 +819,13 @@
           ((:internal) (make-success-report))
           (otherwise (make-error-report
                       :format "Unexpected result from find-symbol")))))))
-;;;(def-documentation (criterion :package-internal)
-;;;  (:callspec (package-desig)))
+(setf (documentation* :package-internal 'criterion)
+      "
+
+Usage:
+#+begin_example
+\(:package-internal PACKAGE-DESIG)
+#+end_example")
 
 (def-criterion (:applying-common-criterion (:forms criterion-head &body data-sets) :ignore)
   (let ((criterion-list-prefix (cond
@@ -726,16 +846,29 @@
                                                          :failures failures
                                                          :errors errors
                                                          :info info)))))
-;;;(def-documentation (criterion :applying-common-criterion)
-;;;  (:properties (nst-manual compound-criteria))
-;;;  (:intro (:seq "The " (:lisp criterion :applying-common-criterion) " criterion applies one criterion to several pairs of criterion arguments and data forms."))
-;;;  (:callspec ((:alt criterion (criterion (:seq arg)))
-;;;              (:seq ( (:seq (((:seq arg)) ((:seq form)))))))))
+(setf (documentation* :applying-common-criterion 'criterion)
+      "The =:applying-common-criterion= criterion applies one criterion to several pairs of criterion arguments and data forms.
+
+Usage:
+#+begin_example
+\(:applying-common-criterion [ CRITERION | (CRITERION ARG ... ARG) ]
+                            ( ((ARG ... ARG) (FORM ... FORM))
+                              ...
+                              ((ARG ... ARG) (FORM ... FORM)) )
+                            ...
+                            ( ((ARG ... ARG) (FORM ... FORM))
+                              ...
+                              ((ARG ... ARG) (FORM ... FORM)) ) )
+#+end_example")
 
 (def-criterion-alias (:with-common-criterion criterion &body forms)
-  `(:applying-common-criterion ,criterion
+ `(:applying-common-criterion ,criterion
      ,@(loop for form in forms collect `(nil ,form))))
-;;;(def-documentation (criterion :with-common-criterion)
-;;;  (:properties (nst-manual compound-criteria))
-;;;  (:intro (:seq "The " (:lisp criterion :with-common-criterion) " criterion applies one criterion to several data forms."))
-;;;  (:callspec ((:alt criterion (criterion (:seq arg))) (:seq ((:seq form))))))
+(setf (documentation* :with-common-criterion 'criterion)
+      "The =:with-common-criterion= criterion applies one criterion to several data forms.
+
+Usage:
+#+begin_example
+\(:with-common-criterion [ CRITERION | (CRITERION ARG ... ARG) ]
+                        (FORM ...  FORM) ... (FORM ...  FORM) )
+#+end_example")

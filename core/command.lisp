@@ -204,20 +204,40 @@ available from compile-time forward.")
 (def-nst-property :debug-on-error *debug-on-error*
   :doc "When non-nil, break into the debugger when NST encounters an error."
   :filter flag-filter)
-;;;(def-documentation (switch :debug-on-error)
-;;;  (:callspec (flag))
-;;;  (:intro (:latex "The \\texttt{:debug-on-error} switch controls NST's behavior on errors.  When non-nil, NST will break into the debugger when it encounters an error."))
-;;;  (:details (:latex "The \\texttt{:debug} command is a short-cut for setting this property.\\index{debug@\\texttt{:debug}}")))
+(setf (documentation* :debug-on-error 'switch)
+      "The =:debug-on-error= switch controls NST's behavior on errors.  When
+non-nil, NST will break into the debugger when it encounters an error.
+
+Usage:
+#+begin_example
+:nst :debug-on-error FLAG
+#+end_example
+
+The =:debug= command is a short-cut for setting this property.")
 
 (def-nst-property :debug-on-fail *debug-on-fail*
   :doc "When non-nil, break into the debugger when NST encounters an error."
   :filter flag-filter)
-;;;(def-documentation (switch :debug-on-fail)
-;;;  (:callspec (flag))
-;;;  (:intro (:latex "The \\texttt{:debug-on-fail} switch controls NST's behavior when a test fails  When non-nil, NST will break into the debugger when it encounters a failing test."))
-;;;  (:details (:latex "This behavior is less useful than it may seem; by the time the results of the test are examined for failure, the stack from the actual form evaluation will usually have been released.  Still, this switch is useful for inspecting the environment in which a failing test was run.")
-;;;         (:latex "Note that both \\texttt{:debug-on-error} and \\texttt{:debug-on-fail} apply in the case of an error; if the latter is set but the former is not, then the debugger will be entered after an erring test completes.")
-;;;         (:latex "The \\texttt{:debug} command is a short-cut for setting this property.\\index{debug@\\texttt{:debug}}")))
+(setf (documentation* :debug-on-fail 'switch)
+      "The =:debug-on-fail= switch controls NST's behavior when a test fails
+When non-nil, NST will break into the debugger when it encounters a failing
+test.
+
+Usage:
+#+begin_example
+:nst :debug-on-fail FLAG
+#+end_example
+
+This behavior is less useful than it may seem; by the time the results of the
+test are examined for failure, the stack from the actual form evaluation will
+usually have been released.  Still, this switch is useful for inspecting the
+environment in which a failing test was run.
+
+Note that both =:debug-on-error= and =:debug-on-fail= apply in the case of an
+error; if the latter is set but the former is not, then the debugger will be
+entered after an erring test completes.
+
+The =:debug= command is a short-cut for setting this property.")
 
 (def-nst-property :verbose *nst-verbosity*
   :doc "Valid settings: :silent (aka nil), :quiet (aka :default), :verbose, ~
@@ -237,11 +257,22 @@ available from compile-time forward.")
                 ((eql x 2) :verbose)
                 ((eql x 3) :vverbose)
                 ((> x 3)   :trace))))
-;;;(def-documentation (switch :verbose)
-;;;  (:callspec (setting))
-;;;  (:intro (:latex "The \\texttt{:verbosity} switch controls the level of NST's output."))
-;;;  (:details (:latex "Valid settings are:\\begin{itemize}\\item\\texttt{:silent} (aka \\texttt{nil})\\item\\texttt{:quiet} (aka \\texttt{:default})\\item\\texttt{:verbose} (aka \\texttt{t})\\item\\texttt{:vverbose}\\item\\texttt{:trace}\\end{itemize}")
-;;;         (:latex "The \\texttt{:report} and \\texttt{:detail} commands operate by setting minimum levels of verbosity.")))
+(setf (documentation* :verbose 'switch)
+      "The =:verbosity= switch controls the level of NST's output.
+
+Usage:
+#+begin_example
+:nst :verbose SETTING
+#+end_example
+
+Valid settings are:
+- =:silent= (aka =nil=)
+- =:quiet= (aka =:default=)
+- =:verbose= (aka =t=)
+- =:vverbose=
+- =:trace=
+The =:report= and =:detail= commands operate by setting minimum levels of
+verbosity.")
 
 #+allegro
 (def-nst-property :backtraces *generate-backtraces*
@@ -249,11 +280,26 @@ available from compile-time forward.")
   "When non-nil, attempts to capture the Lisp backtrace of errors in tests."
   :filter   (lambda (x) (if x t nil))
   :unfilter (lambda (x) (if x t nil)))
-;;;(def-documentation (switch :backtraces)
-;;;  (:callspec (flag))
-;;;  (:intro (:latex "The \\texttt{:backtraces} switch, when non-\\texttt{nil}, directs NST to attempt to capture the Lisp backtrace of errors in tests."))
-;;;  (:details (:latex "This property is only available on platform which allow programmatic examination of backtraces, which is not standardized in Common Lisp; currently we have implemented this feature on Allegro only.")
-;;;         (:latex "This property has a complicated default setting.  Firstly, if the symbol \\texttt{'common-lisp-user::*nst-generate-backtraces*} is bound when NST loads, NST will use its value as the initial value for this property.  Otherwise by default, on MacOS systems the property initializes to \\texttt{nil} because of a known error on that system, but this setting can be overriden by the property \\texttt{:nst-unsafe-allegro-backtraces}.  Finally, if none of these issues apply, the initial value is \\texttt t.")))
+(setf (documentation* :backtraces 'switch)
+      "The =:backtraces= switch, when non-=nil=, directs NST to attempt to
+capture the Lisp backtrace of errors in tests.
+
+Usage:
+#+begin_example
+:nst :backtraces FLAG
+#+end_example
+
+This property is only available on platform which allow programmatic examination
+of backtraces, which is not standardized in Common Lisp; currently we have
+implemented this feature on Allegro only.
+
+This property has a complicated default setting.  Firstly, if the symbol
+='common-lisp-user::*nst-generate-backtraces*= is bound when NST loads, NST will
+use its value as the initial value for this property.  Otherwise by default, on
+MacOS systems the property initializes to =nil= because of a known error on that
+system, but this setting can be overriden by the property
+=:nst-unsafe-allegro-backtraces=.  Finally, if none of these issues apply, the
+initial value is =t=.")
 
 (def-nst-interactive-command (:help :short-help "Print a list of commands."
                                     :long-help "Print this help message.")
@@ -266,10 +312,14 @@ available from compile-time forward.")
              particular command.~%~%Without an explicit command, :nst repeats ~
              the last interesting command~%(currently, ~s~{ ~s~})"
     :nst *last-repl-call*))
-;;;(def-documentation (command :help)
-;;;  (:callspec ())
-;;;  (:blurb "Print a list of commands.")
-;;;  (:intro (:latex "The \\texttt{:help} command gives a complete inventory of runtime system commands.")))
+(setf (documentation* :help 'command)
+      "The =:help= command gives a complete inventory of runtime system
+commands.
+
+Usage:
+#+begin_example
+:nst :help
+#+end_example")
 
 (def-nst-interactive-command
     (:debug :short-help "Activate NST debugging."
@@ -281,10 +331,15 @@ available from compile-time forward.")
     (*nst-debug*  (format t "Deactivated NST debugging.~%"))
     (t            (format t "NST debugging is already deactivated.~%")))
   (setf *nst-debug* val))
-;;;(def-documentation (command :debug)
-;;;  (:callspec (bool))
-;;;  (:blurb "Activate NST debugging")
-;;;  (:intro (:latex "The \\texttt{:debug} command activates a system-configurable debugging mode for test operations.  The mode includes, but is not limited to, disabling error-catching over the orms under test.")))
+(setf (documentation* :debug 'command)
+      "The =:debug= command activates a system-configurable debugging mode for
+test operations.  The mode includes, but is not limited to, disabling
+error-catching over the orms under test.
+
+Usage:
+#+begin_example
+:nst :debug BOOL
+#+end_example")
 
 (def-nst-interactive-command
     (:open :short-help "Inject fixtures into the current name space."
@@ -294,10 +349,14 @@ available from compile-time forward.")
       (declare (special *open-via-repl*))
       (loop for fixture in fixtures do
         (open-fixture fixture))))
-;;;(def-documentation (command :open)
-;;;  (:callspec ((:seq fixture)))
-;;;  (:blurb "Inject fixtures into the current name space.")
-;;;  (:intro (:latex "The \\texttt{:open} command injects the binding given by the \\textt{fixture}s into the current package.")))
+(setf (documentation* :open 'command)
+      "The =:open= command injects the binding given by the =fixture= set
+into the current package.
+
+Usage:
+#+begin_example
+:nst :open (:SEQ FIXTURE)
+#+end_example")
 
 (def-nst-interactive-command
     (:run-package :short-help "Run all NST tests stored in the given packages."
@@ -314,10 +373,14 @@ available from compile-time forward.")
             (run-package package) )
            (t (format t "No such package ~a~%" package))))
        (report-multiple (nreverse ran-packages) nil nil))))
-;;;(def-documentation (command :run-package)
-;;;  (:callspec ((:seq package)))
-;;;  (:blurb "Run tests stored in groups in the given package.")
-;;;  (:intro (:latex "The \\texttt{:run-package} command executes all tests associated with groups in the named packages, and reports the test results afterwards.")))
+(setf (documentation* :run-package 'command)
+      "The =:run-package= command executes all tests associated with groups in
+the named packages, and reports the test results afterwards.
+
+Usage:
+#+begin_example
+:nst :run-package (:SEQ PACKAGE)
+#+end_example")
 
 (def-nst-interactive-command
     (:run-group :short-help "Run all NST tests in the given groups."
@@ -326,10 +389,15 @@ available from compile-time forward.")
   (apply-default-debug-options
    (loop for group in groups do (run-group group))
    (report-multiple nil groups nil)))
-;;;(def-documentation (command :run-group)
-;;;  (:callspec ((:seq group)))
-;;;  (:blurb "Run tests stored in the given groups")
-;;;  (:intro (:latex "The \\texttt{:run-group} command executes all tests associated with the name groups, and reports the test results afterwards. The group name should be package-qualified.")))
+(setf (documentation* :run-group 'command)
+      "The =:run-group= command executes all tests associated with the name
+groups, and reports the test results afterwards. The group name should be
+package-qualified.
+
+Usage:
+#+begin_example
+:nst :run-group (:SEQ GROUP)
+#+end_example")
 
 (def-nst-interactive-command
     (:run-test :short-help "Run a single NST test."
@@ -338,10 +406,14 @@ available from compile-time forward.")
   (apply-default-debug-options
    (run-test group test)
    (report-multiple nil nil (list (cons group test)))))
-;;;(def-documentation (command :run-test)
-;;;  (:callspec (group test))
-;;;  (:blurb "Run a single test.")
-;;;  (:intro (:latex "The \\texttt{:run-test} command executes the given test.  Both the group and test name should be package-qualified.")))
+(setf (documentation* :run-test 'command)
+      "The =:run-test= command executes the given test.  Both the group and test
+name should be package-qualified.
+
+Usage:
+#+begin_example
+:nst :run-test GROUP TEST
+#+end_example")
 
 (def-nst-interactive-command
     (:run :short-help "Run NST packages, groups and tests."
@@ -387,10 +459,17 @@ available from compile-time forward.")
                           interp))))))))
      (when (or report-packages report-groups report-tests)
        (report-multiple report-packages report-groups report-tests)))))
-;;;(def-documentation (command :run)
-;;;  (:callspec (name))
-;;;  (:blurb "Run a test, group or package.")
-;;;  (:intro (:latex "The \\texttt{:run} command executes all tests in the named package, or in the named group, or runs the named test. It is not necessary to prefix the name with a package prefix.  The name does not need to be prefix-qualified, but if the name is ambiguous then \\texttt{:run} will simply report the possible interpretations.")))
+(setf (documentation* :run 'command)
+      "The =:run= command executes all tests in the named package, or in the
+named group, or runs the named test. It is not necessary to prefix the name
+with a package prefix.  The name does not need to be prefix-qualified, but if
+the name is ambiguous then =:run= will simply report the possible
+interpretations.
+
+Usage:
+#+begin_example
+:nst :run NAME
+#+end_example")
 
 (def-nst-interactive-command
     (:report :short-help "Show a summary of test results."
@@ -404,10 +483,17 @@ The last form summarizes all interesting results."
                               (test nil test-supp-p))
              :repeatable nil)
   (report-summary group-or-package gp-supp-p test test-supp-p))
-;;;(def-documentation (command :report)
-;;;  (:callspec () (package) (group) (group test))
-;;;  (:blurb "Summarize test, group or package results.")
-;;;  (:intro (:latex "The \\texttt{:report} command summarizes successes, failures and errors in tests.  It reports either for the named artifact, or for all recently-run tests.")))
+(setf (documentation* :report 'command)
+      "The =:report= command summarizes successes, failures and errors in tests.
+It reports either for the named artifact, or for all recently-run tests.
+
+Usage:
+#+begin_example
+:nst :run
+:nst :run PACKAGE
+:nst :run GROUP
+:nst :run GROUP TEST
+#+end_example")
 
 (def-nst-interactive-command
     (:detail :short-help "Show detailed test results."
@@ -421,20 +507,30 @@ The last form shows all interesting results."
                               (test nil test-supp-p))
              :repeatable nil)
   (report-details group-or-package gp-supp-p test test-supp-p))
-;;;(def-documentation (command :detail)
-;;;  (:callspec () (package) (group) (group test))
-;;;  (:blurb "Detail test, group or package results.")
-;;;  (:intro (:latex "The \\texttt{:report} command gives detailed information about individual test results.")))
+(setf (documentation* :detail 'command)
+      "The =:detail= command gives detailed information about individual test
+results.
+
+Usage:
+#+begin_example
+:nst :detail
+:nst :detail PACKAGE
+:nst :detail GROUP
+:nst :detail GROUP TEST
+#+end_example")
 
 (def-nst-interactive-command
     (:clear :short-help "Clear test results."
             :args ())
   (clrhash +results-record+)
   (format *standard-output* "Results cleared."))
-;;;(def-documentation (command :clear)
-;;;  (:callspec ())
-;;;  (:blurb "Clear test results.")
-;;;  (:intro (:latex "The \\texttt{:clear} command empties NST's internal record of test results.")))
+(setf (documentation* :clear 'command)
+      "The =:clear= command empties NST's internal record of test results.
+
+Usage:
+#+begin_example
+:nst :clear
+#+end_example")
 
 (def-nst-interactive-command
     (:set :short-help "Set or show an NST property."
@@ -447,18 +543,26 @@ The last form shows all interesting results."
     (cond
       (value-supp-p (set-nst-property name value))
       (t (show-nst-property name))))
-;;;(def-documentation (command :set)
-;;;  (:callspec (property) (property value))
-;;;  (:blurb "Set or show a property value setting.")
-;;;  (:intro (:latex "The \\texttt{:set} command assigns or displays the values of NST runtime switches.")))
+(setf (documentation* :set 'command)
+      "The =:set= command assigns or displays the values of NST runtime
+switches.
+
+Usage:
+#+begin_example
+:nst :set PROPERTY
+:nst :set PROPERTY VALUE
+#+end_example")
 
 (def-nst-interactive-command
     (:unset :short-help "Clear an NST property." :args (name))
     (set-nst-property name nil))
-;;;(def-documentation (command :unset)
-;;;  (:callspec (property))
-;;;  (:blurb "Clear an NST runtime property value setting.")
-;;;  (:intro (:latex "The \\texttt{:unset} command clears the values of NST runtime switches.")))
+(setf (documentation* :unset 'command)
+      "The =:unset= command clears the values of NST runtime switches.
+
+Usage:
+#+begin_example
+:nst :unset PROPERTY
+#+end_example")
 
 (def-nst-interactive-command
     (:whatis :short-help "Query what NST artifacts a name denotes" :args (name))
@@ -467,19 +571,27 @@ The last form shows all interesting results."
         ((null usage) (format t "The symbol ~s is not known to NST" name))
         (t (format t "~a" usage)))
       nil))
-;;;(def-documentation (command :whatis)
-;;;  (:callspec (name))
-;;;  (:blurb "Describe how a name is used in NST artifacts.")
-;;;  (:intro (:latex "The \\texttt{:whatis} command prints the uses to which a particular name has been applied in an NST session.")))
+(setf (documentation* :whatis 'command)
+      "The =:whatis= command prints the uses to which a particular name has been
+applied in an NST session.
+
+Usage:
+#+begin_example
+:nst :whatis NAME
+#+end_example")
 
 (def-nst-interactive-command
     (:apply :short-help "Apply a criterion to forms"
             :args (criterion &rest forms))
     (format t "~w~%" (check-criterion-on-form criterion `(list ,@forms))))
-;;;(def-documentation (command :apply)
-;;;  (:callspec (name))
-;;;  (:blurb "Apply a criterion to forms.")
-;;;  (:intro (:latex "The \\texttt{:apply} command assesses whether a test criterion prints the uses to which a particular name has been applied in an NST session.")))
+(setf (documentation* :apply 'command)
+      "The =:apply= command assesses whether a test criterion prints the uses to
+which a particular name has been applied in an NST session.
+
+Usage:
+#+begin_example
+:nst :apply NAME
+#+end_example")
 
 (defun run-nst-command (&rest args)
   (cond
