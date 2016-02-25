@@ -275,7 +275,9 @@ functions to check intermediate states of an arbitrarily-long process.
     (calibrate-check-result result)))
 
 (defmacro def-eval-test (name-or-name-and-args &rest forms)
-  "#+begin_example
+  "The =def-eval-test= macro abbreviates a call to =def-test= with a single
+=:eval= criterion.  Its arguments are just as for =def-test= and =:eval=.
+#+begin_example
 \(def-eval-test (NAME [ :group GROUP-NAME ]
                      [ :setup FORM ]
                      [ :cleanup FORM ]
@@ -290,8 +292,12 @@ functions to check intermediate states of an arbitrarily-long process.
   FORM
   ...
   FORM)
-The =def-eval-test= macro abbreviates a call to =def-test= with a single =:eval=
-criterion.  Its arguments are just as for =def-test= and =:eval=."
+
+\(def-eval-test NAME
+  FORM
+  ...
+  FORM)
+#+end_example"
   (let (name test-args eval-args)
     (cond
       ((symbolp name-or-name-and-args)

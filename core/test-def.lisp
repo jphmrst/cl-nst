@@ -99,7 +99,8 @@ aspirational."
                   [ :fixtures (FIXTURE FIXTURE ... FIXTURE) ]
                   [ :aspirational FLAG ]
                   [ :documentation STRING ] )
-  criterion &body (:seq FORM))
+    criterion
+ FORM ... FORM)
 
 \(def-test NAME criterion &body (:seq FORM))
 #+end_example

@@ -504,9 +504,7 @@ macro.
 #+end_example
 Where a particular system supports the facility (Currently Allegro, and SBCL
 under ACL-REPL) the top-level alias =:nst= provides a shorthand to this
-function.
-
-See the manual for a list of NST commands."
+function."
   `(apply #'run-nst-command ',args))
 
 ;;; Platform-specific command-line interpreter interfaces.
