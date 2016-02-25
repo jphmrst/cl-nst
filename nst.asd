@@ -147,3 +147,18 @@
                            ;; Other packaged APIs.
                            (:file "interfaces" :depends-on
                                   ("check" #|"runner"|# "status"))))))
+
+(defun nst-doc ()
+  (cond
+    ((ensure-directories-exist (asdf:system-relative-pathname :nst "doc/gen"))
+     (flet ((pfuncall (pk fn-sym &rest args)
+              (apply (symbol-function (intern (symbol-name fn-sym)
+                                              (find-package pk)))
+                     args)))
+       (pfuncall :asdf '#:load-system :org-sampler)
+       (format t ";;; Generating org text from function docstrings.~%")
+       (pfuncall :org-sampler '#:write-packages '(:nst)
+                 :package-headers nil :usage-headers nil :show-title nil
+                 :default-path "doc/gen/" :default-system :nst)))
+
+    (t (error "Couldn't find or create directory doc/gen"))))
