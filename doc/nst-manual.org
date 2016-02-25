@@ -18,8 +18,7 @@ platform-specific release notes, and other technical materials are
 available via the link on NST's CLiki page, =cliki.net/NST=.
 
 *Contributors.* The primary author of both NST and this manual is John
-Maraist (Smart Information Flow Technologies, 211 North First Street,
-Suite 300, Minneapolis, MN 55401; =jmaraist= at =sift.info=).  Robert
+Maraist.  Robert
 P. Goldman provided guidance, comments and suggestions through the
 development.  Other contributors include Michael J.S. Pelican,
 Steven A. Harp, Michael Atighetchi and Patrick Stein.
