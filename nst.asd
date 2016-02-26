@@ -50,7 +50,7 @@
                                         ; number) should be
                                         ; incremented immediately
                                         ; after a version is shipped.
-    :version "4.1.0"
+    :version "4.1.1"
     :author "John Maraist <lisper@maraist.org>"
     :license "LLGPL 3.latest"
     :in-order-to ((test-op (test-op :nst-test))
