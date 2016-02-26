@@ -1,5 +1,6 @@
 * 4.1 releases
-** 4.1.0 - public release,
+** 4.1.1 - currently at repository trunk
+** 4.1.0 - public release, February 25, 2016
 - Rewrite of fixture/group/test representation to remove class-based
   representation.  This should significanty speed compiling and
   loading tests.
