@@ -1,8 +1,9 @@
-#+LaTeX_HEADER: \parindent 0pt \parskip 0.5em
-#+TITLE: NST 4.1 User Manual
-#+AUTHOR:
+#+TITLE: NST 4.0/4.1 User Manual
+#+AUTHOR: John Maraist
 #+OPTIONS: skip:nil toc:1
-#+LaTeX: \vspace*{5mm}
+#+LaTeX_HEADER: \parindent 0pt \parskip 0.5em
+#+LaTeX_HEADER: \usepackage{tocloft}
+#+LaTeX_HEADER: \setlength{\cftbeforesecskip}{0em}
 
 #+LaTeX: \noindent
 This document is the manual and users' guide to the 4.1.$x$ series of
