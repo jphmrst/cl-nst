@@ -616,8 +616,8 @@ Example:
                                    (cdr pair) val)
                     (return-from checker
                       (make-failure-report
-                       :format "For ~a value ~s does not match ~s"
-                       :args (list key (cdr pair) val))))))))
+                       :format "For ~a value ~s does not match ~s in ~s"
+                       :args (list key (cdr pair) val alist))))))))
     (make-success-report)))
 (setf (documentation* :alist* 'criterion)
       "The =:alist*= criterion evaluates the form under test, expecting to find an association list as a result.  Using the two given function specs to test the keys (during retrieval, via =assoc=) and the values, the criterion enforces that the lists contains equivalent keys, mapping to respective equivalent values.  Note that the list may contain additional key/value pairs; see also =:alist=.
