@@ -168,7 +168,7 @@ the list of names defined by the fixture."
                          ;; If there are any bindings at all, then we
                          ;; abstract them here.
                          (names
-                          `((let ,bindings
+                          `((let* ,bindings
                               (declare ,@(when special-names
                                            `((special ,@special-names)))
                                        ,@decls
