@@ -66,8 +66,11 @@
        (format ,stream "</~a>" ,tag-val))))
 
 (defun symbol-to-junit-name (symbol)
-  (format nil "lisp.~a.~a"
-    (package-name (symbol-package symbol)) (symbol-name symbol)))
+  (let ((symbol (if (symbolp symbol)
+                  symbol
+                  (group-record-name symbol))))
+    (format nil "lisp.~a.~a"
+            (package-name (symbol-package symbol)) (symbol-name symbol))))
 
 (defun junit-header (stream)
   (format stream "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>~%"))
