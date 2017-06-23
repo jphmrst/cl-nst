@@ -165,6 +165,7 @@
     (lambda (s item)
       (with-accessors ((group-name check-result-group-name)
                        (check-name check-result-check-name)
+                       (info check-result-info)
                        (failures check-result-failures)
                        (errors check-result-errors)
                        (elapsed-time check-result-elapsed-time)
@@ -190,6 +191,13 @@
 
             (when (and errors failures)
               (pprint-newline :mandatory s))
+
+            (when info
+              (loop for (note . others) on info do
+                (let ((*note-type* :info))
+                  (declare (special *note-type*))
+                  (write note :stream s))
+                (when others (pprint-newline :mandatory s))))
 
             (when failures
               (loop for (failure . others) on failures do
