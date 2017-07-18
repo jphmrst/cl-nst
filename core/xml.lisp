@@ -192,20 +192,23 @@
             (when (and errors failures)
               (pprint-newline :mandatory s))
 
-            (when info
-              (loop for (note . others) on info do
-                (let ((*note-type* :info))
-                  (declare (special *note-type*))
-                  (write note :stream s))
-                (when others (pprint-newline :mandatory s))))
-
             (when failures
               (loop for (failure . others) on failures do
                     ;; (format-failure-report-junit-xml s check-name failure)
                     (let ((*nst-note-type* :failure))
                       (declare (special *nst-note-type*))
                       (write failure :stream s))
-                    (when others (pprint-newline :mandatory s)))))))))
+                    (when others (pprint-newline :mandatory s))))
+            (when info
+              (with-xml-tagged-pprint-logical-block (s "system-out")
+                (with-pprint-cdata (s)
+                  (loop for (note . others) on info do
+                    (let ((*note-type* :info))
+                      (declare (special *note-type*))
+                      (write note :stream s))
+                    (when others (pprint-newline :mandatory s)))
+                  )))
+            )))))
   0 *default-xml-pprint-dispatch*)
 
 (set-pprint-dispatch 'error-check-note
