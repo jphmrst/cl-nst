@@ -199,9 +199,12 @@ given, the function will write to =*standard-output*=."
     (return-from string-escaped (string-escaped (symbol-name string))))
   (with-output-to-string (stream)
     "Writes string to stream with all character entities escaped."
-    #-allegro (coerce string 'simple-base-string)
+    #-(or allegro lispworks sbcl) (coerce string 'simple-base-string)
     (loop for char across string
-          for esc = (svref *char-escapes* (char-code char))
+          for code = (char-code char)
+          for esc = (if (< code 255)
+                      (svref *char-escapes* code)
+                      (format nil "&#x~x;" code))
           do (write-sequence esc stream))))
 
 ;;; The above three definitions are Copyright (c) 2003, Miles Egan
