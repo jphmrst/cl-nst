@@ -51,6 +51,20 @@ Example:
 \(def-test fails (:fail \"Expected a \~{}a\" \"string\") 312)
 #+end_example")
 
+(def-criterion (:skip (:forms &rest args) :ignore)
+  (make-skipped-report :format (car args) :args (cdr args)))
+(setf (documentation* :skip 'criterion)
+      "The =:skip= criterion issues a skipping.  The format string and arguments should be suitable for the Lisp =format= function.
+
+Usage:
+#+begin_example
+\(:skip FORMAT-STRING FORM ... FORM)
+#+end_example
+Example:
+#+begin_example
+\(:skip \"\~{}d is not a perfect square\" 5)
+#+end_example")
+
 (def-criterion (:warn (:forms &rest args) :ignore)
   (make-warning-report :format (car args) :args (cdr args)))
 (setf (documentation* :warn 'criterion)

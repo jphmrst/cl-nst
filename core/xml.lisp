@@ -168,6 +168,7 @@
                        (info check-result-info)
                        (failures check-result-failures)
                        (errors check-result-errors)
+                       (skipped check-result-skipped)
                        (elapsed-time check-result-elapsed-time)
                        (timestamp result-stats-timestamp)) item
         (let ((*reporting-check-name* check-name))
@@ -199,13 +200,24 @@
                       (declare (special *nst-note-type*))
                       (write failure :stream s))
                     (when others (pprint-newline :mandatory s))))
+
+            (when skipped
+              (with-xml-tagged-pprint-logical-block
+                  (s "skipped" :properties (("message"
+                                             (with-output-to-string (stream)
+                                               (loop for (note . others) on skipped do
+                                                 (apply 'format stream
+                                                                (check-note-format note)
+                                                                (check-note-args note))
+                                                 (when others (pprint-newline :mandatory stream)))))))))
+
             (when info
               (with-xml-tagged-pprint-logical-block (s "system-out")
                 (with-pprint-cdata (s)
                   (loop for (note . others) on info do
                     (let ((*note-type* :info))
                       (declare (special *note-type*))
-                      (write note :stream s))
+                      (write (format nil "~a" note) :stream s))
                     (when others (pprint-newline :mandatory s)))
                   )))
             )))))
