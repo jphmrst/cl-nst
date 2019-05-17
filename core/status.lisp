@@ -265,18 +265,19 @@ note is an instance of the check-note structure below.  The four note types are:
  warnings - generated warnings
  failures - criteria which are not met, but not a Lisp error
  errors - Lisp errors
+ skipped - skipped information if the test is skipped.
  info - supplimentary information
 Each of these fields is a list; warnings, failures and errors are check-note
 instances, and the info field is of any value."
   (group-name *nst-group-name*)
   (check-name *nst-check-user-name*)
-  (warnings nil) (failures nil) (errors nil) (info nil))
+  (warnings nil) (failures nil) (errors nil) (skipped nil) (info nil))
 
 (defun make-check-result (&key (group-name *nst-group-name*)
                                (check-name *nst-check-user-name*)
                                warnings failures errors info
                                (tests 0) (passing 0) (erring 0)
-                               (failing 0) (warning 0)
+                               (failing 0) (warning 0) (skipped nil)
                                (elapsed-time 0)
                                (timestamp (multiple-value-list
                                               (get-decoded-time))))
@@ -292,7 +293,7 @@ permitting the use of apply."
                       :errors errors
                       :info info
                       :tests tests :passing passing :erring erring
-                      :failing failing :warning warning
+                      :failing failing :warning warning :skipped skipped
                       :elapsed-time elapsed-time
                       :timestamp timestamp))
 
@@ -993,7 +994,7 @@ instead."
         :replacement '(make-failure-report))
   `(make-failure-report ,@args))
 
-(defun make-success-report (&rest args &key warnings info)
+(defun make-success-report (&rest args &key warnings info skipped)
   "The =make-success-report= function indicates a successful test result.
 #+begin_example
 \(make-success-report)
@@ -1001,7 +1002,7 @@ instead."
 Note that some older examples show =(make-check-result)=, =(emit-success)= or
 =(check-result)=.  The former is an internal function and should not be used
 from outside the core NST files.  The latter two are deprecated."
-  (declare (ignore warnings info))
+  (declare (ignore warnings info skipped))
   (apply #'make-and-calibrate-check-result args))
 
 (defmacro emit-success (&rest args)
@@ -1010,6 +1011,21 @@ instead."
   (warn 'nst-soft-deprecation :old-name 'emit-success
         :replacement '(make-success-report))
   `(make-success-report ,@args))
+
+(defun make-skipped-report (&key format args)
+  "Function =make-skipped-report= is like =make-failure-report=, but provides
+supplimentary information as a skipped.
+#+begin_example
+\(make-skipped-report [ :format FORMAT-STRING ] [ :args ARG-FORM-LIST ])
+#+end_example
+The =emit-skipped= function is an older, deprecated version of this function."
+  (declare (special *nst-context* *nst-stack* *nst-check-name*))
+  (make-success-report :skipped (list (make-check-note :context *nst-context*
+                                                       :stack *nst-stack*
+                                                       :format format
+                                                       :args args))))
+
+
 
 (defun add-failure (result &key format args)
   "For use within user-defined NST criteria: add a failure to a result.

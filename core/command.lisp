@@ -161,6 +161,7 @@ available from compile-time forward.")
        ,(when repeatable
           `(defmethod consider-repl-call-save ((cmd (eql ,name)) args)
              (setf *last-repl-call* (cons cmd args))))
+       #-ecl
        (defmethod nst-arg-names ((cmd (eql ',canonical)))
          ,(prep-arg-names-help args))
        (defmethod nst-short-help ((cmd (eql ',canonical)))
