@@ -17,12 +17,12 @@ sub initialize {
   $tag = sprintf("TestRun%05d", ++$gensym) unless defined $tag;
   $self->SUPER::initialize(@_);
 
-  $self->declare_scalar_variable('name', $name);
-  $self->declare_scalar_variable('tag', $tag);
-  $self->declare_scalar_variable
+  $self->declare_scalar('name', $name);
+  $self->declare_scalar('tag', $tag);
+  $self->declare_scalar
       ('description', 'Description of one run of a Lisp session');
-  $self->declare_list_accumulator('asdf_path');
-  $self->declare_list_accumulator('system');
+  $self->declare_list('asdf_path');
+  $self->declare_list('system');
 }
 
 sub execute {

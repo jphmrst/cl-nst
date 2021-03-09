@@ -14,13 +14,13 @@ our $PATH;
 sub initialize {
   my $self = shift;
   $self->SUPER::initialize(@_);
-  $self->declare_scalar_variable
+  $self->declare_scalar
       ('description',
        'Abstract superclass of all SBCL Lisp platform descriptions');
-  $self->declare_scalar_variable('tag', 'sbcl');
-  $self->declare_scalar_variable('executable_name', 'sbcl');
-  $self->declare_scalar_variable('name', 'SBCL');
-  $self->declare_scalar_variable('version', 'general');
+  $self->declare_scalar('tag', 'sbcl');
+  $self->declare_scalar('executable_name', 'sbcl');
+  $self->declare_scalar('name', 'SBCL');
+  $self->declare_scalar('version', 'general');
 }
 
 sub get_global_path {

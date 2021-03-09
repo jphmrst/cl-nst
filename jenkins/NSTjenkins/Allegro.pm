@@ -14,14 +14,14 @@ our $PATH;
 sub initialize {
   my $self = shift;
   $self->SUPER::initialize(@_);
-  $self->declare_scalar_variable
+  $self->declare_scalar
       ('description',
        'Abstract superclass of all Allegro Lisp platform descriptions');
-  $self->declare_scalar_variable('tag', 'allegro');
-  $self->declare_scalar_variable('mixedcase', 0);
-  $self->declare_scalar_variable('eightbitmode', 0);
-  $self->declare_scalar_variable('name', 'Allegro');
-  $self->declare_scalar_variable('version', 'general');
+  $self->declare_scalar('tag', 'allegro');
+  $self->declare_scalar('mixedcase', 0);
+  $self->declare_scalar('eightbitmode', 0);
+  $self->declare_scalar('name', 'Allegro');
+  $self->declare_scalar('version', 'general');
 }
 
 sub tag {

@@ -14,11 +14,11 @@ sub initialize {
   my $name = shift;
   $self->{_asdf_directories} = [];
   $self->SUPER::initialize(@_);
-  $self->declare_scalar_variable
+  $self->declare_scalar
       ('description', 'Abstract superclass of an ASDF system invocation.');
-  $self->declare_scalar_variable('name', $name);
-  $self->declare_scalar_variable('force', undef);
-  $self->declare_scalar_variable('norequirefailflag', undef);
+  $self->declare_scalar('name', $name);
+  $self->declare_scalar('force', undef);
+  $self->declare_scalar('norequirefailflag', undef);
 }
 
 sub invocation {

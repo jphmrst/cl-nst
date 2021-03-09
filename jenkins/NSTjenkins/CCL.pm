@@ -14,14 +14,14 @@ our $PATH;
 sub initialize {
   my $self = shift;
   $self->SUPER::initialize(@_);
-  $self->declare_scalar_variable
+  $self->declare_scalar
       ('description',
        'Abstract superclass of all CCL Lisp platform descriptions');
-  $self->declare_scalar_variable('tag', 'clozure');
-  $self->declare_scalar_variable('arch64', 0);
-  $self->declare_scalar_variable('executable_name', 'lx86cl');
-  $self->declare_scalar_variable('name', 'CCL');
-  $self->declare_scalar_variable('version', 'general');
+  $self->declare_scalar('tag', 'clozure');
+  $self->declare_scalar('arch64', 0);
+  $self->declare_scalar('executable_name', 'lx86cl');
+  $self->declare_scalar('name', 'CCL');
+  $self->declare_scalar('version', 'general');
 }
 
 sub instance {

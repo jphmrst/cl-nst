@@ -12,7 +12,7 @@ our @ISA = ("NSTjenkins::CCL");
 sub initialize {
   my $self = shift;
   $self->SUPER::initialize(@_);
-  $self->declare_scalar_variable('version', '1');
+  $self->declare_scalar('version', '1');
 }
 
 sub get_command_arguments {

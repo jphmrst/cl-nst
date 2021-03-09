@@ -14,14 +14,14 @@ our $PATH;
 sub initialize {
   my $self = shift;
   $self->SUPER::initialize(@_);
-  $self->declare_scalar_variable
+  $self->declare_scalar
       ('description',
        'Abstract superclass of all CLISP Lisp platform descriptions');
-  $self->declare_scalar_variable('mixedcase', 0);
-  $self->declare_scalar_variable('tag', 'clisp');
-  $self->declare_scalar_variable('executable_name', 'clisp');
-  $self->declare_scalar_variable('name', 'CLISP');
-  $self->declare_scalar_variable('version', 'general');
+  $self->declare_scalar('mixedcase', 0);
+  $self->declare_scalar('tag', 'clisp');
+  $self->declare_scalar('executable_name', 'clisp');
+  $self->declare_scalar('name', 'CLISP');
+  $self->declare_scalar('version', 'general');
 }
 
 sub instance {

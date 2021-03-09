@@ -13,15 +13,15 @@ our $gensym=0;
 sub initialize {
   my $self = shift;
   $self->SUPER::initialize(@_);
-  $self->declare_scalar_variable('tag', sprintf("platform%05d", ++$gensym));
-  $self->declare_scalar_variable
+  $self->declare_scalar('tag', sprintf("platform%05d", ++$gensym));
+  $self->declare_scalar
       ('description', 'Abstract superclass of all Lisp platform descriptions');
-  $self->declare_scalar_variable('path', undef);
-  $self->declare_scalar_variable('executable_name', undef);
-  $self->declare_list_accumulator('testrun');
-  $self->declare_list_accumulator('version');
-  $self->declare_list_accumulator('lead_argument');
-  $self->declare_list_accumulator('additional_argument');
+  $self->declare_scalar('path', undef);
+  $self->declare_scalar('executable_name', undef);
+  $self->declare_list('testrun');
+  $self->declare_list('version');
+  $self->declare_list('lead_argument');
+  $self->declare_list('additional_argument');
 }
 
 sub launch {

@@ -12,8 +12,8 @@ our @ISA = ("NSTjenkins::Allegro");
 sub initialize {
   my $self = shift;
   $self->SUPER::initialize(@_);
-  $self->declare_scalar_variable('description', 'Allegro 8.2 Lisp platform descriptions');
-  $self->declare_scalar_variable('version', '8.2');
+  $self->declare_scalar('description', 'Allegro 8.2 Lisp platform descriptions');
+  $self->declare_scalar('version', '8.2');
 }
 
 sub get_command_arguments {

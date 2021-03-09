@@ -16,13 +16,13 @@ sub initialize {
   my $tag = shift;
   $tag = sprintf("NSTjenkins%05d", ++$gensym) unless defined $tag;
   $self->SUPER::initialize(@_);
-  $self->declare_scalar_variable('name', $name);
-  $self->declare_scalar_variable('tag', $tag);
-  $self->declare_scalar_variable('logsdir', 'log');
-  $self->declare_scalar_variable('description',
+  $self->declare_scalar('name', $name);
+  $self->declare_scalar('tag', $tag);
+  $self->declare_scalar('logsdir', 'log');
+  $self->declare_scalar('description',
                                  'Top-level control of an NSTjenkins run');
-  $self->declare_list_accumulator('testrun');
-  $self->declare_list_accumulator('platform');
+  $self->declare_list('testrun');
+  $self->declare_list('platform');
 }
 
 sub execute {

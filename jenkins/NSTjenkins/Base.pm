@@ -24,14 +24,14 @@ sub initialize {
   # $self->SUPER::initialize(@_);
 }
 
-sub declare_scalar_variable {
+sub declare_scalar {
   my $self = shift;
   my $field = shift;
   my $init = shift;
   $self->{__vars}{$field} = $init;
 }
 
-sub declare_list_accumulator {
+sub declare_list {
   my $self = shift;
   my $field = shift;
   my $init = shift;
